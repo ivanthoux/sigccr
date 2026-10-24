@@ -26,6 +26,9 @@ class ComunicacionService extends BaseService
     /** Asunto de cada plantilla (app/Views/correos/<plantilla>.php). */
     public const ASUNTOS = [
         'recuperacion_acceso' => 'SIG-CCR: recuperación de acceso',
+        'restablecimiento_credenciales' => 'SIG-CCR: definición de una contraseña nueva',
+        'definicion_inicial' => 'SIG-CCR: activación de su usuario',
+        'verificacion_correo' => 'SIG-CCR: confirmación de su correo electrónico',
     ];
 
     private ?ComunicacionesInterface $adaptador;

@@ -89,3 +89,18 @@ if (!function_exists('a_zona_negocio')) {
         return $t->setTimezone(config('Sigccr')->zonaNegocio);
     }
 }
+
+if (!function_exists('etiqueta_estado_cuenta')) {
+    /** Etiqueta del estado de una cuenta de acceso (usuarios internos y clientes). */
+    function etiqueta_estado_cuenta(string $estado): string
+    {
+        [$texto, $clase] = [
+            'PendienteActivacion' => ['Pendiente de activación', 'text-bg-warning'],
+            'Habilitada' => ['Habilitado', 'text-bg-success'],
+            'BloqueadaTemporalmente' => ['Bloqueado temporalmente', 'text-bg-danger'],
+            'Desactivada' => ['Desactivado', 'text-bg-secondary'],
+        ][$estado] ?? [$estado, 'text-bg-light'];
+
+        return '<span class="badge rounded-pill ' . $clase . '">' . esc($texto) . '</span>';
+    }
+}
