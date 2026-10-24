@@ -87,6 +87,14 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertArrayHasKey(int|string $clave, array $a, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!array_key_exists($clave, $a)) {
+                $this->fail(($msg ? "$msg: " : '') . 'falta la clave ' . var_export($clave, true));
+            }
+        }
+
         public function assertNull(mixed $v, string $msg = ''): void
         {
             $this->assertions++;

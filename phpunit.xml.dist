@@ -11,6 +11,10 @@
         <testsuite name="Finanzas">
             <directory>./tests/unit/Finanzas</directory>
         </testsuite>
+        <!-- Lógica pura de todas las áreas (finanzas, seguridad, validación): no necesita la base -->
+        <testsuite name="Unitarias">
+            <directory>./tests/unit</directory>
+        </testsuite>
         <testsuite name="App">
             <directory>./tests</directory>
             <exclude>./tests/_local</exclude>

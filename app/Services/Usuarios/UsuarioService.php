@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Usuarios;
 
 use App\Exceptions\ReglaNegocioException;
+use App\Exceptions\ValidacionException;
+use App\Libraries\Validacion\Campos;
+use App\Libraries\Validacion\ValidadorUsuarioInterno;
 use App\Libraries\Seguridad\ReglasUsuarios;
 use App\Services\Acceso\AutorizacionService;
 use App\Services\BaseService;
@@ -19,7 +22,7 @@ use App\Services\Comunes\ComunicacionService;
  */
 class UsuarioService extends BaseService
 {
-    public const TIPOS_DOCUMENTO = ['DNI', 'LC', 'LE', 'Pasaporte'];
+    public const TIPOS_DOCUMENTO = Campos::TIPOS_DOCUMENTO;
     public const ESTADOS = [
         'PendienteActivacion' => 'Pendiente de activación',
         'Habilitada' => 'Habilitado',
@@ -107,8 +110,8 @@ class UsuarioService extends BaseService
      */
     public function registrar(array $datos): int
     {
-        $d = $this->normalizar($datos);
-        $this->validarDatos($d, true);
+        $d = ValidadorUsuarioInterno::normalizar($datos);
+        $this->exigirValidos(ValidadorUsuarioInterno::validar($d, true));
         [$id, $comunicacionId] = $this->transaccion(function () use ($d): array {
             $this->verificarUnicidad($d['correo'], $d['tipo_documento'], $d['nro_documento'], null);
             $rolId = $this->rolId($d['rol']);
@@ -147,8 +150,8 @@ class UsuarioService extends BaseService
      */
     public function modificar(int $id, int $versionLeida, array $datos): bool
     {
-        $d = $this->normalizar($datos);
-        $this->validarDatos($d, false);
+        $d = ValidadorUsuarioInterno::normalizar($datos);
+        $this->exigirValidos(ValidadorUsuarioInterno::validar($d, false));
         $comunicacionId = $this->transaccion(function () use ($id, $versionLeida, $d): ?int {
             $u = $this->obtenerBloqueado($id);
             if ($u['estado'] === 'Desactivada') {
@@ -300,7 +303,7 @@ class UsuarioService extends BaseService
                 return false;
             }
             if ($rechazos !== []) {
-                throw new ReglaNegocioException(implode(' ', $rechazos), 'RN-05');
+                throw new ValidacionException(['rol' => implode(' ', $rechazos)], 'RN-05');
             }
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, ['actualizado_en' => $this->ahoraUtc()]);
             $this->db->query('UPDATE dbo.cuentas_acceso SET version_seguridad = version_seguridad + 1 WHERE id = ?', [$id]);
@@ -381,7 +384,7 @@ class UsuarioService extends BaseService
                 $b->where('id !=', $excluirId);
             }
             if ($b->countAllResults() > 0) {
-                $errores[] = 'El correo electrónico ya está registrado para otro usuario.';
+                $errores['correo'] = 'El correo electrónico ya está registrado para otro usuario.';
             }
         }
         if ($tipoDoc !== null && $nroDoc !== null) {
@@ -390,75 +393,30 @@ class UsuarioService extends BaseService
                 $b->where('id !=', $excluirId);
             }
             if ($b->countAllResults() > 0) {
-                $errores[] = 'El documento ya está registrado para otro usuario.';
+                $errores['nro_documento'] = 'El documento ya está registrado para otro usuario.';
             }
         }
         if ($errores !== []) {
-            throw new ReglaNegocioException(implode(' ', $errores), 'RN-08');
+            throw new ValidacionException($errores, 'RN-08');
         }
     }
 
-    /**
-     * @param array<string, mixed> $datos
-     * @return array{nombre: string, apellido: string, correo: string, tipo_documento: string, nro_documento: string, rol: string}
-     */
-    private function normalizar(array $datos): array
+    /** @param array<string, string> $errores */
+    private function exigirValidos(array $errores): void
     {
-        $limpiar = static fn ($v): string => trim(preg_replace('/\s+/u', ' ', (string) ($v ?? '')) ?? '');
-
-        return [
-            'nombre' => $limpiar($datos['nombre'] ?? ''),
-            'apellido' => $limpiar($datos['apellido'] ?? ''),
-            'correo' => mb_strtolower($limpiar($datos['correo'] ?? '')),
-            'tipo_documento' => $limpiar($datos['tipo_documento'] ?? ''),
-            'nro_documento' => strtoupper(str_replace(['.', ' ', '-'], '', $limpiar($datos['nro_documento'] ?? ''))),
-            'rol' => $limpiar($datos['rol'] ?? ''),
-        ];
-    }
-
-    /** @param array<string, string> $d */
-    private function validarDatos(array $d, bool $conRol): void
-    {
-        $faltan = [];
-        foreach (['nombre' => 'nombre', 'apellido' => 'apellido', 'correo' => 'correo electrónico', 'tipo_documento' => 'tipo de documento', 'nro_documento' => 'número de documento'] as $c => $t) {
-            if ($d[$c] === '') {
-                $faltan[] = $t;
-            }
-        }
-        if ($conRol && $d['rol'] === '') {
-            $faltan[] = 'rol';
-        }
-        $errores = $faltan === [] ? [] : ['Complete: ' . implode(', ', $faltan) . '.'];
-        if ($d['correo'] !== '' && (filter_var($d['correo'], FILTER_VALIDATE_EMAIL) === false || mb_strlen($d['correo']) > 254)) {
-            $errores[] = 'El correo electrónico no es válido.';
-        }
-        if ($d['tipo_documento'] !== '' && !in_array($d['tipo_documento'], self::TIPOS_DOCUMENTO, true)) {
-            $errores[] = 'Seleccione un tipo de documento válido.';
-        }
-        if ($d['nro_documento'] !== '') {
-            $valido = $d['tipo_documento'] === 'Pasaporte' ? preg_match('/^[A-Z0-9]{5,15}$/', $d['nro_documento']) : preg_match('/^\d{6,9}$/', $d['nro_documento']);
-            if ($valido !== 1) {
-                $errores[] = 'El número de documento no es válido.';
-            }
-        }
-        if (mb_strlen($d['nombre']) > 80 || mb_strlen($d['apellido']) > 80) {
-            $errores[] = 'El nombre y el apellido admiten hasta 80 caracteres.';
-        }
-        if ($conRol && $d['rol'] !== '' && !in_array($d['rol'], ReglasUsuarios::ROLES, true)) {
-            $errores[] = 'Seleccione un rol válido.';
-        }
         if ($errores !== []) {
-            throw new ReglaNegocioException(implode(' ', $errores));
+            throw new ValidacionException($errores);
         }
     }
 
     private function exigirMotivo(string $motivo): string
     {
-        $motivo = trim($motivo);
-        if (mb_strlen($motivo) < 5) {
-            throw new ReglaNegocioException('Indique el motivo de la operación.');
+        $motivo = Campos::texto($motivo);
+        $error = Campos::motivo($motivo);
+        if ($error !== null) {
+            throw new ValidacionException(['motivo' => $error]);
         }
 
-        return mb_substr($motivo, 0, 1000);
+        return $motivo;
     }
 }

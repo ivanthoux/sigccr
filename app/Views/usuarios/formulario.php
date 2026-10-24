@@ -25,28 +25,33 @@ $this->section('contenido');
     <div class="row g-3">
         <div class="col-md-6">
             <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" required maxlength="80" autocomplete="off" value="<?= esc($v('nombre'), 'attr') ?>">
+            <input type="text" class="form-control<?= campo_invalido('nombre') ?>" id="nombre" name="nombre" required maxlength="80" autocomplete="off" value="<?= esc($v('nombre'), 'attr') ?>">
+            <?= error_campo('nombre') ?>
         </div>
         <div class="col-md-6">
             <label for="apellido" class="form-label">Apellido</label>
-            <input type="text" class="form-control" id="apellido" name="apellido" required maxlength="80" autocomplete="off" value="<?= esc($v('apellido'), 'attr') ?>">
+            <input type="text" class="form-control<?= campo_invalido('apellido') ?>" id="apellido" name="apellido" required maxlength="80" autocomplete="off" value="<?= esc($v('apellido'), 'attr') ?>">
+            <?= error_campo('apellido') ?>
         </div>
         <div class="col-md-4">
             <label for="tipo_documento" class="form-label">Tipo de documento</label>
-            <select class="form-select" id="tipo_documento" name="tipo_documento" required>
+            <select class="form-select<?= campo_invalido('tipo_documento') ?>" id="tipo_documento" name="tipo_documento" required>
                 <?php foreach (UsuarioService::TIPOS_DOCUMENTO as $t): ?>
                     <option value="<?= $t ?>"<?= $v('tipo_documento') === $t ? ' selected' : '' ?>><?= $t ?></option>
                 <?php endforeach ?>
             </select>
+            <?= error_campo('tipo_documento') ?>
         </div>
         <div class="col-md-8">
             <label for="nro_documento" class="form-label">Número de documento</label>
-            <input type="text" class="form-control" id="nro_documento" name="nro_documento" required maxlength="15" inputmode="numeric" autocomplete="off" value="<?= esc($v('nro_documento'), 'attr') ?>" aria-describedby="ayudaDocumento">
+            <input type="text" class="form-control<?= campo_invalido('nro_documento') ?>" id="nro_documento" name="nro_documento" required maxlength="15" inputmode="numeric" autocomplete="off" value="<?= esc($v('nro_documento'), 'attr') ?>" aria-describedby="ayudaDocumento">
+            <?= error_campo('nro_documento') ?>
             <div class="form-text" id="ayudaDocumento">Sin puntos ni espacios.</div>
         </div>
         <div class="col-12">
             <label for="correo" class="form-label">Correo electrónico</label>
-            <input type="email" class="form-control" id="correo" name="correo" required maxlength="254" autocomplete="off" value="<?= esc($v('correo'), 'attr') ?>" aria-describedby="ayudaCorreo">
+            <input type="email" class="form-control<?= campo_invalido('correo') ?>" id="correo" name="correo" required maxlength="254" autocomplete="off" value="<?= esc($v('correo'), 'attr') ?>" aria-describedby="ayudaCorreo">
+            <?= error_campo('correo') ?>
             <div class="form-text" id="ayudaCorreo"><?= $nuevo
                 ? 'Se usa para iniciar sesión y para recuperar el acceso.'
                 : 'Si lo cambia, enviamos un enlace a la dirección nueva para confirmarla; hasta entonces sigue vigente la actual.' ?></div>
@@ -63,6 +68,7 @@ $this->section('contenido');
                             </div>
                         <?php endforeach ?>
                     </div>
+                    <?= error_campo('rol') ?>
                 </fieldset>
             </div>
         <?php else: ?>

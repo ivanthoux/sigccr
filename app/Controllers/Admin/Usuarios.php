@@ -59,7 +59,7 @@ class Usuarios extends BaseController
         try {
             $id = $this->servicio->registrar((array) $this->request->getPost(['nombre', 'apellido', 'correo', 'tipo_documento', 'nro_documento', 'rol']));
         } catch (ReglaNegocioException $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return $this->volverConError($e);
         }
 
         return redirect()->to(site_url("admin/usuarios/{$id}"))
@@ -84,7 +84,7 @@ class Usuarios extends BaseController
         try {
             $verificacion = $this->servicio->modificar($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(['nombre', 'apellido', 'correo', 'tipo_documento', 'nro_documento']));
         } catch (ReglaNegocioException $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return $this->volverConError($e);
         }
         $mensaje = 'Datos actualizados.' . ($verificacion ? ' Enviamos un enlace al correo nuevo para confirmarlo; hasta entonces sigue vigente el anterior.' : '');
 
@@ -122,7 +122,7 @@ class Usuarios extends BaseController
         try {
             $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return $this->volverConError($e);
         }
 
         return redirect()->to(site_url("admin/usuarios/{$id}"))->with('exito', 'Usuario desactivado. Sus sesiones abiertas se cerraron.');
@@ -134,7 +134,7 @@ class Usuarios extends BaseController
         try {
             $estado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
         } catch (ReglaNegocioException $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return $this->volverConError($e);
         }
         $mensaje = $estado === 'Habilitada' ? 'Usuario reactivado: ya puede iniciar sesión.' : 'Usuario reactivado. Todavía no definió su contraseña: use "Restablecer credenciales" para enviarle el enlace.';
 
@@ -147,7 +147,7 @@ class Usuarios extends BaseController
         try {
             $cambio = $this->servicio->asignarRol($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('rol'), (string) $this->request->getPost('motivo'));
         } catch (ReglaNegocioException $e) {
-            return redirect()->back()->withInput()->with('error', $e->getMessage());
+            return $this->volverConError($e);
         }
         if (!$cambio) {
             return redirect()->to(site_url("admin/usuarios/{$id}"))->with('aviso', 'El usuario ya tiene ese rol: no hay cambios por aplicar.');

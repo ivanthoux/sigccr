@@ -98,8 +98,8 @@ else echo "No hay un Administrador registrado ($admins)" | tee -a "$LOG"; falla 
 titulo "8. Verificación del entorno (R8)"
 paso "Verificación del entorno" no php spark sigccr:verificar-entorno
 
-titulo "9. Pruebas del motor financiero (RNF-15)"
-paso "Pruebas del motor financiero" no composer test:finanzas
+titulo "9. Pruebas unitarias (RNF-15)"
+paso "Pruebas unitarias (finanzas, seguridad, validación)" no composer test:unitarias
 
 titulo "10. Cobertura de líneas del motor financiero (mínimo 90 %, RNF-15)"
 if paso "Ejecución de la cobertura" no composer cobertura; then
