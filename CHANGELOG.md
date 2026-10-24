@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.1.0] - 2026-10-24
+
+Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del documento).
+
 ### Agregado
 - Arquitectura ejecutable (actividad 6): contenedores web, app, scheduler y db con Docker Compose.
 - Esquema de la base de datos: 70 tablas en nueve migraciones, una por subsistema, y datos semilla.
@@ -24,3 +28,6 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Imagen de PHP con pcov (cobertura), pcntl y `safe.directory` para git.
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
+
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.1.0...develop
+[0.1.0]: https://github.com/ivanthoux/sigccr/releases/tag/v0.1.0
