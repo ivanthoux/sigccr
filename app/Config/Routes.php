@@ -48,6 +48,23 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/rol', 'Admin\Usuarios::asignarRol/$1', ['filter' => 'permiso:usuarios.asignar-rol']);
         });
 
+        // SS-02 Clientes (CU-11 a CU-15, CU-54)
+        $routes->group('clientes', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
+            $routes->get('nuevo', 'Admin\Clientes::nuevo', ['as' => 'clientes.registrar', 'filter' => 'permiso:clientes.registrar']);
+            $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
+            $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->post('(:num)/documentos', 'Admin\Clientes::agregarDocumentos/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->get('(:num)/editar', 'Admin\Clientes::editar/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->post('(:num)/editar', 'Admin\Clientes::actualizar/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->get('(:num)/desactivar', 'Admin\Clientes::confirmar/$1/desactivar', ['filter' => 'permiso:clientes.desactivar']);
+            $routes->post('(:num)/desactivar', 'Admin\Clientes::desactivar/$1', ['filter' => 'permiso:clientes.desactivar']);
+            $routes->get('(:num)/reactivar', 'Admin\Clientes::confirmar/$1/reactivar', ['filter' => 'permiso:clientes.reactivar']);
+            $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
+        });
+
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
         // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
     });
@@ -55,7 +72,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
 
 // Portal de autogestión (iteración 4)
 $routes->group('portal', static function (RouteCollection $routes): void {
-    // $routes->get('login', 'Portal\Acceso::login');
+    // Verificación del correo del cliente desde el enlace (sin sesión)
+    $routes->get('verificar-correo/(:segment)', 'Portal\Verificacion::mostrar/$1');
+    $routes->post('verificar-correo/(:segment)', 'Portal\Verificacion::confirmar/$1');
+    // $routes->get('login', 'Portal\Acceso::login');   // iteración 4
 });
 
 // Notificaciones de servicios externos (sin sesión ni CSRF; se validan por firma, RNF-08)

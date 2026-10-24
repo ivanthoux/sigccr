@@ -87,6 +87,14 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertMatchesRegularExpression(string $patron, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (preg_match($patron, $texto) !== 1) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no coincide con {$patron}");
+            }
+        }
+
         public function assertArrayHasKey(int|string $clave, array $a, string $msg = ''): void
         {
             $this->assertions++;
