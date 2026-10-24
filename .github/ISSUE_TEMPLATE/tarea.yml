@@ -1,0 +1,20 @@
+name: Tarea
+description: Actividad del plan de iteraciones (caso de uso, documentación o configuración)
+labels: ["tarea"]
+body:
+  - type: input
+    id: referencia
+    attributes:
+      label: Casos de uso y reglas
+      placeholder: "CU-33; RN-29, RN-31"
+  - type: textarea
+    id: descripcion
+    attributes:
+      label: Descripción
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Criterios de aceptación
+      placeholder: "- El cobro se registra con su comprobante\n- ..."

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  pruebas:
+    name: Motor financiero y calidad de código
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP 8.3 con bcmath e intl
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Estructura base de CodeIgniter (mientras no esté versionada)
+        run: |
+          if [ ! -f spark ]; then
+            composer create-project codeigniter4/appstarter /tmp/ci4 "^4.6" --no-interaction --no-install
+            cp -rn /tmp/ci4/. .
+          fi
+
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
+
+      - name: Pruebas del motor financiero con cobertura (RNF-15, mínimo 90 %)
+        run: |
+          vendor/bin/phpunit --testsuite Finanzas --coverage-text --coverage-clover build/clover.xml
+          php -r '$x = simplexml_load_file("build/clover.xml"); $m = $x->project->metrics; $c = (int) $m["coveredstatements"]; $t = (int) $m["statements"]; $p = $t ? 100 * $c / $t : 0; printf("Cobertura de líneas: %.1f %%\n", $p); exit($p >= 90 ? 0 : 1);'
+
+      - name: Cálculo independiente de referencia (R3)
+        run: |
+          python3 tests/referencia/casos_referencia.py > /tmp/ref.json
+          python3 -c "import json,sys; a=json.load(open('/tmp/ref.json')); b=json.load(open('tests/referencia/resultados_referencia.json')); sys.exit(0 if a==b else 'Los resultados de referencia cambiaron')"
+
+      - name: PSR-12
+        run: vendor/bin/phpcs
+
+      - name: PHPStan
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+        continue-on-error: true   # se vuelve obligatorio cuando la estructura base esté versionada
