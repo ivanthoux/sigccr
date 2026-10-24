@@ -25,4 +25,8 @@ if [ ! -f .env ]; then
   php spark key:generate --force
   echo ">> Se creó .env a partir de env.sigccr.example: completar las contraseñas antes de migrar."
 fi
-echo ">> Listo. Siguiente paso: crear la base (README, paso 4)."
+# El contenedor corre como root: los archivos nuevos (vendor/, spark, app/, .env) se devuelven al dueño de la
+# carpeta del proyecto en WSL, para poder editarlos desde VS Code sin sudo.
+DUENO="$(stat -c '%u:%g' /var/www/html)"
+find /var/www/html -path /var/www/html/writable -prune -o ! -user "${DUENO%%:*}" -exec chown -h "$DUENO" {} +
+echo ">> Listo. Siguiente paso: docker compose up -d y docker compose exec app bash docker/inicializar.sh"

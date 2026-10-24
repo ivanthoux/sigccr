@@ -12,7 +12,7 @@ Stack: PHP 8.3 · CodeIgniter 4.6 · SQL Server 2022 · Bootstrap 5 · Docker (W
 |---|---|---|
 | `docker-compose.yml`, `docker/` | Contenedores web (Nginx), app (PHP-FPM), scheduler (cron) y db (SQL Server) | 4.4.5, RNF-04 |
 | `app/Libraries/Finanzas/` | Motor financiero: decimal BCMath, amortización francesa, calendario de cuotas, punitorios, TEA y CFTEA, capacidad de pago, imputación, cancelación anticipada, refinanciación, modelo de evaluación, horas hábiles | RN-29, RN-34 a RN-35, RN-49 a RN-53, RN-63, RN-67 a RN-70, RNF-15 |
-| `tests/unit/Finanzas/` | 51 pruebas con los casos de referencia | RNF-15 |
+| `tests/unit/Finanzas/` | 52 pruebas con los casos de referencia | RNF-15 |
 | `tests/referencia/` | Cálculo independiente en Python de los valores esperados y catálogo de casos | Plan preventivo de R3 |
 | `app/Database/Migrations/`, `app/Database/Sql/` | Una migración por subsistema (70 tablas), generadas desde la especificación del modelo de datos | 4.3 |
 | `app/Database/Seeds/` | Roles, tipos de documentación, parámetros iniciales y Administrador inicial | 3.5.1 |
@@ -27,7 +27,7 @@ Requisitos: Docker Desktop con integración WSL 2, y el repositorio clonado **de
 
 ```bash
 # 1. Variables de los contenedores y certificado de desarrollo
-cp .env.docker.example .env.docker          # editar MSSQL_SA_PASSWORD
+cp .env.docker.example .env.docker          # editar MSSQL_SA_PASSWORD (sin $, comillas ni espacios)
 sh docker/nginx/generar-certificado.sh
 
 # 2. Construir la imagen de PHP (incluye msodbcsql18, sqlsrv, pdo_sqlsrv y bcmath)
@@ -35,24 +35,32 @@ docker compose build
 
 # 3. Estructura de CodeIgniter 4, dependencias y .env
 docker compose run --rm --no-deps app bash docker/bootstrap.sh
-#    editar .env: contraseñas de sigccr_app y sigccr_owner
+#    editar .env: database.default.password (sigccr_app) y database.migraciones.password (sigccr_owner)
 
-# 4. Levantar los servicios y crear la base con sus inicios de sesión
+# 4. Levantar los servicios
 docker compose up -d
-docker compose exec app bash -c 'sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -i docker/db/crear_base.sql \
-    -v OWNER_PASSWORD="Cambiar.Owner.2026" APP_PASSWORD="Cambiar.App.2026"'
-#    (usar las mismas contraseñas que en .env)
+docker compose ps                           # esperar a que db figure como healthy
 
-# 5. Esquema y datos semilla (con el propietario del esquema)
+# 5. Inicializar y verificar todo en un paso: base e inicios de sesión, migraciones, datos semilla,
+#    Administrador inicial (pide sus datos), verificar-entorno, pruebas del motor financiero y /estado
+docker compose exec app bash docker/inicializar.sh
+```
+
+`inicializar.sh` toma las contraseñas del `.env` y de `.env.docker`, se puede repetir sin efectos adversos y deja su salida en `inicializar.log`. Los pasos sueltos, por si hace falta repetir alguno:
+
+```bash
 docker compose exec app php spark migrate --all -g migraciones
 docker compose exec app php spark db:seed SigccrSeeder -g migraciones
 docker compose exec app php spark db:seed AdministradorInicialSeeder -g migraciones
-
-# 6. Verificación de la arquitectura ejecutable
 docker compose exec app php spark sigccr:verificar-entorno
 docker compose exec app composer test:finanzas
 curl -k https://localhost/estado
 ```
+
+**Problemas frecuentes**
+
+- *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.
+- *Cache unable to write to writable/cache*: el volumen de `writable/` se recreó vacío. Desde esta versión el contenedor lo prepara al arrancar: `docker compose up -d --force-recreate app scheduler`.
 
 Para producción se usan las mismas imágenes; cambian `.env.docker` (`MSSQL_PID=Express`), `.env` (`CI_ENVIRONMENT = production`, credenciales y adaptadores reales) y el certificado de Nginx (RNF-04).
 

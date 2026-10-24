@@ -25,6 +25,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    entrypoint: ["bash", "/var/www/html/docker/php/entrypoint.sh"]   # prepara writable/ en cada arranque
+    command: ["php-fpm"]
     volumes:
       - ./:/var/www/html
       - storage:/var/www/html/writable
@@ -39,6 +41,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    entrypoint: ["bash", "/var/www/html/docker/php/entrypoint.sh"]
     command: ["cron", "-f"]
     volumes:
       - ./:/var/www/html
