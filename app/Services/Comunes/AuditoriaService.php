@@ -25,13 +25,16 @@ class AuditoriaService extends BaseService
         ?string $motivo = null,
         ?array $detalle = null,
         ?string $proceso = null,
+        ?int $cuentaAccesoId = null,
+        ?string $responsable = null,
     ): void {
+        // Sin sesión (inicio de sesión, recuperación) el servicio indica la cuenta y el responsable
         $sesion = session_status() === PHP_SESSION_ACTIVE ? session() : null;
         $cuenta = $sesion?->get('cuenta');
         $this->db->table('registros_auditoria')->insert([
             'fecha_hora' => $this->ahoraUtc(),
-            'cuenta_acceso_id' => $cuenta['id'] ?? null,
-            'responsable' => $proceso !== null ? "Proceso {$proceso}" : ($cuenta['nombre'] ?? 'Sistema'),
+            'cuenta_acceso_id' => $cuentaAccesoId ?? $cuenta['id'] ?? null,
+            'responsable' => $proceso !== null ? "Proceso {$proceso}" : ($responsable ?? $cuenta['nombre'] ?? 'Sistema'),
             'proceso' => $proceso,
             'accion' => $accion,
             'objeto_tipo' => $objetoTipo,

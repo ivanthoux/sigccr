@@ -84,6 +84,6 @@ class Filters extends BaseFilters
      */
     public array $filters = [
         'mantenimiento'  => ['before' => ['portal', 'portal/*']],
-        'limiteintentos' => ['before' => ['admin/login', 'portal/login']],
+        'limiteintentos' => ['before' => ['admin/login', 'admin/recuperar', 'portal/login', 'portal/recuperar']],
     ];
 }
