@@ -11,3 +11,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Componentes base: servicio transaccional, auditoría, alertas, parámetros versionados, comando base de procesos programados, filtros de seguridad y adaptadores con simuladores.
 - Comando `sigccr:verificar-entorno` para el riesgo R8.
 - Registro de decisiones D-01 a D-08.
+- `docker/inicializar.sh`: inicializa y verifica la arquitectura ejecutable en un solo paso.
+
+### Corregido
+- El contenedor prepara `writable/` en cada arranque (el volumen quedaba vacío tras `docker compose down -v`).
+- `bootstrap.sh` devuelve los archivos generados al usuario de WSL.
+- `crear_base.sql` actualiza la contraseña de los inicios de sesión si ya existen.
+- La contraseña del Administrador inicial no se muestra al escribirla y se pide dos veces.

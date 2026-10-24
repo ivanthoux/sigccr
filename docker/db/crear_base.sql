@@ -1,5 +1,5 @@
 /* Creación de la base y de los inicios de sesión del SIG-CCR.
-   Se ejecuta una sola vez, con el usuario sa, desde el contenedor app:
+   Lo ejecuta docker/inicializar.sh (se puede repetir sin efectos adversos), con el usuario sa, desde el contenedor app:
      sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -i docker/db/crear_base.sql \
             -v OWNER_PASSWORD="..." APP_PASSWORD="..."
    - sigccr_owner: propietario del esquema; lo usan las migraciones (php spark migrate -g migraciones).
@@ -10,10 +10,15 @@ GO
 ALTER DATABASE sigccr SET READ_COMMITTED_SNAPSHOT ON WITH ROLLBACK IMMEDIATE;
 ALTER DATABASE sigccr SET ALLOW_SNAPSHOT_ISOLATION ON;
 GO
+-- Si los inicios de sesión ya existen se les actualiza la contraseña, para que siempre coincidan con el .env.
 IF SUSER_ID('sigccr_owner') IS NULL
     CREATE LOGIN sigccr_owner WITH PASSWORD = '$(OWNER_PASSWORD)', CHECK_POLICY = ON, DEFAULT_DATABASE = sigccr;
+ELSE
+    ALTER LOGIN sigccr_owner WITH PASSWORD = '$(OWNER_PASSWORD)';
 IF SUSER_ID('sigccr_app') IS NULL
     CREATE LOGIN sigccr_app WITH PASSWORD = '$(APP_PASSWORD)', CHECK_POLICY = ON, DEFAULT_DATABASE = sigccr;
+ELSE
+    ALTER LOGIN sigccr_app WITH PASSWORD = '$(APP_PASSWORD)';
 GO
 USE sigccr;
 GO
