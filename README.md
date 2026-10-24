@@ -1,5 +1,7 @@
 # SIG-CCR · Arquitectura ejecutable
 
+[![CI](https://github.com/ivanthoux/sigccr/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/ivanthoux/sigccr/actions/workflows/ci.yml)
+
 Sistema Integral de Gestión de Créditos, Cobranzas y Refinanciación. Este repositorio contiene la **arquitectura ejecutable** de la actividad 6 del cronograma (hito de fin de Elaboración, 27/10/2026): entorno Docker, esquema de la base de datos, componentes base y motor financiero con sus pruebas.
 
 Stack: PHP 8.3 · CodeIgniter 4.6 · SQL Server 2022 · Bootstrap 5 · Docker (WSL 2 en desarrollo, Docker Engine en producción).
@@ -77,6 +79,13 @@ php tests/_local/run.php               # ejecutor mínimo sin Composer (usa un r
 ## Conexión cifrada con SQL Server
 
 El controlador ODBC 18 exige un certificado de confianza para cifrar la conexión. En desarrollo la conexión viaja por la red interna de Docker sin cifrar (`database.default.encrypt = false`). Para cifrarla: configurar un certificado TLS en SQL Server (`mssql-conf set network.tlscert/tlskey`), agregar su autoridad a la imagen `app` (`/usr/local/share/ca-certificates` + `update-ca-certificates`) y poner `encrypt = true`.
+
+## Seguimiento del proyecto
+
+- Tareas: [issues](https://github.com/ivanthoux/sigccr/issues), agrupadas en un [hito por fase](https://github.com/ivanthoux/sigccr/milestones) del cronograma (2.2).
+- Flujo de trabajo, ramas y versiones: [CONTRIBUTING.md](CONTRIBUTING.md).
+- Decisiones de diseño: [docs/decisiones.md](docs/decisiones.md).
+- Cambios por versión: [CHANGELOG.md](CHANGELOG.md).
 
 ## Convenciones
 
