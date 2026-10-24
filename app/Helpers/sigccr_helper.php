@@ -104,3 +104,21 @@ if (!function_exists('etiqueta_estado_cuenta')) {
         return '<span class="badge rounded-pill ' . $clase . '">' . esc($texto) . '</span>';
     }
 }
+
+if (!function_exists('campo_invalido')) {
+    /** Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true' se agrega a class="...". */
+    function campo_invalido(string $campo): string
+    {
+        return isset((session('errores') ?? [])[$campo]) ? ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') : '';
+    }
+}
+
+if (!function_exists('error_campo')) {
+    /** Mensaje de error de un campo, debajo del control (Bootstrap invalid-feedback). */
+    function error_campo(string $campo): string
+    {
+        $mensaje = (session('errores') ?? [])[$campo] ?? null;
+
+        return $mensaje === null ? '' : '<div class="invalid-feedback d-block" id="error-' . esc($campo, 'attr') . '">' . esc($mensaje) . '</div>';
+    }
+}

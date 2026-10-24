@@ -29,10 +29,12 @@ $this->section('contenido');
                     </div>
                 <?php endforeach ?>
             </div>
+            <?= error_campo('rol') ?>
         </fieldset>
         <div class="mb-3">
             <label for="motivo" class="form-label">Motivo</label>
-            <textarea class="form-control" id="motivo" name="motivo" rows="3" required minlength="5" maxlength="1000"><?= esc(old('motivo')) ?></textarea>
+            <textarea class="form-control<?= campo_invalido('motivo') ?>" id="motivo" name="motivo" rows="3" required minlength="5" maxlength="1000"><?= esc(old('motivo')) ?></textarea>
+            <?= error_campo('motivo') ?>
             <div class="form-text">Queda registrado en la auditoría junto con el rol anterior y el nuevo.</div>
         </div>
         <div class="d-flex gap-2 justify-content-end">

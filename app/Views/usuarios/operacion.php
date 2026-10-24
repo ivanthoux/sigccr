@@ -46,7 +46,8 @@ $this->section('contenido');
         <?php if ($conMotivo): ?>
             <div class="mb-3">
                 <label for="motivo" class="form-label">Motivo</label>
-                <textarea class="form-control" id="motivo" name="motivo" rows="3" required minlength="5" maxlength="1000"><?= esc(old('motivo')) ?></textarea>
+                <textarea class="form-control<?= campo_invalido('motivo') ?>" id="motivo" name="motivo" rows="3" required minlength="5" maxlength="1000"><?= esc(old('motivo')) ?></textarea>
+                <?= error_campo('motivo') ?>
                 <div class="form-text">Queda registrado en la auditoría.</div>
             </div>
         <?php endif ?>
