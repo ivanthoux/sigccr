@@ -26,9 +26,20 @@ class AdministradorInicialSeeder extends Seeder
         $nombre = CLI::prompt('Nombre', null, 'required');
         $apellido = CLI::prompt('Apellido', null, 'required');
         $documento = CLI::prompt('Número de DNI', null, 'required|numeric');
-        do {
-            $clave = CLI::prompt('Contraseña (15 a 128 caracteres)');
-        } while (mb_strlen($clave) < 15 || mb_strlen($clave) > 128);
+        while (true) {
+            $clave = $this->leerOculto('Contraseña (15 a 128 caracteres)');
+            if (mb_strlen($clave) < 15 || mb_strlen($clave) > 128) {
+                CLI::write('La contraseña debe tener entre 15 y 128 caracteres (RN-62).', 'red');
+
+                continue;
+            }
+            if ($this->leerOculto('Repetir la contraseña') !== $clave) {
+                CLI::write('Las contraseñas no coinciden.', 'red');
+
+                continue;
+            }
+            break;
+        }
 
         $ahora = Time::now('UTC')->format('Y-m-d H:i:s.vP');
         $rolId = (int) $this->db->table('roles')->select('id')->where('codigo', 'Administrador')->get()->getRowArray()['id'];
@@ -48,5 +59,24 @@ class AdministradorInicialSeeder extends Seeder
         ]);
         $this->db->transComplete();
         CLI::write("Administrador creado (cuenta #{$id}).", 'green');
+    }
+
+    /**
+     * Lee una línea sin mostrarla en pantalla (stty -echo) cuando la entrada es una terminal.
+     */
+    private function leerOculto(string $mensaje): string
+    {
+        CLI::print($mensaje . ': ');
+        $terminal = function_exists('posix_isatty') && posix_isatty(STDIN);
+        if ($terminal) {
+            shell_exec('stty -echo');
+        }
+        $valor = rtrim((string) fgets(STDIN), "\r\n");
+        if ($terminal) {
+            shell_exec('stty echo');
+            CLI::newLine();
+        }
+
+        return $valor;
     }
 }

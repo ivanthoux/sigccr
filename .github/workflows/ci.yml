@@ -32,7 +32,7 @@ jobs:
 
       - name: Pruebas del motor financiero con cobertura (RNF-15, mínimo 90 %)
         run: |
-          vendor/bin/phpunit --testsuite Finanzas --coverage-text --coverage-clover build/clover.xml
+          vendor/bin/phpunit -c phpunit.xml.dist --testsuite Finanzas --coverage-text --coverage-clover build/clover.xml
           php -r '$x = simplexml_load_file("build/clover.xml"); $m = $x->project->metrics; $c = (int) $m["coveredstatements"]; $t = (int) $m["statements"]; $p = $t ? 100 * $c / $t : 0; printf("Cobertura de líneas: %.1f %%\n", $p); exit($p >= 90 ? 0 : 1);'
 
       - name: Cálculo independiente de referencia (R3)

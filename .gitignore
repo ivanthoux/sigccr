@@ -8,3 +8,4 @@ docker/nginx/certs/*.crt
 docker-compose.override.yml
 build/
 .phpunit.cache/
+inicializar.log
