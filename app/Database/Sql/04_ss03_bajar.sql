@@ -1,0 +1,9 @@
+ALTER TABLE dbo.requisitos_documentales DROP CONSTRAINT FK_requisitos_documentales_version_condiciones_id;
+ALTER TABLE dbo.requisitos_documentales DROP CONSTRAINT FK_requisitos_documentales_tipo_documentacion_id;
+ALTER TABLE dbo.condiciones_categorias DROP CONSTRAINT FK_condiciones_categorias_version_condiciones_id;
+ALTER TABLE dbo.versiones_condiciones DROP CONSTRAINT FK_versiones_condiciones_linea_credito_id;
+GO
+DROP TABLE dbo.requisitos_documentales;
+DROP TABLE dbo.condiciones_categorias;
+DROP TABLE dbo.versiones_condiciones;
+DROP TABLE dbo.lineas_credito;
