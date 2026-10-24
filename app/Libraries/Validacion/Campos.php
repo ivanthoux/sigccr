@@ -120,4 +120,63 @@ final class Campos
 
         return $largo > 1000 ? 'El motivo admite hasta 1000 caracteres.' : null;
     }
+
+    /**
+     * Importe ingresado con formato local ("1.234.567,89", "1234567,89" o "1234567.89") normalizado a "1234567.89".
+     * Devuelve null si no es un importe válido con hasta dos decimales.
+     */
+    public static function importe(mixed $valor): ?string
+    {
+        $t = str_replace([' ', '$'], '', self::texto($valor));
+        if ($t === '') {
+            return null;
+        }
+        if (preg_match('/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/', $t) === 1 || str_contains($t, ',')) {
+            $t = str_replace(['.', ','], ['', '.'], $t);
+        }
+        if (preg_match('/^\d{1,17}(\.\d{1,2})?$/', $t) !== 1) {
+            return null;
+        }
+        [$entero, $dec] = array_pad(explode('.', $t), 2, '');
+
+        return ltrim($entero, '0') === '' ? '0.' . str_pad($dec, 2, '0') : ltrim($entero, '0') . '.' . str_pad($dec, 2, '0');
+    }
+
+    /** Fecha dd/mm/aaaa o aaaa-mm-dd normalizada a aaaa-mm-dd; null si no es una fecha válida. */
+    public static function fecha(mixed $valor): ?string
+    {
+        $t = self::texto($valor);
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $t, $m) === 1) {
+            [$a, $mes, $d] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        } elseif (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $t, $m) === 1) {
+            [$d, $mes, $a] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        } else {
+            return null;
+        }
+
+        return checkdate($mes, $d, $a) && $a >= 1900 ? sprintf('%04d-%02d-%02d', $a, $mes, $d) : null;
+    }
+
+    /** Años cumplidos entre dos fechas aaaa-mm-dd. */
+    public static function edad(string $nacimiento, string $hoy): int
+    {
+        return (new \DateTimeImmutable($nacimiento))->diff(new \DateTimeImmutable($hoy))->y;
+    }
+
+    /** Teléfono informativo (RN-08): dígitos, espacios, +, guiones y paréntesis; entre 6 y 30 caracteres. */
+    public static function telefono(string $valor): ?string
+    {
+        if ($valor === '') {
+            return null;
+        }
+
+        return preg_match('/^\+?[\d\s()\-]{6,30}$/', $valor) === 1 && preg_match_all('/\d/', $valor) >= 6
+            ? null : 'Ingrese un teléfono válido (solo números, espacios, guiones o +).';
+    }
+
+    /** CUIL coherente con el DNI: los ocho dígitos centrales son el documento. */
+    public static function cuilCorrespondeADni(string $cuil, string $dni): bool
+    {
+        return strlen($cuil) === 11 && substr($cuil, 2, 8) === str_pad($dni, 8, '0', STR_PAD_LEFT);
+    }
 }

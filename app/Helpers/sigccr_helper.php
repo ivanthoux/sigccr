@@ -122,3 +122,11 @@ if (!function_exists('error_campo')) {
         return $mensaje === null ? '' : '<div class="invalid-feedback d-block" id="error-' . esc($campo, 'attr') . '">' . esc($mensaje) . '</div>';
     }
 }
+
+if (!function_exists('formato_cuit')) {
+    /** CUIT/CUIL con guiones: 20-12345678-6. */
+    function formato_cuit(?string $cuit): string
+    {
+        return $cuit === null || strlen($cuit) !== 11 ? (string) $cuit : substr($cuit, 0, 2) . '-' . substr($cuit, 2, 8) . '-' . substr($cuit, 10);
+    }
+}
