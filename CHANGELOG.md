@@ -11,6 +11,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Componentes base: servicio transaccional, auditoría, alertas, parámetros versionados, comando base de procesos programados, filtros de seguridad y adaptadores con simuladores.
 - Comando `sigccr:verificar-entorno` para el riesgo R8.
 - Registro de decisiones D-01 a D-08.
+- Planilla `tests/referencia/casos_referencia.xlsx`: verificación independiente con fórmulas de los 27 casos de referencia (68 valores).
 - `docker/inicializar.sh`: inicializa y verifica la arquitectura ejecutable en un solo paso.
 
 ### Corregido
