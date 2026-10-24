@@ -1,0 +1,82 @@
+# SIG-CCR - Arquitectura ejecutable (RNF-04, sección 4.4.5)
+# Mismas imágenes en desarrollo (Windows + WSL 2) y producción (Linux + Docker Engine);
+# las diferencias se limitan al archivo .env de CodeIgniter y a las variables de este compose.
+name: sigccr
+
+services:
+  web:
+    image: nginx:1.27-alpine
+    depends_on: [app]
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
+    networks: [sigccr_net]
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: sigccr/php:8.3
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./:/var/www/html
+      - storage:/var/www/html/writable
+    env_file: .env.docker               # MSSQL_SA_PASSWORD, solo para crear la base con sqlcmd
+    environment:
+      TZ: UTC                           # instantes en UTC; la zona de negocio la aplica la aplicación (3.5.1)
+    networks: [sigccr_net]
+    restart: unless-stopped
+
+  scheduler:
+    image: sigccr/php:8.3
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["cron", "-f"]
+    volumes:
+      - ./:/var/www/html
+      - storage:/var/www/html/writable
+      - backups:/var/opt/sigccr/backups
+      - ./docker/scheduler/crontab:/etc/cron.d/sigccr:ro
+    environment:
+      TZ: America/Argentina/Buenos_Aires   # cron dispara en hora local de negocio (RNF-10 f)
+    networks: [sigccr_net]
+    restart: unless-stopped
+
+  db:
+    # Fijar una versión acumulativa concreta (por ejemplo 2022-CU16-ubuntu-22.04) antes de producción.
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # .env.docker (fuera del repositorio) define MSSQL_SA_PASSWORD y MSSQL_PID:
+    # Developer en desarrollo, Express en producción (RNF-06).
+    env_file: .env.docker
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_COLLATION: Modern_Spanish_CI_AI
+    volumes:
+      - sqldata:/var/opt/mssql
+      - backups:/var/opt/sigccr/backups
+    # El puerto 1433 no se publica en producción. Para usar SSMS o Azure Data Studio en desarrollo,
+    # agregar en un docker-compose.override.yml:  ports: ["1433:1433"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks: [sigccr_net]
+    restart: unless-stopped
+
+volumes:
+  sqldata:      # datos de SQL Server, independientes del contenedor (plan correctivo de R4)
+  storage:      # writable/: adjuntos, sesiones, caché y registros técnicos
+  backups:      # copias de seguridad cifradas (RNF-13)
+
+networks:
+  sigccr_net:
