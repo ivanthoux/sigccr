@@ -7,7 +7,9 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Acceso\AccesoService;
+use App\Services\Acceso\AutorizacionService;
 use App\Services\Acceso\RecuperacionService;
+use App\Services\Usuarios\UsuarioService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -114,5 +116,24 @@ class Acceso extends BaseController
         }
 
         return redirect()->route('acceso.login')->with('exito', 'La contraseña se actualizó. Ya puede iniciar sesión.');
+    }
+
+    /** CU-06 paso 7: confirmación del correo nuevo desde el enlace (sin sesión). */
+    public function verificarCorreo(string $codigo): string
+    {
+        $valido = (new AutorizacionService())->buscarVigente($codigo, ['VerificacionCorreo'], false) !== null;
+
+        return view('acceso/verificar_correo', ['titulo' => 'Confirmar correo', 'codigo' => $codigo, 'valido' => $valido]);
+    }
+
+    public function confirmarCorreo(string $codigo): RedirectResponse
+    {
+        try {
+            (new UsuarioService())->verificarCorreo($codigo);
+        } catch (ReglaNegocioException $e) {
+            return redirect()->route('acceso.login')->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('acceso.login')->with('exito', 'Correo confirmado. Desde ahora inicia sesión con la dirección nueva.');
     }
 }
