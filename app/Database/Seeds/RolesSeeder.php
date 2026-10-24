@@ -7,8 +7,7 @@ namespace App\Database\Seeds;
 use CodeIgniter\Database\Seeder;
 
 /**
- * Roles (RN-06). Los permisos y su asignación a cada rol se cargan en la iteración 1, a partir de la matriz de
- * participación por actor (3.6.2): un permiso por operación de caso de uso.
+ * Roles (RN-06). Los permisos y su asignación a cada rol los carga PermisosSeeder (matriz de participación, 3.6.2).
  */
 class RolesSeeder extends Seeder
 {
