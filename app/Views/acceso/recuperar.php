@@ -3,8 +3,8 @@
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
-<h2 class="h5 mb-2">Recuperar acceso</h2>
-<p class="text-body-secondary small">Ingrese el correo electrónico de su cuenta. Le enviaremos un enlace para definir una nueva contraseña.</p>
+<h1>Recuperar acceso</h1>
+<p class="ayuda">Le enviaremos un enlace al correo de su cuenta para que defina una contraseña nueva.</p>
 <form method="post" action="<?= site_url('admin/recuperar') ?>" novalidate>
     <?= csrf_field() ?>
     <div class="mb-3">

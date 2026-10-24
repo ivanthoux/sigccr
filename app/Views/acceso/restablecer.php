@@ -10,8 +10,8 @@ use App\Libraries\Seguridad\PoliticaContrasena;
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
-<h2 class="h5 mb-2">Definir nueva contraseña</h2>
-<p class="text-body-secondary small">Use entre <?= PoliticaContrasena::MINIMO ?> y <?= PoliticaContrasena::MAXIMO ?> caracteres.
+<h1>Nueva contraseña</h1>
+<p class="ayuda">Use entre <?= PoliticaContrasena::MINIMO ?> y <?= PoliticaContrasena::MAXIMO ?> caracteres.
     Una frase de varias palabras es fácil de recordar y difícil de adivinar.</p>
 <form method="post" action="<?= site_url('admin/restablecer/' . $codigo) ?>" novalidate>
     <?= csrf_field() ?>
