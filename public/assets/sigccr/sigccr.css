@@ -1,0 +1,38 @@
+/* SIG-CCR: estilos propios sobre Bootstrap 5 (RNF-07) */
+:root {
+    --sigccr-azul: #1f4e78;
+    --sigccr-azul-claro: #e7eef6;
+}
+
+.barra-sigccr { background-color: var(--sigccr-azul); }
+.acceso { background: linear-gradient(180deg, var(--sigccr-azul-claro), #fff); }
+
+/* Menú lateral */
+@media (min-width: 992px) {
+    .panel aside { min-height: calc(100vh - 56px); }
+    .panel .offcanvas-lg { position: sticky; top: 56px; }
+}
+.menu-seccion {
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    padding: 1rem 1.25rem .25rem;
+}
+.menu-opcion {
+    display: block;
+    padding: .4rem 1.25rem;
+    color: var(--bs-body-color);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+}
+.menu-opcion:hover { background-color: var(--sigccr-azul-claro); }
+.menu-opcion.activa {
+    background-color: var(--sigccr-azul-claro);
+    border-left-color: var(--sigccr-azul);
+    font-weight: 600;
+}
+
+/* Importes alineados a la derecha con cifras tabulares (RNF-02) */
+.importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
