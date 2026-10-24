@@ -15,6 +15,7 @@ class SigccrSeeder extends Seeder
     public function run(): void
     {
         $this->call(RolesSeeder::class);
+        $this->call(PermisosSeeder::class);
         $this->call(TiposDocumentacionSeeder::class);
         $this->call(ParametrosInicialesSeeder::class);
     }
