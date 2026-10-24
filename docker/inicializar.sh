@@ -24,9 +24,14 @@ cerrar() {
     exit "$1"
 }
 # Ejecuta un comando mostrando y registrando su salida; si falla y el paso es obligatorio, termina.
+# spark puede terminar con código 0 aunque haya lanzado una excepción, así que también se busca en la salida.
 paso() {
-    local nombre="$1" obligatorio="$2"; shift 2
-    if "$@" 2>&1 | tee -a "$LOG"; then ok "$nombre"; return 0; fi
+    local nombre="$1" obligatorio="$2" tmp rc; shift 2
+    tmp="$(mktemp)"
+    "$@" 2>&1 | tee "$tmp"; rc=${PIPESTATUS[0]}
+    cat "$tmp" >> "$LOG"
+    if [ "$rc" -eq 0 ] && ! grep -qE '^\[[A-Za-z\\]*Exception\]' "$tmp"; then rm -f "$tmp"; ok "$nombre"; return 0; fi
+    rm -f "$tmp"
     falla "$nombre"
     [ "$obligatorio" = "si" ] && cerrar 1
     return 1
@@ -43,6 +48,7 @@ echo "writable/ preparada." | tee -a "$LOG"; ok "Carpeta writable"
 titulo "2. Configuración"
 [ -f spark ] || { echo "Falta la estructura de CodeIgniter: ejecutar antes docker/bootstrap.sh" | tee -a "$LOG"; falla "Configuración"; cerrar 1; }
 [ -f .env ]  || { echo "Falta .env: cp env.sigccr.example .env" | tee -a "$LOG"; falla "Configuración"; cerrar 1; }
+rm -f phpunit.dist.xml   # el del appstarter; el proyecto usa phpunit.xml.dist
 APP_PASSWORD="$(leer_env database.default.password)"
 OWNER_PASSWORD="$(leer_env database.migraciones.password)"
 CLAVE_CIFRADO="$(leer_env encryption.key)"
@@ -76,14 +82,18 @@ paso "Base e inicios de sesión" si sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD
     -v OWNER_PASSWORD="$OWNER_PASSWORD" APP_PASSWORD="$APP_PASSWORD"
 
 titulo "5. Esquema (migraciones)"
-paso "Migraciones" si php spark migrate --all -g migraciones
+# Con el propietario del esquema (SIGCCR_DB_GRUPO, ver app/Config/Database.php)
+paso "Migraciones" si env SIGCCR_DB_GRUPO=migraciones php spark migrate --all
 
 titulo "6. Datos semilla"
-paso "Datos semilla" si php spark db:seed SigccrSeeder -g migraciones
+paso "Datos semilla" si env SIGCCR_DB_GRUPO=migraciones php spark db:seed SigccrSeeder
 
 titulo "7. Administrador inicial"
 # Es interactivo (pide los datos y la contraseña sin mostrarla), por eso no pasa por tee.
-if php spark db:seed AdministradorInicialSeeder -g migraciones; then ok "Administrador inicial"; else falla "Administrador inicial"; fi
+SIGCCR_DB_GRUPO=migraciones php spark db:seed AdministradorInicialSeeder
+admins="$(sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -d sigccr -h -1 -W -b -Q "SET NOCOUNT ON; SELECT COUNT(*) FROM usuarios_internos u JOIN roles r ON r.id = u.rol_id WHERE r.codigo = 'Administrador'" 2>&1 | tr -d '[:space:]')"
+if [ "$admins" -ge 1 ] 2>/dev/null; then echo "Administradores registrados: $admins" | tee -a "$LOG"; ok "Administrador inicial"
+else echo "No hay un Administrador registrado ($admins)" | tee -a "$LOG"; falla "Administrador inicial"; fi
 
 titulo "8. Verificación del entorno (R8)"
 paso "Verificación del entorno" no php spark sigccr:verificar-entorno
@@ -91,7 +101,14 @@ paso "Verificación del entorno" no php spark sigccr:verificar-entorno
 titulo "9. Pruebas del motor financiero (RNF-15)"
 paso "Pruebas del motor financiero" no composer test:finanzas
 
-titulo "10. Punta a punta: Nginx → PHP-FPM → SQL Server"
+titulo "10. Cobertura de líneas del motor financiero (mínimo 90 %, RNF-15)"
+if paso "Ejecución de la cobertura" no composer cobertura; then
+    lineas="$(grep -m1 -E '^[[:space:]]*Lines:' "$LOG" | grep -oE '[0-9]+(\.[0-9]+)?' | head -n 1)"
+    if [ -n "$lineas" ] && awk -v l="$lineas" 'BEGIN { exit !(l >= 90) }'; then ok "Cobertura $lineas %"
+    else echo "Cobertura de líneas: ${lineas:-sin dato}" | tee -a "$LOG"; falla "Cobertura ${lineas:-sin dato} % (mínimo 90 %)"; fi
+fi
+
+titulo "11. Punta a punta: Nginx → PHP-FPM → SQL Server"
 respuesta="$(curl -sk -H 'Host: localhost' -w '\nHTTP %{http_code}' https://web/estado 2>&1)"
 echo "$respuesta" | tee -a "$LOG"
 case "$respuesta" in *'"conectada"'*'HTTP 200'*) ok "Punta a punta (/estado)" ;; *) falla "Punta a punta (/estado)" ;; esac

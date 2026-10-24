@@ -4,7 +4,7 @@
 
 Sistema Integral de Gestión de Créditos, Cobranzas y Refinanciación. Este repositorio contiene la **arquitectura ejecutable** de la actividad 6 del cronograma (hito de fin de Elaboración, 27/10/2026): entorno Docker, esquema de la base de datos, componentes base y motor financiero con sus pruebas.
 
-Stack: PHP 8.3 · CodeIgniter 4.6 · SQL Server 2022 · Bootstrap 5 · Docker (WSL 2 en desarrollo, Docker Engine en producción).
+Stack: PHP 8.3 · CodeIgniter 4 (4.6 o posterior; el appstarter instala la última 4.x) · SQL Server 2022 · Bootstrap 5 · Docker (WSL 2 en desarrollo, Docker Engine en producción).
 
 ## Contenido
 
@@ -49,17 +49,21 @@ docker compose exec app bash docker/inicializar.sh
 `inicializar.sh` toma las contraseñas del `.env` y de `.env.docker`, se puede repetir sin efectos adversos y deja su salida en `inicializar.log`. Los pasos sueltos, por si hace falta repetir alguno:
 
 ```bash
-docker compose exec app php spark migrate --all -g migraciones
-docker compose exec app php spark db:seed SigccrSeeder -g migraciones
-docker compose exec app php spark db:seed AdministradorInicialSeeder -g migraciones
+docker compose exec app composer migrar      # SIGCCR_DB_GRUPO=migraciones php spark migrate --all
+docker compose exec app composer semillas    # SIGCCR_DB_GRUPO=migraciones php spark db:seed SigccrSeeder
+docker compose exec app bash -c 'SIGCCR_DB_GRUPO=migraciones php spark db:seed AdministradorInicialSeeder'
 docker compose exec app php spark sigccr:verificar-entorno
 docker compose exec app composer test:finanzas
+docker compose exec app composer cobertura   # informe en build/cobertura/index.html
 curl -k https://localhost/estado
 ```
+
+Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCCR_DB_GRUPO=migraciones`): CodeIgniter guarda el historial de migraciones con el grupo por defecto y `sigccr_app` no tiene permiso para crear tablas.
 
 **Problemas frecuentes**
 
 - *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.
+- *No tests executed!* con `Configuration: phpunit.dist.xml`: es el archivo del appstarter; borrarlo (`rm phpunit.dist.xml`). Los scripts de Composer ya indican `-c phpunit.xml.dist`.
 - *Cache unable to write to writable/cache*: el volumen de `writable/` se recreó vacío. Desde esta versión el contenedor lo prepara al arrancar: `docker compose up -d --force-recreate app scheduler`.
 
 Para producción se usan las mismas imágenes; cambian `.env.docker` (`MSSQL_PID=Express`), `.env` (`CI_ENVIRONMENT = production`, credenciales y adaptadores reales) y el certificado de Nginx (RNF-04).

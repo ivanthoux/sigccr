@@ -11,6 +11,8 @@ if [ ! -f spark ]; then
   cp -rn /tmp/ci4/. /var/www/html/
   rm -rf /tmp/ci4
 fi
+# El appstarter trae phpunit.dist.xml, que PHPUnit preferiría a nuestro phpunit.xml.dist
+rm -f /var/www/html/phpunit.dist.xml
 
 echo ">> Instalando dependencias..."
 composer install --no-interaction

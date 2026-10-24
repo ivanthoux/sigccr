@@ -35,9 +35,11 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
-        "test:finanzas": "phpunit --testsuite Finanzas",
-        "cobertura": "XDEBUG_MODE=coverage phpunit --testsuite Finanzas --coverage-text --coverage-html build/cobertura",
+        "test": "phpunit -c phpunit.xml.dist",
+        "test:finanzas": "phpunit -c phpunit.xml.dist --testsuite Finanzas --no-coverage",
+        "cobertura": "@php -d pcov.enabled=1 vendor/bin/phpunit -c phpunit.xml.dist --testsuite Finanzas --coverage-text --coverage-html build/cobertura",
+        "migrar": "SIGCCR_DB_GRUPO=migraciones php spark migrate --all",
+        "semillas": "SIGCCR_DB_GRUPO=migraciones php spark db:seed SigccrSeeder",
         "cs": "phpcs",
         "stan": "phpstan analyse"
     },

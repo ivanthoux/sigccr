@@ -106,5 +106,13 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }
+
+        // Las migraciones y los seeders se ejecutan con el propietario del esquema: CodeIgniter crea y actualiza la
+        // tabla "migrations" con el grupo por defecto, y sigccr_app no tiene permiso CREATE TABLE (4.3.5).
+        //   SIGCCR_DB_GRUPO=migraciones php spark migrate --all
+        $grupo = getenv('SIGCCR_DB_GRUPO');
+        if (is_string($grupo) && $grupo !== '' && property_exists($this, $grupo) && is_array($this->{$grupo})) {
+            $this->defaultGroup = $grupo;
+        }
     }
 }

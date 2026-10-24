@@ -23,10 +23,9 @@ GO
 USE sigccr;
 GO
 IF USER_ID('sigccr_owner') IS NULL
-BEGIN
     CREATE USER sigccr_owner FOR LOGIN sigccr_owner;
+IF IS_ROLEMEMBER('db_owner', 'sigccr_owner') = 0
     ALTER ROLE db_owner ADD MEMBER sigccr_owner;
-END
 IF USER_ID('sigccr_app') IS NULL
     CREATE USER sigccr_app FOR LOGIN sigccr_app;
 GO
