@@ -2,6 +2,8 @@
 
 Valores esperados calculados de forma independiente (`casos_referencia.py`, módulo `decimal` de Python con 40 dígitos y redondeo a la mitad hacia arriba). Resultado completo: `resultados_referencia.json`. Cada caso está implementado en `tests/unit/Finanzas`.
 
+Hay una segunda verificación independiente en planilla de cálculo: `casos_referencia.xlsx` recalcula los 27 casos con fórmulas (sistema francés, IRR, WORKDAY, prelación de imputación, etc.) y su hoja **Resumen** compara 68 valores con los esperados por las pruebas. Se regenera con `python3 tests/referencia/generar_planilla.py`; Excel o LibreOffice recalculan las fórmulas al abrirla.
+
 | ID | Regla | Datos | Resultado esperado | Prueba |
 |---|---|---|---|---|
 | CP-F01 | RN-50, RN-68 | Capital 100.000, TNA 60 %, 6 cuotas, liquidación 10/01/2026, gasto adm. 500, IVA 21 % | Cuota ordinaria 19.701,75; 1.ª cuota: capital 14.701,75, interés 5.000,00, gasto 500,00, IVA 1.155,00, total 21.356,75 | AmortizacionFrancesaTest |
