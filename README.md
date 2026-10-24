@@ -60,6 +60,8 @@ curl -k https://localhost/estado
 
 Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCCR_DB_GRUPO=migraciones`): CodeIgniter guarda el historial de migraciones con el grupo por defecto y `sigccr_app` no tiene permiso para crear tablas.
 
+**Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor (`docker compose exec app ls writable/correos`).
+
 **Problemas frecuentes**
 
 - *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.

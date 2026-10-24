@@ -14,15 +14,22 @@ $routes->get('estado', 'Estado::index');
 
 // Panel administrativo
 $routes->group('admin', static function (RouteCollection $routes): void {
-    // Iteración 1 (SS-01): inicio y cierre de sesión
-    // $routes->get('login', 'Admin\Acceso::login');
-    // $routes->post('login', 'Admin\Acceso::autenticar');
-    // $routes->post('logout', 'Admin\Acceso::cerrar', ['filter' => 'auth:panel']);
+    // SS-01: acceso sin sesión (CU-01, CU-02). El límite por dirección de origen se aplica en Config\Filters (RN-62).
+    $routes->get('login', 'Admin\Acceso::login', ['as' => 'acceso.login']);
+    $routes->post('login', 'Admin\Acceso::autenticar');
+    $routes->get('recuperar', 'Admin\Acceso::recuperar', ['as' => 'acceso.recuperar']);
+    $routes->post('recuperar', 'Admin\Acceso::solicitarRecuperacion');
+    $routes->get('restablecer/(:segment)', 'Admin\Acceso::restablecer/$1');
+    $routes->post('restablecer/(:segment)', 'Admin\Acceso::guardarContrasena/$1');
 
     $routes->group('', ['filter' => 'auth:panel'], static function (RouteCollection $routes): void {
-        // Ejemplo del patrón de declaración:
-        // $routes->get('clientes', 'Admin\Clientes::index', ['filter' => 'permiso:clientes.consultar']);
-        // $routes->post('clientes', 'Admin\Clientes::store', ['filter' => 'permiso:clientes.registrar']);
+        $routes->get('/', 'Admin\Inicio::index', ['as' => 'panel.inicio']);
+        // CU-03: confirmación y cierre de sesión
+        $routes->get('salir', 'Admin\Acceso::confirmarCierre', ['as' => 'acceso.salir']);
+        $routes->post('salir', 'Admin\Acceso::cerrar');
+
+        // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
+        // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
     });
 });
 
