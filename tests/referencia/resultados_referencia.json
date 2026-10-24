@@ -1,0 +1,135 @@
+{
+ "rn68": {
+  "cuota": "19701.75",
+  "plan": [
+   {
+    "n": "1",
+    "venc": "2026-02-09",
+    "capital": "14701.75",
+    "interes": "5000.00",
+    "gastos": "500",
+    "iva": "1155.00",
+    "nocap": "0.00",
+    "total": "21356.75"
+   },
+   {
+    "n": "2",
+    "venc": "2026-03-09",
+    "capital": "15436.84",
+    "interes": "4264.91",
+    "gastos": "500",
+    "iva": "1000.63",
+    "nocap": "0.00",
+    "total": "21202.38"
+   },
+   {
+    "n": "3",
+    "venc": "2026-04-09",
+    "capital": "16208.68",
+    "interes": "3493.07",
+    "gastos": "500",
+    "iva": "838.54",
+    "nocap": "0.00",
+    "total": "21040.29"
+   },
+   {
+    "n": "4",
+    "venc": "2026-05-09",
+    "capital": "17019.11",
+    "interes": "2682.64",
+    "gastos": "500",
+    "iva": "668.35",
+    "nocap": "0.00",
+    "total": "20870.10"
+   },
+   {
+    "n": "5",
+    "venc": "2026-06-09",
+    "capital": "17870.07",
+    "interes": "1831.68",
+    "gastos": "500",
+    "iva": "489.65",
+    "nocap": "0.00",
+    "total": "20691.40"
+   },
+   {
+    "n": "6",
+    "venc": "2026-07-09",
+    "capital": "18763.55",
+    "interes": "938.18",
+    "gastos": "500",
+    "iva": "302.02",
+    "nocap": "0.00",
+    "total": "20503.75"
+   }
+  ],
+  "gasto": "2000.00",
+  "iva_gasto": "420.00",
+  "neto": "97580.00",
+  "tea": "79.59",
+  "cftea": "146.33",
+  "total_capital": "100000.00",
+  "total_pagar": "125664.67"
+ },
+ "tasa_cero": {
+  "cuota": "333.33",
+  "capitales": [
+   "333.33",
+   "333.33",
+   "333.34"
+  ]
+ },
+ "punitorios": {
+  "tasa_diaria": "0.000821917808",
+  "tramo": "12.6878",
+  "iva_tramo": "2.6644",
+  "dia4_importe": "50.75",
+  "dia4_iva": "10.66"
+ },
+ "punitorios_cambio_tasa": {
+  "importe": "100.34",
+  "iva": "21.07"
+ },
+ "capacidad": {
+  "capacidad": "100000.00",
+  "capital_maximo_12": "805000",
+  "bruto": "805957.1826",
+  "cuota_max": "99881.96",
+  "cuota_max_siguiente": "100005.28"
+ },
+ "cancelacion": {
+  "vencidas": "21348.19",
+  "capital_no_vencido": "69861.41",
+  "dias": 11,
+  "interes": "1280.79",
+  "iva": "268.97",
+  "total": "92759.36"
+ },
+ "refinanciacion": {
+  "capital": "85298.25",
+  "no_capitalizable": "5911.35",
+  "no_capitalizable_aplicado": "5946.75",
+  "cuota": "9088.71",
+  "primera": [
+   "2026-04-24",
+   "5676.78",
+   "3411.93",
+   "716.51",
+   "495.56",
+   "10300.78"
+  ],
+  "ultima": [
+   "2027-03-24",
+   "8739.18",
+   "349.57",
+   "73.41",
+   "495.59",
+   "9657.75"
+  ],
+  "suma_capital": "85298.25",
+  "suma_nocap": "5946.75"
+ },
+ "rn69": {
+  "puntaje": "86.50"
+ }
+}
