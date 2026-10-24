@@ -1,0 +1,13 @@
+# Registro de cambios
+
+Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versionado semántico.
+
+## [Sin publicar]
+
+### Agregado
+- Arquitectura ejecutable (actividad 6): contenedores web, app, scheduler y db con Docker Compose.
+- Esquema de la base de datos: 70 tablas en nueve migraciones, una por subsistema, y datos semilla.
+- Motor financiero con 52 pruebas y casos de referencia calculados de forma independiente.
+- Componentes base: servicio transaccional, auditoría, alertas, parámetros versionados, comando base de procesos programados, filtros de seguridad y adaptadores con simuladores.
+- Comando `sigccr:verificar-entorno` para el riesgo R8.
+- Registro de decisiones D-01 a D-08.

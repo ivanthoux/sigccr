@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="SIG-CCR">
+    <description>Convención PSR-12 (RNF-05)</description>
+    <file>app</file>
+    <file>tests/unit</file>
+    <exclude-pattern>app/Views/*</exclude-pattern>
+    <exclude-pattern>app/Config/*</exclude-pattern>
+    <arg name="extensions" value="php"/>
+    <rule ref="PSR12">
+        <exclude name="Generic.Files.LineLength"/>
+    </rule>
+</ruleset>

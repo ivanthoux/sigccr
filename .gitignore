@@ -1,0 +1,10 @@
+.env
+.env.docker
+vendor/
+writable/*
+!writable/.gitkeep
+docker/nginx/certs/*.key
+docker/nginx/certs/*.crt
+docker-compose.override.yml
+build/
+.phpunit.cache/

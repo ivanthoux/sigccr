@@ -1,0 +1,13 @@
+# Análisis estático (RNF-05)
+parameters:
+    level: 6
+    paths:
+        - app/Libraries
+        - app/Services
+        - app/Adapters
+        - app/Commands
+        - app/Filters
+    bootstrapFiles:
+        - vendor/codeigniter4/framework/system/Test/bootstrap.php
+    scanDirectories:
+        - vendor/codeigniter4/framework/system

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/codeigniter4/framework/system/Test/bootstrap.php"
+         cacheDirectory=".phpunit.cache"
+         colors="true"
+         failOnRisky="true"
+         failOnWarning="true">
+    <testsuites>
+        <!-- Motor financiero: casos de referencia de RNF-15 -->
+        <testsuite name="Finanzas">
+            <directory>./tests/unit/Finanzas</directory>
+        </testsuite>
+        <testsuite name="App">
+            <directory>./tests</directory>
+            <exclude>./tests/_local</exclude>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./app/Libraries/Finanzas</directory>
+            <directory suffix=".php">./app/Services</directory>
+        </include>
+    </source>
+    <php>
+        <server name="app.baseURL" value="https://localhost/"/>
+        <!-- Base de pruebas: las pruebas de integración usan el grupo "tests" -->
+        <env name="database.tests.hostname" value="db"/>
+        <env name="database.tests.database" value="sigccr_pruebas"/>
+        <env name="database.tests.DBDriver" value="SQLSRV"/>
+    </php>
+</phpunit>
