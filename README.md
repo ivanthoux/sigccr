@@ -66,6 +66,7 @@ Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCC
 
 - *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.
 - *No tests executed!* con `Configuration: phpunit.dist.xml`: es el archivo del appstarter; borrarlo (`rm phpunit.dist.xml`). Los scripts de Composer ya indican `-c phpunit.xml.dist`.
+- *404 de Nginx en todas las páginas* (incluso `/estado`) después de `git pull` o de cambiar de rama: el contenedor web quedó apuntando a la carpeta `public/` anterior. Recrear los contenedores de la aplicación (la base no se toca): `docker compose up -d --force-recreate web app scheduler`. Conviene hacerlo siempre después de un `git pull`.
 - *Cache unable to write to writable/cache*: el volumen de `writable/` se recreó vacío. Desde esta versión el contenedor lo prepara al arrancar: `docker compose up -d --force-recreate app scheduler`.
 
 Para producción se usan las mismas imágenes; cambian `.env.docker` (`MSSQL_PID=Express`), `.env` (`CI_ENVIRONMENT = production`, credenciales y adaptadores reales) y el certificado de Nginx (RNF-04).
