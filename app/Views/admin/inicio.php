@@ -1,43 +1,45 @@
 <?php
 /**
- * Pantalla principal del panel (CU-01 paso 6).
+ * Pantalla principal del panel (CU-01 paso 6): saludo, alertas pendientes y las funciones del rol agrupadas por área.
  *
  * @var CodeIgniter\View\View $this
  * @var list<array{titulo: string, icono: string, opciones: list<array{texto: string, url: string}>}> $menu
  * @var int $alertasPendientes
  */
 $cuenta = session('cuenta');
+$hoy = a_zona_negocio('now');
+$dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+$meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+$fecha = ucfirst($dias[(int) $hoy->format('w')]) . ' ' . $hoy->format('j') . ' de ' . $meses[(int) $hoy->format('n') - 1];
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
-<div class="d-flex flex-wrap align-items-baseline justify-content-between mb-4">
+<div class="encabezado">
     <div>
-        <h1 class="h4 mb-1">Hola, <?= esc($cuenta['nombre']) ?></h1>
-        <p class="text-body-secondary mb-0"><?= esc($cuenta['rol_nombre']) ?> · <?= esc(formato_fecha(date('Y-m-d H:i:s'))) ?></p>
+        <h1>Hola, <?= esc(strtok($cuenta['nombre'], ' ')) ?></h1>
+        <p><?= esc($fecha) ?>. Ingresó como <?= esc(mb_strtolower($cuenta['rol_nombre'])) ?>.</p>
     </div>
     <?php if ($alertasPendientes > 0): ?>
-        <span class="badge text-bg-warning fs-6 mt-2"><i class="bi bi-bell me-1"></i><?= $alertasPendientes ?> alerta<?= $alertasPendientes === 1 ? '' : 's' ?> pendiente<?= $alertasPendientes === 1 ? '' : 's' ?></span>
+        <span class="badge rounded-pill text-bg-warning fs-6"><i class="bi bi-bell me-1" aria-hidden="true"></i><?= $alertasPendientes ?> alerta<?= $alertasPendientes === 1 ? '' : 's' ?> sin resolver</span>
     <?php endif ?>
 </div>
+
 <?php if ($menu === []): ?>
-    <div class="alert alert-info" role="status">
-        <i class="bi bi-info-circle me-2"></i>Las funciones de su rol se habilitan a medida que se construye cada iteración del sistema.
+    <div class="hoja p-4">
+        <h2 class="h5">Todavía no hay funciones habilitadas para su rol</h2>
+        <p class="mb-0 text-body-secondary">Se agregan a medida que se construye cada iteración del sistema y aparecen en el menú de la izquierda.</p>
     </div>
 <?php else: ?>
-    <div class="row g-3">
+    <div class="hoja indice">
         <?php foreach ($menu as $seccion): ?>
-            <div class="col-sm-6 col-xl-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h2 class="h6 card-title"><i class="bi <?= esc($seccion['icono'], 'attr') ?> me-2 text-primary"></i><?= esc($seccion['titulo']) ?></h2>
-                        <ul class="list-unstyled mb-0">
-                            <?php foreach ($seccion['opciones'] as $o): ?>
-                                <li><a href="<?= esc($o['url'], 'attr') ?>"><?= esc($o['texto']) ?></a></li>
-                            <?php endforeach ?>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+            <section>
+                <h2><i class="bi <?= esc($seccion['icono'], 'attr') ?> me-2" aria-hidden="true"></i><?= esc($seccion['titulo']) ?></h2>
+                <ul>
+                    <?php foreach ($seccion['opciones'] as $o): ?>
+                        <li><a href="<?= esc($o['url'], 'attr') ?>"><?= esc($o['texto']) ?></a></li>
+                    <?php endforeach ?>
+                </ul>
+            </section>
         <?php endforeach ?>
     </div>
 <?php endif ?>

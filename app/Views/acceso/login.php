@@ -3,7 +3,8 @@
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
-<h2 class="h5 mb-3">Iniciar sesión</h2>
+<h1>Iniciar sesión</h1>
+<p class="ayuda">Ingrese con el correo y la contraseña de su usuario.</p>
 <form method="post" action="<?= site_url('admin/login') ?>" novalidate>
     <?= csrf_field() ?>
     <div class="mb-3">
@@ -18,7 +19,7 @@ $this->section('contenido');
             <button class="btn btn-outline-secondary" type="button" data-mostrar="contrasena" aria-label="Mostrar la contraseña"><i class="bi bi-eye"></i></button>
         </div>
     </div>
-    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
+    <button type="submit" class="btn btn-primary w-100">Iniciar sesión</button>
 </form>
 <div class="text-center mt-3">
     <a href="<?= url_to('acceso.recuperar') ?>" class="small">¿Olvidó su contraseña?</a>

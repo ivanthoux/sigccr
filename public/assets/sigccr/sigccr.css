@@ -1,38 +1,162 @@
-/* SIG-CCR: estilos propios sobre Bootstrap 5 (RNF-07) */
+/*
+ * SIG-CCR · Identidad visual del panel (RNF-02, RNF-07)
+ *
+ * Herramienta de trabajo diario de una entidad de crédito: mucha lectura de importes, fechas y estados.
+ * - Tinta (#15304B): estructura y navegación. Papel frío (#F4F6F8): fondo de trabajo.
+ * - Verde billete (#1F7A57): la acción principal de cada pantalla. Rojo y ámbar solo para estados.
+ * - IBM Plex Sans en todo el sistema, con cifras tabulares en importes y tablas.
+ */
+@font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-style: normal; font-display: swap; src: url("../vendor/plex-sans/IBMPlexSans-Regular-Latin1.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-style: italic; font-display: swap; src: url("../vendor/plex-sans/IBMPlexSans-Italic-Latin1.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 500; font-style: normal; font-display: swap; src: url("../vendor/plex-sans/IBMPlexSans-Medium-Latin1.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 600; font-style: normal; font-display: swap; src: url("../vendor/plex-sans/IBMPlexSans-SemiBold-Latin1.woff2") format("woff2"); }
+
 :root {
-    --sigccr-azul: #1f4e78;
-    --sigccr-azul-claro: #e7eef6;
+    --tinta: #15304b;
+    --tinta-2: #23476b;
+    --tinta-texto: #c9d6e3;
+    --papel: #f4f6f8;
+    --linea: #dde3ea;
+    --texto: #1a2330;
+    --texto-2: #536271;
+    --verde: #1f7a57;
+    --verde-oscuro: #17603f;
+    --rojo: #b42318;
+    --ambar: #b54708;
+
+    --bs-body-font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --bs-body-font-size: .9375rem;
+    --bs-body-color: var(--texto);
+    --bs-body-bg: var(--papel);
+    --bs-border-color: var(--linea);
+    --bs-secondary-color: var(--texto-2);
+    --bs-link-color-rgb: 31, 122, 87;
+    --bs-link-hover-color-rgb: 23, 96, 63;
+    --bs-primary-rgb: 31, 122, 87;
+    --bs-border-radius: .375rem;
+    --bs-focus-ring-color: rgba(31, 122, 87, .35);
 }
 
-.barra-sigccr { background-color: var(--sigccr-azul); }
-.acceso { background: linear-gradient(180deg, var(--sigccr-azul-claro), #fff); }
+body { -webkit-font-smoothing: antialiased; }
+h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--tinta); font-weight: 600; letter-spacing: -.01em; }
+h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
+:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
 
-/* Menú lateral */
+/* Botones: el verde es la acción principal; el resto, contorno sobrio */
+.btn { font-weight: 500; }
+.btn-primary {
+    --bs-btn-bg: var(--verde); --bs-btn-border-color: var(--verde);
+    --bs-btn-hover-bg: var(--verde-oscuro); --bs-btn-hover-border-color: var(--verde-oscuro);
+    --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
+    --bs-btn-disabled-bg: var(--verde); --bs-btn-disabled-border-color: var(--verde);
+    --bs-btn-focus-shadow-rgb: 31, 122, 87;
+}
+.btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: #b9c3ce; --bs-btn-hover-bg: #e9edf1; --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: #b9c3ce; }
+.form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
+.form-label { font-weight: 500; }
+.alert { border-width: 0 0 0 4px; border-radius: .25rem; }
+.alert-success { --bs-alert-bg: #e7f3ee; --bs-alert-color: #134e37; --bs-alert-border-color: var(--verde); }
+.alert-danger { --bs-alert-bg: #fbecea; --bs-alert-color: #7a1810; --bs-alert-border-color: var(--rojo); }
+.alert-warning { --bs-alert-bg: #fdf1e5; --bs-alert-color: #7a3005; --bs-alert-border-color: var(--ambar); }
+.alert-info { --bs-alert-bg: #e8eef5; --bs-alert-color: var(--tinta); --bs-alert-border-color: var(--tinta-2); }
+
+/* Importes y tablas con cifras tabulares (RNF-02) */
+.importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table { --bs-table-bg: #fff; font-variant-numeric: tabular-nums; }
+.table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: #c5ced8; }
+
+/* ── Panel: barra lateral de tinta a toda altura ─────────────────────────── */
+.panel { min-height: 100vh; }
+.lateral {
+    background: var(--tinta);
+    color: var(--tinta-texto);
+    width: 15.5rem;
+    flex-shrink: 0;
+}
 @media (min-width: 992px) {
-    .panel aside { min-height: calc(100vh - 56px); }
-    .panel .offcanvas-lg { position: sticky; top: 56px; }
+    .lateral { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 }
-.menu-seccion {
-    font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: var(--bs-secondary-color);
-    padding: 1rem 1.25rem .25rem;
+.lateral .offcanvas-lg { --bs-offcanvas-bg: var(--tinta); --bs-offcanvas-color: var(--tinta-texto); --bs-offcanvas-width: 17rem; height: 100%; }
+.lateral .offcanvas-body { display: flex; flex-direction: column; height: 100%; }
+.marca {
+    display: block;
+    padding: 1.5rem 1.5rem 1.25rem;
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
+.marca:hover { color: #fff; }
+.marca strong { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+.marca span { display: block; margin-top: .4rem; font-size: .75rem; line-height: 1.35; color: var(--tinta-texto); }
+
+.menu-lateral { padding: .75rem 0; flex: 1; }
+.menu-seccion { padding: 1.1rem 1.5rem .3rem; font-size: .8125rem; font-weight: 500; color: #8fa6bd; }
 .menu-opcion {
     display: block;
-    padding: .4rem 1.25rem;
-    color: var(--bs-body-color);
+    padding: .45rem 1.5rem;
+    color: #e8eef4;
     text-decoration: none;
     border-left: 3px solid transparent;
 }
-.menu-opcion:hover { background-color: var(--sigccr-azul-claro); }
-.menu-opcion.activa {
-    background-color: var(--sigccr-azul-claro);
-    border-left-color: var(--sigccr-azul);
-    font-weight: 600;
-}
+.menu-opcion:hover { background: var(--tinta-2); color: #fff; }
+.menu-opcion.activa { background: var(--tinta-2); border-left-color: #5fc49b; color: #fff; font-weight: 500; }
+.menu-opcion .bi { width: 1.25rem; display: inline-block; }
 
-/* Importes alineados a la derecha con cifras tabulares (RNF-02) */
-.importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cuenta {
+    padding: 1rem 1.5rem 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    font-size: .8125rem;
+}
+.cuenta .nombre { color: #fff; font-weight: 500; font-size: .875rem; }
+.cuenta a { color: var(--tinta-texto); }
+.cuenta a:hover { color: #fff; }
+
+.barra-movil { background: var(--tinta); color: #fff; }
+.barra-movil .btn-link { color: #fff; }
+
+.contenido { flex: 1; min-width: 0; padding: 2rem 2.5rem 3rem; max-width: 84rem; }
+@media (max-width: 991.98px) { .contenido { padding: 1.25rem 1rem 2.5rem; } }
+
+.encabezado { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; }
+.encabezado h1 { font-size: 1.625rem; margin: 0; }
+.encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
+
+.hoja { background: #fff; border: 1px solid var(--linea); border-radius: .5rem; }
+
+/* Pantalla principal: índice de funciones por área */
+.indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }
+.indice section { padding: 1.25rem 1.5rem; background: #fff; }
+.indice h2 { font-size: 1rem; margin-bottom: .6rem; }
+.indice ul { list-style: none; padding: 0; margin: 0; }
+.indice li + li { margin-top: .3rem; }
+.indice a { text-decoration: none; font-weight: 500; }
+.indice a:hover { text-decoration: underline; }
+
+/* ── Acceso: tinta a la izquierda, formulario a la derecha ───────────────── */
+.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: #fff; }
+@media (min-width: 992px) { .acceso { grid-template-columns: minmax(22rem, 5fr) 7fr; } }
+.acceso-marca {
+    background: var(--tinta);
+    color: var(--tinta-texto);
+    padding: 3.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.acceso-marca strong { display: block; color: #fff; font-size: clamp(3rem, 6vw, 5.25rem); font-weight: 600; letter-spacing: -.035em; line-height: .95; }
+.acceso-marca p { max-width: 26rem; margin: 1.25rem 0 0; font-size: 1.0625rem; line-height: 1.5; }
+.acceso-marca small { color: #8fa6bd; }
+@media (max-width: 991.98px) {
+    .acceso-marca { padding: 2rem 1.5rem 1.75rem; }
+    .acceso-marca strong { font-size: 2.5rem; }
+    .acceso-marca p { font-size: .9375rem; margin-top: .6rem; }
+    .acceso-marca small { display: none; }
+}
+.acceso-formulario { display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; }
+.acceso-formulario > div { width: 100%; max-width: 24rem; }
+.acceso-formulario h1 { font-size: 1.5rem; margin-bottom: .4rem; }
+.acceso-formulario .ayuda { color: var(--texto-2); margin-bottom: 1.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
