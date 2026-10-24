@@ -1,6 +1,6 @@
 .env
 .env.docker
-vendor/
+/vendor/
 writable/*
 !writable/.gitkeep
 docker/nginx/certs/*.key
