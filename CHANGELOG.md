@@ -5,6 +5,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ## [Sin publicar]
 
 ### Agregado
+- C06 Líneas de crédito: CU-16 Registrar, CU-17 Modificar (nueva versión no retroactiva), CU-18 Suspender, CU-19 Reactivar, CU-20 Localizar y CU-73 Consultar, con importe mínimo y máximo prestable (RN-76, D-09) y documentación exigida por categoría.
+- CU-58 Configurar Parámetros de Evaluación Crediticia: pesos, valores, cortes y situaciones excluyentes del motor BCRA, con validaciones y carga de los valores sugeridos de RN-69 (D-13).
+- `ComparadorLineas`: simulación comparativa de todas las líneas para un cliente, por mayor monto o menor CFTEA (CU-99, D-10).
+- `MediosCobro`: cobro en ventanilla con varios medios de pago (D-11).
+- Migración 10: `cobros_medios`, `simulaciones_comparativas`, `cobros.cambio`, `movimientos_caja.cobro_medio_id`.
+- Decisiones D-09 a D-13 por las devoluciones de la presentación de la v8.
+
+### Cambiado
+- `Imputador`: el cobro ordinario admite el pago parcial de cuotas (D-12); `imputaciones.parcial_excepcional` pasa a `parcial`.
+- `cobros.medio` y `cobros.numero_operacion` pasan a `cobros_medios` (D-11).
+
+### Agregado
 - Clientes (C05): CU-54 Localizar, CU-11 Registrar persona humana o jurídica con su legajo y consentimientos, CU-12 Modificar (el cambio de correo exige evidencia de identidad y nueva verificación), CU-13 Desactivar, CU-14 Reactivar y CU-15 Consultar perfil e historial crediticio, con las reglas RN-09 a RN-12, RN-58 y RN-64 (`ValidadorCliente`, `RequisitosDocumentales`, `ArchivoLegajo`, `ReglasClientes`, `ClienteService`).
 - Legajo digital: PDF, JPG o PNG de hasta 5 MB guardados fuera de `public/` con nombre aleatorio; descarga solo con permiso y aviso de la documentación faltante según la categoría de ingresos.
 - Verificación del correo del cliente desde el portal (`portal/verificar-correo`); el alta crea su cuenta pendiente de activación.

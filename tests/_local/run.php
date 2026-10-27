@@ -95,6 +95,14 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertStringContainsString(string $aguja, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!str_contains($texto, $aguja)) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no contiene '{$aguja}'");
+            }
+        }
+
         public function assertArrayHasKey(int|string $clave, array $a, string $msg = ''): void
         {
             $this->assertions++;
