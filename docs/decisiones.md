@@ -17,6 +17,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-11 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
 | D-12 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
 | D-13 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
+| D-14 | 28/10/2026 | Propuesta (acordada en la presentación del 26/10/2026) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -105,3 +106,11 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** CU-58 enumera los parámetros editables: pesos de los cuatro indicadores; valor por situación BCRA (1 a 6 y sin deudas); situaciones vigentes excluyentes; tramos de atraso interno, de endeudamiento y de antigüedad con sus valores; cortes de las categorías A a E y su resultado; y vigencia de la evaluación. Validaciones: pesos entre 0 % y 100 % que suman 100 %; valores enteros de 0 a 100; tramos ordenados; cortes estrictamente descendentes con E desde 0; A no puede ser Desfavorable ni E Favorable; vigencia de 1 a 365 días. Los valores de RN-69 quedan como **valores sugeridos**, que el Gerente puede volver a cargar en el formulario y registrar como una versión nueva con fecha y motivo.
 
 **Consecuencias.** `ValidadorParametrosEvaluacion` con 6 pruebas; pantalla CU-58 en el panel (`admin/parametros/evaluacion`) y `ParametroService::registrarVersion`. Sin cambios de esquema.
+
+## D-14 · Documentación exigida por la línea: créditos solo con DNI (RN-11)
+
+**Contexto.** En la presentación se discutió que muchas prestadoras otorgan préstamos de bajo monto pidiendo solo el documento de identidad. La v8 permitía configurar la documentación por línea, pero el alta del cliente (CU-11 A4) exigía la documentación base de su categoría de ingresos (por ejemplo, los tres últimos recibos de sueldo), así que un cliente que se presentaba solo con su DNI no podía registrarse.
+
+**Decisión.** Se separan dos momentos. En el alta del cliente solo es obligatoria su identificación: documento de identidad para la persona humana; constancia de CUIT, documento del representante e instrumento de representación para la persona jurídica. La documentación de ingresos la define cada versión de condiciones de la línea y se exige al registrar la solicitud (CU-22) y se verifica en CU-23. La documentación base de RN-11 pasa a ser la que el sistema propone al configurar una línea; la línea puede quitarla y exigir solo el documento de identidad, que es obligatorio en todas. El riesgo de una línea «solo con DNI» se controla con la evaluación del BCRA (RN-69), la capacidad de pago sobre ingresos declarados y el importe máximo de la línea (RN-76).
+
+**Consecuencias.** Sin cambios de esquema (`requisitos_documentales` ya es por versión y categoría). `RequisitosDocumentales`: `identificacion()`, `sugeridos()`, `faltantes()` sobre una lista y `exigidosPorLinea()` para CU-22 y CU-23; `ClienteService::registrar` exige solo la identificación; `ValidadorLinea` exige el documento de identidad en cada categoría. Cambian RN-11, CU-11 (paso 3 y A4, A8), CU-16 (paso 2 y A3), CU-22 (paso 8 y A4) y CU-23 (paso 3).

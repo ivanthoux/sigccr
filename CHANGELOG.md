@@ -10,7 +10,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - `ComparadorLineas`: simulación comparativa de todas las líneas para un cliente, por mayor monto o menor CFTEA (CU-99, D-10).
 - `MediosCobro`: cobro en ventanilla con varios medios de pago (D-11).
 - Migración 10: `cobros_medios`, `simulaciones_comparativas`, `cobros.cambio`, `movimientos_caja.cobro_medio_id`.
-- Decisiones D-09 a D-13 por las devoluciones de la presentación de la v8.
+- Decisiones D-09 a D-14 por las devoluciones de la presentación de la v8.
+- Líneas «solo con DNI»: el alta del cliente exige solo su identificación y cada línea define la documentación de la solicitud (D-14).
 
 ### Cambiado
 - `Imputador`: el cobro ordinario admite el pago parcial de cuotas (D-12); `imputaciones.parcial_excepcional` pasa a `parcial`.

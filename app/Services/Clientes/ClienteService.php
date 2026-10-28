@@ -154,10 +154,9 @@ class ClienteService extends BaseService
         $d = ValidadorCliente::normalizar($datos);
         $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio());
         $documentos = $this->validarArchivos($archivos, $errores);
-        if (RequisitosDocumentales::categoriaValida($d['tipo_cliente'], $d['categoria_ingresos'])) {
-            foreach (RequisitosDocumentales::faltantes($d['categoria_ingresos'], array_column($documentos, 'codigo')) as $falta) {
-                $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para la categoría de ingresos (RN-11).';
-            }
+        // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
+        foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
+            $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-11');

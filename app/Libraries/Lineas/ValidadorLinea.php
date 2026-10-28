@@ -10,7 +10,7 @@ use App\Libraries\Validacion\Campos;
 
 /**
  * Datos de una línea de crédito y de cada versión de sus condiciones (CU-16 pasos 2 a 4, CU-17 paso 5; RN-11, RN-14,
- * RN-68, RN-75, D-09). Las tasas y el gasto de otorgamiento se ingresan en porcentaje y se guardan en tanto por uno.
+ * RN-68, RN-75, D-09, D-14). Las tasas y el gasto de otorgamiento se ingresan en porcentaje y se guardan en tanto por uno.
  * El importe mínimo y máximo prestable acota simulaciones, solicitudes, alternativas y ofertas de la línea (RN-76).
  */
 final class ValidadorLinea
@@ -163,7 +163,17 @@ final class ValidadorLinea
                 $sinDocumentos[] = $admitidas[$cat] ?? $cat;
             }
         }
-        $r['requisitos'] = [$sinDocumentos !== [] ? 'Indique la documentación exigida para: ' . implode(', ', $sinDocumentos) . '.' : null];
+        // D-14: el documento de identidad es el mínimo de toda línea (en una empresa, el del representante)
+        $sinIdentidad = [];
+        foreach ($d['categorias'] as $cat) {
+            if (!in_array('DOC_IDENTIDAD', $d['requisitos'][$cat] ?? [], true)) {
+                $sinIdentidad[] = $admitidas[$cat] ?? $cat;
+            }
+        }
+        $r['requisitos'] = [
+            $sinDocumentos !== [] ? 'Indique la documentación exigida para: ' . implode(', ', $sinDocumentos) . '.' : null,
+            $sinIdentidad !== [] ? 'El documento de identidad es obligatorio en todas las categorías; falta en: ' . implode(', ', $sinIdentidad) . '.' : null,
+        ];
 
         $r['vigencia_inicio'] = [
             Campos::obligatorio($d['vigencia_inicio_texto'], 'la fecha de inicio de vigencia'),

@@ -30,7 +30,7 @@ $requisitosMarcados = [];
 foreach (RequisitosDocumentales::CATEGORIAS as $cats) {
     foreach (array_keys($cats) as $cat) {
         $requisitosMarcados[$cat] = $enviado ? (array) (old('requisitos')[$cat] ?? [])
-            : ($alta || !in_array($cat, $vig['categorias'], true) ? RequisitosDocumentales::exigidos($cat) : array_column($vig['requisitos'][$cat] ?? [], 'codigo'));
+            : ($alta || !in_array($cat, $vig['categorias'], true) ? RequisitosDocumentales::sugeridos($cat) : array_column($vig['requisitos'][$cat] ?? [], 'codigo'));
     }
 }
 $campo = static fn (string $nombre, string $etiqueta, string $html, string $ayuda = '', string $col = 'col-md-6'): string =>
@@ -117,7 +117,7 @@ $this->section('contenido');
 
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Categorías de ingresos y documentación exigida</legend>
-        <p class="small text-body-secondary">Marque las categorías admitidas. Para cada una se propone la documentación base de RN-11; puede agregar documentación adicional.</p>
+        <p class="small text-body-secondary">Marque las categorías admitidas. Para cada una se propone la documentación base de RN-11: puede quitarla o agregar otra. El documento de identidad es obligatorio en todas; una línea «solo con DNI» exige únicamente ese documento (D-14).</p>
         <?= error_campo('categorias') ?><?= error_campo('requisitos') ?>
         <div class="row g-3 mt-0">
             <?php foreach (RequisitosDocumentales::CATEGORIAS as $tipoCliente => $cats): ?>

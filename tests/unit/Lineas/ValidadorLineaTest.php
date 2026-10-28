@@ -76,6 +76,17 @@ final class ValidadorLineaTest extends TestCase
         $this->assertArrayHasKey('tipos_cliente', $ninguno);
     }
 
+    public function testLineaSoloConDni(): void
+    {
+        // D-14: una línea puede exigir únicamente el documento de identidad
+        $express = $this->motos(['codigo' => 'EXPRESS', 'requisitos' => ['RelacionDependencia' => ['DOC_IDENTIDAD'], 'Monotributista' => ['DOC_IDENTIDAD']]]);
+        $this->assertSame([], V::validar(V::normalizar($express), self::CODIGOS, '2026-10-27'));
+        // pero no puede omitirlo
+        $sinDni = $this->motos(['requisitos' => ['RelacionDependencia' => ['RECIBO_SUELDO'], 'Monotributista' => ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']]]);
+        $e = V::validar(V::normalizar($sinDni), self::CODIGOS, '2026-10-27');
+        $this->assertSame('El documento de identidad es obligatorio en todas las categorías; falta en: Relación de dependencia.', $e['requisitos']);
+    }
+
     public function testTasasEnPorcentaje(): void
     {
         $this->assertSame('0.655000', V::porcentaje('65,5 %'));

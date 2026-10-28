@@ -132,12 +132,36 @@ final class ClientesTest extends TestCase
         $this->assertFalse(RequisitosDocumentales::categoriaValida('PersonaJuridica', 'Monotributista'));
     }
 
-    public function testDocumentacionExigidaPorCategoria(): void
+    public function testAltaSoloExigeIdentificacion(): void
     {
-        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::exigidos('RelacionDependencia'));
-        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes('Monotributista', ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
-        $this->assertSame([], RequisitosDocumentales::faltantes('JubiladoPensionado', ['RECIBO_HABERES', 'DOC_IDENTIDAD', 'OTRO']));
-        $this->assertCount(5, RequisitosDocumentales::faltantes('Empresa', []));
+        // D-14: una persona humana se registra solo con su DNI, cualquiera sea su categoría de ingresos
+        $this->assertSame([], RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion('PersonaHumana'), ['DOC_IDENTIDAD']));
+        $this->assertSame(['DOC_IDENTIDAD'], RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion('PersonaHumana'), ['RECIBO_SUELDO']));
+        $this->assertSame(['PODER_REPRESENTACION'], RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion('PersonaJuridica'), ['CONST_CUIT', 'DOC_IDENTIDAD']));
+    }
+
+    public function testDocumentacionSugeridaPorCategoria(): void
+    {
+        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::sugeridos('RelacionDependencia'));
+        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Monotributista'), ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
+        $this->assertCount(5, RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Empresa'), []));
+    }
+
+    public function testLaLineaDefineLoExigidoEnLaSolicitud(): void
+    {
+        // Línea «solo con DNI»: al cliente en relación de dependencia no se le piden recibos
+        $express = [['codigo' => 'DOC_IDENTIDAD', 'categoria_ingresos' => 'RelacionDependencia', 'obligatorio' => 1]];
+        $this->assertSame(['DOC_IDENTIDAD'], RequisitosDocumentales::exigidosPorLinea($express, 'RelacionDependencia'));
+        // Línea con recibos: se exigen; una fila sin categoría aplica a todas y una opcional no se exige
+        $motos = [
+            ['codigo' => 'DOC_IDENTIDAD', 'categoria_ingresos' => null, 'obligatorio' => 1],
+            ['codigo' => 'RECIBO_SUELDO', 'categoria_ingresos' => 'RelacionDependencia', 'obligatorio' => 1],
+            ['codigo' => 'CONST_MONOTRIBUTO', 'categoria_ingresos' => 'Monotributista', 'obligatorio' => 1],
+            ['codigo' => 'DDJJ_GANANCIAS', 'categoria_ingresos' => 'RelacionDependencia', 'obligatorio' => 0],
+        ];
+        $exigidos = RequisitosDocumentales::exigidosPorLinea($motos, 'RelacionDependencia');
+        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], $exigidos);
+        $this->assertSame(['RECIBO_SUELDO'], RequisitosDocumentales::faltantes($exigidos, ['DOC_IDENTIDAD']));
     }
 
     public function testArchivosDelLegajo(): void

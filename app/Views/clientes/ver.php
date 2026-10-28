@@ -13,7 +13,9 @@ $id = (int) $c['id'];
 $juridica = $c['tipo_cliente'] === 'PersonaJuridica';
 $activo = $c['estado'] === 'Activo';
 $categoria = RequisitosDocumentales::CATEGORIAS[$c['tipo_cliente']][$c['categoria_ingresos']] ?? $c['categoria_ingresos'];
-$faltantes = RequisitosDocumentales::faltantes($c['categoria_ingresos'], array_column($c['documentos'], 'codigo'));
+$presentes = array_column($c['documentos'], 'codigo');
+$faltantes = RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($c['tipo_cliente']), $presentes);
+$sugeridosFaltantes = RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos($c['categoria_ingresos']), $presentes);
 $nombresTipo = array_column($tipos, 'nombre', 'codigo');
 $fila = static fn (string $etiqueta, ?string $valor): string => $valor === null || $valor === '' ? '' : '<dt class="col-sm-5 fw-medium">' . $etiqueta . '</dt><dd class="col-sm-7">' . $valor . '</dd>';
 $politica = $c['consentimientos']['PoliticaDatos'];
@@ -90,7 +92,9 @@ $this->section('contenido');
         <section class="hoja p-4" id="legajo" aria-labelledby="titulo-legajo">
             <h2 class="h5" id="titulo-legajo">Legajo</h2>
             <?php if ($faltantes !== []): ?>
-                <div class="alert alert-warning small" role="status">Falta documentación de su categoría de ingresos: <?= esc(implode(', ', array_map(static fn ($f) => $nombresTipo[$f] ?? $f, $faltantes))) ?>.</div>
+                <div class="alert alert-warning small" role="status">Falta documentación de identificación: <?= esc(implode(', ', array_map(static fn ($f) => $nombresTipo[$f] ?? $f, $faltantes))) ?>.</div>
+            <?php elseif ($sugeridosFaltantes !== []): ?>
+                <p class="small text-body-secondary">Documentación habitual de su categoría todavía no incorporada: <?= esc(implode(', ', array_map(static fn ($f) => $nombresTipo[$f] ?? $f, $sugeridosFaltantes))) ?>. Se exige solo si la línea que solicite la requiere (D-14).</p>
             <?php endif ?>
             <?php if ($c['documentos'] === []): ?>
                 <p class="text-body-secondary">El legajo no tiene documentos.</p>
@@ -117,13 +121,13 @@ $this->section('contenido');
                         <label for="tipo-documento-nuevo" class="form-label small">Agregar documento</label>
                         <select class="form-select" id="tipo-documento-nuevo" data-destino="archivo-nuevo">
                             <?php foreach ($tipos as $t): if (!in_array($t['aplica_a'], ['Ambos', $c['tipo_cliente']], true)) { continue; } ?>
-                                <option value="<?= esc($t['codigo'], 'attr') ?>"<?= in_array($t['codigo'], $faltantes, true) ? ' selected' : '' ?>><?= esc($t['nombre']) ?></option>
+                                <option value="<?= esc($t['codigo'], 'attr') ?>"<?= ($faltantes[0] ?? $sugeridosFaltantes[0] ?? '') === $t['codigo'] ? ' selected' : '' ?>><?= esc($t['nombre']) ?></option>
                             <?php endforeach ?>
                         </select>
                     </div>
                     <div class="col-md-5">
                         <label for="archivo-nuevo" class="form-label small">Archivos (PDF, JPG o PNG, hasta 5 MB)</label>
-                        <input type="file" class="form-control<?= campo_invalido('documentos') ?>" id="archivo-nuevo" name="documentos[<?= esc($faltantes[0] ?? 'DOC_IDENTIDAD', 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple required>
+                        <input type="file" class="form-control<?= campo_invalido('documentos') ?>" id="archivo-nuevo" name="documentos[<?= esc($faltantes[0] ?? $sugeridosFaltantes[0] ?? 'DOC_IDENTIDAD', 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple required>
                     </div>
                     <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-secondary"><i class="bi bi-upload me-1" aria-hidden="true"></i>Incorporar</button></div>
                     <div class="col-12"><?= error_campo('documentos') ?><?php foreach ($tipos as $t) { echo error_campo('doc_' . $t['codigo']); } ?></div>

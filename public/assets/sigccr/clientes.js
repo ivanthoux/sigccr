@@ -1,5 +1,5 @@
-/* Formulario de clientes (CU-11, CU-12): secciones según el tipo de cliente, documentación obligatoria según la
-   categoría de ingresos (RN-11) y comprobación de identidad al cambiar el correo (RN-58). */
+/* Formulario de clientes (CU-11, CU-12): secciones según el tipo de cliente, documentación de identificación
+   obligatoria según el tipo (RN-11, D-14) y comprobación de identidad al cambiar el correo (RN-58). */
 (function () {
     'use strict';
     const form = document.querySelector('form.formulario-cliente');
@@ -15,8 +15,7 @@
         const tipo = tipoActual();
         form.querySelectorAll('[data-solo]').forEach((el) => { el.hidden = el.dataset.solo !== tipo; });
         form.querySelectorAll('[data-aplica]').forEach((el) => { el.hidden = !['Ambos', tipo].includes(el.dataset.aplica); });
-        const categoria = tipo === 'PersonaJuridica' ? 'Empresa' : (form.querySelector('#categoria_ingresos')?.value || '');
-        const exigidos = requisitos[categoria] || [];
+        const exigidos = requisitos[tipo] || [];
         form.querySelectorAll('[data-obligatorio]').forEach((el) => { el.hidden = !exigidos.includes(el.dataset.obligatorio); });
     }
 
