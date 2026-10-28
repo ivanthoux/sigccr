@@ -345,7 +345,11 @@ class UsuarioService extends BaseService
             ->groupStart()->where('hasta', null)->orWhere('hasta >=', $this->hoyNegocio())->groupEnd()->countAllResults() > 0;
     }
 
-    /** RN-04: responsabilidades que impiden desactivar al usuario. @return list<string> */
+    /**
+     * RN-04: responsabilidades que impiden desactivar al usuario.
+     *
+     * @return list<string>
+     */
     private function responsabilidadesPendientes(int $id): array
     {
         $r = [];

@@ -31,6 +31,7 @@ class SimuladorPasarela implements PasarelaInterface
         return array_values($datos[$referenciaExterna] ?? []);
     }
 
+    /** @param array<string, string> $cabeceras */
     public function firmaValida(string $cuerpo, array $cabeceras): bool
     {
         $secreto = config('Sigccr')->pasarelaSecretoNotificaciones ?: 'simulador';

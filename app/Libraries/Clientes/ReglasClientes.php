@@ -39,7 +39,7 @@ final class ReglasClientes
         ];
         $motivos = [];
         foreach ($textos as $clave => [$singular, $plural]) {
-            $n = $pendientes[$clave] ?? 0;
+            $n = $pendientes[$clave];
             if ($n > 0) {
                 $motivos[] = $n . ' ' . ($n === 1 ? $singular : $plural);
             }

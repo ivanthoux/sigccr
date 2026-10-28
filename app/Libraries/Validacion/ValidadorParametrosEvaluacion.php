@@ -20,7 +20,11 @@ final class ValidadorParametrosEvaluacion
     public const CATEGORIAS = ['A', 'B', 'C', 'D', 'E'];
     public const VIGENCIA_SUGERIDA = 30;
 
-    /** Valores sugeridos (RN-69) con la vigencia de 3.5.1. @return array<string, mixed> */
+    /**
+     * Valores sugeridos (RN-69) con la vigencia de 3.5.1.
+     *
+     * @return array<string, mixed>
+     */
     public static function sugeridos(): array
     {
         return ModeloEvaluacion::PARAMETROS_INICIALES + ['vigencia_dias' => self::VIGENCIA_SUGERIDA];

@@ -114,7 +114,7 @@ class LineaService extends BaseService
      *
      * @param array<string, mixed> $datos
      */
-    public function registrar(array $datos, int $usuarioId): int
+    public function registrar(array $datos): int
     {
         $d = ValidadorLinea::normalizar($datos);
         $errores = ValidadorLinea::validar($d, $this->codigosDocumentacion(), $this->hoyNegocio());
@@ -122,7 +122,7 @@ class LineaService extends BaseService
             throw new ValidacionException($errores, 'RN-14');
         }
 
-        return $this->transaccion(function () use ($d, $usuarioId): int {
+        return $this->transaccion(function () use ($d): int {
             // CU-16 A1: identificación o nombre ya existentes
             $repetida = $this->db->query('SELECT TOP (1) codigo, nombre FROM dbo.lineas_credito WITH (UPDLOCK, HOLDLOCK) WHERE codigo = ? OR nombre = ?', [$d['codigo'], $d['nombre']])->getRowArray();
             if ($repetida !== null) {
@@ -151,7 +151,7 @@ class LineaService extends BaseService
      * @param array<string, mixed> $datos
      * @return array{version: int, vigente_desde: string, operaciones_anteriores: int}
      */
-    public function modificar(int $id, int $versionLeida, array $datos, string $fechaVigencia, string $motivo, int $usuarioId): array
+    public function modificar(int $id, int $versionLeida, array $datos, string $fechaVigencia, string $motivo): array
     {
         $d = ValidadorLinea::normalizar($datos);
         $hoy = $this->hoyNegocio();
@@ -170,7 +170,7 @@ class LineaService extends BaseService
             throw new ValidacionException($errores, 'RN-14');
         }
 
-        return $this->transaccion(function () use ($id, $versionLeida, $d, $fecha, $hoy, $motivo, $usuarioId): array {
+        return $this->transaccion(function () use ($id, $versionLeida, $d, $fecha, $hoy, $motivo): array {
             $linea = $this->bloquear('lineas_credito', [$id])[0] ?? null;
             if ($linea === null) {
                 throw new ReglaNegocioException('La línea de crédito no existe.');
@@ -333,7 +333,11 @@ class LineaService extends BaseService
         return (new \DateTimeImmutable($valor))->getTimestamp();
     }
 
-    /** Categorías de ingresos con su nombre, para formularios y filtros. @return array<string, string> */
+    /**
+     * Categorías de ingresos con su nombre, para formularios y filtros.
+     *
+     * @return array<string, string>
+     */
     public static function categorias(): array
     {
         return RequisitosDocumentales::CATEGORIAS['PersonaHumana'] + RequisitosDocumentales::CATEGORIAS['PersonaJuridica'];

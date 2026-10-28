@@ -46,7 +46,7 @@ final class MediosCobro
         }
         foreach ($medios as $n => $m) {
             $fila = $n + 1;
-            $medio = (string) ($m['medio'] ?? '');
+            $medio = $m['medio'];
             if (!isset(self::MEDIOS[$medio])) {
                 $errores[] = "Medio {$fila}: seleccione un medio de pago válido.";
                 continue;

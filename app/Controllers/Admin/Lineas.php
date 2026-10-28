@@ -58,7 +58,7 @@ class Lineas extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $id = $this->servicio->registrar((array) $this->request->getPost(), (int) session('cuenta')['id']);
+            $id = $this->servicio->registrar((array) $this->request->getPost());
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -88,7 +88,6 @@ class Lineas extends BaseController
                 (array) $this->request->getPost(),
                 (string) $this->request->getPost('fecha_vigencia'),
                 (string) $this->request->getPost('motivo'),
-                (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

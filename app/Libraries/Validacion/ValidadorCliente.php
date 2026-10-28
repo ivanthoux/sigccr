@@ -132,7 +132,11 @@ final class ValidadorCliente
         return $errores;
     }
 
-    /** Denominación del cliente para búsquedas y listados: "Apellido, Nombre" o la razón social. */
+    /**
+     * Denominación del cliente para búsquedas y listados: "Apellido, Nombre" o la razón social.
+     *
+     * @param array<string, mixed> $d
+     */
     public static function denominacion(array $d): string
     {
         return $d['tipo_cliente'] === 'PersonaJuridica' ? $d['razon_social'] : $d['apellido'] . ', ' . $d['nombre'];

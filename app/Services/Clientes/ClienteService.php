@@ -426,7 +426,10 @@ class ClienteService extends BaseService
 
     // ── Auxiliares ─────────────────────────────────────────────────────────────
 
-    /** @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $d
+     * @return array<string, mixed>
+     */
     private function datosSubclase(array $d): array
     {
         $nulo = static fn (string $v): ?string => $v === '' ? null : $v;
@@ -443,7 +446,11 @@ class ClienteService extends BaseService
         ];
     }
 
-    /** RN-07 y RN-08: documento, CUIT/CUIL y correo únicos en el padrón. $correo null: no se cambia el correo. */
+    /**
+     * RN-07 y RN-08: documento, CUIT/CUIL y correo únicos en el padrón. $correo null: no se cambia el correo.
+     *
+     * @param array<string, mixed> $d
+     */
     private function verificarUnicidad(array $d, ?int $excluirId, ?string $correo): void
     {
         $errores = [];
@@ -499,7 +506,11 @@ class ClienteService extends BaseService
         return $validos;
     }
 
-    /** Mueve el archivo al legajo con nombre aleatorio y registra el documento. Devuelve la ruta relativa. */
+    /**
+     * Mueve el archivo al legajo con nombre aleatorio y registra el documento. Devuelve la ruta relativa.
+     *
+     * @param array<string, mixed> $doc
+     */
     private function guardarDocumento(int $clienteId, array $doc, int $usuarioId): string
     {
         $carpeta = self::CARPETA_LEGAJOS . '/' . $clienteId;

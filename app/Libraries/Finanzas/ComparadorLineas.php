@@ -147,7 +147,10 @@ final class ComparadorLineas
         ];
     }
 
-    /** @param array<string, mixed> $a @param array<string, mixed> $b */
+    /**
+     * @param array<string, mixed> $a
+     * @param array<string, mixed> $b
+     */
     private static function compararCosto(array $a, array $b): int
     {
         $porCft = $a['cftea']->compare($b['cftea']);
