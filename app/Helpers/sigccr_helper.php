@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types=1);
-
 /**
  * Funciones de presentación del SIG-CCR: permisos, menú y formatos locales (RNF-02, RNF-07).
  */
+
+declare(strict_types=1);
 
 use App\Libraries\Finanzas\Decimal;
 use CodeIgniter\I18n\Time;

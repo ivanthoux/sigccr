@@ -31,8 +31,14 @@ final class ComparadorLineasTest extends TestCase
     private function comparar(?string $pedido = null, ?int $cuotas = null, string $criterio = ComparadorLineas::CRITERIO_MONTO): array
     {
         return ComparadorLineas::comparar(
-            Decimal::of('150000'), $this->lineas(), Decimal::of('0.21'), Decimal::of('1000'), new DateTimeImmutable('2026-11-02'),
-            $pedido === null ? null : Decimal::of($pedido), $cuotas, $criterio,
+            Decimal::of('150000'),
+            $this->lineas(),
+            Decimal::of('0.21'),
+            Decimal::of('1000'),
+            new DateTimeImmutable('2026-11-02'),
+            $pedido === null ? null : Decimal::of($pedido),
+            $cuotas,
+            $criterio,
         );
     }
 
@@ -70,7 +76,12 @@ final class ComparadorLineasTest extends TestCase
         $this->assertGreaterThan(6, $motos['cuotas']);
         $this->assertLessThanOrEqual(0, $motos['primera_cuota']->compare('150000'));
         $anterior = \App\Libraries\Finanzas\AmortizacionFrancesa::plan(
-            Decimal::of('900000'), Decimal::of('0.70'), $motos['cuotas'] - 1, new DateTimeImmutable('2026-11-02'), Decimal::of('500'), Decimal::of('0.21'),
+            Decimal::of('900000'),
+            Decimal::of('0.70'),
+            $motos['cuotas'] - 1,
+            new DateTimeImmutable('2026-11-02'),
+            Decimal::of('500'),
+            Decimal::of('0.21'),
         );
         $this->assertGreaterThan(0, $anterior->cuotaTotalMaxima()->compare('150000'));
     }

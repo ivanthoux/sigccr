@@ -457,8 +457,10 @@ class ClienteService extends BaseService
         $excluir = static function ($b, string $col) use ($excluirId) {
             return $excluirId === null ? $b : $b->where("{$col} !=", $excluirId);
         };
-        if ($d['tipo_cliente'] === 'PersonaHumana'
-            && $excluir($this->db->table('personas_humanas')->where('tipo_documento', $d['tipo_documento'])->where('nro_documento', $d['nro_documento']), 'cliente_id')->countAllResults() > 0) {
+        if (
+            $d['tipo_cliente'] === 'PersonaHumana'
+            && $excluir($this->db->table('personas_humanas')->where('tipo_documento', $d['tipo_documento'])->where('nro_documento', $d['nro_documento']), 'cliente_id')->countAllResults() > 0
+        ) {
             $errores['nro_documento'] = 'El documento ya está registrado para otro cliente.';
         }
         if ($d['cuit_cuil'] !== '' && $excluir($this->db->table('clientes')->where('cuit_cuil', $d['cuit_cuil']), 'id')->countAllResults() > 0) {
