@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Corregido (prueba funcional de la iteración 1, 29/10)
+- El número de documento ya no descarta en silencio puntos, guiones o espacios sueltos («28999111.» se rechazaba como válido); solo se acepta el separador de miles bien formado (28.999.111).
+- CUIL/CUIT: el prefijo se valida según el tipo de persona (20, 23, 24 o 27 para personas humanas; 30, 33 o 34 para jurídicas) y, si el dígito verificador no corresponde al prefijo, el mensaje indica cuál es.
+- El bloqueo temporal vencido vuelve a Habilitada antes de cualquier lectura del estado de la cuenta (4.2.1), no solo al iniciar sesión: la recuperación de acceso, la activación del portal y las pantallas de usuarios y clientes ya no ven un bloqueo terminado (RN-62).
+- El cliente que confirma su correo desde el enlace del alta pasa directamente a definir su contraseña del portal (D-16); el correo de verificación de los clientes tiene su propia plantilla.
+- La pantalla de clientes muestra los registrados más recientemente antes de buscar, como las de usuarios y líneas.
+
 ### Cambiado (pruebas manuales del portal, 29/10)
 - El rechazo del inicio de sesión advierte cuando quedan dos intentos o uno antes del bloqueo temporal, e informa el bloqueo al aplicarse y mientras dura (CU-01 A1 y A2), en el panel y en el portal. Los correos sin cuenta habilitada siguen la misma secuencia con un contador en la caché, para no revelar si la cuenta existe (RN-62).
 - Al terminar la activación (CU-04 paso 10) el cliente pasa al inicio de sesión del portal con su correo ya cargado; la pantalla de activación ofrece también «Ya tengo acceso: iniciar sesión».

@@ -40,28 +40,15 @@ class AutorizacionService extends BaseService
      *
      * @return int identificador de la comunicación encolada
      */
-    public function emitir(int $cuentaId, string $proposito, string $correoDestino, string $nombre, string $rutaEnlace): int
+    public function emitir(int $cuentaId, string $proposito, string $correoDestino, string $nombre, string $rutaEnlace, ?string $plantilla = null): int
     {
-        $this->db->query("UPDATE dbo.autorizaciones_temporales SET estado = 'Sustituida' WHERE cuenta_acceso_id = ? AND proposito = ? AND estado = 'Vigente'", [$cuentaId, $proposito]);
-        $codigo = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        ['codigo' => $codigo, 'id' => $autorizacionId, 'vence' => $vence] = $this->crear($cuentaId, $proposito, $correoDestino);
         $minutos = self::VIGENCIA_MINUTOS[$proposito];
-        $emitida = Time::now('UTC');
-        $vence = $emitida->addMinutes($minutos);
-        $this->db->table('autorizaciones_temporales')->insert([
-            'cuenta_acceso_id' => $cuentaId,
-            'proposito' => $proposito,
-            'hash_codigo' => hash('sha256', $codigo),
-            'correo_destino' => $correoDestino,
-            'emitida' => $emitida->format('Y-m-d H:i:s.vP'),
-            'vence' => $vence->format('Y-m-d H:i:s.vP'),
-            'estado' => 'Vigente',
-        ]);
-        $autorizacionId = (int) $this->db->insertID();
 
         return (new ComunicacionService())->encolar(
             $proposito === 'VerificacionCorreo' ? 'VerificacionCorreo' : 'Autorizacion',
             $correoDestino,
-            self::PLANTILLAS[$proposito],
+            $plantilla ?? self::PLANTILLAS[$proposito],
             [
                 'nombre' => $nombre,
                 'enlace' => site_url($rutaEnlace . '/' . $codigo),
@@ -71,6 +58,36 @@ class AutorizacionService extends BaseService
             'autorizaciones_temporales',
             $autorizacionId,
         );
+    }
+
+    /**
+     * Emite la autorización sin enviarla por correo y devuelve su código. Solo para quien acaba de demostrar el
+     * control del correo con otra autorización de un solo uso en la misma petición (D-16: activación al verificar
+     * el correo). Debe llamarse dentro de la transacción de la operación.
+     */
+    public function emitirSinComunicacion(int $cuentaId, string $proposito, string $correoDestino): string
+    {
+        return $this->crear($cuentaId, $proposito, $correoDestino)['codigo'];
+    }
+
+    /** @return array{codigo: string, id: int, vence: Time} */
+    private function crear(int $cuentaId, string $proposito, string $correoDestino): array
+    {
+        $this->db->query("UPDATE dbo.autorizaciones_temporales SET estado = 'Sustituida' WHERE cuenta_acceso_id = ? AND proposito = ? AND estado = 'Vigente'", [$cuentaId, $proposito]);
+        $codigo = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+        $emitida = Time::now('UTC');
+        $vence = $emitida->addMinutes(self::VIGENCIA_MINUTOS[$proposito]);
+        $this->db->table('autorizaciones_temporales')->insert([
+            'cuenta_acceso_id' => $cuentaId,
+            'proposito' => $proposito,
+            'hash_codigo' => hash('sha256', $codigo),
+            'correo_destino' => $correoDestino,
+            'emitida' => $emitida->format('Y-m-d H:i:s.vP'),
+            'vence' => $vence->format('Y-m-d H:i:s.vP'),
+            'estado' => 'Vigente',
+        ]);
+
+        return ['codigo' => $codigo, 'id' => (int) $this->db->insertID(), 'vence' => $vence];
     }
 
     /**

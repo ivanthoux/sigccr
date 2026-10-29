@@ -16,7 +16,12 @@ final class CamposTest extends TestCase
         $this->assertSame('', Campos::texto(null));
         $this->assertSame('ana.gomez@entidad.com.ar', Campos::correo(' Ana.Gomez@Entidad.COM.ar '));
         $this->assertSame('28999111', Campos::documento('28.999.111'));
-        $this->assertSame('AAB123456', Campos::documento('aab 123-456'));
+        $this->assertSame('AAB123456', Campos::documento(' aab123456 '));
+        // Solo se quita el separador de miles bien formado: el resto llega a numeroDocumento() y se rechaza
+        $this->assertSame('28999111.', Campos::documento('28999111.'));
+        $this->assertSame('28.99.9111', Campos::documento('28.99.9111'));
+        $this->assertSame('AAB 123-456', Campos::documento('aab 123-456'));
+        $this->assertSame('28999111', Campos::documentoFlexible('28.999.111.'));
     }
 
     public function testObligatorioYLargo(): void
@@ -58,6 +63,9 @@ final class CamposTest extends TestCase
         $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '12345'));
         $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '1234567890'));
         $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', 'AB123456'));
+        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('28999111.')));
+        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('.28999111')));
+        $this->assertNull(Campos::numeroDocumento('DNI', Campos::documento('28.999.111')));
         $this->assertSame('El número de documento no es válido.', Campos::numeroDocumento('DNI', '000000'));
         $this->assertNull(Campos::numeroDocumento('Pasaporte', 'AAB123456'));
         $this->assertSame('El pasaporte debe tener entre 5 y 15 letras o números.', Campos::numeroDocumento('Pasaporte', 'AB12'));
@@ -70,7 +78,15 @@ final class CamposTest extends TestCase
         $this->assertNull(Campos::cuit('20111111112'));
         $this->assertSame('El CUIT o CUIL debe tener 11 dígitos.', Campos::cuit('2012345678'));
         $this->assertSame('El CUIT o CUIL tiene un prefijo inválido.', Campos::cuit('11123456786'));
-        $this->assertSame('El dígito verificador del CUIT o CUIL no es correcto.', Campos::cuit('20123456787'));
+        $this->assertSame('El dígito verificador no corresponde: para 20-12345678 el último dígito es 6.', Campos::cuit('20123456787'));
+        // El dígito depende del prefijo: 20 y 27 para el mismo DNI tienen dígitos distintos y los dos son válidos
+        $this->assertNull(Campos::cuit('20289991116', 'PersonaHumana'));
+        $this->assertNull(Campos::cuit('27289991110', 'PersonaHumana'));
+        $this->assertNull(Campos::cuit('23289991115', 'PersonaHumana'));
+        $this->assertSame('El dígito verificador no corresponde: para 27-28999111 el último dígito es 0.', Campos::cuit('27289991116', 'PersonaHumana'));
+        $this->assertSame('El CUIL o CUIT de una persona humana empieza con 20, 23, 24 o 27.', Campos::cuit('30500010912', 'PersonaHumana'));
+        $this->assertSame('El CUIT de una persona jurídica empieza con 30, 33 o 34.', Campos::cuit('20289991116', 'PersonaJuridica'));
+        $this->assertNull(Campos::cuit('30500010912', 'PersonaJuridica'));
     }
 
     public function testMotivo(): void

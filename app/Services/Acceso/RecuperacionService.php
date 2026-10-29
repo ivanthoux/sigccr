@@ -28,6 +28,7 @@ class RecuperacionService extends BaseService
     {
         $correo = mb_strtolower(trim($correo));
         $comunicacionId = $this->transaccion(function () use ($tipoCuenta, $correo, $rutaEnlace): ?int {
+            $this->liberarBloqueosVencidos();
             $auditoria = new AuditoriaService($this->db);
             $cuenta = $this->db->query(
                 'SELECT ca.id, ca.correo, ca.estado, c.estado AS estado_cliente, COALESCE(ui.nombre, ph.nombre, pj.razon_social) AS nombre '

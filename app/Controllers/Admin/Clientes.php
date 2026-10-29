@@ -35,7 +35,7 @@ class Clientes extends BaseController
             'titulo' => 'Clientes',
             'criterios' => $criterios,
             'buscado' => $buscado,
-            'clientes' => $buscado ? $this->servicio->buscar($criterios) : [],
+            'clientes' => $buscado ? $this->servicio->buscar($criterios) : $this->servicio->recientes(),
         ]);
     }
 
@@ -54,7 +54,7 @@ class Clientes extends BaseController
             return $this->volverConError($e);
         }
 
-        return redirect()->to(site_url("admin/clientes/{$id}"))->with('exito', 'Cliente registrado. Enviamos un enlace a su correo para verificarlo; hasta entonces no puede activar el portal.');
+        return redirect()->to(site_url("admin/clientes/{$id}"))->with('exito', 'Cliente registrado. Enviamos un enlace a su correo: al abrirlo, el cliente lo verifica y define su contraseña del portal.');
     }
 
     /** CU-15 pasos 1 a 3. */
