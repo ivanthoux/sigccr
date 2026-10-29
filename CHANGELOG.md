@@ -39,8 +39,8 @@ Control 1: iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financier
 - Plantilla del portal con barra superior y pantalla principal con las funciones de autogestión, que pasan a ser enlaces a medida que se construyen (`Config\Menu::$portal`).
 - Pruebas `Rutas`: cada ruta del portal con sesión exige `auth:portal`, el panel no acepta la sesión del portal y las pantallas de acceso envían cada formulario a su ámbito.
 - Diseño de la iteración 1 (C09): clases de diseño y nueve diagramas de secuencia por patrón en Mermaid y draw.io (`docs/diseno/`), incorporados como sección 4.5 del documento.
-- Guía de la prueba funcional de la iteración 1 (C11) con 57 casos (`docs/pruebas/`).
-- Decisión D-15: persistencia desde los servicios con el Query Builder, sin modelos por tabla.
+- Guía de la prueba funcional de la iteración 1 (C11) con 60 casos (`docs/pruebas/`).
+- Decisiones D-15 (persistencia desde los servicios con el Query Builder, sin modelos por tabla) y D-16 (activación del portal al verificar el correo).
 
 ### Cambiado
 - `Imputador`: el cobro ordinario admite el pago parcial de cuotas (D-12); `imputaciones.parcial_excepcional` pasa a `parcial`.
@@ -49,6 +49,11 @@ Control 1: iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financier
 - Al terminar la activación (CU-04 paso 10) el cliente pasa al inicio de sesión del portal con su correo ya cargado; la pantalla de activación ofrece también «Ya tengo acceso: iniciar sesión».
 
 ### Corregido
+- El número de documento ya no descarta en silencio puntos, guiones o espacios sueltos («28999111.» se rechazaba como válido); solo se acepta el separador de miles bien formado (28.999.111).
+- CUIL/CUIT: el prefijo se valida según el tipo de persona (20, 23, 24 o 27 para personas humanas; 30, 33 o 34 para jurídicas) y, si el dígito verificador no corresponde al prefijo, el mensaje indica cuál es.
+- El bloqueo temporal vencido vuelve a Habilitada antes de cualquier lectura del estado de la cuenta (4.2.1), no solo al iniciar sesión: la recuperación de acceso, la activación del portal y las pantallas de usuarios y clientes ya no ven un bloqueo terminado (RN-62).
+- El cliente que confirma su correo desde el enlace del alta pasa directamente a definir su contraseña del portal (D-16); el correo de verificación de los clientes tiene su propia plantilla.
+- La pantalla de clientes muestra los registrados más recientemente antes de buscar, como las de usuarios y líneas.
 - Un resultado incierto del proveedor de correo se reintentaba; ahora queda En revisión y no se reenvía (RNF-09, CU-95 A4).
 - Los reintentos se programaban 1, 3 y 5 minutos después de cada intento; ahora se cuentan desde el primero.
 - Integración continua: se versionan vacías las subcarpetas de `writable/`; un clon nuevo fallaba con «Cache unable to write».

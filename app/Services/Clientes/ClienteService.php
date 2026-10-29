@@ -30,6 +30,8 @@ class ClienteService extends BaseService
     /** Carpeta de los legajos dentro de writable/ (fuera del directorio público, RNF-12). */
     public const CARPETA_LEGAJOS = 'legajos';
     private const RUTA_VERIFICACION = 'portal/verificar-correo';
+    /** Clientes que muestra la pantalla inicial de CU-54 antes de buscar. */
+    public const CANTIDAD_RECIENTES = 50;
 
     /**
      * CU-54 Localizar Cliente.
@@ -46,7 +48,7 @@ class ClienteService extends BaseService
             $b->like('c.denominacion', trim($palabra, ','));
         }
         if (($c['documento'] ?? '') !== '') {
-            $b->where('ph.nro_documento', Campos::documento($c['documento']));
+            $b->where('ph.nro_documento', Campos::documentoFlexible($c['documento']));
         }
         if (($c['cuit'] ?? '') !== '') {
             $b->where('c.cuit_cuil', str_replace(['-', ' ', '.'], '', $c['cuit']));
@@ -62,12 +64,26 @@ class ClienteService extends BaseService
     }
 
     /**
+     * CU-54 paso 1: últimos clientes registrados, para la pantalla inicial antes de buscar.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function recientes(int $cantidad = self::CANTIDAD_RECIENTES): array
+    {
+        return $this->db->table('clientes c')
+            ->select('c.id, c.tipo_cliente, c.denominacion, c.cuit_cuil, c.correo, c.estado, ph.tipo_documento, ph.nro_documento')
+            ->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')
+            ->orderBy('c.id', 'DESC')->get($cantidad)->getResultArray();
+    }
+
+    /**
      * Perfil del cliente (CU-15 paso 3) con cuenta del portal, consentimientos vigentes y legajo.
      *
      * @return array<string, mixed>
      */
     public function obtener(int $id): array
     {
+        $this->liberarBloqueosVencidos();
         $c = $this->db->query(
             'SELECT c.*, ph.tipo_documento, ph.nro_documento, ph.nombre, ph.apellido, ph.fecha_nacimiento, ph.estado_civil, ph.ocupacion, ph.empleador, '
             . 'pj.razon_social, pj.fecha_constitucion, pj.actividad_principal, pj.representante_nombre, pj.representante_documento, pj.representante_cargo, '
@@ -191,7 +207,7 @@ class ClienteService extends BaseService
                 foreach ($documentos as $doc) {
                     $movidos[] = $this->guardarDocumento($id, $doc, $usuarioId);
                 }
-                $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $d['correo'], $d['tipo_cliente'] === 'PersonaJuridica' ? $d['representante_nombre'] : $d['nombre'], self::RUTA_VERIFICACION);
+                $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $d['correo'], $d['tipo_cliente'] === 'PersonaJuridica' ? $d['representante_nombre'] : $d['nombre'], self::RUTA_VERIFICACION, 'verificacion_correo_cliente');
                 (new AuditoriaService($this->db))->registrar('clientes.registrar', 'clientes', $id, 'Exitoso', null, [
                     'tipo' => $d['tipo_cliente'], 'denominacion' => ValidadorCliente::denominacion($d), 'categoria' => $d['categoria_ingresos'],
                     'documentos' => count($documentos), 'comunicaciones_comerciales' => $d['acepta_comunicaciones'],
@@ -272,7 +288,7 @@ class ClienteService extends BaseService
             if ($correoNuevo !== null) {
                 $cuentaId = (int) $actual['cuenta_cliente_id'];
                 (new AutorizacionService($this->db))->sustituirVigentes($cuentaId);
-                $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $correoNuevo, (string) ($d['nombre'] ?? $d['representante_nombre']), self::RUTA_VERIFICACION);
+                $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $correoNuevo, (string) ($d['nombre'] ?? $d['representante_nombre']), self::RUTA_VERIFICACION, 'verificacion_correo_cliente');
                 $cambios['correo'] = ['anterior' => $actual['correo'], 'nuevo' => "{$correoNuevo} (pendiente de verificación)", 'evidencia_identidad' => $evidencia];
             }
 
@@ -295,10 +311,14 @@ class ClienteService extends BaseService
         return ['verificacion' => $resultado['comunicacion'] !== null, 'solicitudes_afectadas' => $resultado['solicitudes_afectadas']];
     }
 
-    /** CU-11 paso 8 y CU-12 paso 8: el cliente confirma su correo desde el enlace. */
-    public function verificarCorreo(string $codigo): void
+    /**
+     * CU-11 paso 8 y CU-12 paso 8: el cliente confirma su correo desde el enlace.
+     *
+     * @return int identificador de la cuenta de acceso del cliente, para continuar con su activación (D-16)
+     */
+    public function verificarCorreo(string $codigo): int
     {
-        $this->transaccion(function () use ($codigo): void {
+        return $this->transaccion(function () use ($codigo): int {
             $autorizaciones = new AutorizacionService($this->db);
             $a = $autorizaciones->buscarVigente($codigo, ['VerificacionCorreo'], true);
             $cliente = $a === null ? null : $this->db->table('clientes')->select('id, correo')->where('cuenta_cliente_id', $a['cuenta_acceso_id'])->get()->getRowArray();
@@ -315,6 +335,8 @@ class ClienteService extends BaseService
             $this->db->query('UPDATE dbo.clientes SET correo = ?, actualizado_en = ?, version_fila = version_fila + 1 WHERE id = ?', [$correo, $this->ahoraUtc(), $cliente['id']]);
             $autorizaciones->marcarUtilizada((int) $a['id']);
             (new AuditoriaService($this->db))->registrar('clientes.verificar_correo', 'clientes', (int) $cliente['id'], 'Exitoso', null, ['correo' => ['anterior' => $cliente['correo'], 'nuevo' => $correo]], null, $cuentaId, $correo);
+
+            return $cuentaId;
         });
     }
 

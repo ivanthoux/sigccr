@@ -52,6 +52,7 @@ Datos de prueba sugeridos (correos ficticios):
 |---|---|---|---|---|
 | F-11 | Registrar usuarios | Como Administrador, registrar Gerente, Analista y Cajero con los datos sugeridos. | Cada uno queda Pendiente de activación y recibe el enlace de definición inicial (24 horas). | |
 | F-12 | Validaciones del alta | Intentar un alta con: nombre vacío, correo inválido, DNI con letras, correo o documento ya registrados. | Cada error aparece junto a su campo y no se crea el usuario. | |
+| F-12b | Documento con caracteres sueltos | Registrar un usuario con DNI `28999111.`, `.28999111` y `28-999-111`; luego con `28.999.111`. | Los tres primeros se rechazan («…sin puntos»); el último se acepta como 28999111. | |
 | F-13 | Definición inicial | Abrir los enlaces de F-11, definir las contraseñas e ingresar con cada usuario. | Cada usuario ve solo las opciones de su rol (el Cajero no ve Clientes → Registrar ni Líneas). | |
 | F-14 | Localizar | Buscar usuarios por nombre, documento, rol y estado. | Resultados que cumplen los filtros. | |
 | F-15 | Modificar correo | Cambiar el correo del Cajero. | Sigue vigente el correo anterior hasta abrir el enlace enviado al nuevo (30 minutos); después ingresa con el nuevo. | |
@@ -68,8 +69,9 @@ Datos de prueba sugeridos (correos ficticios):
 |---|---|---|---|---|
 | F-22 | Registrar persona humana | Como Analista, registrar a Ana Gómez con su DNI adjunto (PDF o JPG). | Perfil con el aviso de verificación del correo; cuenta del portal Pendiente de activación. | |
 | F-23 | Validaciones del alta | Probar: menor de 18 años, CUIL que no corresponde al DNI, sin aceptar la política de datos, sin adjuntar el DNI, archivo de más de 5 MB o de otro tipo, documento o correo repetidos. | Cada error junto a su campo; no se registra el cliente ni queda ningún archivo guardado. | |
+| F-23b | CUIL según el prefijo | Para el mismo DNI, cargar el CUIL con 20, 27 y 23 y su dígito; luego cambiar solo el prefijo sin cambiar el dígito, y probar un prefijo de empresa (30). | Los tres con su dígito correcto se aceptan; el de dígito sin actualizar indica cuál corresponde; 30 se rechaza para una persona humana. | |
 | F-24 | Registrar persona jurídica | Registrar la pyme con CUIT, representante, constancia de CUIT, DNI del representante y poder. | Perfil de persona jurídica con los documentos en el legajo. | |
-| F-25 | Verificar el correo | Abrir el enlace de `sigccr:correos` (portal/verificar-correo). | El perfil muestra el correo como verificado. | |
+| F-25 | Verificar el correo y activar | Abrir el enlace de `sigccr:correos` (portal/verificar-correo) y confirmar. | Lleva directamente a definir la contraseña del portal (D-16); después, el perfil muestra el correo como verificado y la cuenta Habilitada. | |
 | F-26 | Legajo | En el perfil, subir otro documento y descargarlo. | El documento aparece en el legajo y se descarga con su nombre original. | |
 | F-27 | Localizar | Buscar por parte del nombre, DNI, CUIT, tipo y estado. | La lista aparece solo después de buscar y respeta los filtros. | |
 | F-28 | Modificar datos | Cambiar el domicilio y los ingresos. | «Datos actualizados.»; la auditoría registra los valores anteriores y nuevos. | |
@@ -82,7 +84,7 @@ Datos de prueba sugeridos (correos ficticios):
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| F-33 | Activar el acceso | En `https://localhost/portal/activar`, ingresar el DNI y el correo verificado de Ana; abrir el enlace y definir la contraseña. | Lleva al inicio de sesión del portal con el correo cargado; ingresa a su pantalla principal. | |
+| F-33 | Activar el acceso sin el enlace de verificación | Con un cliente con el correo verificado y la cuenta Pendiente de activación, ir a `https://localhost/portal/activar`, ingresar su DNI y correo, abrir el enlace y definir la contraseña. | Lleva al inicio de sesión del portal con el correo cargado; ingresa a su pantalla principal. | |
 | F-34 | Datos que no coinciden | Repetir F-33 con un DNI inexistente o un correo distinto. | «No pudimos verificar los datos ingresados…» | |
 | F-35 | Cuenta ya activa | Repetir F-33 con la cuenta ya habilitada. | El mismo mensaje que un envío exitoso, sin enviar correo (no revela el estado). | |
 | F-36 | Persona jurídica | Activar el acceso de la pyme con su CUIT. | Igual que F-33. | |
@@ -118,6 +120,7 @@ Datos de prueba sugeridos (correos ficticios):
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
+| F-53b | Fin del bloqueo temporal | Bloquear una cuenta (F-03), esperar 15 minutos y, sin iniciar sesión, consultar el usuario como Administrador y pedir la recuperación de acceso. | El usuario figura Habilitado y la recuperación envía el enlace; luego inicia sesión normalmente. | |
 | F-54 | Inactividad | Dejar el panel 30 minutos sin uso (el portal, 15) y operar. | «La sesión finalizó por inactividad.» | |
 | F-55 | Pantalla angosta | Abrir el panel y el portal con 360 px de ancho (herramientas del navegador). | Menú desplegable, formularios en una columna y tablas con desplazamiento propio, sin desplazamiento horizontal de la página. | |
 | F-56 | Errores técnicos | Abrir `/admin/clientes/999999`. | Mensaje de cliente inexistente, sin detalles técnicos. | |

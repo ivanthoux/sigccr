@@ -74,7 +74,7 @@ $this->section('contenido');
             <h2 class="h5" id="titulo-portal">Acceso al portal</h2>
             <p class="mb-1"><?= etiqueta_estado_cuenta((string) ($c['estado_cuenta'] ?? 'Sin cuenta')) ?></p>
             <p class="small text-body-secondary mb-0"><?= ($c['estado_cuenta'] ?? '') === 'PendienteActivacion'
-                ? 'El cliente activa su acceso desde el portal una vez verificado el correo (CU-04).'
+                ? 'Al confirmar su correo desde el enlace que recibió, el cliente define su contraseña y activa el portal (CU-04).'
                 : 'El registro en el padrón no habilita por sí mismo el portal.' ?></p>
         </section>
         <section class="hoja p-4" aria-labelledby="titulo-consentimientos">

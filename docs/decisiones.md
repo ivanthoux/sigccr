@@ -19,6 +19,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-13 | 27/10/2026 | Validada (29/10/2026) |
 | D-14 | 28/10/2026 | Validada (29/10/2026) |
 | D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
+| D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -123,4 +124,12 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** Los servicios acceden a la base con el Query Builder y con consultas parametrizadas (`?`), sin modelos ni entidades por tabla. `BaseService` concentra la transacción (`transaccion()`), el bloqueo (`bloquear()`), la actualización con versión (`actualizarConVersion()`) y las fechas (`ahoraUtc()`, `hoyNegocio()`). Las reglas puras de cada área se ubican en `app/Libraries/<Área>` (Seguridad, Clientes, Lineas, Validacion, Alertas, Comunicaciones, Caja, además de Finanzas). Los importes siguen viajando como cadenas decimales y nunca como `float`.
 
 **Consecuencias.** Sin cambios de esquema. `app/Models` queda vacío y no existe `app/Entities`. Se mantienen RNF-05 (sin reglas en controladores ni vistas) y RNF-12 (sin concatenar datos del usuario en el SQL). Cambian 4.4.2 (fila Persistencia e Imagen 47) y 4.4.3 (filas de controladores, filtros, bibliotecas, excepciones, vistas, adjuntos y pruebas) en la v10.
+
+## D-16 · Activación del portal al verificar el correo del cliente (CU-04, CU-11)
+
+**Contexto.** En la prueba funcional de la iteración 1, el cliente recién registrado abría el enlace de verificación del correo y la pantalla solo le confirmaba la verificación: para definir su contraseña debía ir por su cuenta a «Activar o rehabilitar acceso», volver a ingresar su documento y su correo y esperar un segundo correo. El recorrido se percibía como un bloqueo («me pide verificar el correo y no me deja crear la contraseña»). Además, el correo usaba la plantilla de los usuarios internos.
+
+**Decisión.** Al confirmar el correo desde el enlace (CU-11 paso 8), si la cuenta del cliente está Pendiente de activación, o Desactivada con el cliente activo en el padrón, el sistema emite en ese momento la autorización de activación o de rehabilitación y lleva al cliente directamente a definir su contraseña (CU-04 paso 7). La autorización no se envía por correo, porque el cliente acaba de demostrar que lo controla con otra autorización de un solo uso (RN-03); se aplican las mismas reglas del paso 4 (RN-10, RN-62) y queda auditada. Si la cuenta ya está habilitada (cambio de correo, CU-12), la verificación termina en el inicio de sesión. La activación desde «Activar o rehabilitar acceso» con documento y correo se mantiene para quien no tenga el enlace. El correo de verificación de los clientes tiene su propia plantilla, que anticipa este paso.
+
+**Consecuencias.** Sin cambios de esquema. `AutorizacionService::emitirSinComunicacion()`, `ActivacionService::continuarTrasVerificacion()` y la plantilla `verificacion_correo_cliente`. Cambian CU-04 (flujo alternativo desde la verificación del correo) y CU-11 (paso 8 y postcondición) en la próxima versión del documento.
 

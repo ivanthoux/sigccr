@@ -7,7 +7,7 @@ $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
 <h1>Activar o rehabilitar acceso</h1>
-<p class="ayuda">Para usar el portal de autogestión por primera vez, o volver a usarlo después de que la entidad reactivó su ficha, ingrese su documento y el correo que registró en la sucursal. Le enviaremos un enlace para definir su contraseña.</p>
+<p class="ayuda">Para usar el portal de autogestión por primera vez, o volver a usarlo después de que la entidad reactivó su ficha, ingrese su documento y el correo que registró en la sucursal. Le enviaremos un enlace para definir su contraseña. Si acaba de registrarse en la sucursal, use el enlace que le enviamos para confirmar su correo: lo lleva directamente a definir su contraseña.</p>
 <form method="post" action="<?= url_to('portal.activar') ?>" novalidate>
     <?= csrf_field() ?>
     <div class="row g-2 mb-3">

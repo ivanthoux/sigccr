@@ -73,7 +73,7 @@ final class ValidadorCliente
 
         if ($juridica) {
             $r['razon_social'] = [Campos::obligatorio($d['razon_social'], 'la razón social'), Campos::largoMaximo($d['razon_social'], 200, 'la razón social')];
-            $r['cuit_cuil'] = [Campos::obligatorio($d['cuit_cuil'], 'el CUIT'), Campos::cuit($d['cuit_cuil'])];
+            $r['cuit_cuil'] = [Campos::obligatorio($d['cuit_cuil'], 'el CUIT'), Campos::cuit($d['cuit_cuil'], 'PersonaJuridica')];
             $r['fecha_constitucion'] = [
                 Campos::obligatorio($d['fecha_constitucion_texto'], 'la fecha de constitución'),
                 $d['fecha_constitucion_texto'] !== '' && $d['fecha_constitucion'] === null ? 'Ingrese una fecha válida (dd/mm/aaaa).' : null,
@@ -89,7 +89,7 @@ final class ValidadorCliente
             $r['tipo_documento'] = [Campos::obligatorio($d['tipo_documento'], 'el tipo de documento'), Campos::tipoDocumento($d['tipo_documento'])];
             $r['nro_documento'] = [Campos::obligatorio($d['nro_documento'], 'el número de documento'), Campos::numeroDocumento($d['tipo_documento'], $d['nro_documento'])];
             $r['cuit_cuil'] = [
-                Campos::cuit($d['cuit_cuil']),
+                Campos::cuit($d['cuit_cuil'], 'PersonaHumana'),
                 $d['cuit_cuil'] !== '' && $d['tipo_documento'] === 'DNI' && Campos::numeroDocumento('DNI', $d['nro_documento']) === null
                     && !Campos::cuilCorrespondeADni($d['cuit_cuil'], $d['nro_documento']) ? 'El CUIT/CUIL no corresponde al número de documento.' : null,
             ];

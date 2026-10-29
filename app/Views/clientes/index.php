@@ -59,12 +59,13 @@ $this->section('contenido');
     </div>
 </form>
 
-<?php if (!$buscado): ?>
-    <div class="hoja p-4"><p class="mb-0 text-body-secondary">Ingrese al menos un criterio para buscar en el padrón.</p></div>
-<?php elseif ($clientes === []): ?>
-    <div class="hoja p-4"><p class="mb-0">No hay clientes que coincidan con la búsqueda. Revise los datos o pruebe con menos criterios.</p></div>
+<?php if ($clientes === []): ?>
+    <div class="hoja p-4"><p class="mb-0"><?= $buscado ? 'No hay clientes que coincidan con la búsqueda. Revise los datos o pruebe con menos criterios.' : 'Todavía no hay clientes registrados.' ?></p></div>
 <?php else: ?>
     <div class="hoja p-3">
+        <?php if (!$buscado): ?>
+            <p class="small text-body-secondary mb-2">Clientes registrados más recientemente<?= count($clientes) >= \App\Services\Clientes\ClienteService::CANTIDAD_RECIENTES ? ' (los últimos ' . count($clientes) . '). Use los filtros para buscar en todo el padrón' : '' ?>.</p>
+        <?php endif ?>
         <table class="table table-hover align-middle mb-0" data-tabla>
             <thead><tr><th>Cliente</th><th>Tipo</th><th>Documento</th><th>CUIT/CUIL</th><th>Correo electrónico</th><th>Estado</th></tr></thead>
             <tbody>

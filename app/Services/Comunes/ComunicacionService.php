@@ -29,6 +29,7 @@ class ComunicacionService extends BaseService
         'restablecimiento_credenciales' => 'SIG-CCR: definición de una contraseña nueva',
         'definicion_inicial' => 'SIG-CCR: activación de su usuario',
         'verificacion_correo' => 'SIG-CCR: confirmación de su correo electrónico',
+        'verificacion_correo_cliente' => 'SIG-CCR: confirme su correo para usar el portal',
         'activacion_acceso' => 'SIG-CCR: activación de su acceso al portal',
     ];
 
