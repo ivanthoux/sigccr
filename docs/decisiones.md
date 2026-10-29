@@ -1,6 +1,6 @@
 # Registro de decisiones
 
-Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y se incorporaron a las secciones correspondientes del documento (v8, sección 4.5). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
+Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
 | ID | Fecha | Estado |
 |---|---|---|
@@ -12,12 +12,12 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-06 | 23/10/2026 | Validada (24/10/2026) |
 | D-07 | 23/10/2026 | Validada (24/10/2026) |
 | D-08 | 23/10/2026 | Validada (24/10/2026) |
-| D-09 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
-| D-10 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
-| D-11 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
-| D-12 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
-| D-13 | 27/10/2026 | Propuesta (devolución del 26/10/2026) |
-| D-14 | 28/10/2026 | Propuesta (acordada en la presentación del 26/10/2026) |
+| D-09 | 27/10/2026 | Validada (29/10/2026) |
+| D-10 | 27/10/2026 | Validada (29/10/2026) |
+| D-11 | 27/10/2026 | Validada (29/10/2026) |
+| D-12 | 27/10/2026 | Validada (29/10/2026) |
+| D-13 | 27/10/2026 | Validada (29/10/2026) |
+| D-14 | 28/10/2026 | Validada (29/10/2026) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
