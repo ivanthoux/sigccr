@@ -94,7 +94,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
     });
 });
 
-// Portal de autogestión (iteración 4)
+// Portal de autogestión del cliente (SS-07)
 $routes->group('portal', static function (RouteCollection $routes): void {
     // Verificación del correo del cliente desde el enlace (sin sesión)
     $routes->get('verificar-correo/(:segment)', 'Portal\Verificacion::mostrar/$1');
@@ -104,7 +104,22 @@ $routes->group('portal', static function (RouteCollection $routes): void {
     $routes->post('activar', 'Portal\Activacion::solicitar');
     $routes->get('activar/(:segment)', 'Portal\Activacion::contrasena/$1');
     $routes->post('activar/(:segment)', 'Portal\Activacion::guardarContrasena/$1');
-    // $routes->get('login', 'Portal\Acceso::login');   // iteración 4
+    // CU-01 y CU-02 del Cliente (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('login', 'Portal\Acceso::login', ['as' => 'portal.login']);
+    $routes->post('login', 'Portal\Acceso::autenticar');
+    $routes->get('recuperar', 'Portal\Acceso::recuperar', ['as' => 'portal.recuperar']);
+    $routes->post('recuperar', 'Portal\Acceso::solicitarRecuperacion');
+    $routes->get('restablecer/(:segment)', 'Portal\Acceso::restablecer/$1');
+    $routes->post('restablecer/(:segment)', 'Portal\Acceso::guardarContrasena/$1');
+
+    // Con sesión de cliente (RN-08): 15 minutos de inactividad (RNF-11)
+    $routes->group('', ['filter' => 'auth:portal'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'Portal\Inicio::index', ['as' => 'portal.inicio']);
+        // CU-03 del Cliente
+        $routes->get('salir', 'Portal\Acceso::confirmarCierre', ['as' => 'portal.salir']);
+        $routes->post('salir', 'Portal\Acceso::cerrar');
+        // Iteración 4: CU-45 a CU-49 con sus nombres de ruta de Config\Menu::$portal
+    });
 });
 
 // Notificaciones de servicios externos (sin sesión ni CSRF; se validan por firma, RNF-08)

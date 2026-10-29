@@ -30,13 +30,17 @@ class RecuperacionService extends BaseService
         $comunicacionId = $this->transaccion(function () use ($tipoCuenta, $correo, $rutaEnlace): ?int {
             $auditoria = new AuditoriaService($this->db);
             $cuenta = $this->db->query(
-                'SELECT ca.id, ca.correo, ca.estado, ui.nombre FROM dbo.cuentas_acceso ca WITH (UPDLOCK, ROWLOCK) '
-                . 'LEFT JOIN dbo.usuarios_internos ui ON ui.id = ca.id WHERE ca.tipo_cuenta = ? AND ca.correo = ?',
+                'SELECT ca.id, ca.correo, ca.estado, c.estado AS estado_cliente, COALESCE(ui.nombre, ph.nombre, pj.razon_social) AS nombre '
+                . 'FROM dbo.cuentas_acceso ca WITH (UPDLOCK, ROWLOCK) LEFT JOIN dbo.usuarios_internos ui ON ui.id = ca.id '
+                . 'LEFT JOIN dbo.clientes c ON c.cuenta_cliente_id = ca.id LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id '
+                . 'LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id WHERE ca.tipo_cuenta = ? AND ca.correo = ?',
                 [$tipoCuenta, $correo],
             )->getRowArray();
 
-            if ($cuenta === null || $cuenta['estado'] !== 'Habilitada') {
-                $motivo = $cuenta === null ? 'Correo no registrado' : "Cuenta en estado {$cuenta['estado']}";
+            // RN-10: el cliente desactivado en el padrón tampoco recupera el acceso al portal
+            $clienteInactivo = $tipoCuenta === 'Cliente' && $cuenta !== null && $cuenta['estado_cliente'] !== 'Activo';
+            if ($cuenta === null || $cuenta['estado'] !== 'Habilitada' || $clienteInactivo) {
+                $motivo = $cuenta === null ? 'Correo no registrado' : ($clienteInactivo ? 'Cliente desactivado en el padrón (RN-10)' : "Cuenta en estado {$cuenta['estado']}");
                 $auditoria->registrar('acceso.recuperacion.solicitud', 'cuenta_acceso', $cuenta['id'] ?? null, 'Rechazado', $motivo, ['correo' => $correo], null, $cuenta === null ? null : (int) $cuenta['id'], $correo);
 
                 return null;

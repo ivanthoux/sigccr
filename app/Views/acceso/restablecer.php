@@ -4,16 +4,18 @@
  *
  * @var CodeIgniter\View\View $this
  * @var string $codigo
+ * @var string|null $base 'admin' (por omisión) o 'portal'
  */
 use App\Libraries\Seguridad\PoliticaContrasena;
 
+$base = ($base ?? 'admin') === 'portal' ? 'portal' : 'admin';
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
 <h1>Nueva contraseña</h1>
 <p class="ayuda">Use entre <?= PoliticaContrasena::MINIMO ?> y <?= PoliticaContrasena::MAXIMO ?> caracteres.
     Una frase de varias palabras es fácil de recordar y difícil de adivinar.</p>
-<form method="post" action="<?= site_url('admin/restablecer/' . $codigo) ?>" novalidate>
+<form method="post" action="<?= site_url($base . '/restablecer/' . $codigo) ?>" novalidate>
     <?= csrf_field() ?>
     <div class="mb-3">
         <label for="contrasena" class="form-label">Nueva contraseña</label>

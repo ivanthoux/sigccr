@@ -167,3 +167,20 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .btn-check:checked + .btn-outline-secondary { background-color: #e7f3ee; border-color: var(--verde); color: var(--texto); font-weight: 600; }
 .btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #912018; --bs-btn-hover-border-color: #912018; --bs-btn-active-bg: #912018; }
 .btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
+
+/* Portal de autogestión del cliente: la misma identidad, con una barra superior en lugar del menú lateral. */
+.portal-ancho { max-width: 960px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
+.portal-barra { background: var(--tinta); color: var(--tinta-texto); padding: .75rem 0; }
+.portal-marca { color: #fff; text-decoration: none; display: flex; align-items: baseline; gap: .6rem; }
+.portal-marca:hover { color: #fff; }
+.portal-marca strong { font-size: 1.15rem; letter-spacing: .02em; }
+.portal-marca span { color: var(--tinta-texto); font-size: .875rem; }
+.portal-cuenta { font-size: .875rem; }
+.portal-salir { color: #fff; font-size: .875rem; text-decoration: none; white-space: nowrap; }
+.portal-salir:hover { color: #fff; text-decoration: underline; }
+.portal-contenido { padding-top: 2rem; padding-bottom: 3rem; }
+.funciones-portal { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); list-style: none; padding: 0; margin: 0; }
+.funciones-portal li { background: #fff; border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
+.funciones-portal .bi { color: var(--tinta-2); font-size: 1.25rem; }
+.funciones-portal h3 { font-size: 1rem; margin: .5rem 0 .25rem; }
+.funciones-portal p { color: var(--texto-2); font-size: .875rem; margin: 0; }
