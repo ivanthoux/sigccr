@@ -1,0 +1,40 @@
+sequenceDiagram
+autonumber
+actor U as Usuario interno o Cliente
+participant V as Vistas recuperar y restablecer
+participant C as Acceso (panel o portal)
+participant R as RecuperacionService
+participant AU as AutorizacionService
+participant CO as ComunicacionService
+participant P as ComunicacionesInterface
+participant DB as SQL Server
+U->>V: ingresa su correo
+V->>C: POST recuperar
+C->>R: solicitar(tipoCuenta, correo, ruta del enlace)
+R->>DB: BEGIN y lee la cuenta con UPDLOCK
+alt inexistente, no habilitada o cliente desactivado (RN-10)
+R->>DB: auditoría Rechazado y COMMIT, sin autorización
+else cuenta habilitada
+R->>AU: emitir(cuenta, Recuperacion, correo, nombre, ruta)
+AU->>DB: sustituye la vigente y guarda el hash SHA-256 del código de 256 bits, vence en 15 min (RN-03)
+AU->>CO: encolar(Autorizacion, correo, plantilla, enlace)
+CO->>DB: comunicación Pendiente con los datos cifrados
+R->>DB: auditoría y COMMIT
+R->>CO: enviar(id), fuera de la transacción
+CO->>P: enviar(destino, asunto, cuerpo, identificador)
+P-->>CO: aceptado o fallo, que reintenta CU-95
+end
+C-->>V: el mismo mensaje en todos los casos (A1, A5)
+U->>V: abre el enlace y define la contraseña
+V->>C: POST restablecer con el código
+C->>R: restablecer(código, contraseña, confirmación)
+R->>R: PoliticaContrasena, de 15 a 128 caracteres y no comprometida
+R->>AU: buscarVigente(código) con UPDLOCK
+alt vencida, utilizada o sustituida
+R-->>C: enlace inválido (A2)
+else vigente
+R->>DB: hash Argon2id, correo verificado y version_seguridad + 1
+R->>AU: marcarUtilizada
+R->>DB: auditoría y COMMIT
+C-->>V: inicio de sesión con la contraseña nueva
+end

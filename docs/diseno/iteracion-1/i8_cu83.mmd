@@ -1,0 +1,27 @@
+sequenceDiagram
+autonumber
+actor U as Usuario interno
+participant M as Plantilla del panel
+participant C as Admin Alertas
+participant S as AlertaService
+participant OA as OperacionAlerta
+participant DB as SQL Server
+U->>M: abre cualquier pantalla del panel
+M->>S: contarPendientes(usuario, rol)
+S-->>M: indicador de alertas pendientes en el menú
+U->>C: GET admin/alertas con estado, tipo y fechas
+C->>S: listar(usuario, rol, filtros)
+S->>DB: alertas del rol o del usuario, con la marca de vista, de la más reciente a la más antigua
+C-->>U: listado
+U->>C: GET detalle de una alerta
+C->>S: verDetalle(id, usuario, rol)
+alt dirigida a otro rol u otra persona
+S-->>C: se trata como inexistente (RN-01)
+end
+S->>DB: alertas_vistas, si el usuario no la había visto
+opt alerta Pendiente
+C->>OA: para(objeto, identificador, permisos, rutas del panel)
+OA-->>C: Ir a la operación, si su ruta existe y el rol tiene el permiso (A3)
+end
+C-->>U: detalle de la alerta
+Note over S,DB: Las operaciones y los procesos generan las alertas en su transacción y las resuelven al resolverse la situación. Consultarlas no las resuelve
