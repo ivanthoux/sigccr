@@ -42,6 +42,10 @@ class Sigccr extends BaseConfig
     public string $pasarelaSecretoNotificaciones = '';
     public string $informacionCrediticiaUrl = '';
     public string $smtpHost = '';
+    public int $smtpPuerto = 587;
+    /** tls (STARTTLS, puerto 587) o ssl (puerto 465) */
+    public string $smtpCifrado = 'tls';
     public string $smtpUsuario = '';
     public string $smtpClave = '';
+    public string $correoRemitente = 'no-responder@sigccr.local';
 }

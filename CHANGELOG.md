@@ -4,6 +4,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (iteración 1, C06, C08 y C10)
+- CU-04 Activar o Rehabilitar Acceso del Cliente en el portal (`portal/activar`), con RN-10 y respuesta sin revelar el estado de la cuenta (`ReglasActivacion`, `ActivacionService`).
+- CU-83 Consultar Alertas: listado con filtros, detalle registrado como visto, «Ir a la operación» según el rol e indicador de pendientes en el menú (`OperacionAlerta`, migración 11 `alertas_vistas`).
+- CU-95 Procesar Comunicaciones Pendientes: comando `comunicaciones:enviar` cada minuto, validez antes de enviar, reintentos al 1, 3 y 5 minutos del primer intento y resultado incierto En revisión (`PoliticaEnvio`).
+- Adaptador SMTP real (`sigccr.adaptadorComunicaciones = real`) con clasificación de respuestas según RNF-09.
+- Suite `Rutas`: autorización de cada ruta del panel con cada rol, sin base de datos.
+
+### Corregido
+- Un resultado incierto del proveedor de correo se reintentaba; ahora queda En revisión y no se reenvía (RNF-09, CU-95 A4).
+- Los reintentos se programaban 1, 3 y 5 minutos después de cada intento; ahora se cuentan desde el primero.
+
 ### Agregado
 - C06 Líneas de crédito: CU-16 Registrar, CU-17 Modificar (nueva versión no retroactiva), CU-18 Suspender, CU-19 Reactivar, CU-20 Localizar y CU-73 Consultar, con importe mínimo y máximo prestable (RN-76, D-09) y documentación exigida por categoría.
 - CU-58 Configurar Parámetros de Evaluación Crediticia: pesos, valores, cortes y situaciones excluyentes del motor BCRA, con validaciones y carga de los valores sugeridos de RN-69 (D-13).

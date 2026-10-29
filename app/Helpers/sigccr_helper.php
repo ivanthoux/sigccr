@@ -43,6 +43,22 @@ if (!function_exists('menu_panel')) {
     }
 }
 
+if (!function_exists('alertas_pendientes')) {
+    /** Alertas pendientes del usuario o de su rol, para el indicador del panel (CU-83 paso 1); una consulta por pedido. */
+    function alertas_pendientes(): int
+    {
+        static $cantidad = null;
+        $cuenta = session('cuenta');
+        if ($cantidad === null) {
+            $cantidad = is_array($cuenta) && in_array('alertas.consultar', $cuenta['permisos'] ?? [], true)
+                ? (new \App\Services\Comunes\AlertaService())->contarPendientes((int) $cuenta['id'], (string) $cuenta['rol'])
+                : 0;
+        }
+
+        return $cantidad;
+    }
+}
+
 if (!function_exists('formato_importe')) {
     /** Importe con separador de miles y coma decimal: $ 1.234,56 (RNF-02). Acepta cadenas, Decimal o números. */
     function formato_importe(string|int|float|Decimal|null $importe, bool $conSigno = true): string

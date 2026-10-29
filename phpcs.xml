@@ -3,6 +3,7 @@
     <description>Convención PSR-12 (RNF-05)</description>
     <file>app</file>
     <file>tests/unit</file>
+    <file>tests/rutas</file>
     <exclude-pattern>app/Views/*</exclude-pattern>
     <exclude-pattern>app/Config/*</exclude-pattern>
     <arg name="extensions" value="php"/>
