@@ -40,8 +40,17 @@ final class CapacidadPagoTest extends TestCase
     public function testAlternativasDescartanLasQueSuperanLaCapacidad(): void
     {
         $r = CapacidadPago::alternativas(
-            Decimal::of('30000'), Decimal::of('0.60'), [6, 12], Decimal::of('500'), Decimal::of('0.02'), Decimal::of('0.21'),
-            Decimal::of('50000'), Decimal::of('1000000'), Decimal::of('1000'), ['1', '0.5'], new DateTimeImmutable('2026-01-10'),
+            Decimal::of('30000'),
+            Decimal::of('0.60'),
+            [6, 12],
+            Decimal::of('500'),
+            Decimal::of('0.02'),
+            Decimal::of('0.21'),
+            Decimal::of('50000'),
+            Decimal::of('1000000'),
+            Decimal::of('1000'),
+            ['1', '0.5'],
+            new DateTimeImmutable('2026-01-10'),
         );
         $this->assertTrue($r['monto_maximo']->isPositive());
         $viables = array_filter($r['alternativas'], static fn ($a) => $a['viable']);

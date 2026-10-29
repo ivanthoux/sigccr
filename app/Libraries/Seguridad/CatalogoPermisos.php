@@ -92,6 +92,7 @@ final class CatalogoPermisos
         85 => ['fondos.registrar-movimiento', 'Registrar Movimiento de Fondos'],
         96 => ['refinanciaciones.cancelar-propuesta', 'Cancelar Propuesta de Refinanciación'],
         97 => ['creditos.cancelar-anticipadamente', 'Registrar Cancelación Anticipada de Crédito'],
+        99 => ['solicitudes.simular-comparativa', 'Simular Todas las Líneas de Crédito'],
     ];
 
     /**
@@ -102,7 +103,7 @@ final class CatalogoPermisos
     public const MATRIZ = [
         'Administrador' => [[5, 10], 53, 54, 57, [61, 63], 83],
         'Gerente' => [[13, 20], 24, 26, [28, 30], 32, 37, [41, 44], 50, 51, [54, 60], [65, 73], 77, [80, 83], 85, 96],
-        'AnalistaCredito' => [[11, 15], [20, 25], [28, 30], 39, 40, 42, 43, 50, 54, 64, 73, 74, 79, 83, 84, 96],
+        'AnalistaCredito' => [[11, 15], [20, 25], [28, 30], 39, 40, 42, 43, 50, 54, 64, 73, 74, 79, 83, 84, 96, 99],
         'Cajero' => [27, 29, [31, 36], 38, 42, 43, 54, 56, 74, 76, 78, 83, 97],
     ];
 

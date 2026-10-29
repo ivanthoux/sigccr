@@ -25,6 +25,7 @@ abstract class BaseProcesoCommand extends BaseCommand
 {
     protected $group = 'SIG-CCR';
 
+    /** @var BaseConnection<mixed, mixed> */
     protected BaseConnection $db;
     private int $procesados = 0;
     private int $errores = 0;

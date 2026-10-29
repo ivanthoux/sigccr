@@ -20,8 +20,10 @@ use Throwable;
  */
 abstract class BaseService
 {
+    /** @var BaseConnection<mixed, mixed> */
     protected BaseConnection $db;
 
+    /** @param BaseConnection<mixed, mixed>|null $db */
     public function __construct(?BaseConnection $db = null)
     {
         $this->db = $db ?? Database::connect();
@@ -62,7 +64,7 @@ abstract class BaseService
         $marcas = implode(', ', array_fill(0, count($ids), '?'));
         $sql = "SELECT * FROM dbo.{$tabla} WITH (UPDLOCK, ROWLOCK) WHERE {$columnaId} IN ({$marcas}) ORDER BY {$columnaId}";
 
-        return $this->db->query($sql, array_values($ids))->getResultArray();
+        return $this->db->query($sql, $ids)->getResultArray();
     }
 
     /**

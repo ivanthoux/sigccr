@@ -247,7 +247,12 @@ class UsuarioService extends BaseService
         $this->transaccion(function () use ($id, $versionLeida, $motivo, $actuanteId): void {
             $u = $this->obtenerBloqueado($id);
             $rechazos = ReglasUsuarios::motivosContraDesactivar(
-                $actuanteId, $id, $u['rol'], $u['estado'], $this->administradoresActivos(), $this->responsabilidadesPendientes($id),
+                $actuanteId,
+                $id,
+                $u['rol'],
+                $u['estado'],
+                $this->administradoresActivos(),
+                $this->responsabilidadesPendientes($id),
             );
             if ($rechazos !== []) {
                 throw new ReglaNegocioException(implode(' ', $rechazos), 'RN-04');
@@ -295,7 +300,10 @@ class UsuarioService extends BaseService
         return $this->transaccion(function () use ($id, $versionLeida, $rolNuevo, $motivo): bool {
             $u = $this->obtenerBloqueado($id);
             $rechazos = ReglasUsuarios::motivosContraCambiarRol(
-                $u['rol'], $rolNuevo, $u['estado'], $this->administradoresActivos(),
+                $u['rol'],
+                $rolNuevo,
+                $u['estado'],
+                $this->administradoresActivos(),
                 $this->db->table('jornadas_caja')->where('usuario_id', $id)->where('estado', 'Abierta')->countAllResults() > 0,
                 $this->asignacionCajaVigente($id),
             );
@@ -345,7 +353,11 @@ class UsuarioService extends BaseService
             ->groupStart()->where('hasta', null)->orWhere('hasta >=', $this->hoyNegocio())->groupEnd()->countAllResults() > 0;
     }
 
-    /** RN-04: responsabilidades que impiden desactivar al usuario. @return list<string> */
+    /**
+     * RN-04: responsabilidades que impiden desactivar al usuario.
+     *
+     * @return list<string>
+     */
     private function responsabilidadesPendientes(int $id): array
     {
         $r = [];

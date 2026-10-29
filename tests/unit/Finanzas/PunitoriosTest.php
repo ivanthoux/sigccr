@@ -35,8 +35,14 @@ final class PunitoriosTest extends TestCase
 
     public function testEjemploRn53TercerDiaSinPunitorios(): void
     {
-        $r = Punitorios::calcular(Decimal::of('15436.84'), $this->venc, new DateTimeImmutable('2026-03-12'), 3,
-            static fn () => Decimal::of('0.000821917808'), Decimal::of('0.21'));
+        $r = Punitorios::calcular(
+            Decimal::of('15436.84'),
+            $this->venc,
+            new DateTimeImmutable('2026-03-12'),
+            3,
+            static fn () => Decimal::of('0.000821917808'),
+            Decimal::of('0.21')
+        );
         $this->assertSame(3, $r['dias']);
         $this->assertFalse($r['exigible']);
         $this->assertCount(3, $r['tramos'], 'los tramos se registran aunque sean condicionales');
@@ -45,8 +51,14 @@ final class PunitoriosTest extends TestCase
 
     public function testEjemploRn53CuartoDiaCuatroDiasDePunitorios(): void
     {
-        $r = Punitorios::calcular(Decimal::of('15436.84'), $this->venc, new DateTimeImmutable('2026-03-13'), 3,
-            static fn () => Decimal::of('0.000821917808'), Decimal::of('0.21'));
+        $r = Punitorios::calcular(
+            Decimal::of('15436.84'),
+            $this->venc,
+            new DateTimeImmutable('2026-03-13'),
+            3,
+            static fn () => Decimal::of('0.000821917808'),
+            Decimal::of('0.21')
+        );
         $this->assertSame(4, $r['dias']);
         $this->assertTrue($r['exigible']);
         $this->assertSame('12.6878', $r['tramos'][0]['importe']->toFixed(4));

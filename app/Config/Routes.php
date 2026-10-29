@@ -65,6 +65,26 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
         });
 
+        // SS-03 Líneas de crédito (CU-16 a CU-20, CU-73)
+        $routes->group('lineas', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Lineas::index', ['as' => 'lineas.localizar', 'filter' => 'permiso:lineas.localizar']);
+            $routes->get('nueva', 'Admin\Lineas::nuevo', ['as' => 'lineas.registrar', 'filter' => 'permiso:lineas.registrar']);
+            $routes->post('', 'Admin\Lineas::registrar', ['filter' => 'permiso:lineas.registrar']);
+            $routes->get('(:num)', 'Admin\Lineas::ver/$1', ['filter' => 'permiso:lineas.consultar']);
+            $routes->get('(:num)/editar', 'Admin\Lineas::editar/$1', ['filter' => 'permiso:lineas.modificar']);
+            $routes->post('(:num)/editar', 'Admin\Lineas::actualizar/$1', ['filter' => 'permiso:lineas.modificar']);
+            $routes->get('(:num)/suspender', 'Admin\Lineas::confirmar/$1/suspender', ['filter' => 'permiso:lineas.suspender']);
+            $routes->post('(:num)/suspender', 'Admin\Lineas::suspender/$1', ['filter' => 'permiso:lineas.suspender']);
+            $routes->get('(:num)/reactivar', 'Admin\Lineas::confirmar/$1/reactivar', ['filter' => 'permiso:lineas.reactivar']);
+            $routes->post('(:num)/reactivar', 'Admin\Lineas::reactivar/$1', ['filter' => 'permiso:lineas.reactivar']);
+        });
+
+        // SS-10 Parámetros del motor de evaluación (CU-58, D-13)
+        $routes->group('parametros', static function (RouteCollection $routes): void {
+            $routes->get('evaluacion', 'Admin\Parametros::evaluacion', ['as' => 'parametros.evaluacion', 'filter' => 'permiso:parametros.evaluacion']);
+            $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
+        });
+
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
         // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
     });

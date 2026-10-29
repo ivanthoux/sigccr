@@ -2,7 +2,7 @@
 
 Valores esperados calculados de forma independiente (`casos_referencia.py`, módulo `decimal` de Python con 40 dígitos y redondeo a la mitad hacia arriba). Resultado completo: `resultados_referencia.json`. Cada caso está implementado en `tests/unit/Finanzas`.
 
-Hay una segunda verificación independiente en planilla de cálculo: `casos_referencia.xlsx` recalcula los 27 casos con fórmulas (sistema francés, IRR, WORKDAY, prelación de imputación, etc.) y su hoja **Resumen** compara 68 valores con los esperados por las pruebas. Se regenera con `python3 tests/referencia/generar_planilla.py`; Excel o LibreOffice recalculan las fórmulas al abrirla.
+Hay una segunda verificación independiente en planilla de cálculo: `casos_referencia.xlsx` recalcula los 27 casos con fórmulas (sistema francés, IRR, WORKDAY, prelación de imputación, etc.) y su hoja **Resumen** compara 70 valores con los esperados por las pruebas. Se regenera con `python3 tests/referencia/generar_planilla.py`; Excel o LibreOffice recalculan las fórmulas al abrirla.
 
 | ID | Regla | Datos | Resultado esperado | Prueba |
 |---|---|---|---|---|
@@ -24,7 +24,7 @@ Hay una segunda verificación independiente en planilla de cálculo: `casos_refe
 | CP-F16 | CU-87 | Ingresos 500.000, afectación 30 %, obligaciones 50.000 | Capacidad 100.000,00 | CapacidadPagoTest |
 | CP-F17 | CU-87 | Capacidad 100.000, TNA 60 %, 12 cuotas, gasto 500, IVA 21 %, paso 1.000 | Capital máximo 805.000 (1.ª cuota 99.881,96); 806.000 supera la capacidad (100.005,28) | CapacidadPagoTest |
 | CP-F18 | RN-29 | Cuotas 2 y 3 con punitorios, cobro de 42.304,08 | Imputación: punitorio, interés, gastos, IVA, capital; ambas canceladas | ImputadorTest |
-| CP-F19 | RN-29 | Cobro ordinario por 20.000 | Rechazado: no se admiten fracciones | ImputadorTest |
+| CP-F19 | RN-29, D-12 | Pago parcial de 30.000 sobre las cuotas 2 y 3 | Cuota 2 cancelada; cuota 3 recibe 8.736,21 (capital 3.904,60) y conserva 12.304,08 de capital | ImputadorTest |
 | CP-F20 | RN-56 | Pago excepcional de 6.000 | Cubre punitorio, interés, gasto e IVA de la cuota 2 y 173,05 de capital; la cuota no queda pagada | ImputadorTest |
 | CP-F21 | RN-57 | Pago de 42.400 | Excedente 95,92 como saldo a favor | ImputadorTest |
 | CP-F22 | RN-67 | Plan CP-F01, cuota 2 vencida con punitorios 120,50 + IVA 25,31, pago 20/03/2026 | Vencidas 21.348,19; capital no vencido 69.861,41; interés en curso 11 días 1.280,79 + IVA 268,97; total 92.759,36 | CancelacionAnticipadaTest |

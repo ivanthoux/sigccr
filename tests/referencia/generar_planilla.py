@@ -356,48 +356,51 @@ esperar('CP-F17', 'CU-87', '1.ª cuota con 806.000 (supera la capacidad)', 10000
 # ---------------------------------------------------------------------------------------------------------------
 # Imputación: CP-F18 a CP-F21
 ws = hoja('Imputación', 'Imputación de cobros por prelación', 'CP-F18 a CP-F21 · RN-29: punitorio, interés ordinario, gastos, '
-          'IVA y capital, cuota por cuota desde la más antigua; RN-56 pago parcial excepcional; RN-57 excedente',
-          [26, 22, 14, 14, 16, 16, 16])
-entradas(ws, 4, [('Cobro ordinario CP-F18', 42304.08, IMPORTE, None), ('Cobro ordinario CP-F19', 20000, IMPORTE, None),
+          'IVA y capital, cuota por cuota desde la más antigua; D-12 pago parcial ordinario; RN-56 pago parcial '
+          'excepcional; RN-57 excedente',
+          [26, 22, 14, 14, 16, 16, 16, 16])
+entradas(ws, 4, [('Cobro ordinario CP-F18', 42304.08, IMPORTE, None), ('Pago parcial CP-F19', 30000, IMPORTE, None),
                  ('Pago excepcional CP-F20', 6000, IMPORTE, None), ('Pago electrónico CP-F21', 42400, IMPORTE, None)])
 conceptos = [(2, 'Punitorio', 50.75), (2, 'Interés ordinario', 4264.91), (2, 'Gastos y cargos', 500.00), (2, 'IVA', 1011.29),
              (2, 'Capital', 15436.84), (3, 'Interés ordinario', 3493.07), (3, 'Gastos y cargos', 500.00), (3, 'IVA', 838.54),
              (3, 'Capital', 16208.68)]
-encabezados(ws, 9, 1, ['Cuota', 'Concepto', 'Importe', 'Acumulado', 'Imputado CP-F18', 'Imputado CP-F20', 'Imputado CP-F21'])
+encabezados(ws, 9, 1, ['Cuota', 'Concepto', 'Importe', 'Acumulado', 'Imputado CP-F18', 'Imputado CP-F20', 'Imputado CP-F21', 'Imputado CP-F19'])
 for j, (cu, con, imp) in enumerate(conceptos):
     f = 10 + j
     celda(ws, f'A{f}', cu, '0', 'entrada')
     celda(ws, f'B{f}', con, None, 'entrada')
     celda(ws, f'C{f}', imp, IMPORTE, 'entrada')
     celda(ws, f'D{f}', f'=SUM($C$10:C{f})', IMPORTE)
-    for col, monto in zip('EFG', ['$B$4', '$B$6', '$B$7']):
+    for col, monto in zip('EFGH', ['$B$4', '$B$6', '$B$7', '$B$5']):
         celda(ws, f'{col}{f}', f'=MIN(C{f},MAX(0,{monto}-(D{f}-C{f})))', IMPORTE)
 ws['B10'].comment = Comment('El IVA de la cuota 2 incluye el IVA del punitorio (1.000,63 + 10,66).', 'SIG-CCR')
 etiqueta(ws, 'B19', 'Totales', True)
-for col in 'CEFG':
+for col in 'CEFGH':
     celda(ws, f'{col}19', f'=SUM({col}10:{col}18)', IMPORTE, negrita=True)
-encabezados(ws, 21, 1, ['', 'Resultado', 'Total cuota', '', 'CP-F18', 'CP-F20', 'CP-F21'])
+encabezados(ws, 21, 1, ['', 'Resultado', 'Total cuota', '', 'CP-F18', 'CP-F20', 'CP-F21', 'CP-F19'])
 for j, cu in enumerate([2, 3]):
     f = 22 + j
     etiqueta(ws, f'B{f}', f'¿Cuota {cu} cancelada?')
     celda(ws, f'C{f}', f'=SUMIF($A$10:$A$18,{cu},$C$10:$C$18)', IMPORTE)
-    for col in 'EFG':
+    for col in 'EFGH':
         celda(ws, f'{col}{f}', f'=IF(ROUND(SUMIF($A$10:$A$18,{cu},{col}$10:{col}$18)-C{f},2)=0,1,0)', '0')
 etiqueta(ws, 'B24', 'Cuotas canceladas')
 etiqueta(ws, 'B25', 'Remanente (saldo a favor)')
-for col, monto in zip('EFG', ['$B$4', '$B$6', '$B$7']):
+for col, monto in zip('EFGH', ['$B$4', '$B$6', '$B$7', '$B$5']):
     celda(ws, f'{col}24', f'={col}22+{col}23', '0')
     celda(ws, f'{col}25', f'=ROUND(MAX(0,{monto}-{col}19),2)', IMPORTE)
-seccion(ws, 'A27', 'Cobro ordinario (RN-29): debe coincidir con cuotas completas y consecutivas')
+seccion(ws, 'A27', 'Cobro ordinario (RN-29, D-12): cuotas consecutivas; importe mayor que cero y no mayor que el total')
 calculos(ws, 28, [
     ('Cuota 2', '=C22', IMPORTE), ('Cuotas 2 y 3', '=C22+C23', IMPORTE),
-    ('CP-F18', '=IF(OR(ROUND($B$4-C28,2)=0,ROUND($B$4-C29,2)=0),"Aceptado","Rechazado")', None),
-    ('CP-F19', '=IF(OR(ROUND($B$5-C28,2)=0,ROUND($B$5-C29,2)=0),"Aceptado","Rechazado")', None),
+    ('CP-F18', '=IF(AND($B$4>0,ROUND($B$4-C29,2)<=0),"Aceptado","Rechazado")', None),
+    ('CP-F19', '=IF(AND($B$5>0,ROUND($B$5-C29,2)<=0),"Aceptado","Rechazado")', None),
 ], col='C')
 esperar('CP-F18', 'RN-29', 'Cobro ordinario de 42.304,08', 'Aceptado', 'Imputación!$C$30', fmt=None)
 esperar('CP-F18', 'RN-29', 'Cuotas canceladas', 2, 'Imputación!$E$24', fmt='0')
 esperar('CP-F18', 'RN-29', 'Remanente', 0, 'Imputación!$E$25')
-esperar('CP-F19', 'RN-29', 'Cobro ordinario de 20.000 (fracción de cuota)', 'Rechazado', 'Imputación!$C$31', fmt=None)
+esperar('CP-F19', 'D-12', 'Pago parcial de 30.000', 'Aceptado', 'Imputación!$C$31', fmt=None)
+esperar('CP-F19', 'D-12', 'Cuotas canceladas', 1, 'Imputación!$H$24', fmt='0')
+esperar('CP-F19', 'D-12', 'Capital imputado a la cuota 3', 3904.60, 'Imputación!$H$18')
 esperar('CP-F20', 'RN-56', 'Capital imputado a la cuota 2', 173.05, 'Imputación!$F$14')
 esperar('CP-F20', 'RN-56', 'Cuotas canceladas', 0, 'Imputación!$F$24', fmt='0')
 esperar('CP-F21', 'RN-57', 'Excedente como saldo a favor', 95.92, 'Imputación!$G$25')

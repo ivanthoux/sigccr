@@ -31,10 +31,34 @@ final class ImputadorTest extends TestCase
         $this->assertTrue($r['remanente']->isZero());
     }
 
-    public function testCobroOrdinarioNoAdmiteFracciones(): void
+    public function testPagoParcialOrdinarioImputaPorPrelacion(): void
+    {
+        // D-12: $ 30.000 cancelan la cuota 2 ($ 21.263,79) y dejan $ 8.736,21 imputados en la cuota 3
+        $r = Imputador::imputar(Decimal::of('30000'), $this->cuotas());
+        $this->assertSame([2], $r['canceladas']);
+        $deLaTres = array_values(array_filter($r['imputaciones'], static fn ($i) => $i['cuota'] === 3));
+        $this->assertSame(['InteresOrdinario', 'GastosCargos', 'IVA', 'Capital'], array_column($deLaTres, 'concepto'));
+        $this->assertSame('3904.60', end($deLaTres)['importe']->toFixed(2));
+        $this->assertTrue(end($deLaTres)['parcial']);
+        $saldo = Imputador::saldoDespues($this->cuotas()[1]['conceptos'], $deLaTres);
+        $this->assertSame('12304.08', $saldo['Capital']->toFixed(2));
+        $this->assertTrue($saldo['InteresOrdinario']->isZero());
+        $this->assertTrue($r['remanente']->isZero());
+    }
+
+    public function testPagoParcialMenorQueLosIntereses(): void
+    {
+        // Un pago chico cubre primero el punitorio y parte del interés: el capital no se reduce
+        $r = Imputador::imputar(Decimal::of('1000'), $this->cuotas());
+        $this->assertSame([], $r['canceladas']);
+        $this->assertSame(['Punitorio', 'InteresOrdinario'], array_column($r['imputaciones'], 'concepto'));
+        $this->assertSame('949.25', $r['imputaciones'][1]['importe']->toFixed(2));
+    }
+
+    public function testCobroOrdinarioNoSuperaElTotalExigible(): void
     {
         $this->expectException(DomainException::class);
-        Imputador::imputar(Decimal::of('20000'), $this->cuotas());
+        Imputador::imputar(Decimal::of('42304.09'), $this->cuotas());
     }
 
     public function testImputacionParcialExcepcional(): void

@@ -21,12 +21,8 @@ $v = static function (string $k) use ($c): string {
 };
 $tipo = $alta ? (old('tipo_cliente') ?? 'PersonaHumana') : $c['tipo_cliente'];
 $comunicaciones = $alta ? old('acepta_comunicaciones') !== null : (old('version_fila') !== null ? old('acepta_comunicaciones') !== null : (bool) ($c['consentimientos']['ComunicacionesComerciales']['otorgado'] ?? false));
-$requisitos = [];
-foreach (RequisitosDocumentales::CATEGORIAS as $categorias) {
-    foreach (array_keys($categorias) as $cat) {
-        $requisitos[$cat] = RequisitosDocumentales::exigidos($cat);
-    }
-}
+// D-14: en el alta solo es obligatoria la identificación del cliente, según su tipo
+$requisitos = RequisitosDocumentales::IDENTIFICACION;
 $campo = static fn (string $nombre, string $etiqueta, string $html, string $ayuda = '', string $col = 'col-md-6'): string =>
     "<div class=\"{$col}\"><label for=\"{$nombre}\" class=\"form-label\">{$etiqueta}</label>{$html}" . error_campo($nombre) . ($ayuda !== '' ? "<div class=\"form-text\">{$ayuda}</div>" : '') . '</div>';
 $texto = static fn (string $nombre, int $max, string $extra = '') => "<input type=\"text\" class=\"form-control" . campo_invalido($nombre) . "\" id=\"{$nombre}\" name=\"{$nombre}\" maxlength=\"{$max}\" value=\"" . esc($v($nombre), 'attr') . "\" {$extra}>";
@@ -140,7 +136,7 @@ $this->section('contenido');
     <?php if ($alta): ?>
         <fieldset class="hoja p-4 mb-3" id="documentacion">
             <legend class="h5">Documentación respaldatoria</legend>
-            <p class="text-body-secondary small">PDF, JPG o PNG de hasta 5 MB cada uno. Los obligatorios dependen de la categoría de ingresos (RN-11). Incorporar un documento no equivale a verificarlo.</p>
+            <p class="text-body-secondary small">PDF, JPG o PNG de hasta 5 MB cada uno. Solo es obligatoria la identificación del cliente. La documentación de ingresos puede incorporarse ahora o más adelante: la exige cada línea de crédito al registrar la solicitud (RN-11). Incorporar un documento no equivale a verificarlo.</p>
             <div class="row g-3">
                 <?php foreach ($tipos as $t): ?>
                     <div class="col-md-6" data-aplica="<?= esc($t['aplica_a'], 'attr') ?>">

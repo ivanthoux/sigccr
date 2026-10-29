@@ -154,10 +154,9 @@ class ClienteService extends BaseService
         $d = ValidadorCliente::normalizar($datos);
         $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio());
         $documentos = $this->validarArchivos($archivos, $errores);
-        if (RequisitosDocumentales::categoriaValida($d['tipo_cliente'], $d['categoria_ingresos'])) {
-            foreach (RequisitosDocumentales::faltantes($d['categoria_ingresos'], array_column($documentos, 'codigo')) as $falta) {
-                $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para la categoría de ingresos (RN-11).';
-            }
+        // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
+        foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
+            $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-11');
@@ -426,7 +425,10 @@ class ClienteService extends BaseService
 
     // ── Auxiliares ─────────────────────────────────────────────────────────────
 
-    /** @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $d
+     * @return array<string, mixed>
+     */
     private function datosSubclase(array $d): array
     {
         $nulo = static fn (string $v): ?string => $v === '' ? null : $v;
@@ -443,15 +445,21 @@ class ClienteService extends BaseService
         ];
     }
 
-    /** RN-07 y RN-08: documento, CUIT/CUIL y correo únicos en el padrón. $correo null: no se cambia el correo. */
+    /**
+     * RN-07 y RN-08: documento, CUIT/CUIL y correo únicos en el padrón. $correo null: no se cambia el correo.
+     *
+     * @param array<string, mixed> $d
+     */
     private function verificarUnicidad(array $d, ?int $excluirId, ?string $correo): void
     {
         $errores = [];
         $excluir = static function ($b, string $col) use ($excluirId) {
             return $excluirId === null ? $b : $b->where("{$col} !=", $excluirId);
         };
-        if ($d['tipo_cliente'] === 'PersonaHumana'
-            && $excluir($this->db->table('personas_humanas')->where('tipo_documento', $d['tipo_documento'])->where('nro_documento', $d['nro_documento']), 'cliente_id')->countAllResults() > 0) {
+        if (
+            $d['tipo_cliente'] === 'PersonaHumana'
+            && $excluir($this->db->table('personas_humanas')->where('tipo_documento', $d['tipo_documento'])->where('nro_documento', $d['nro_documento']), 'cliente_id')->countAllResults() > 0
+        ) {
             $errores['nro_documento'] = 'El documento ya está registrado para otro cliente.';
         }
         if ($d['cuit_cuil'] !== '' && $excluir($this->db->table('clientes')->where('cuit_cuil', $d['cuit_cuil']), 'id')->countAllResults() > 0) {
@@ -499,7 +507,11 @@ class ClienteService extends BaseService
         return $validos;
     }
 
-    /** Mueve el archivo al legajo con nombre aleatorio y registra el documento. Devuelve la ruta relativa. */
+    /**
+     * Mueve el archivo al legajo con nombre aleatorio y registra el documento. Devuelve la ruta relativa.
+     *
+     * @param array<string, mixed> $doc
+     */
     private function guardarDocumento(int $clienteId, array $doc, int $usuarioId): string
     {
         $carpeta = self::CARPETA_LEGAJOS . '/' . $clienteId;
