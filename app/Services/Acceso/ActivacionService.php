@@ -65,17 +65,17 @@ class ActivacionService extends BaseService
     }
 
     /**
-     * CU-04 pasos 8 a 10.
+     * CU-04 pasos 8 a 10. Devuelve el correo de la cuenta, para invitar al cliente a iniciar sesión con él.
      *
      * @throws ReglaNegocioException por la política de contraseñas (A4) o por un enlace inválido (A3)
      */
-    public function definirContrasena(string $codigo, string $contrasena, string $confirmacion): void
+    public function definirContrasena(string $codigo, string $contrasena, string $confirmacion): string
     {
         $motivos = PoliticaContrasena::validar($contrasena, $confirmacion);
         if ($motivos !== []) {
             throw new ReglaNegocioException(implode(' ', $motivos), 'RN-62');
         }
-        $this->transaccion(function () use ($codigo, $contrasena): void {
+        return $this->transaccion(function () use ($codigo, $contrasena): string {
             $autorizaciones = new AutorizacionService($this->db);
             $a = $autorizaciones->buscarVigente($codigo, ['Activacion', 'Rehabilitacion'], true);
             if ($a === null) {
@@ -100,6 +100,8 @@ class ActivacionService extends BaseService
             $autorizaciones->marcarUtilizada((int) $a['id']);
             $accion = $a['proposito'] === 'Activacion' ? 'acceso.activacion' : 'acceso.rehabilitacion';
             (new AuditoriaService($this->db))->registrar($accion, 'cuenta_acceso', $cuentaId, 'Exitoso', null, ['cliente' => (int) $cliente['id']], null, $cuentaId, (string) $a['correo_destino']);
+
+            return (string) $a['correo_destino'];
         });
     }
 

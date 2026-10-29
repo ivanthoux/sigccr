@@ -6,6 +6,7 @@
  * @var string|null $base 'admin' (por omisión) o 'portal'
  */
 $base = ($base ?? 'admin') === 'portal' ? 'portal' : 'admin';
+$correo = (string) (session()->getFlashdata('correo') ?? old('correo') ?? '');
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
@@ -17,13 +18,13 @@ $this->section('contenido');
     <?= csrf_field() ?>
     <div class="mb-3">
         <label for="correo" class="form-label">Correo electrónico</label>
-        <input type="email" class="form-control" id="correo" name="correo" autocomplete="username" required autofocus
-               maxlength="254" value="<?= esc(session()->getFlashdata('correo') ?? old('correo'), 'attr') ?>">
+        <input type="email" class="form-control" id="correo" name="correo" autocomplete="username" required<?= $correo === '' ? ' autofocus' : '' ?>
+               maxlength="254" value="<?= esc($correo, 'attr') ?>">
     </div>
     <div class="mb-3">
         <label for="contrasena" class="form-label">Contraseña</label>
         <div class="input-group">
-            <input type="password" class="form-control" id="contrasena" name="contrasena" autocomplete="current-password" required maxlength="128">
+            <input type="password" class="form-control" id="contrasena" name="contrasena" autocomplete="current-password" required maxlength="128"<?= $correo !== '' ? ' autofocus' : '' ?>>
             <button class="btn btn-outline-secondary" type="button" data-mostrar="contrasena" aria-label="Mostrar la contraseña"><i class="bi bi-eye"></i></button>
         </div>
     </div>

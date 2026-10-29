@@ -45,11 +45,11 @@ class Activacion extends BaseController
         return view('portal/activar_contrasena', ['titulo' => 'Definir su contraseña', 'codigo' => $codigo]);
     }
 
-    /** Pasos 8 a 10 y A4. */
+    /** Pasos 8 a 10 y A4. El paso 10 lleva al inicio de sesión del portal con el correo ya cargado (CU-01). */
     public function guardarContrasena(string $codigo): RedirectResponse
     {
         try {
-            (new ActivacionService())->definirContrasena($codigo, (string) $this->request->getPost('contrasena'), (string) $this->request->getPost('confirmacion'));
+            $correo = (new ActivacionService())->definirContrasena($codigo, (string) $this->request->getPost('contrasena'), (string) $this->request->getPost('confirmacion'));
         } catch (ReglaNegocioException $e) {
             if ($e->getMessage() === ActivacionService::MENSAJE_INVALIDA) {
                 return redirect()->route('portal.activar')->with('error', $e->getMessage());
@@ -58,6 +58,7 @@ class Activacion extends BaseController
             return redirect()->back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('portal.activar')->with('exito', 'Su acceso al portal quedó activado. Ya puede iniciar sesión con su correo y la contraseña que definió.');
+        return redirect()->route('portal.login')->with('correo', $correo)
+            ->with('exito', 'Su acceso al portal quedó activado. Ingrese con su correo y la contraseña que definió.');
     }
 }
