@@ -65,6 +65,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
         });
 
+        // SS-10 Alertas (CU-83)
+        $routes->get('alertas', 'Admin\Alertas::index', ['as' => 'alertas.consultar', 'filter' => 'permiso:alertas.consultar']);
+        $routes->get('alertas/(:num)', 'Admin\Alertas::ver/$1', ['filter' => 'permiso:alertas.consultar']);
+
         // SS-03 Líneas de crédito (CU-16 a CU-20, CU-73)
         $routes->group('lineas', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Lineas::index', ['as' => 'lineas.localizar', 'filter' => 'permiso:lineas.localizar']);
@@ -95,6 +99,11 @@ $routes->group('portal', static function (RouteCollection $routes): void {
     // Verificación del correo del cliente desde el enlace (sin sesión)
     $routes->get('verificar-correo/(:segment)', 'Portal\Verificacion::mostrar/$1');
     $routes->post('verificar-correo/(:segment)', 'Portal\Verificacion::confirmar/$1');
+    // CU-04 Activar o Rehabilitar Acceso del Cliente (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('activar', 'Portal\Activacion::solicitud', ['as' => 'portal.activar']);
+    $routes->post('activar', 'Portal\Activacion::solicitar');
+    $routes->get('activar/(:segment)', 'Portal\Activacion::contrasena/$1');
+    $routes->post('activar/(:segment)', 'Portal\Activacion::guardarContrasena/$1');
     // $routes->get('login', 'Portal\Acceso::login');   // iteración 4
 });
 

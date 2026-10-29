@@ -20,6 +20,8 @@ class AutorizacionService extends BaseService
         'Restablecimiento' => 15,
         'DefinicionInicial' => 1440,
         'VerificacionCorreo' => 30,
+        'Activacion' => 1440,
+        'Rehabilitacion' => 1440,
     ];
 
     /** Plantilla de correo por propósito (app/Views/correos). */
@@ -28,6 +30,8 @@ class AutorizacionService extends BaseService
         'Restablecimiento' => 'restablecimiento_credenciales',
         'DefinicionInicial' => 'definicion_inicial',
         'VerificacionCorreo' => 'verificacion_correo',
+        'Activacion' => 'activacion_acceso',
+        'Rehabilitacion' => 'activacion_acceso',
     ];
 
     /**

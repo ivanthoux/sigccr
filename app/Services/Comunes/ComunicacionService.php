@@ -6,29 +6,30 @@ namespace App\Services\Comunes;
 
 use App\Adapters\Comunicaciones\ComunicacionesInterface;
 use App\Adapters\Fabrica;
+use App\Libraries\Comunicaciones\PoliticaEnvio;
 use App\Services\BaseService;
-use CodeIgniter\I18n\Time;
+use DateTimeImmutable;
+use DateTimeZone;
 use Throwable;
 
 /**
  * Cola de comunicaciones (RNF-09, CU-95). Los datos sensibles del mensaje (por ejemplo, el enlace de una
  * autorización) se guardan cifrados con la clave de la aplicación y se eliminan al aceptarse el envío (4.4.6).
  *
- * Cada intento queda en intentos_envio. Un fallo transitorio o incierto se reintenta a los 1, 3 y 5 minutos con el
- * mismo identificador de operación (el proveedor descarta duplicados); agotados los reintentos, o ante un fallo
- * definitivo, la comunicación queda Fallida y se genera una alerta para el Administrador.
+ * Cada intento queda en intentos_envio. Un fallo transitorio se reintenta al minuto, a los tres y a los cinco minutos
+ * del primer intento con el mismo identificador de operación (el proveedor descarta duplicados); agotados los
+ * reintentos, o ante un fallo definitivo, queda Fallida; un resultado incierto queda En revisión y no se reenvía.
+ * En los tres casos se genera una alerta para el Administrador (PoliticaEnvio, CU-95).
  */
 class ComunicacionService extends BaseService
 {
-    /** Minutos de espera antes de cada reintento (RNF-09). */
-    public const REINTENTOS_MINUTOS = [1, 3, 5];
-
     /** Asunto de cada plantilla (app/Views/correos/<plantilla>.php). */
     public const ASUNTOS = [
         'recuperacion_acceso' => 'SIG-CCR: recuperación de acceso',
         'restablecimiento_credenciales' => 'SIG-CCR: definición de una contraseña nueva',
         'definicion_inicial' => 'SIG-CCR: activación de su usuario',
         'verificacion_correo' => 'SIG-CCR: confirmación de su correo electrónico',
+        'activacion_acceso' => 'SIG-CCR: activación de su acceso al portal',
     ];
 
     private ?ComunicacionesInterface $adaptador;
@@ -65,8 +66,9 @@ class ComunicacionService extends BaseService
     }
 
     /**
-     * Intenta enviar una comunicación pendiente o con reintento programado. Nunca lanza excepciones por fallas del
-     * proveedor: el resultado queda registrado y la comunicación, programada para su reintento.
+     * Intenta enviar una comunicación pendiente o con reintento programado (CU-95 pasos 3 a 6). Nunca lanza
+     * excepciones por fallas del proveedor: el resultado queda registrado y la comunicación, en el estado que
+     * corresponde según PoliticaEnvio.
      *
      * @return string estado resultante
      */
@@ -74,12 +76,22 @@ class ComunicacionService extends BaseService
     {
         return $this->transaccion(function () use ($id): string {
             $c = $this->db->query(
-                'SELECT id, tipo, destino, plantilla, identificador_operacion, intentos, estado, CONVERT(VARCHAR(MAX), datos_cifrados, 1) AS datos_hex '
-                . 'FROM dbo.comunicaciones WITH (UPDLOCK, ROWLOCK) WHERE id = ?',
+                'SELECT id, tipo, destino, plantilla, identificador_operacion, intentos, estado, origen_tipo, origen_id, '
+                . 'CONVERT(VARCHAR(MAX), datos_cifrados, 1) AS datos_hex FROM dbo.comunicaciones WITH (UPDLOCK, ROWLOCK) WHERE id = ?',
                 [$id],
             )->getRowArray();
             if ($c === null || !in_array($c['estado'], ['Pendiente', 'ReintentoProgramado'], true)) {
                 return $c['estado'] ?? 'Inexistente';
+            }
+            $ahora = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+            // Paso 3 y A1: la comunicación debe seguir siendo válida
+            $motivo = PoliticaEnvio::motivoCancelacion((string) $c['tipo'], $this->autorizacionDeOrigen($c), $this->ofertaDeOrigen($c), $this->consentimientoComercial($c), $ahora);
+            if ($motivo !== null) {
+                $this->db->table('intentos_envio')->insert(['comunicacion_id' => $id, 'fecha_hora' => $this->ahoraUtc(), 'resultado' => 'Cancelada', 'detalle' => $motivo]);
+                $this->db->query('UPDATE dbo.comunicaciones SET estado = ?, datos_cifrados = NULL, version_fila = version_fila + 1 WHERE id = ?', ['Cancelada', $id]);
+
+                return 'Cancelada';
             }
 
             try {
@@ -105,23 +117,85 @@ class ComunicacionService extends BaseService
                 'detalle' => $r['detalle'] === null ? null : mb_substr($r['detalle'], 0, 500),
             ]);
             $intentos = (int) $c['intentos'] + 1;
+            $primero = $this->db->query('SELECT MIN(fecha_hora) AS f FROM dbo.intentos_envio WHERE comunicacion_id = ? AND resultado <> ?', [$id, 'Cancelada'])->getRow()->f ?? null;
+            $sig = PoliticaEnvio::despuesDelIntento($r['resultado'], $intentos, $primero === null ? $ahora : new DateTimeImmutable((string) $primero));
 
-            if ($r['resultado'] === ComunicacionesInterface::ACEPTADO) {
-                $this->db->query('UPDATE dbo.comunicaciones SET estado = ?, intentos = ?, datos_cifrados = NULL, version_fila = version_fila + 1 WHERE id = ?', ['AceptadaProveedor', $intentos, $id]);
-
-                return 'AceptadaProveedor';
+            // Los datos cifrados (el enlace) se eliminan cuando ya no habrá más envíos (4.4.6); En revisión los conserva
+            $limpiar = in_array($sig['estado'], ['AceptadaProveedor', 'Fallida'], true);
+            $this->db->query(
+                'UPDATE dbo.comunicaciones SET estado = ?, intentos = ?, programada_para = ISNULL(?, programada_para)'
+                . ($limpiar ? ', datos_cifrados = NULL' : '') . ', version_fila = version_fila + 1 WHERE id = ?',
+                [$sig['estado'], min($intentos, 4), $sig['programada_para']?->format('Y-m-d H:i:s.vP'), $id],
+            );
+            if ($sig['alerta']) {
+                $causa = $sig['estado'] === 'EnRevision'
+                    ? "El proveedor no confirmó si recibió la comunicación #{$id} a {$c['destino']}; no se reenvía."
+                    : "No se pudo enviar la comunicación #{$id} a {$c['destino']}.";
+                (new AlertaService($this->db))->generar('Integracion', $causa, 'Verificar el servicio de comunicaciones y el destinatario.', 'Administrador', null, 'comunicaciones', $id);
             }
-            $reintento = $r['resultado'] !== ComunicacionesInterface::FALLO_DEFINITIVO && $intentos <= count(self::REINTENTOS_MINUTOS);
-            if ($reintento) {
-                $cuando = Time::now('UTC')->addMinutes(self::REINTENTOS_MINUTOS[$intentos - 1])->format('Y-m-d H:i:s.vP');
-                $this->db->query('UPDATE dbo.comunicaciones SET estado = ?, intentos = ?, programada_para = ?, version_fila = version_fila + 1 WHERE id = ?', ['ReintentoProgramado', $intentos, $cuando, $id]);
 
-                return 'ReintentoProgramado';
-            }
-            $this->db->query('UPDATE dbo.comunicaciones SET estado = ?, intentos = ?, datos_cifrados = NULL, version_fila = version_fila + 1 WHERE id = ?', ['Fallida', $intentos, $id]);
-            (new AlertaService($this->db))->generar('Integracion', "No se pudo enviar la comunicación #{$id} a {$c['destino']}.", 'Verificar el servicio de comunicaciones y el destinatario.', 'Administrador', null, 'comunicaciones', $id);
-
-            return 'Fallida';
+            return $sig['estado'];
         });
+    }
+
+    /**
+     * Comunicaciones listas para enviar (CU-95 paso 2), de la más antigua a la más reciente.
+     *
+     * @return list<int>
+     */
+    public function pendientes(int $limite = 100): array
+    {
+        $filas = $this->db->query(
+            "SELECT TOP ({$limite}) id FROM dbo.comunicaciones WHERE estado IN ('Pendiente', 'ReintentoProgramado') AND programada_para <= ? ORDER BY programada_para, id",
+            [$this->ahoraUtc()],
+        )->getResultArray();
+
+        return array_map(static fn (array $f): int => (int) $f['id'], $filas);
+    }
+
+    /**
+     * @param array<string, mixed> $c
+     * @return array{estado: string, vence: string}|null
+     */
+    private function autorizacionDeOrigen(array $c): ?array
+    {
+        if ($c['origen_tipo'] !== 'autorizaciones_temporales') {
+            return null;
+        }
+        $a = $this->db->query('SELECT estado, vence FROM dbo.autorizaciones_temporales WHERE id = ?', [(int) $c['origen_id']])->getRowArray();
+
+        return $a === null ? null : ['estado' => (string) $a['estado'], 'vence' => (string) $a['vence']];
+    }
+
+    /**
+     * @param array<string, mixed> $c
+     * @return array{estado: string, vence: string}|null
+     */
+    private function ofertaDeOrigen(array $c): ?array
+    {
+        if ($c['tipo'] !== 'Oferta' || $c['origen_tipo'] !== 'ofertas') {
+            return null;
+        }
+        $o = $this->db->query('SELECT estado, vence FROM dbo.ofertas WHERE id = ?', [(int) $c['origen_id']])->getRowArray();
+
+        return $o === null ? null : ['estado' => (string) $o['estado'], 'vence' => (string) $o['vence']];
+    }
+
+    /**
+     * RN-64: rige el último registro de consentimiento comercial del cliente de la oferta.
+     *
+     * @param array<string, mixed> $c
+     */
+    private function consentimientoComercial(array $c): ?bool
+    {
+        if ($c['tipo'] !== 'Oferta' || $c['origen_tipo'] !== 'ofertas') {
+            return null;
+        }
+        $f = $this->db->query(
+            "SELECT TOP (1) k.otorgado FROM dbo.ofertas o JOIN dbo.consentimientos k ON k.cliente_id = o.cliente_id AND k.tipo = 'ComunicacionesComerciales' WHERE o.id = ? ORDER BY k.fecha DESC, k.id DESC",
+            [(int) $c['origen_id']],
+        )->getRowArray();
+
+        return $f !== null && (int) $f['otorgado'] === 1;
     }
 }
