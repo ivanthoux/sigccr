@@ -46,6 +46,12 @@ $actual = current_url();
                 <a class="menu-opcion<?= url_is('admin') ? ' activa' : '' ?>" href="<?= url_to('panel.inicio') ?>"<?= url_is('admin') ? ' aria-current="page"' : '' ?>>
                     <i class="bi bi-house" aria-hidden="true"></i>Inicio
                 </a>
+                <?php if (tiene_permiso('alertas.consultar')): $pendientes = alertas_pendientes(); $enAlertas = url_is('admin/alertas*'); ?>
+                    <a class="menu-opcion<?= $enAlertas ? ' activa' : '' ?>" href="<?= url_to('alertas.consultar') ?>"<?= $enAlertas ? ' aria-current="page"' : '' ?>>
+                        <i class="bi bi-bell" aria-hidden="true"></i>Alertas
+                        <?php if ($pendientes > 0): ?><span class="badge rounded-pill text-bg-warning float-end mt-1"><?= $pendientes ?><span class="visually-hidden"> pendientes</span></span><?php endif ?>
+                    </a>
+                <?php endif ?>
                 <?php foreach ($menu as $seccion): ?>
                     <div class="menu-seccion"><?= esc($seccion['titulo']) ?></div>
                     <?php foreach ($seccion['opciones'] as $o): $activa = str_starts_with($actual, $o['url']); ?>

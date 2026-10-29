@@ -62,6 +62,8 @@ Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCC
 
 **Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor. Para ver el último con su enlace: `docker compose exec app php spark sigccr:correos` (o `sigccr:correos 5` para los cinco últimos).
 
+**Portal de clientes:** un cliente registrado activa su acceso en `https://localhost/portal/activar` con su documento (o CUIT) y su correo verificado (CU-04). **Cola de comunicaciones:** el contenedor scheduler ejecuta `comunicaciones:enviar` cada minuto para los reintentos (CU-95); a mano: `docker compose exec app php spark comunicaciones:enviar`. Con `sigccr.adaptadorComunicaciones = real` y los datos `sigccr.smtp*` del `.env`, los correos salen por SMTP.
+
 **Problemas frecuentes**
 
 - *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.

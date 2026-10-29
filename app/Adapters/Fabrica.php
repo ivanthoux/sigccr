@@ -6,6 +6,7 @@ namespace App\Adapters;
 
 use App\Adapters\Comunicaciones\ComunicacionesInterface;
 use App\Adapters\Comunicaciones\SimuladorComunicaciones;
+use App\Adapters\Comunicaciones\SmtpComunicaciones;
 use App\Adapters\InformacionCrediticia\InformacionCrediticiaInterface;
 use App\Adapters\InformacionCrediticia\SimuladorInformacionCrediticia;
 use App\Adapters\Pasarela\PasarelaInterface;
@@ -38,7 +39,8 @@ final class Fabrica
     {
         return match (config('Sigccr')->adaptadorComunicaciones) {
             'simulador' => new SimuladorComunicaciones(),
-            default => throw new RuntimeException('Adaptador real de comunicaciones pendiente (iteración 1).'),
+            'real' => new SmtpComunicaciones(),
+            default => throw new RuntimeException('Adaptador de comunicaciones desconocido: use simulador o real.'),
         };
     }
 }
