@@ -29,6 +29,7 @@ class ActivacionService extends BaseService
     {
         $identificacion = ReglasActivacion::identificacion($tipoDocumento, $numero);
         [$ok, $comunicacionId] = $this->transaccion(function () use ($identificacion, $correo, $tipoDocumento): array {
+            $this->liberarBloqueosVencidos();
             $c = $identificacion === null ? null : $this->buscarCliente($identificacion);
             $r = ReglasActivacion::evaluar($c === null ? null : [
                 'estado_cliente' => (string) $c['estado'],
@@ -56,6 +57,43 @@ class ActivacionService extends BaseService
         }
 
         return $ok;
+    }
+
+    /**
+     * D-16: al confirmar su correo desde el enlace de verificación (CU-11 paso 8), el cliente ya demostró que lo
+     * controla, así que continúa directamente con la definición de su contraseña (CU-04 paso 7) sin volver a
+     * identificarse ni esperar un segundo correo. Se aplican las mismas reglas que en el paso 4 (RN-10, RN-62).
+     *
+     * @return string|null código de la autorización de activación o rehabilitación, o null si no corresponde
+     *                     (cuenta ya habilitada, bloqueada o cliente desactivado)
+     */
+    public function continuarTrasVerificacion(int $cuentaId): ?string
+    {
+        return $this->transaccion(function () use ($cuentaId): ?string {
+            $this->liberarBloqueosVencidos();
+            $c = $this->db->query(
+                'SELECT c.id, c.estado, ca.correo AS correo_cuenta, ca.correo_verificado, ca.estado AS estado_cuenta, ca.bloqueada_hasta '
+                . "FROM dbo.cuentas_acceso ca WITH (UPDLOCK, ROWLOCK) JOIN dbo.clientes c ON c.cuenta_cliente_id = ca.id WHERE ca.id = ? AND ca.tipo_cuenta = 'Cliente'",
+                [$cuentaId],
+            )->getRowArray();
+            if ($c === null) {
+                return null;
+            }
+            $r = ReglasActivacion::evaluar([
+                'estado_cliente' => (string) $c['estado'],
+                'correo' => (string) $c['correo_cuenta'],
+                'correo_verificado' => (int) $c['correo_verificado'] === 1,
+                'estado_cuenta' => $c['estado_cuenta'],
+                'bloqueada' => $c['bloqueada_hasta'] !== null && new \DateTimeImmutable((string) $c['bloqueada_hasta']) > new \DateTimeImmutable(),
+            ], (string) $c['correo_cuenta']);
+            if ($r['resultado'] !== ReglasActivacion::RESULTADO_ENVIAR) {
+                return null;
+            }
+            $codigo = (new AutorizacionService($this->db))->emitirSinComunicacion($cuentaId, (string) $r['proposito'], (string) $c['correo_cuenta']);
+            (new AuditoriaService($this->db))->registrar('acceso.activacion.solicitud', 'cuenta_acceso', $cuentaId, 'Exitoso', 'Al verificar el correo (D-16)', ['proposito' => $r['proposito']], null, $cuentaId, (string) $c['correo_cuenta']);
+
+            return $codigo;
+        });
     }
 
     /** El enlace sigue vigente (paso 8, A3). */

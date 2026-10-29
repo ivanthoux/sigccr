@@ -42,6 +42,7 @@ class UsuarioService extends BaseService
      */
     public function buscar(array $criterios): array
     {
+        $this->liberarBloqueosVencidos();
         $b = $this->db->table('usuarios_internos ui')
             ->select('ui.id, ui.nombre, ui.apellido, ui.tipo_documento, ui.nro_documento, ca.correo, ca.estado, r.codigo AS rol, r.nombre AS rol_nombre')
             ->join('cuentas_acceso ca', 'ca.id = ui.id')
@@ -51,7 +52,7 @@ class UsuarioService extends BaseService
             $b->groupStart()->like('ui.nombre', $palabra)->orLike('ui.apellido', $palabra)->groupEnd();
         }
         if (($criterios['documento'] ?? '') !== '') {
-            $b->where('ui.nro_documento', trim($criterios['documento']));
+            $b->where('ui.nro_documento', Campos::documentoFlexible($criterios['documento']));
         }
         if (($criterios['correo'] ?? '') !== '') {
             $b->like('ca.correo', mb_strtolower(trim($criterios['correo'])));
@@ -79,6 +80,7 @@ class UsuarioService extends BaseService
      */
     public function obtener(int $id): array
     {
+        $this->liberarBloqueosVencidos();
         $u = $this->db->query(
             'SELECT ui.id, ui.nombre, ui.apellido, ui.tipo_documento, ui.nro_documento, ca.correo, ca.correo_verificado, ca.estado, '
             . 'ca.ultimo_acceso, ca.creado_en, ca.version_fila, CASE WHEN ca.hash_contrasena IS NULL THEN 0 ELSE 1 END AS tiene_contrasena, '

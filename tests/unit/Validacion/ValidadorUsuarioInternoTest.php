@@ -71,6 +71,10 @@ final class ValidadorUsuarioInternoTest extends TestCase
     {
         $this->assertSame([], $this->errores(['tipo_documento' => 'Pasaporte', 'nro_documento' => 'aab123456']));
         $this->assertArrayHasKey('nro_documento', $this->errores(['tipo_documento' => 'DNI', 'nro_documento' => 'AAB123456']));
+        // Prueba funcional del 29/10: un punto suelto no se descarta en silencio
+        foreach (['28999111.', '.28999111', '28999.111', '28-999-111'] as $mal) {
+            $this->assertSame(['nro_documento' => 'El documento debe tener entre 6 y 9 dígitos, sin puntos.'], $this->errores(['nro_documento' => $mal]), $mal);
+        }
         $this->assertSame(['tipo_documento' => 'Seleccione un tipo de documento válido.'], $this->errores(['tipo_documento' => 'CI']));
     }
 }

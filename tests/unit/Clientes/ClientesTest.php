@@ -97,7 +97,7 @@ final class ClientesTest extends TestCase
     {
         $otro = $this->cuilValido('20', '29999888');
         $this->assertSame(['cuit_cuil' => 'El CUIT/CUIL no corresponde al número de documento.'], $this->errores([...$this->humana(), 'cuit_cuil' => $otro]));
-        $this->assertSame(['cuit_cuil' => 'El dígito verificador del CUIT o CUIL no es correcto.'], $this->errores([...$this->humana(), 'cuit_cuil' => '27301112220']));
+        $this->assertSame(['cuit_cuil' => 'El dígito verificador no corresponde: para 27-30111222 el último dígito es 5.'], $this->errores([...$this->humana(), 'cuit_cuil' => '27301112220']));
     }
 
     public function testFechaDeNacimiento(): void

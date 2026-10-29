@@ -33,7 +33,7 @@ final class ReglasActivacion
 
             return Campos::cuit($cuit) === null && $cuit !== '' ? ['cuit' => $cuit] : null;
         }
-        $nro = Campos::documento($numero);
+        $nro = Campos::documentoFlexible($numero);
         if (Campos::tipoDocumento($tipo) !== null || $tipo === '' || $nro === '' || Campos::numeroDocumento($tipo, $nro) !== null) {
             return null;
         }

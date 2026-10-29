@@ -83,6 +83,20 @@ abstract class BaseService
         }
     }
 
+    /**
+     * Transición por tiempo del diagrama de estados de la cuenta (4.2.1): un bloqueo temporal vencido vuelve a
+     * Habilitada con el contador de intentos en cero (RN-62). Se aplica antes de leer el estado de una cuenta, para
+     * que la recuperación (CU-02), la activación (CU-04) y las pantallas de usuarios y clientes no vean un bloqueo
+     * que ya terminó aunque nadie haya vuelto a iniciar sesión.
+     */
+    protected function liberarBloqueosVencidos(): void
+    {
+        $this->db->query(
+            "UPDATE dbo.cuentas_acceso SET estado = 'Habilitada', intentos_fallidos = 0, inicio_ventana_intentos = NULL, bloqueada_hasta = NULL, "
+            . "version_fila = version_fila + 1 WHERE estado = 'BloqueadaTemporalmente' AND (bloqueada_hasta IS NULL OR bloqueada_hasta <= SYSDATETIMEOFFSET())",
+        );
+    }
+
     /** Instante actual en UTC con desplazamiento, para columnas datetimeoffset (3.5.1). */
     protected function ahoraUtc(): string
     {

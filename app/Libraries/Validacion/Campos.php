@@ -24,8 +24,20 @@ final class Campos
         return mb_strtolower(str_replace(' ', '', self::texto($valor)));
     }
 
-    /** Número de documento sin puntos, espacios ni guiones, en mayúsculas. */
+    /**
+     * Número de documento en mayúsculas y sin espacios en los extremos. Solo se quitan los puntos de un número escrito
+     * con separador de miles (28.999.111); cualquier otro carácter se conserva para que numeroDocumento() lo rechace
+     * (por ejemplo, «28999111.»).
+     */
     public static function documento(mixed $valor): string
+    {
+        $v = strtoupper(self::texto($valor));
+
+        return preg_match('/^\d{1,3}(\.\d{3})+$/', $v) === 1 ? str_replace('.', '', $v) : $v;
+    }
+
+    /** Número de documento para buscar o identificarse: sin puntos, espacios ni guiones. */
+    public static function documentoFlexible(mixed $valor): string
     {
         return strtoupper(str_replace(['.', ' ', '-'], '', self::texto($valor)));
     }
@@ -86,8 +98,16 @@ final class Campos
         return (int) $numero === 0 ? 'El número de documento no es válido.' : null;
     }
 
-    /** CUIT o CUIL: 11 dígitos, prefijo válido y dígito verificador (módulo 11). */
-    public static function cuit(string $valor): ?string
+    /** Prefijos de CUIT/CUIL por tipo de persona (AFIP): 20, 23, 24 y 27 para personas humanas; 30, 33 y 34 para jurídicas. */
+    public const PREFIJOS_CUIT = ['PersonaHumana' => ['20', '23', '24', '27'], 'PersonaJuridica' => ['30', '33', '34']];
+
+    /**
+     * CUIT o CUIL: 11 dígitos, prefijo válido para el tipo de persona y dígito verificador (módulo 11). El dígito
+     * depende del prefijo: al cambiar 20 por 27 cambia también el último dígito, y el mensaje indica cuál corresponde.
+     *
+     * @param 'PersonaHumana'|'PersonaJuridica'|null $tipo null admite cualquier prefijo válido
+     */
+    public static function cuit(string $valor, ?string $tipo = null): ?string
     {
         if ($valor === '') {
             return null;
@@ -96,18 +116,32 @@ final class Campos
         if (preg_match('/^\d{11}$/', $c) !== 1) {
             return 'El CUIT o CUIL debe tener 11 dígitos.';
         }
-        if (!in_array(substr($c, 0, 2), ['20', '23', '24', '27', '30', '33', '34'], true)) {
-            return 'El CUIT o CUIL tiene un prefijo inválido.';
+        $prefijo = substr($c, 0, 2);
+        $validos = $tipo === null ? array_merge(...array_values(self::PREFIJOS_CUIT)) : self::PREFIJOS_CUIT[$tipo];
+        if (!in_array($prefijo, $validos, true)) {
+            return $tipo === 'PersonaHumana' ? 'El CUIL o CUIT de una persona humana empieza con 20, 23, 24 o 27.'
+                : ($tipo === 'PersonaJuridica' ? 'El CUIT de una persona jurídica empieza con 30, 33 o 34.' : 'El CUIT o CUIL tiene un prefijo inválido.');
         }
+        $dv = self::digitoVerificadorCuit(substr($c, 0, 10));
+        if ($dv === null) {
+            return "Con el prefijo {$prefijo} ese número no tiene un CUIT o CUIL válido: verifique el prefijo asignado (por ejemplo, 23 o 33).";
+        }
+
+        return (int) $c[10] === $dv ? null
+            : 'El dígito verificador no corresponde: para ' . $prefijo . '-' . substr($c, 2, 8) . " el último dígito es {$dv}.";
+    }
+
+    /** Dígito verificador de los 10 primeros dígitos de un CUIT o CUIL, o null si el resultado es 10 (combinación no asignable). */
+    public static function digitoVerificadorCuit(string $diezDigitos): ?int
+    {
         $pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
         $suma = 0;
         foreach ($pesos as $i => $p) {
-            $suma += (int) $c[$i] * $p;
+            $suma += (int) $diezDigitos[$i] * $p;
         }
         $dv = 11 - ($suma % 11);
-        $dv = $dv === 11 ? 0 : ($dv === 10 ? 9 : $dv);
 
-        return (int) $c[10] === $dv ? null : 'El dígito verificador del CUIT o CUIL no es correcto.';
+        return $dv === 11 ? 0 : ($dv === 10 ? null : $dv);
     }
 
     /** Texto de motivo de una operación (auditoría): entre 5 y 1000 caracteres. */
