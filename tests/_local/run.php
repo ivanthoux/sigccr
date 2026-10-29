@@ -87,6 +87,14 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertStringStartsWith(string $prefijo, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!str_starts_with($texto, $prefijo)) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no empieza con '{$prefijo}'");
+            }
+        }
+
         public function assertMatchesRegularExpression(string $patron, string $texto, string $msg = ''): void
         {
             $this->assertions++;
