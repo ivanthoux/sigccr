@@ -13,7 +13,7 @@ use CodeIgniter\Test\CIUnitTestCase;
  *
  * Recorre las rutas declaradas en Config\Routes y verifica, sin base de datos:
  *  - toda ruta del panel, salvo las de acceso sin sesión, exige sesión del panel (auth:panel) y un permiso del catálogo;
- *  - las rutas del portal sin sesión no exigen permisos del panel;
+ *  - las rutas del portal sin sesión no exigen permisos del panel, y las demás exigen una sesión de cliente (auth:portal);
  *  - para cada rol, las rutas que puede usar coinciden con la matriz de participación por actor (3.6.2).
  *
  * @internal
@@ -91,6 +91,43 @@ final class AutorizacionRutasTest extends CIUnitTestCase
                 $filtros = $this->rutas->getFiltersForRoute($ruta, $verbo);
                 $this->assertSame([], array_values(array_filter($filtros, static fn (string $f): bool => str_starts_with($f, 'permiso:') || $f === 'auth:panel')), "{$verbo} {$ruta}");
             }
+        }
+    }
+
+    /** Rutas del portal que se usan sin sesión (CU-01, CU-02, CU-04 y enlaces de correo). */
+    private const PUBLICAS_PORTAL = [
+        'portal/login', 'portal/recuperar', 'portal/restablecer/([^/]+)', 'portal/activar', 'portal/activar/([^/]+)',
+        'portal/verificar-correo/([^/]+)',
+    ];
+
+    public function testCadaRutaDelPortalConSesionExigeUnaCuentaDeCliente(): void
+    {
+        $sinProteger = [];
+        $hayPrivadas = false;
+        foreach (['GET', 'POST'] as $verbo) {
+            foreach (array_keys($this->rutas->getRoutes($verbo, false)) as $ruta) {
+                if ($ruta !== 'portal' && !str_starts_with($ruta, 'portal/')) {
+                    continue;
+                }
+                $filtros = $this->rutas->getFiltersForRoute($ruta, $verbo);
+                if (in_array($ruta, self::PUBLICAS_PORTAL, true)) {
+                    $this->assertNotContains('auth:portal', $filtros, "{$verbo} {$ruta} es de acceso sin sesión");
+                    continue;
+                }
+                $hayPrivadas = true;
+                if (!in_array('auth:portal', $filtros, true)) {
+                    $sinProteger[] = "{$verbo} {$ruta}: falta auth:portal";
+                }
+            }
+        }
+        $this->assertTrue($hayPrivadas, 'El portal debe tener rutas con sesión (inicio y cierre de sesión)');
+        $this->assertSame([], $sinProteger);
+    }
+
+    public function testElPanelNoAceptaLaSesionDelPortal(): void
+    {
+        foreach ($this->rutasPanel() as $clave => $filtros) {
+            $this->assertNotContains('auth:portal', $filtros, $clave);
         }
     }
 

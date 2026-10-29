@@ -1,11 +1,19 @@
 <?php
-/** CU-01 Iniciar Sesión (panel administrativo). @var CodeIgniter\View\View $this */
+/**
+ * CU-01 Iniciar Sesión, pasos 1 a 3, en el panel administrativo o en el portal de autogestión.
+ *
+ * @var CodeIgniter\View\View $this
+ * @var string|null $base 'admin' (por omisión) o 'portal'
+ */
+$base = ($base ?? 'admin') === 'portal' ? 'portal' : 'admin';
 $this->extend('layouts/acceso');
 $this->section('contenido');
 ?>
 <h1>Iniciar sesión</h1>
-<p class="ayuda">Ingrese con el correo y la contraseña de su usuario.</p>
-<form method="post" action="<?= site_url('admin/login') ?>" novalidate>
+<p class="ayuda"><?= $base === 'portal'
+    ? 'Ingrese con el correo que registró en la entidad y la contraseña que definió al activar su acceso.'
+    : 'Ingrese con el correo y la contraseña de su usuario.' ?></p>
+<form method="post" action="<?= site_url($base . '/login') ?>" novalidate>
     <?= csrf_field() ?>
     <div class="mb-3">
         <label for="correo" class="form-label">Correo electrónico</label>
@@ -22,6 +30,12 @@ $this->section('contenido');
     <button type="submit" class="btn btn-primary w-100">Iniciar sesión</button>
 </form>
 <div class="text-center mt-3">
-    <a href="<?= url_to('acceso.recuperar') ?>" class="small">¿Olvidó su contraseña?</a>
+    <a href="<?= site_url($base . '/recuperar') ?>" class="small">¿Olvidó su contraseña?</a>
 </div>
+<?php if ($base === 'portal'): ?>
+    <div class="border-top mt-4 pt-3 small text-body-secondary">
+        ¿Es la primera vez que ingresa, o la entidad reactivó su ficha?
+        <a href="<?= url_to('portal.activar') ?>">Activar o rehabilitar acceso</a>
+    </div>
+<?php endif ?>
 <?php $this->endSection() ?>
