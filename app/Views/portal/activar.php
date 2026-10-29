@@ -30,5 +30,6 @@ $this->section('contenido');
     </div>
     <button type="submit" class="btn btn-primary w-100">Enviar instrucciones</button>
 </form>
+<div class="text-center mt-3"><a href="<?= url_to('portal.login') ?>" class="small">Ya tengo acceso: iniciar sesión</a></div>
 <p class="small text-body-secondary mt-3 mb-0">Si ya activó su acceso y no recuerda la contraseña, use «¿Olvidó su contraseña?» en el inicio de sesión del portal.</p>
 <?php $this->endSection() ?>

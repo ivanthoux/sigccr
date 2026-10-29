@@ -49,4 +49,26 @@ final class ControlIntentos
             'bloqueada_hasta' => $bloquear ? $ahora->add(new DateInterval('PT' . $this->bloqueoSegundos . 'S')) : null,
         ];
     }
+
+    /**
+     * Mensaje del rechazo (CU-01 A1 y A2): el genérico, con la advertencia de bloqueo cuando quedan pocos intentos y el
+     * aviso del bloqueo cuando se aplicó o sigue vigente. Depende solo del contador, no de que la cuenta exista, para
+     * no revelarlo (RN-62).
+     */
+    public function mensajeRechazo(string $generico, int $intentosFallidos, bool $bloqueada): string
+    {
+        $minutos = intdiv($this->bloqueoSegundos, 60);
+        if ($bloqueada) {
+            return "Por seguridad, el acceso quedó bloqueado durante {$minutos} minutos por intentos fallidos. Vuelva a intentarlo más tarde.";
+        }
+        $restantes = $this->maximo - $intentosFallidos;
+        if ($restantes === 1) {
+            return "{$generico} Le queda un intento: si vuelve a fallar, el acceso se bloqueará durante {$minutos} minutos.";
+        }
+        if ($restantes === 2) {
+            return "{$generico} Le quedan 2 intentos antes de que el acceso se bloquee durante {$minutos} minutos.";
+        }
+
+        return $generico;
+    }
 }

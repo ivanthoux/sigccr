@@ -67,4 +67,43 @@ final class PoliticaYControlIntentosTest extends TestCase
         $this->assertTrue($c->bloqueoVencido('BloqueadaTemporalmente', $hasta, $hasta));
         $this->assertFalse($c->bloqueoVencido('Desactivada', $hasta, $hasta->modify('+1 day')));
     }
+
+    public function testMensajeAdviertePocosIntentosEInformaElBloqueo(): void
+    {
+        $c = new ControlIntentos();
+        $g = 'Usuario o contraseña incorrectos.';
+        $this->assertSame($g, $c->mensajeRechazo($g, 1, false));
+        $this->assertSame($g, $c->mensajeRechazo($g, 2, false));
+        $this->assertSame("{$g} Le quedan 2 intentos antes de que el acceso se bloquee durante 15 minutos.", $c->mensajeRechazo($g, 3, false));
+        $this->assertSame("{$g} Le queda un intento: si vuelve a fallar, el acceso se bloqueará durante 15 minutos.", $c->mensajeRechazo($g, 4, false));
+        $bloqueo = 'Por seguridad, el acceso quedó bloqueado durante 15 minutos por intentos fallidos. Vuelva a intentarlo más tarde.';
+        $this->assertSame($bloqueo, $c->mensajeRechazo($g, 5, true));
+        // Durante el bloqueo, aunque el contador venga de una ventana anterior
+        $this->assertSame($bloqueo, $c->mensajeRechazo($g, 0, true));
+    }
+
+    public function testElMensajeSigueLaConfiguracionDeLaEntidad(): void
+    {
+        $c = new ControlIntentos(3, 600, 1800);
+        $this->assertStringContainsString('Le queda un intento', $c->mensajeRechazo('X.', 2, false));
+        $this->assertStringContainsString('30 minutos', $c->mensajeRechazo('X.', 3, true));
+    }
+
+    public function testCincoFallosSeguidosDanLaSecuenciaDeMensajes(): void
+    {
+        $c = new ControlIntentos();
+        $t = new DateTimeImmutable('2026-10-29 16:00:00');
+        $intentos = 0;
+        $ventana = null;
+        $mensajes = [];
+        for ($i = 0; $i < 5; $i++) {
+            $r = $c->registrarFallo($intentos, $ventana, $t->modify("+{$i} minutes"));
+            [$intentos, $ventana] = [$r['intentos_fallidos'], $r['inicio_ventana_intentos']];
+            $mensajes[] = $c->mensajeRechazo('G.', $r['intentos_fallidos'], $r['bloquear']);
+        }
+        $this->assertSame(['G.', 'G.'], array_slice($mensajes, 0, 2));
+        $this->assertStringContainsString('Le quedan 2 intentos', $mensajes[2]);
+        $this->assertStringContainsString('Le queda un intento', $mensajes[3]);
+        $this->assertStringStartsWith('Por seguridad, el acceso quedó bloqueado', $mensajes[4]);
+    }
 }

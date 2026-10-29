@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Cambiado (pruebas manuales del portal, 29/10)
+- El rechazo del inicio de sesión advierte cuando quedan dos intentos o uno antes del bloqueo temporal, e informa el bloqueo al aplicarse y mientras dura (CU-01 A1 y A2), en el panel y en el portal. Los correos sin cuenta habilitada siguen la misma secuencia con un contador en la caché, para no revelar si la cuenta existe (RN-62).
+- Al terminar la activación (CU-04 paso 10) el cliente pasa al inicio de sesión del portal con su correo ya cargado; la pantalla de activación ofrece también «Ya tengo acceso: iniciar sesión».
+
+### Corregido
+- Integración continua: se versionan vacías las subcarpetas de `writable/`; un clon nuevo fallaba con «Cache unable to write».
+
 ### Agregado (iteración 1, acceso del cliente)
 - CU-01 a CU-03 del Cliente en el portal (`portal/login`, `portal/recuperar`, `portal/salir`): mismo servicio que el panel con el tipo de cuenta Cliente, mensaje genérico, bloqueo por intentos (RN-62) y rechazo del cliente desactivado en el padrón aunque su contraseña sea correcta (RN-10).
 - Plantilla del portal con barra superior y pantalla principal con las funciones de autogestión, que pasan a ser enlaces a medida que se construyen (`Config\Menu::$portal`).

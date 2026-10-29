@@ -39,15 +39,15 @@ class AccesoService extends BaseService
         $correo = mb_strtolower(trim($correo));
         // Los intentos fallidos se confirman antes de rechazar: la transacción no se revierte con el rechazo
         $resultado = $this->transaccion(fn () => $this->verificar($tipoCuenta, $correo, $contrasena));
-        if ($resultado === null) {
-            throw new ReglaNegocioException(self::MENSAJE_RECHAZO, 'RN-62');
+        if (is_string($resultado)) {
+            throw new ReglaNegocioException($resultado, 'RN-62');
         }
 
         return $resultado;
     }
 
-    /** @return array<string, mixed>|null */
-    private function verificar(string $tipoCuenta, string $correo, string $contrasena): ?array
+    /** @return array<string, mixed>|string los datos de la sesión, o el mensaje del rechazo */
+    private function verificar(string $tipoCuenta, string $correo, string $contrasena): array|string
     {
         $auditoria = new AuditoriaService($this->db);
         $cuenta = $this->db->query(
@@ -63,16 +63,16 @@ class AccesoService extends BaseService
             [$tipoCuenta, $correo],
         )->getRowArray();
 
+        $ahora = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $control = new ControlIntentos(config('Sigccr')->intentosPorCuenta, config('Sigccr')->ventanaIntentos, config('Sigccr')->bloqueoTemporal);
         if ($cuenta === null) {
             password_verify($contrasena, self::HASH_REFERENCIA);
             $auditoria->registrar('acceso.fallido', 'cuenta_acceso', null, 'Rechazado', 'Credenciales inválidas', ['correo' => $correo, 'ambito' => $tipoCuenta], responsable: $correo);
 
-            return null;
+            return $this->intentoSinCuenta($tipoCuenta, $correo, $control, $ahora);
         }
 
         $id = (int) $cuenta['id'];
-        $ahora = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $control = new ControlIntentos(config('Sigccr')->intentosPorCuenta, config('Sigccr')->ventanaIntentos, config('Sigccr')->bloqueoTemporal);
         if ($control->bloqueoVencido($cuenta['estado'], $this->fecha($cuenta['bloqueada_hasta']), $ahora)) {
             $this->db->query("UPDATE dbo.cuentas_acceso SET estado = 'Habilitada', intentos_fallidos = 0, inicio_ventana_intentos = NULL, bloqueada_hasta = NULL, version_fila = version_fila + 1 WHERE id = ?", [$id]);
             $cuenta['estado'] = 'Habilitada';
@@ -84,7 +84,10 @@ class AccesoService extends BaseService
             password_verify($contrasena, self::HASH_REFERENCIA);
             $auditoria->registrar('acceso.fallido', 'cuenta_acceso', $id, 'Rechazado', "Cuenta en estado {$cuenta['estado']}", null, null, $id, $cuenta['correo']);
 
-            return null;
+            // CU-01 A2: el bloqueo vigente se informa; una cuenta desactivada o pendiente se trata como inexistente
+            return $cuenta['estado'] === 'BloqueadaTemporalmente'
+                ? $control->mensajeRechazo(self::MENSAJE_RECHAZO, (int) $cuenta['intentos_fallidos'], true)
+                : $this->intentoSinCuenta($tipoCuenta, $correo, $control, $ahora);
         }
 
         if ($cuenta['hash_contrasena'] === null || !password_verify($contrasena, $cuenta['hash_contrasena'])) {
@@ -104,21 +107,21 @@ class AccesoService extends BaseService
                 $auditoria->registrar('acceso.bloqueo', 'cuenta_acceso', $id, 'Exitoso', 'Bloqueo temporal por intentos fallidos (RN-62)', ['hasta' => $this->texto($f['bloqueada_hasta'])], null, $id, 'Sistema');
             }
 
-            return null;
+            return $control->mensajeRechazo(self::MENSAJE_RECHAZO, $f['intentos_fallidos'], $f['bloquear']);
         }
 
         // RN-10: un cliente desactivado en el padrón no accede al portal aunque su contraseña sea correcta
         if ($tipoCuenta === 'Cliente' && ($cuenta['cliente_id'] === null || $cuenta['estado_cliente'] !== 'Activo')) {
             $auditoria->registrar('acceso.fallido', 'cuenta_acceso', $id, 'Rechazado', 'Cliente desactivado en el padrón (RN-10)', null, null, $id, $cuenta['correo']);
 
-            return null;
+            return self::MENSAJE_RECHAZO;
         }
 
         $permisos = $tipoCuenta === 'UsuarioInterno' ? $this->permisosDelRol((int) $cuenta['rol_id']) : [];
         if ($tipoCuenta === 'UsuarioInterno' && $permisos === []) {
             $auditoria->registrar('acceso.fallido', 'cuenta_acceso', $id, 'Rechazado', 'Rol sin permisos para operar', null, null, $id, $cuenta['correo']);
 
-            return null;
+            return self::MENSAJE_RECHAZO;
         }
 
         $nombre = ($tipoCuenta === 'Cliente'
@@ -174,6 +177,33 @@ class AccesoService extends BaseService
     public function registrarCierre(int $cuentaId, string $nombre, bool $jornadaAbierta): void
     {
         (new AuditoriaService($this->db))->registrar('acceso.cierre', 'cuenta_acceso', $cuentaId, 'Exitoso', $jornadaAbierta ? 'Jornada de caja abierta' : null, null, null, $cuentaId, $nombre);
+    }
+
+    /**
+     * Intento sobre un correo sin cuenta habilitada: se cuenta igual que en una cuenta real, en la caché y por un
+     * hash del correo, para que la advertencia y el bloqueo no revelen si la cuenta existe (RN-62).
+     */
+    private function intentoSinCuenta(string $tipoCuenta, string $correo, ControlIntentos $control, DateTimeImmutable $ahora): string
+    {
+        $clave = 'acceso_' . hash('sha256', $tipoCuenta . '|' . $correo);
+        $previo = cache($clave);
+        $d = is_array($previo) ? $previo : ['intentos' => 0, 'inicio' => null, 'hasta' => null];
+        $hasta = $d['hasta'] === null ? null : new DateTimeImmutable((string) $d['hasta']);
+        if ($hasta !== null && $ahora < $hasta) {
+            return $control->mensajeRechazo(self::MENSAJE_RECHAZO, (int) $d['intentos'], true);
+        }
+        if ($hasta !== null) {
+            $d = ['intentos' => 0, 'inicio' => null, 'hasta' => null];
+        }
+        $f = $control->registrarFallo((int) $d['intentos'], $d['inicio'] === null ? null : new DateTimeImmutable((string) $d['inicio']), $ahora);
+        $cfg = config('Sigccr');
+        cache()->save($clave, [
+            'intentos' => $f['intentos_fallidos'],
+            'inicio' => $f['inicio_ventana_intentos']->format(DATE_ATOM),
+            'hasta' => $f['bloqueada_hasta']?->format(DATE_ATOM),
+        ], $cfg->ventanaIntentos + $cfg->bloqueoTemporal);
+
+        return $control->mensajeRechazo(self::MENSAJE_RECHAZO, $f['intentos_fallidos'], $f['bloquear']);
     }
 
     private function fecha(mixed $valor): ?DateTimeImmutable
