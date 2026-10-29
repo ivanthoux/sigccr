@@ -18,6 +18,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-12 | 27/10/2026 | Validada (29/10/2026) |
 | D-13 | 27/10/2026 | Validada (29/10/2026) |
 | D-14 | 28/10/2026 | Validada (29/10/2026) |
+| D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -114,3 +115,12 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** Se separan dos momentos. En el alta del cliente solo es obligatoria su identificación: documento de identidad para la persona humana; constancia de CUIT, documento del representante e instrumento de representación para la persona jurídica. La documentación de ingresos la define cada versión de condiciones de la línea y se exige al registrar la solicitud (CU-22) y se verifica en CU-23. La documentación base de RN-11 pasa a ser la que el sistema propone al configurar una línea; la línea puede quitarla y exigir solo el documento de identidad, que es obligatorio en todas. El riesgo de una línea «solo con DNI» se controla con la evaluación del BCRA (RN-69), la capacidad de pago sobre ingresos declarados y el importe máximo de la línea (RN-76).
 
 **Consecuencias.** Sin cambios de esquema (`requisitos_documentales` ya es por versión y categoría). `RequisitosDocumentales`: `identificacion()`, `sugeridos()`, `faltantes()` sobre una lista y `exigidosPorLinea()` para CU-22 y CU-23; `ClienteService::registrar` exige solo la identificación; `ValidadorLinea` exige el documento de identidad en cada categoría. Cambian RN-11, CU-11 (paso 3 y A4, A8), CU-16 (paso 2 y A3), CU-22 (paso 8 y A4) y CU-23 (paso 3).
+
+## D-15 · Persistencia desde los servicios con el Query Builder, sin modelos por tabla (4.4.2, 4.4.3)
+
+**Contexto.** La vista lógica de la v9 preveía una capa de persistencia con un modelo de CodeIgniter por tabla y entidades con conversión de tipos. Al construir la iteración 1, cada operación de servicio resultó necesitar, dentro de una misma transacción, lecturas con bloqueo de fila (`WITH (UPDLOCK, ROWLOCK)`), actualizaciones condicionadas por `version_fila`, consultas que combinan varias tablas (por ejemplo, la cuenta de acceso con el usuario, el rol y el cliente) y conversiones propias de SQL Server (`VARBINARY` de la cola de comunicaciones). Los modelos de CodeIgniter no expresan esos bloqueos, duplican el control de concurrencia de `BaseService` y no aportan reglas de negocio, que ya están en los servicios y en `app/Libraries`.
+
+**Decisión.** Los servicios acceden a la base con el Query Builder y con consultas parametrizadas (`?`), sin modelos ni entidades por tabla. `BaseService` concentra la transacción (`transaccion()`), el bloqueo (`bloquear()`), la actualización con versión (`actualizarConVersion()`) y las fechas (`ahoraUtc()`, `hoyNegocio()`). Las reglas puras de cada área se ubican en `app/Libraries/<Área>` (Seguridad, Clientes, Lineas, Validacion, Alertas, Comunicaciones, Caja, además de Finanzas). Los importes siguen viajando como cadenas decimales y nunca como `float`.
+
+**Consecuencias.** Sin cambios de esquema. `app/Models` queda vacío y no existe `app/Entities`. Se mantienen RNF-05 (sin reglas en controladores ni vistas) y RNF-12 (sin concatenar datos del usuario en el SQL). Cambian 4.4.2 (fila Persistencia e Imagen 47) y 4.4.3 (filas de controladores, filtros, bibliotecas, excepciones, vistas, adjuntos y pruebas) en la v10.
+

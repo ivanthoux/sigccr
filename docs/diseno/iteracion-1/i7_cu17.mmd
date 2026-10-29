@@ -1,0 +1,27 @@
+sequenceDiagram
+autonumber
+actor GE as Gerente
+participant V as Vista lineas/formulario
+participant C as Admin Lineas
+participant S as LineaService
+participant VL as ValidadorLinea
+participant A as AuditoriaService
+participant DB as SQL Server
+GE->>V: modifica las condiciones, la fecha de vigencia y el motivo
+V->>C: POST admin/lineas con la version_fila leída
+C->>S: modificar(id, versión, datos, fecha, motivo)
+S->>VL: normaliza y valida TNA, gastos, mínimo y máximo prestable, cuotas, edades y categorías (RN-14, RN-76)
+S->>S: la fecha no puede ser anterior a hoy, sin retroactividad
+alt hay errores
+S-->>C: ValidacionException
+C-->>V: cada error junto a su campo
+end
+S->>DB: BEGIN y bloquea lineas_credito
+S->>DB: nombre único y versión vigente anterior
+S->>DB: versiones_condiciones con el número siguiente y vigente_desde
+S->>DB: condiciones_categorias y requisitos_documentales por categoría (D-14)
+S->>DB: actualizarConVersion(lineas_credito)
+S->>DB: operaciones que conservan la versión anterior
+S->>A: auditoría lineas.modificar con el motivo
+S->>DB: COMMIT
+C-->>V: versión nueva vigente desde la fecha, las operaciones anteriores conservan sus condiciones (RN-15)

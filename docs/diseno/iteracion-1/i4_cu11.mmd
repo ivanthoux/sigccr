@@ -1,0 +1,35 @@
+sequenceDiagram
+autonumber
+actor AN as Analista de Crédito
+participant V as Vista clientes/formulario
+participant F as AuthFilter, PermisoFilter y csrf
+participant C as Admin Clientes
+participant S as ClienteService
+participant VA as ValidadorCliente, RequisitosDocumentales y ArchivoLegajo
+participant AU as AutorizacionService
+participant AC as AuditoriaService y ComunicacionService
+participant DB as SQL Server
+AN->>V: completa los datos, adjunta la identificación y confirma
+V->>F: POST admin/clientes (multipart)
+F->>F: sesión vigente, version_seguridad y permiso clientes.registrar (RNF-01, RNF-11)
+F->>C: registrar()
+C->>S: registrar(datos, archivos, usuario)
+S->>VA: normaliza y valida campos, edad mínima, CUIL y DNI, tipo real y tamaño de cada archivo
+S->>VA: documentos de identificación faltantes (RN-11, D-14)
+alt hay errores
+S-->>C: ValidacionException (campo y mensaje)
+C-->>V: volverConError, cada error junto a su campo (RNF-02)
+end
+S->>DB: BEGIN TRANSACTION
+S->>DB: unicidad de documento, CUIT/CUIL y correo (RN-07, RN-08)
+S->>DB: clientes y personas_humanas o personas_juridicas
+S->>DB: cuentas_acceso PendienteActivacion y cuentas_cliente
+S->>DB: consentimientos PoliticaDatos y ComunicacionesComerciales (RN-64)
+S->>DB: documentos_legajo, archivos movidos a writable/legajos con nombre aleatorio y hash
+S->>AU: emitir(cuenta, VerificacionCorreo, correo, nombre, portal/verificar-correo)
+S->>AC: auditoría clientes.registrar
+S->>DB: COMMIT
+S->>AC: enviar(comunicación)
+S-->>C: identificador del cliente
+C-->>V: perfil del cliente con el aviso de verificación del correo
+Note over S,DB: Ante cualquier error, ROLLBACK y se eliminan los archivos ya movidos (RN-46)

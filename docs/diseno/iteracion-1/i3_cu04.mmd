@@ -1,0 +1,36 @@
+sequenceDiagram
+autonumber
+actor CL as Cliente
+participant V as Vistas portal/activar
+participant C as Portal Activacion
+participant S as ActivacionService
+participant RA as ReglasActivacion
+participant AU as AutorizacionService
+participant CO as ComunicacionService
+participant DB as SQL Server
+CL->>V: documento o CUIT y correo
+V->>C: POST portal/activar
+C->>S: solicitar(tipo, número, correo)
+S->>RA: identificacion(tipo, número)
+S->>DB: BEGIN y busca el cliente y su cuenta con UPDLOCK
+S->>RA: evaluar(cliente, correo ingresado)
+RA-->>S: Enviar (Activacion o Rehabilitacion), SinEnvio o NoVerificado
+alt NoVerificado, cliente inexistente o desactivado (RN-10), o correo no verificado
+S->>DB: auditoría Rechazado y COMMIT
+C-->>V: no pudimos verificar los datos (A1)
+else SinEnvio, cuenta habilitada o bloqueada
+S->>DB: auditoría Rechazado y COMMIT
+C-->>V: el mismo mensaje que el envío, sin revelar el estado (A2)
+else Enviar
+S->>AU: emitir(cuenta, propósito, correo, nombre, portal/activar), vigencia de 24 h
+S->>DB: auditoría y COMMIT
+S->>CO: enviar(id)
+C-->>V: le enviamos un correo con las instrucciones
+end
+CL->>C: POST portal/activar con el código y la contraseña
+C->>S: definirContrasena(código, contraseña, confirmación)
+S->>AU: buscarVigente(código) con UPDLOCK
+S->>DB: cliente Activo y cuenta PendienteActivacion o Desactivada a Habilitada
+S->>AU: marcarUtilizada
+S->>DB: fecha_activacion, auditoría y COMMIT
+C-->>CL: inicio de sesión del portal con el correo cargado (paso 10)

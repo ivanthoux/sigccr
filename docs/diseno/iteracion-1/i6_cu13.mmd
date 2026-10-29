@@ -1,0 +1,31 @@
+sequenceDiagram
+autonumber
+actor AN as Analista de Crédito o Gerente
+participant C as Admin Clientes
+participant S as ClienteService
+participant RC as ReglasClientes
+participant AU as AutorizacionService
+participant A as AuditoriaService
+participant DB as SQL Server
+participant AF as AuthFilter
+actor CL as Cliente en el portal
+AN->>C: GET desactivar
+C-->>AN: confirmación con la version_fila
+AN->>C: POST desactivar con el motivo
+C->>S: desactivar(id, versión, motivo)
+S->>S: exigirMotivo (Campos::motivo)
+S->>DB: BEGIN y bloquea el cliente
+S->>DB: pendientes, cuotas, solicitudes, propuestas, saldos a favor, órdenes y ofertas
+S->>RC: motivosContraDesactivar(estado, pendientes)
+alt tiene pendientes
+S-->>C: ReglaNegocioException con lo que debe resolverse (RN-09)
+end
+S->>DB: actualizarConVersion, estado Desactivado
+S->>DB: cuenta del portal Desactivada y version_seguridad + 1
+S->>AU: sustituirVigentes(cuenta)
+S->>A: auditoría clientes.desactivar con el motivo
+S->>DB: COMMIT
+C-->>AN: cliente desactivado
+CL->>AF: siguiente petición en el portal
+AF->>DB: estado y version_seguridad de la cuenta
+AF-->>CL: sesión finalizada y redirección a portal/login

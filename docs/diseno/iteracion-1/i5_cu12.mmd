@@ -1,0 +1,37 @@
+sequenceDiagram
+autonumber
+actor AN as Analista de Crédito
+participant C as Admin Clientes
+participant S as ClienteService
+participant VA as ValidadorCliente y ReglasClientes
+participant AU as AutorizacionService
+participant AL as AlertaService
+participant A as AuditoriaService
+participant DB as SQL Server
+AN->>C: POST admin/clientes con la version_fila leída
+C->>S: modificar(id, versión, datos, evidencia)
+S->>VA: normaliza y valida los datos
+S->>S: un correo nuevo exige describir la evidencia de identidad (RN-58)
+S->>DB: BEGIN y bloquea el cliente, que debe estar Activo
+S->>DB: unicidad sin contar al propio cliente
+S->>S: calcula los cambios y rechaza si no hay ninguno
+S->>DB: actualizarConVersion(clientes, id, versión)
+alt otro usuario lo modificó antes
+DB-->>S: ninguna fila afectada
+S-->>C: ConflictoConcurrenciaException (RN-24)
+end
+S->>DB: actualiza la persona humana o jurídica
+opt cambia el consentimiento comercial
+S->>DB: nuevo consentimiento y, si se revoca, cancela las ofertas pendientes (RN-64)
+end
+opt cambia el correo
+S->>AU: sustituirVigentes y emitir VerificacionCorreo al correo nuevo
+end
+S->>VA: cambiosRelevantes(actual, nuevos)
+opt cambiaron datos usados en la evaluación
+S->>DB: invalida las evaluaciones vigentes de las solicitudes en curso
+S->>AL: alerta Operativa al analista de cada solicitud o a su rol (RN-12)
+end
+S->>A: auditoría con los valores anteriores y nuevos
+S->>DB: COMMIT
+C-->>AN: confirmación, con aviso de verificación o de solicitudes afectadas

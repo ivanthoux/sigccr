@@ -1,0 +1,37 @@
+sequenceDiagram
+autonumber
+actor U as Usuario interno o Cliente
+participant V as Vista acceso/login
+participant F as LimiteIntentosFilter y csrf
+participant C as Acceso (panel o portal)
+participant S as AccesoService
+participant CI as ControlIntentos
+participant A as AuditoriaService
+participant DB as SQL Server
+U->>V: ingresa correo y contraseña
+V->>F: POST admin/login o portal/login
+F->>F: token CSRF y hasta 100 intentos por dirección de origen cada 15 min (RN-62)
+alt límite de origen superado
+F-->>V: 429 y auditoría acceso.limite_origen (A4)
+end
+F->>C: autenticar()
+C->>S: autenticar(tipoCuenta, correo, contraseña)
+S->>DB: BEGIN TRANSACTION y lee cuentas_acceso WITH (UPDLOCK, ROWLOCK)
+alt cuenta inexistente o no habilitada, o contraseña incorrecta
+S->>CI: registrarFallo(intentos, inicio de la ventana)
+CI-->>S: intentos, bloqueo al quinto en 15 min y su vencimiento
+S->>DB: intentos o BloqueadaTemporalmente (sin cuenta, contador en la caché)
+S->>A: acceso.fallido y acceso.bloqueo
+S->>DB: COMMIT, el intento fallido no se revierte
+S-->>C: ReglaNegocioException con el mensaje genérico
+C-->>V: rechazo con advertencia de intentos restantes (A1, A2)
+else credenciales válidas
+S->>S: portal, cliente Activo en el padrón (RN-10). Panel, rol con permisos (RN-01)
+S->>DB: reinicia intentos, ultimo_acceso y rehash Argon2id si corresponde
+S->>A: acceso.inicio
+S->>DB: COMMIT
+S-->>C: cuenta, rol, permisos y version_seguridad
+C->>C: regenera el identificador de sesión y guarda la cuenta (RNF-11)
+C-->>V: redirección a la pantalla principal
+end
+Note over S,DB: Sin cuenta se verifica una contraseña de referencia, para que el tiempo de respuesta no revele si existe (RN-62)
