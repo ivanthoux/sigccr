@@ -130,4 +130,5 @@ Datos de prueba sugeridos (correos ficticios):
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | Iván Ezequiel Thoux | | | |
+| 29/10/2026 | Iván Ezequiel Thoux | 55 de 60 | 5 fallas: documento con punto final, CUIL según el prefijo, activación tras verificar el correo, lista inicial de clientes y fin del bloqueo temporal | Corregidas en el PR #104 (D-16); se agregaron F-12b, F-23b y F-53b. |
+| 29/10/2026 | Iván Ezequiel Thoux | 60 de 60 | Ninguna | Repetición completa después de las correcciones: validaciones, mensajes por campo y acceso por rol correctos. Iteración 1 aprobada. |
