@@ -7,8 +7,10 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Clientes\ClienteService;
+use App\Services\Comunes\GeografiaService;
 use CodeIgniter\HTTP\DownloadResponse;
 use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 
 /**
  * Padrón de clientes: CU-54 Localizar, CU-11 Registrar, CU-12 Modificar, CU-13 Desactivar, CU-14 Reactivar y
@@ -40,7 +42,7 @@ class Clientes extends BaseController
     /** CU-11 pasos 1 y 2. */
     public function nuevo(): string
     {
-        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'tipos' => $this->servicio->tiposDocumentacion()] + $this->geografia(null));
     }
 
     /** CU-11 pasos 3 a 9. */
@@ -90,7 +92,7 @@ class Clientes extends BaseController
             return redirect()->route('clientes.localizar')->with('error', $e->getMessage());
         }
 
-        return view('clientes/formulario', ['titulo' => 'Modificar cliente', 'c' => $cliente, 'tipos' => []]);
+        return view('clientes/formulario', ['titulo' => 'Modificar cliente', 'c' => $cliente, 'tipos' => []] + $this->geografia($cliente));
     }
 
     /** CU-12 pasos 4 a 10. */
@@ -173,5 +175,27 @@ class Clientes extends BaseController
         }
 
         return redirect()->to(site_url("admin/clientes/{$id}"))->with('exito', $mensaje);
+    }
+
+    /**
+     * D-18: localidades activas de una provincia para el formulario del cliente (se cargan al elegir la provincia).
+     */
+    public function localidades(int $provinciaId): ResponseInterface
+    {
+        return $this->response->setJSON((new GeografiaService())->localidades($provinciaId));
+    }
+
+    /**
+     * Provincias y, si ya hay una elegida, sus localidades, para mostrar el formulario sin esperar la carga.
+     *
+     * @param array<string, mixed>|null $cliente
+     * @return array{provincias: list<array{id: int, nombre: string}>, localidades: list<array{id: int, nombre: string}>}
+     */
+    private function geografia(?array $cliente): array
+    {
+        $g = new GeografiaService();
+        $provincia = (int) (old('provincia_id') ?? $cliente['provincia_id'] ?? 0);
+
+        return ['provincias' => $g->provincias(), 'localidades' => $provincia === 0 ? [] : $g->localidades($provincia)];
     }
 }

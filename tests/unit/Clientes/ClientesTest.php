@@ -22,7 +22,7 @@ final class ClientesTest extends TestCase
         return [
             'tipo_cliente' => 'PersonaHumana', 'nombre' => 'Lucía', 'apellido' => 'Fernández', 'tipo_documento' => 'DNI',
             'nro_documento' => '30.111.222', 'cuit_cuil' => '27-30111222-?', 'fecha_nacimiento' => '15/03/1985', 'estado_civil' => 'Casado',
-            'correo' => 'lucia@correo.com', 'telefono' => '+54 351 555-1234', 'domicilio' => 'San Martín 123, Córdoba',
+            'correo' => 'lucia@correo.com', 'telefono' => '+54 351 555-1234', 'domicilio' => 'San Martín 123', 'provincia_id' => '14', 'localidad_id' => '3', 'codigo_postal' => '5000',
             'ingresos_declarados' => '850.000,00', 'categoria_ingresos' => 'RelacionDependencia', 'acepta_politica' => '1',
         ];
     }
@@ -34,7 +34,7 @@ final class ClientesTest extends TestCase
             'tipo_cliente' => 'PersonaJuridica', 'razon_social' => 'Panificadora del Centro SRL', 'cuit_cuil' => '30-50001091-2',
             'fecha_constitucion' => '2015-06-01', 'actividad_principal' => 'Elaboración de productos de panadería',
             'representante_nombre' => 'Jorge Pérez', 'representante_documento' => '20111222', 'representante_cargo' => 'Socio gerente',
-            'correo' => 'admin@panificadora.com.ar', 'domicilio' => 'Belgrano 450, Córdoba', 'ingresos_declarados' => '12500000', 'acepta_politica' => 'on',
+            'correo' => 'admin@panificadora.com.ar', 'domicilio' => 'Belgrano 450', 'provincia_id' => '14', 'localidad_id' => '3', 'ingresos_declarados' => '12500000', 'acepta_politica' => 'on',
         ];
     }
 
@@ -71,10 +71,10 @@ final class ClientesTest extends TestCase
     public function testFormularioVacioDePersonaHumana(): void
     {
         $e = $this->errores([]);
-        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica'] as $campo) {
+        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica'] as $campo) {
             $this->assertArrayHasKey($campo, $e, $campo);
         }
-        $this->assertCount(10, $e);
+        $this->assertCount(11, $e);
     }
 
     public function testFormularioVacioDePersonaJuridica(): void

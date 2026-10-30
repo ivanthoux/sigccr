@@ -21,6 +21,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
 | D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
 | D-17 | 30/10/2026 | Propuesta |
+| D-18 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -146,3 +147,11 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 5. Indicadores internos de RN-69: el comportamiento de pago es el máximo atraso de las cuotas vencidas en los últimos 12 meses (las pagadas, hasta la fecha efectiva del pago; las impagas, hasta hoy) y no hay antecedentes si no hay cuotas vencidas en ese período; las obligaciones son la próxima cuota impaga de cada crédito Activo o En mora más la primera cuota de las demás solicitudes en trámite del cliente (RN-18). De la Central de Deudores se toman los períodos desde doce meses antes del mes en curso; la situación vigente es la peor del último período informado.
 
 **Consecuencias.** Sin cambios de esquema. `EvaluacionService`, comando `evaluacion:ejecutar` (cada 5 minutos en el planificador), `AntecedentesBcra`, `DimensionesEvaluacion`, `Contingencia` y el adaptador `BcraInformacionCrediticia` (API pública de la Central de Deudores, `sigccr.adaptadorInformacionCrediticia = real`). Cambian el diagrama de estados de la solicitud de 4.2.3 (nueva transición), el de la evaluación de 4.2.4 (EnProceso → NoCompletada por error interno o interrupción), CU-86 (A7) y CU-25 (paso 7, resultado registrado).
+
+## D-18 · Domicilio del cliente con provincia y localidad (CU-11, CU-12)
+
+**Contexto.** En la prueba de la iteración 2 se observó que el domicilio del cliente era un único texto libre. Una sucursal atiende clientes de varias localidades cercanas, a veces de otra provincia: por ejemplo, desde Apóstoles (Misiones) se atiende a Azara y San José, en Misiones, y a Colonia Liebig, en Corrientes. Con un texto libre no se puede saber con certeza de qué localidad es cada cliente, ni agruparlos para reportes o campañas.
+
+**Decisión.** El domicilio se compone de provincia, localidad, código postal (opcional) y calle y número. La provincia y la localidad se eligen de un catálogo y son obligatorias en el alta (CU-11) y en cada modificación (CU-12). Los clientes registrados antes del cambio conservan su domicilio y completan la localidad en su próxima modificación. El catálogo usa los códigos oficiales: las provincias, con su código INDEC, y las localidades, del catálogo de localidades censales del Servicio de Normalización de Datos Geográficos (georef, datos.gob.ar). La instalación carga las 24 jurisdicciones y una lista base de localidades (las capitales, la zona de Apóstoles y el Gran Resistencia). El comando `php spark geografia:importar` incorpora el catálogo completo, descargado o desde un archivo; puede repetirse y no elimina localidades que ya estén en uso. El código postal admite los cuatro dígitos o el CPA de ocho caracteres.
+
+**Consecuencias.** Migración 13: tablas `provincias` y `localidades` en SS-10 y columnas `clientes.localidad_id` y `clientes.codigo_postal`; `domicilio` conserva la calle y el número. Queda en 75 tablas. `CatalogoGeografico` (con 6 pruebas), `GeografiaService`, `GeografiaSeeder` y el comando `geografia:importar`. El formulario del cliente carga las localidades al elegir la provincia. Cambian CU-11 (paso 3), CU-12, el modelo de dominio (`Cliente` con `Localidad`), 4.3 (tablas de SS-10 y SS-02, totales) y el glosario.

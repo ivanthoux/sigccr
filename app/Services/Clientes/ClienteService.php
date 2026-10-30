@@ -15,6 +15,7 @@ use App\Services\BaseService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ComunicacionService;
+use App\Services\Comunes\GeografiaService;
 use Throwable;
 
 /**
@@ -84,8 +85,10 @@ class ClienteService extends BaseService
         $c = $this->db->query(
             'SELECT c.*, ph.tipo_documento, ph.nro_documento, ph.nombre, ph.apellido, ph.fecha_nacimiento, ph.estado_civil, ph.ocupacion, ph.empleador, '
             . 'pj.razon_social, pj.fecha_constitucion, pj.actividad_principal, pj.representante_nombre, pj.representante_documento, pj.representante_cargo, '
-            . 'ca.estado AS estado_cuenta, ca.correo_verificado, ca.correo AS correo_cuenta '
+            . 'ca.estado AS estado_cuenta, ca.correo_verificado, ca.correo AS correo_cuenta, '
+            . 'lo.nombre AS localidad, lo.departamento, lo.provincia_id, pr.nombre AS provincia '
             . 'FROM dbo.clientes c LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id '
+            . 'LEFT JOIN dbo.localidades lo ON lo.id = c.localidad_id LEFT JOIN dbo.provincias pr ON pr.id = lo.provincia_id '
             . 'LEFT JOIN dbo.cuentas_acceso ca ON ca.id = c.cuenta_cliente_id WHERE c.id = ?',
             [$id],
         )->getRowArray();
@@ -160,6 +163,7 @@ class ClienteService extends BaseService
     {
         $d = ValidadorCliente::normalizar($datos);
         $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio());
+        $this->validarLocalidad($d, null, $errores);
         $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
         foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
@@ -178,6 +182,7 @@ class ClienteService extends BaseService
                     'tipo_cliente' => $d['tipo_cliente'], 'cuit_cuil' => $d['cuit_cuil'] === '' ? null : $d['cuit_cuil'],
                     'denominacion' => ValidadorCliente::denominacion($d), 'correo' => $d['correo'],
                     'telefono' => $d['telefono'] === '' ? null : $d['telefono'], 'domicilio' => $d['domicilio'],
+                    'localidad_id' => $d['localidad_id'], 'codigo_postal' => $d['codigo_postal'],
                     'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'],
                     'estado' => 'Activo', 'fecha_alta' => $this->hoyNegocio(), 'creado_en' => $ahora,
                 ]);
@@ -226,6 +231,7 @@ class ClienteService extends BaseService
         $actual = $this->obtener($id);
         $d = ValidadorCliente::normalizar(['tipo_cliente' => $actual['tipo_cliente']] + $datos);
         $errores = ValidadorCliente::validar($d, false, $this->hoyNegocio());
+        $this->validarLocalidad($d, $actual['localidad_id'] === null ? null : (int) $actual['localidad_id'], $errores);
         $correoNuevo = $d['correo'] !== $actual['correo'] ? $d['correo'] : null;
         $evidencia = Campos::texto($evidenciaIdentidad);
         if ($correoNuevo !== null && mb_strlen($evidencia) < 10) {
@@ -246,6 +252,7 @@ class ClienteService extends BaseService
             $nuevos = [
                 'cuit_cuil' => $d['cuit_cuil'] === '' ? null : $d['cuit_cuil'], 'denominacion' => ValidadorCliente::denominacion($d),
                 'telefono' => $d['telefono'] === '' ? null : $d['telefono'], 'domicilio' => $d['domicilio'],
+                'localidad_id' => $d['localidad_id'], 'codigo_postal' => $d['codigo_postal'],
                 'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'],
             ] + $this->datosSubclase($d);
             $cambios = [];
@@ -262,7 +269,7 @@ class ClienteService extends BaseService
                 throw new ReglaNegocioException('No hay cambios para guardar.');
             }
 
-            $this->actualizarConVersion('clientes', $id, $versionLeida, array_intersect_key($nuevos, array_flip(['cuit_cuil', 'denominacion', 'telefono', 'domicilio', 'ingresos_declarados', 'categoria_ingresos'])) + ['actualizado_en' => $this->ahoraUtc()]);
+            $this->actualizarConVersion('clientes', $id, $versionLeida, array_intersect_key($nuevos, array_flip(['cuit_cuil', 'denominacion', 'telefono', 'domicilio', 'localidad_id', 'codigo_postal', 'ingresos_declarados', 'categoria_ingresos'])) + ['actualizado_en' => $this->ahoraUtc()]);
             $this->db->table($d['tipo_cliente'] === 'PersonaJuridica' ? 'personas_juridicas' : 'personas_humanas')->where('cliente_id', $id)->update($this->datosSubclase($d));
 
             if ($cambiaConsentimiento) {
@@ -442,6 +449,26 @@ class ClienteService extends BaseService
      * @param array<string, mixed> $d
      * @return array<string, mixed>
      */
+    /**
+     * D-18: la localidad existe, pertenece a la provincia elegida y está activa (una localidad dada de baja del
+     * catálogo se conserva en el cliente que ya la tenía).
+     *
+     * @param array<string, mixed>  $d
+     * @param array<string, string> $errores
+     */
+    private function validarLocalidad(array $d, ?int $actual, array &$errores): void
+    {
+        if ($d['localidad_id'] === 0 || isset($errores['provincia_id'])) {
+            return;
+        }
+        $l = (new GeografiaService($this->db))->localidad($d['localidad_id']);
+        if ($l === null || $l['provincia_id'] !== $d['provincia_id']) {
+            $errores['localidad_id'] = 'Seleccione una localidad de la provincia elegida.';
+        } elseif ($l['activa'] !== 1 && $l['id'] !== $actual) {
+            $errores['localidad_id'] = 'La localidad ya no está disponible: seleccione otra.';
+        }
+    }
+
     private function datosSubclase(array $d): array
     {
         $nulo = static fn (string $v): ?string => $v === '' ? null : $v;

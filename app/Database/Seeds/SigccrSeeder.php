@@ -17,6 +17,7 @@ class SigccrSeeder extends Seeder
         $this->call(RolesSeeder::class);
         $this->call(PermisosSeeder::class);
         $this->call(TiposDocumentacionSeeder::class);
+        $this->call(GeografiaSeeder::class);
         $this->call(ParametrosInicialesSeeder::class);
     }
 }

@@ -164,6 +164,21 @@ add('tipos_documentacion', 'SS-10', '(catálogo)', 'Catálogo de tipos de docume
     C('activo', B, default='1', d='Disponible para nuevas exigencias.'),
 ])
 
+add('provincias', 'SS-10', '(catálogo)', 'Provincias de la República Argentina y Ciudad Autónoma de Buenos Aires, identificadas por su código INDEC (Servicio de Normalización de Datos Geográficos, georef). Se ubica en servicios comunes como catálogo de referencia geográfica.', [
+    C('id', 'INT', pk=True, d='Código INDEC de la provincia (por ejemplo, 54 Misiones, 18 Corrientes).'),
+    C('nombre', 'NVARCHAR(80)', uq=True, d='Nombre oficial abreviado.'),
+])
+
+add('localidades', 'SS-10', '(catálogo)', 'Localidades de cada provincia para el domicilio de los clientes. Se cargan del catálogo oficial de localidades censales (georef) con el comando geografia:importar; las localidades base se cargan con la instalación.', [
+    ID(),
+    FK('provincia_id', 'provincias'),
+    C('nombre', 'NVARCHAR(150)', d='Nombre de la localidad.'),
+    C('departamento', 'NVARCHAR(100)', null=True, d='Departamento o partido; distingue localidades homónimas de una provincia.'),
+    C('codigo', 'VARCHAR(12)', null=True, d='Identificador de la localidad censal en georef; nulo en las localidades cargadas manualmente.'),
+    C('activa', B, default='1', d='Disponible para nuevos domicilios.'),
+], uq=[('UQ_localidades_codigo', ['codigo'], 'codigo IS NOT NULL'),
+       ('UQ_localidades_nombre', ['provincia_id', 'nombre', 'departamento'], None)])
+
 add('versiones_parametros', 'SS-10', 'VersionParametros', 'Versiones de cada grupo de parámetros de negocio; las operaciones referencian la versión aplicada (RN-15, RN-45).', [
     ID(),
     EN('tipo', 'TipoParametros', d='Grupo de parámetros (CU-51, CU-58 a CU-60).'),
@@ -348,8 +363,10 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
     C('denominacion', 'NVARCHAR(200)', d='«Apellido, Nombre» o razón social, mantenida por la aplicación para la búsqueda (RNF-03).'),
     C('correo', 'NVARCHAR(254)', null=True, d='Correo de contacto.'),
     C('telefono', 'VARCHAR(30)', null=True, d='Teléfono informativo; no identifica (RN-08).'),
-    C('domicilio', 'NVARCHAR(200)', d='Domicilio real o legal.'),
+    C('domicilio', 'NVARCHAR(200)', d='Calle, número, piso y departamento del domicilio real o legal.'),
     C('ingresos_declarados', M2, d='Ingresos netos mensuales declarados.'),
+    FK('localidad_id', 'localidades', null=True, d='Localidad del domicilio; obligatoria en el alta y en cada modificación (D-18), nula en clientes anteriores.'),
+    C('codigo_postal', 'VARCHAR(8)', null=True, d='Código postal: cuatro dígitos o CPA de ocho caracteres (por ejemplo, N3350ABC).'),
     EN('categoria_ingresos', 'CategoriaIngresos'),
     EN('estado', 'EstadoCliente', default="'Activo'"),
     FK('cuenta_cliente_id', 'cuentas_cliente', null=True, uq=True, d='Cuenta de acceso al portal; nula hasta que el cliente la solicita.'),
