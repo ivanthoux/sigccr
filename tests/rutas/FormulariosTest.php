@@ -36,7 +36,7 @@ final class FormulariosTest extends CIUnitTestCase
             if (!$f->isFile() || $f->getExtension() !== 'php') {
                 continue;
             }
-            preg_match_all('/<form\b[^>]*>/i', (string) file_get_contents($f->getPathname()), $m);
+            preg_match_all('/<form\b(?:[^>"]|"[^"]*")*>/i', (string) file_get_contents($f->getPathname()), $m);
             foreach ($m[0] as $form) {
                 if (stripos($form, 'method="post"') === false || preg_match('/action="([^"]*)"/', $form, $a) !== 1) {
                     continue;
