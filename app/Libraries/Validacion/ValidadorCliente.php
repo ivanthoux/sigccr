@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Libraries\Validacion;
 
+use App\Libraries\Clientes\CatalogoGeografico;
 use App\Libraries\Clientes\RequisitosDocumentales;
 
 /**
@@ -28,6 +29,10 @@ final class ValidadorCliente
             'correo' => Campos::correo($d['correo'] ?? ''),
             'telefono' => $t('telefono'),
             'domicilio' => $t('domicilio'),
+            'provincia_id' => ctype_digit($t('provincia_id')) ? (int) $t('provincia_id') : 0,
+            'localidad_id' => ctype_digit($t('localidad_id')) ? (int) $t('localidad_id') : 0,
+            'codigo_postal_texto' => $t('codigo_postal'),
+            'codigo_postal' => CatalogoGeografico::codigoPostal($t('codigo_postal')),
             'ingresos_texto' => $t('ingresos_declarados'),
             'ingresos_declarados' => Campos::importe($d['ingresos_declarados'] ?? ''),
             'categoria_ingresos' => $tipo === 'PersonaJuridica' ? 'Empresa' : $t('categoria_ingresos'),
@@ -106,7 +111,11 @@ final class ValidadorCliente
 
         $r['correo'] = [Campos::obligatorio($d['correo'], 'el correo electrónico'), Campos::formatoCorreo($d['correo'])];
         $r['telefono'] = [Campos::telefono($d['telefono'])];
-        $r['domicilio'] = [Campos::obligatorio($d['domicilio'], $juridica ? 'el domicilio legal' : 'el domicilio'), Campos::largoMaximo($d['domicilio'], 200, 'el domicilio')];
+        $r['domicilio'] = [Campos::obligatorio($d['domicilio'], $juridica ? 'la calle y el número del domicilio legal' : 'la calle y el número del domicilio'), Campos::largoMaximo($d['domicilio'], 200, 'el domicilio')];
+        // D-18: provincia y localidad del domicilio; que la localidad pertenezca a la provincia lo verifica el servicio
+        $r['provincia_id'] = [$d['provincia_id'] === 0 ? 'Seleccione la provincia.' : null];
+        $r['localidad_id'] = [$d['provincia_id'] !== 0 && $d['localidad_id'] === 0 ? 'Seleccione la localidad.' : null];
+        $r['codigo_postal'] = [$d['codigo_postal_texto'] !== '' && $d['codigo_postal'] === null ? 'Ingrese un código postal de 4 dígitos o el CPA de 8 caracteres (por ejemplo, N3350ABC).' : null];
         $r['ingresos_declarados'] = [
             Campos::obligatorio($d['ingresos_texto'], $juridica ? 'los ingresos netos mensuales promedio' : 'los ingresos declarados'),
             $d['ingresos_texto'] !== '' && $d['ingresos_declarados'] === null ? 'Ingrese un importe válido, por ejemplo 850.000,00.' : null,

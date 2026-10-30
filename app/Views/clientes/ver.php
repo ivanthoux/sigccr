@@ -62,7 +62,7 @@ $this->section('contenido');
                 <?php endif ?>
                 <?= $fila('Categoría de ingresos', esc($categoria)) ?>
                 <?= $fila($juridica ? 'Ingresos netos mensuales' : 'Ingresos declarados', '<span class="importe d-inline">' . esc(formato_importe($c['ingresos_declarados'])) . '</span>') ?>
-                <?= $fila($juridica ? 'Domicilio legal' : 'Domicilio', esc($c['domicilio'])) ?>
+                <?= $fila($juridica ? 'Domicilio legal' : 'Domicilio', esc($c['domicilio']) . ($c['localidad'] ? '<br><span class="small">' . esc($c['localidad']) . ', ' . esc($c['provincia']) . ($c['codigo_postal'] ? ' (CP ' . esc($c['codigo_postal']) . ')' : '') . '</span>' : ' <span class="badge rounded-pill text-bg-warning">Falta la localidad</span>')) ?>
                 <?= $fila('Teléfono', $c['telefono'] ? esc($c['telefono']) : null) ?>
                 <?= $fila('Correo electrónico', esc((string) $c['correo']) . ((int) $c['correo_verificado'] === 1 ? ' <span class="badge rounded-pill text-bg-success">Verificado</span>' : ' <span class="badge rounded-pill text-bg-light border">Sin verificar</span>')
                     . ($c['correo_pendiente'] ? '<div class="small text-body-secondary mt-1">Correo nuevo pendiente de verificación: ' . esc($c['correo_pendiente']) . '</div>' : '')) ?>

@@ -54,6 +54,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
             $routes->get('nuevo', 'Admin\Clientes::nuevo', ['as' => 'clientes.registrar', 'filter' => 'permiso:clientes.registrar']);
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
+            // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
+            $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);

@@ -41,6 +41,8 @@ class Sigccr extends BaseConfig
     public string $pasarelaToken = '';
     public string $pasarelaSecretoNotificaciones = '';
     public string $informacionCrediticiaUrl = '';
+    /** Catálogo de localidades censales de georef para geografia:importar (D-18). */
+    public string $georefLocalidadesUrl = 'https://infra.datos.gob.ar/georef/localidades-censales.json';
     public string $smtpHost = '';
     public int $smtpPuerto = 587;
     /** tls (STARTTLS, puerto 587) o ssl (puerto 465) */
