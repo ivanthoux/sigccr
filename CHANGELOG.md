@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (iteración 2 · D01: simulación, solicitud, verificación y correcciones)
+- CU-21 Simular Crédito: líneas admitidas para el cliente según estado, vigencia, tipo, categoría, edad o antigüedad (`Elegibilidad`, RN-13, RN-75), validación del importe y las cuotas (RN-14, RN-76) y plan preliminar con TEA, CFTEA, gastos e IVA (`Simulador`, RN-50 a RN-52, RN-63, RN-68), vigente por 7 días (RN-48).
+- CU-22 Registrar Solicitud desde una simulación vigente: cliente activo con CUIT/CUIL, línea no suspendida (RN-16), una sola solicitud en trámite por cliente y línea (RN-18) y la documentación que exige la versión de condiciones (RN-11, D-14).
+- CU-23 Verificar Legajo: resultado por documento con su motivo y resultado de la revisión (`RevisionLegajo`, RN-19); incorporación de documentación durante la verificación (A4).
+- CU-84 Registrar Corrección: reemplazo de los documentos observados (RN-44), aclaraciones y etapa siguiente según 4.2.3, incluida la devolución gerencial (`EstadosSolicitud`); corrección parcial (A1).
+- RN-61: un documento clave nuevo devuelve a verificación las solicitudes evaluadas, invalida su evaluación y alerta al Analista.
+- Localización y consulta de solicitudes (base de CU-29 y CU-30) con historial de estados y revisiones documentales.
+- `LegajoService`: legajo compartido por clientes y solicitudes.
+
 ### Agregado
 - Especificación del modelo de datos en el repositorio (`docs/modelo-datos/`) con sus generadores y `verificar.py`, que la integración continua ejecuta para comprobar que las migraciones producen el mismo esquema.
 

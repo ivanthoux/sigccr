@@ -6,7 +6,6 @@ namespace App\Services\Clientes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
-use App\Libraries\Clientes\ArchivoLegajo;
 use App\Libraries\Clientes\ReglasClientes;
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
@@ -27,8 +26,6 @@ use Throwable;
  */
 class ClienteService extends BaseService
 {
-    /** Carpeta de los legajos dentro de writable/ (fuera del directorio público, RNF-12). */
-    public const CARPETA_LEGAJOS = 'legajos';
     private const RUTA_VERIFICACION = 'portal/verificar-correo';
     /** Clientes que muestra la pantalla inicial de CU-54 antes de buscar. */
     public const CANTIDAD_RECIENTES = 50;
@@ -107,13 +104,7 @@ class ClienteService extends BaseService
                 [$id, $tipo],
             )->getRowArray();
         }
-        $c['documentos'] = $this->db->query(
-            'SELECT d.id, d.nombre_original, d.tipo_mime, d.tamano_bytes, d.fecha_incorporacion, td.codigo, td.nombre AS tipo '
-            . 'FROM dbo.documentos_legajo d JOIN dbo.tipos_documentacion td ON td.id = d.tipo_documentacion_id '
-            . 'WHERE d.cliente_id = ? AND NOT EXISTS (SELECT 1 FROM dbo.documentos_legajo r WHERE r.reemplaza_documento_id = d.id) '
-            . 'ORDER BY td.nombre, d.fecha_incorporacion DESC',
-            [$id],
-        )->getResultArray();
+        $c['documentos'] = (new LegajoService($this->db))->vigentes($id);
         $c['desactivacion'] = $c['estado'] !== 'Desactivado' ? null : $this->db->query(
             "SELECT TOP 1 fecha_hora, motivo, responsable FROM dbo.registros_auditoria WHERE accion = 'clientes.desactivar' AND objeto_tipo = 'clientes' "
             . "AND objeto_id = ? AND resultado = 'Exitoso' ORDER BY id DESC",
@@ -169,7 +160,7 @@ class ClienteService extends BaseService
     {
         $d = ValidadorCliente::normalizar($datos);
         $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio());
-        $documentos = $this->validarArchivos($archivos, $errores);
+        $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
         foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
             $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
@@ -205,7 +196,7 @@ class ClienteService extends BaseService
                     $this->registrarConsentimiento($id, 'ComunicacionesComerciales', true);
                 }
                 foreach ($documentos as $doc) {
-                    $movidos[] = $this->guardarDocumento($id, $doc, $usuarioId);
+                    $movidos[] = (new LegajoService($this->db))->guardar($id, $doc, $usuarioId)['ruta'];
                 }
                 $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $d['correo'], $d['tipo_cliente'] === 'PersonaJuridica' ? $d['representante_nombre'] : $d['nombre'], self::RUTA_VERIFICACION, 'verificacion_correo_cliente');
                 (new AuditoriaService($this->db))->registrar('clientes.registrar', 'clientes', $id, 'Exitoso', null, [
@@ -216,9 +207,7 @@ class ClienteService extends BaseService
                 return [$id, $comunicacionId];
             });
         } catch (Throwable $e) {
-            foreach ($movidos as $ruta) {
-                @unlink(WRITEPATH . $ruta);
-            }
+            LegajoService::descartar($movidos);
             throw $e;
         }
         (new ComunicacionService())->enviar($comunicacionId);
@@ -393,7 +382,7 @@ class ClienteService extends BaseService
     public function agregarDocumentos(int $id, array $archivos, int $usuarioId): int
     {
         $errores = [];
-        $documentos = $this->validarArchivos($archivos, $errores);
+        $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         if ($documentos === [] && $errores === []) {
             $errores['documentos'] = 'Seleccione al menos un archivo.';
         }
@@ -408,14 +397,16 @@ class ClienteService extends BaseService
                     throw new ReglaNegocioException('Solo se puede agregar documentación al legajo de un cliente activo.');
                 }
                 foreach ($documentos as $doc) {
-                    $movidos[] = $this->guardarDocumento($id, $doc, $usuarioId);
+                    $movidos[] = (new LegajoService($this->db))->guardar($id, $doc, $usuarioId)['ruta'];
+                }
+                // RN-61: un documento clave nuevo devuelve a verificación las solicitudes que ya pasaron por ella
+                if (array_filter($documentos, static fn (array $d) => (int) $d['es_clave'] === 1) !== []) {
+                    (new \App\Services\Solicitudes\SolicitudService($this->db))->documentoClaveIncorporado($id, $usuarioId);
                 }
                 (new AuditoriaService($this->db))->registrar('clientes.agregar_documentos', 'clientes', $id, 'Exitoso', null, ['documentos' => array_column($documentos, 'nombre')]);
             });
         } catch (Throwable $e) {
-            foreach ($movidos as $ruta) {
-                @unlink(WRITEPATH . $ruta);
-            }
+            LegajoService::descartar($movidos);
             throw $e;
         }
 
@@ -442,7 +433,7 @@ class ClienteService extends BaseService
     /** @return list<array{id: int, codigo: string, nombre: string, aplica_a: string}> */
     public function tiposDocumentacion(): array
     {
-        return $this->db->table('tipos_documentacion')->select('id, codigo, nombre, aplica_a')->where('activo', 1)->orderBy('id')->get()->getResultArray();
+        return (new LegajoService($this->db))->tiposDocumentacion();
     }
 
     // ── Auxiliares ─────────────────────────────────────────────────────────────
@@ -501,57 +492,6 @@ class ClienteService extends BaseService
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-07');
         }
-    }
-
-    /**
-     * @param list<array{codigo: string, nombre: string, temporal: string, tamano: int}> $archivos
-     * @param array<string, string> $errores se agregan los errores por archivo
-     * @return list<array{codigo: string, nombre: string, temporal: string, tamano: int, mime: string, tipo_id: int}>
-     */
-    private function validarArchivos(array $archivos, array &$errores): array
-    {
-        $tipos = array_column($this->tiposDocumentacion(), 'id', 'codigo');
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $validos = [];
-        foreach ($archivos as $a) {
-            if (!isset($tipos[$a['codigo']])) {
-                continue;
-            }
-            $mime = is_file($a['temporal']) ? (string) $finfo->file($a['temporal']) : '';
-            $error = ArchivoLegajo::validar(ArchivoLegajo::nombreSeguro($a['nombre']), $a['tamano'], $mime);
-            if ($error !== null) {
-                $errores['doc_' . $a['codigo']] = $error;
-                continue;
-            }
-            $validos[] = $a + ['mime' => $mime, 'tipo_id' => (int) $tipos[$a['codigo']]];
-        }
-
-        return $validos;
-    }
-
-    /**
-     * Mueve el archivo al legajo con nombre aleatorio y registra el documento. Devuelve la ruta relativa.
-     *
-     * @param array<string, mixed> $doc
-     */
-    private function guardarDocumento(int $clienteId, array $doc, int $usuarioId): string
-    {
-        $carpeta = self::CARPETA_LEGAJOS . '/' . $clienteId;
-        if (!is_dir(WRITEPATH . $carpeta) && !mkdir(WRITEPATH . $carpeta, 0750, true) && !is_dir(WRITEPATH . $carpeta)) {
-            throw new \RuntimeException("No se pudo crear la carpeta del legajo {$carpeta}");
-        }
-        $ruta = $carpeta . '/' . ArchivoLegajo::nombreAleatorio($doc['mime']);
-        $hash = hash_file('sha256', $doc['temporal']);
-        if (!rename($doc['temporal'], WRITEPATH . $ruta)) {
-            throw new \RuntimeException('No se pudo guardar el archivo del legajo.');
-        }
-        $this->db->table('documentos_legajo')->insert([
-            'cliente_id' => $clienteId, 'tipo_documentacion_id' => $doc['tipo_id'], 'nombre_original' => ArchivoLegajo::nombreSeguro($doc['nombre']),
-            'ruta_archivo' => $ruta, 'tipo_mime' => $doc['mime'], 'tamano_bytes' => $doc['tamano'], 'hash_sha256' => $hash,
-            'fecha_incorporacion' => $this->ahoraUtc(), 'usuario_id' => $usuarioId,
-        ]);
-
-        return $ruta;
     }
 
     private function registrarConsentimiento(int $clienteId, string $tipo, bool $otorgado): void

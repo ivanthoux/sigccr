@@ -66,6 +66,23 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
         });
 
+        // SS-04 Simulación y solicitudes (CU-21 a CU-23, CU-84; localización y consulta de CU-29 y CU-30)
+        $routes->get('simulaciones', 'Admin\Simulaciones::index', ['as' => 'solicitudes.simular', 'filter' => 'permiso:solicitudes.simular']);
+        $routes->post('simulaciones', 'Admin\Simulaciones::simular', ['filter' => 'permiso:solicitudes.simular']);
+        $routes->get('simulaciones/(:num)', 'Admin\Simulaciones::ver/$1', ['filter' => 'permiso:solicitudes.simular']);
+        $routes->group('solicitudes', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
+            $routes->get('nueva', 'Admin\Solicitudes::nueva', ['as' => 'solicitudes.registrar', 'filter' => 'permiso:solicitudes.registrar']);
+            $routes->get('nueva/(:num)', 'Admin\Solicitudes::confirmar/$1', ['filter' => 'permiso:solicitudes.registrar']);
+            $routes->post('', 'Admin\Solicitudes::registrar', ['filter' => 'permiso:solicitudes.registrar']);
+            $routes->get('(:num)', 'Admin\Solicitudes::ver/$1', ['as' => 'solicitudes.consultar', 'filter' => 'permiso:solicitudes.consultar']);
+            $routes->get('(:num)/verificar', 'Admin\Solicitudes::verificacion/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->post('(:num)/verificar', 'Admin\Solicitudes::verificar/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->post('(:num)/documentos', 'Admin\Solicitudes::incorporarDocumentos/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->get('(:num)/corregir', 'Admin\Solicitudes::correccion/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
+            $routes->post('(:num)/corregir', 'Admin\Solicitudes::corregir/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
+        });
+
         // SS-10 Alertas (CU-83)
         $routes->get('alertas', 'Admin\Alertas::index', ['as' => 'alertas.consultar', 'filter' => 'permiso:alertas.consultar']);
         $routes->get('alertas/(:num)', 'Admin\Alertas::ver/$1', ['filter' => 'permiso:alertas.consultar']);
