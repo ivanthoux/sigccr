@@ -7,7 +7,8 @@ use CodeIgniter\Router\RouteCollection;
  *
  * @var RouteCollection $routes
  */
-$routes->get('/', static fn () => redirect()->to('admin'));
+// Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
+$routes->get('/', 'Portada::index', ['as' => 'portada']);
 
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');

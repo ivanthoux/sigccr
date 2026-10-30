@@ -22,10 +22,10 @@
 <div class="acceso">
 <div class="acceso-marca">
     <div>
-        <strong>SIG-CCR</strong>
+        <a href="<?= url_to('portada') ?>" class="acceso-inicio"><strong>SIG-CCR</strong></a>
         <p>Solicitudes, cartera, caja y cobranzas de la entidad, en un solo lugar.</p>
     </div>
-    <small><?= str_starts_with(uri_string(), 'portal') ? 'Portal de autogestión de clientes.' : 'Panel de uso interno. El acceso de clientes es por el portal de autogestión.' ?></small>
+    <small><?= str_starts_with(uri_string(), 'admin') ? 'Panel de uso interno. El acceso de clientes es por el portal de autogestión.' : 'Portal de autogestión de clientes.' ?></small>
 </div>
 <main class="acceso-formulario">
     <div>

@@ -47,6 +47,18 @@ final class VistasAccesoTest extends CIUnitTestCase
         $this->assertStringContainsString(site_url($base . '/restablecer/abc'), $vistas[2]);
     }
 
+    public function testLaPortadaOrientaAlPortalYOfreceElAccesoDelPersonal(): void
+    {
+        $html = view('portada', ['titulo' => 'Inicio', 'continuar' => null]);
+        foreach (['portal/login', 'portal/activar', 'portal/recuperar', 'admin/login'] as $ruta) {
+            $this->assertStringContainsString('href="' . site_url($ruta) . '"', $html, $ruta);
+        }
+        // Sin formularios ni datos: solo orienta (la autenticación ocurre en cada ámbito)
+        $this->assertStringNotContainsString('<form', $html);
+        $this->assertStringContainsString('Portal de autogestión de clientes.', $html);
+        $this->assertStringEndsWith('Portada::index', (string) (service('routes')->getRoutes('GET')['/'] ?? ''));
+    }
+
     public function testElLoginDelPortalOfreceActivarElAcceso(): void
     {
         $this->assertStringContainsString(site_url('portal/activar'), view('acceso/login', ['base' => 'portal']));
