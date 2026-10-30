@@ -21,7 +21,7 @@ $this->section('contenido');
         <p><?= esc($s['denominacion']) ?> · <?= esc($s['linea']) ?>, versión <?= (int) $s['version'] ?> · <?= esc(formato_importe($s['importe'])) ?> en <?= (int) $s['cantidad_cuotas'] ?> cuotas</p>
     </div>
 </div>
-<form method="post" action="<?= url_to('solicitudes.registrar') ?>" enctype="multipart/form-data" novalidate>
+<form method="post" action="<?= site_url('admin/solicitudes') ?>" enctype="multipart/form-data" novalidate>
     <?= csrf_field() ?>
     <input type="hidden" name="simulacion_id" value="<?= (int) $s['id'] ?>">
     <section class="hoja p-4 mb-3" aria-labelledby="titulo-plan">
