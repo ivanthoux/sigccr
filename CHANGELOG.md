@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado
+- Especificación del modelo de datos en el repositorio (`docs/modelo-datos/`) con sus generadores y `verificar.py`, que la integración continua ejecuta para comprobar que las migraciones producen el mismo esquema.
+
+### Corregido
+- Migración 12: `alertas_vistas.usuario_id` sin clave foránea hacia SS-01 (las tablas de SS-10 no dependen de otros subsistemas) e índices de las claves foráneas de la migración 10 (`movimientos_caja.cobro_id`, `simulaciones_comparativas.usuario_id` y `version_parametros_id`).
+
 ## [0.2.0] - 2026-10-29
 
 Control 1 (previsto para el 03/11/2026): iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financiero aprobado por sus casos de prueba (2.2.2 del documento).
