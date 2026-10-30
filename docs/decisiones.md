@@ -22,6 +22,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
 | D-17 | 30/10/2026 | Propuesta |
 | D-18 | 30/10/2026 | Propuesta |
+| D-19 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -155,3 +156,35 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** El domicilio se compone de provincia, localidad, código postal (opcional) y calle y número. La provincia y la localidad se eligen de un catálogo y son obligatorias en el alta (CU-11) y en cada modificación (CU-12). Los clientes registrados antes del cambio conservan su domicilio y completan la localidad en su próxima modificación. El catálogo usa los códigos oficiales: las provincias, con su código INDEC, y las localidades, del catálogo de localidades censales del Servicio de Normalización de Datos Geográficos (georef, datos.gob.ar). La instalación carga las 24 jurisdicciones y una lista base de localidades (las capitales, la zona de Apóstoles y el Gran Resistencia). El comando `php spark geografia:importar` incorpora el catálogo completo, descargado o desde un archivo; puede repetirse y no elimina localidades que ya estén en uso. El código postal admite los cuatro dígitos o el CPA de ocho caracteres.
 
 **Consecuencias.** Migración 13: tablas `provincias` y `localidades` en SS-10 y columnas `clientes.localidad_id` y `clientes.codigo_postal`; `domicilio` conserva la calle y el número. Queda en 75 tablas. `CatalogoGeografico` (con 6 pruebas), `GeografiaService`, `GeografiaSeeder` y el comando `geografia:importar`. El formulario del cliente carga las localidades al elegir la provincia. Cambian CU-11 (paso 3), CU-12, el modelo de dominio (`Cliente` con `Localidad`), 4.3 (tablas de SS-10 y SS-02, totales) y el glosario.
+
+## D-19 · Alternativas de financiación, aprobación automática y reserva de fondos (CU-87, CU-64, CU-79)
+
+**Contexto.** Al construir las alternativas (D03) quedaron cuatro definiciones sin precisar en la v11. CU-87 combina el monto máximo y sus escalones con *todas* las cantidades de cuotas admitidas: una línea de 3 a 24 cuotas daría 66 combinaciones, demasiadas para presentarlas al cliente. Tampoco se dice si la combinación que el cliente pidió en la solicitud debe figurar entre las alternativas. CU-79 exige verificar «las condiciones de aprobación automática según los parámetros vigentes», pero CU-58 y CU-59 no definen ningún parámetro de ese tipo. Por último, RN-41 pide reservar fondos sin indicar el importe.
+
+**Decisión.**
+1. **Plazos sugeridos.** Las alternativas se generan sobre los plazos sugeridos de la línea: el mínimo, el máximo y los plazos habituales intermedios (3, 6, 9, 12, 18, 24, 30, 36, 48 y 60 cuotas). Se agrega el plazo de la solicitud si no está entre ellos. Con los escalones iniciales (100 %, 75 % y 50 % del monto máximo), una línea de 3 a 24 cuotas da hasta 18 combinaciones.
+2. **Combinación pedida.** La combinación pedida en la solicitud se presenta primero cuando no supera el monto máximo financiable. Las combinaciones cuya primera cuota con IVA supera la capacidad se conservan descartadas, con su motivo y su costo (RF-15). Una nueva generación descarta las alternativas vigentes de la anterior.
+3. **Aprobación automática (RN-23).** Se aprueba automáticamente cuando:
+   - la evaluación sigue vigente;
+   - la alternativa está vigente;
+   - su primera cuota entra en la capacidad de pago recalculada con las obligaciones actuales del cliente (RN-18);
+   - la línea está activa (RN-16);
+   - el disponible libre alcanza para el desembolso (RN-71).
+
+   No hay otros parámetros de aprobación automática. Si la línea no está activa o faltan fondos, la confirmación queda registrada y la solicitud pasa a Pendiente de resolución con la causa y una alerta al Gerente (A1, A4). Si la evaluación perdió vigencia, la solicitud vuelve a Pendiente de evaluación (A5).
+4. **Reserva de fondos (RN-41).** La reserva es por el importe neto a desembolsar (capital menos gasto de otorgamiento y su IVA), que es lo que sale de los fondos al liquidar. El disponible libre de RN-71 se calcula como:
+   - movimientos de fondos realizados (ingresos menos egresos);
+   - más los importes imputados por cobros confirmados y aplicaciones de saldo;
+   - menos desembolsos, devoluciones completadas, reservas y compromisos vigentes;
+   - menos la reserva mínima de los parámetros de campañas.
+
+   La reserva se constituye con un bloqueo de aplicación, para que dos aprobaciones simultáneas no usen los mismos fondos.
+5. **Vencimiento de la aprobación.** Son 72 horas hábiles con el calendario operativo (RN-49), que se conservan en la resolución automática.
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `Estructurador`, con 6 pruebas.
+- `EstructuracionService` (generar, regenerar, consultar y confirmar).
+- `FondosService` (disponibilidad y reserva).
+- `ComparativaService` (CU-99, con `ComparadorLineas`).
+
+CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay viables, deriva a resolución (A6). Hasta construir CU-85 (D05), los fondos de la entidad se registran como movimientos de fondos. Cambian CU-87 (paso 5), CU-79 (pasos 7 a 9) y RN-41 (importe de la reserva).

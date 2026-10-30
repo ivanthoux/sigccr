@@ -72,6 +72,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('simulaciones', 'Admin\Simulaciones::index', ['as' => 'solicitudes.simular', 'filter' => 'permiso:solicitudes.simular']);
         $routes->post('simulaciones', 'Admin\Simulaciones::simular', ['filter' => 'permiso:solicitudes.simular']);
         $routes->get('simulaciones/(:num)', 'Admin\Simulaciones::ver/$1', ['filter' => 'permiso:solicitudes.simular']);
+        // CU-99 Simular todas las líneas (D-10)
+        $routes->get('simulaciones/comparar', 'Admin\Comparativas::index', ['as' => 'simulaciones.comparar', 'filter' => 'permiso:solicitudes.simular-comparativa']);
+        $routes->post('simulaciones/comparar', 'Admin\Comparativas::simular', ['filter' => 'permiso:solicitudes.simular-comparativa']);
+        $routes->get('simulaciones/comparar/(:num)', 'Admin\Comparativas::ver/$1', ['filter' => 'permiso:solicitudes.simular-comparativa']);
         $routes->get('evaluaciones/contingencia', 'Admin\Evaluaciones::pendientes', ['as' => 'evaluaciones.contingencia', 'filter' => 'permiso:evaluaciones.registrar-contingencia']);
         $routes->group('solicitudes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
@@ -88,6 +92,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->get('(:num)/evaluacion', 'Admin\Evaluaciones::ver/$1', ['filter' => 'permiso:evaluaciones.consultar']);
             $routes->get('(:num)/contingencia', 'Admin\Evaluaciones::contingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
             $routes->post('(:num)/contingencia', 'Admin\Evaluaciones::registrarContingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
+            // CU-64, CU-79 y CU-87 (regeneración): alternativas de financiación
+            $routes->get('(:num)/alternativas', 'Admin\Alternativas::index/$1', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->post('(:num)/alternativas/regenerar', 'Admin\Alternativas::regenerar/$1', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->get('(:num)/alternativas/(:num)', 'Admin\Alternativas::ver/$1/$2', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->post('(:num)/alternativas/(:num)/confirmar', 'Admin\Alternativas::confirmar/$1/$2', ['filter' => 'permiso:alternativas.confirmar']);
         });
 
         // SS-10 Alertas (CU-83)

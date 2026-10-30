@@ -13,7 +13,11 @@ $this->section('contenido');
 <div class="encabezado">
     <div>
         <h1><?= esc($titulo) ?></h1>
-        <p><?= $destino === 'solicitudes.simular' ? 'Plan preliminar con las condiciones vigentes de una línea. No genera solicitud ni deuda (RN-17).' : 'Formalice una simulación vigente del cliente.' ?></p>
+        <p><?= match ($destino) {
+            'solicitudes.simular' => 'Plan preliminar con las condiciones vigentes de una línea. No genera solicitud ni deuda (RN-17).',
+            'simulaciones.comparar' => 'Compara todas las líneas para un cliente que no sabe qué crédito le conviene. No genera solicitud ni deuda (RN-17).',
+            default => 'Formalice una simulación vigente del cliente.',
+        } ?></p>
     </div>
 </div>
 <form method="get" action="<?= url_to($destino) ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar cliente">
