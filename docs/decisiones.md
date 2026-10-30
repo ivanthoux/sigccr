@@ -23,6 +23,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-17 | 30/10/2026 | Propuesta |
 | D-18 | 30/10/2026 | Propuesta |
 | D-19 | 30/10/2026 | Propuesta |
+| D-20 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -188,3 +189,41 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 - `ComparativaService` (CU-99, con `ComparadorLineas`).
 
 CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay viables, deriva a resolución (A6). Hasta construir CU-85 (D05), los fondos de la entidad se registran como movimientos de fondos. Cambian CU-87 (paso 5), CU-79 (pasos 7 a 9) y RN-41 (importe de la reserva).
+
+## D-20 · Plan de la aprobación gerencial, conformidad al liquidar e identidad del destinatario (CU-26, CU-27, CU-28)
+
+**Contexto.** Al construir la resolución, la liquidación y la cancelación (D04) quedaron cinco puntos sin precisar en la v11:
+- **Plan definido por el Gerente.** CU-26 A8 permite que el Gerente defina el importe y las cuotas cuando no hay una alternativa confirmada, pero `resoluciones` solo referencia alternativas.
+- **Conformidad.** CU-27 exige registrar la conformidad del cliente con ese plan, sin decir dónde se guarda.
+- **Identidad.** Pide verificar la identidad del destinatario sin indicar cómo.
+- **Datos de la transferencia.** Pide registrar el CUIT del titular, la evidencia de titularidad y el comprobante, pero `liquidaciones` solo tiene la cuenta y un comprobante de texto.
+- **Tipo de rechazo.** Tampoco se dice qué tipo de rechazo corresponde a la decisión del Gerente.
+
+**Decisión.**
+1. **Plan aprobado.** Toda aprobación referencia una alternativa:
+   - la confirmada por el cliente;
+   - una alternativa vigente que elige el Gerente;
+   - o la combinación que define el Gerente.
+
+   En el último caso se valida contra los límites de la línea (RN-76) y la capacidad de pago actual. Después se genera una estructuración nueva con la capacidad de ese momento y la combinación se agrega como alternativa vigente.
+2. **Conformidad al liquidar (RN-22).** Si la alternativa aprobada no está confirmada, el Cajero marca la conformidad del cliente al liquidar. La alternativa queda Confirmada con la fecha de la liquidación y el medio «Presencial, al liquidar».
+3. **Identidad del destinatario.** El Cajero reingresa el número del documento que presenta la persona. Debe coincidir con el del cliente o, si es una persona jurídica, con el de su representante registrado (RN-25).
+4. **Transferencia.** La cuenta debe ser un CBU o CVU con dígitos verificadores válidos y el CUIT/CUIL del titular debe ser el del cliente. El importe transferido debe ser el neto a desembolsar. Se guardan:
+   - el número de operación y la fecha, en `comprobante`;
+   - la evidencia de titularidad, en la auditoría.
+5. **Rechazo gerencial.** Se registra como rechazo crediticio. La aprobación, el rechazo y la devolución liberan las afectaciones previas. La aprobación constituye la reserva por el neto (D-19). Si los fondos no alcanzan, la aprobación no se registra y el Gerente debe rechazar o devolver (A4).
+6. **Liquidación (RN-26, RN-52).** En una sola transacción se registran:
+   - el crédito, con su plan definitivo de cuotas (primer vencimiento a los 30 días);
+   - la liquidación;
+   - el egreso de caja, si es en efectivo, con la caja abierta del Cajero (RN-28);
+   - el consumo de la reserva.
+
+   La solicitud pasa a Liquidada. El régimen de morosidad (tolerancia) se toma de los parámetros vigentes al liquidar (RN-35).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `ResolucionGerencial` y `Desembolso`, con 6 pruebas.
+- `ResolucionService` (CU-26 y CU-28) y `LiquidacionService` (CU-27).
+- `EstructuracionService::alternativaParaAprobar`.
+- `FondosService::liberarDeSolicitud` y `consumir`.
+
+El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye en D05; hasta entonces se puede liquidar por transferencia. Cambian CU-26 (A8), CU-27 (pasos 4 y 6, A7) y RN-22.

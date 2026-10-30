@@ -31,6 +31,15 @@ $this->section('contenido');
         <?php if (in_array($s['estado'], ['PendienteSeleccionPlan', 'AprobadaPendienteLiquidacion', 'PendienteResolucion'], true) && tiene_permiso('alternativas.consultar')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/alternativas") ?>" class="btn <?= $s['estado'] === 'PendienteSeleccionPlan' ? 'btn-primary' : 'btn-outline-secondary' ?>"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Alternativas de financiación</a>
         <?php endif ?>
+        <?php if ($s['estado'] === 'PendienteResolucion' && tiene_permiso('solicitudes.resolver')): ?>
+            <a href="<?= site_url("admin/solicitudes/{$id}/resolver") ?>" class="btn btn-primary"><i class="bi bi-hammer me-1" aria-hidden="true"></i>Resolver</a>
+        <?php endif ?>
+        <?php if ($s['estado'] === 'AprobadaPendienteLiquidacion' && tiene_permiso('creditos.liquidar')): ?>
+            <a href="<?= site_url("admin/liquidaciones/{$id}") ?>" class="btn btn-primary"><i class="bi bi-cash-stack me-1" aria-hidden="true"></i>Liquidar</a>
+        <?php endif ?>
+        <?php if (!EstadosSolicitud::esFinal((string) $s['estado']) && tiene_permiso('solicitudes.cancelar')): ?>
+            <a href="<?= site_url("admin/solicitudes/{$id}/cancelar") ?>" class="btn btn-outline-danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Cancelar solicitud</a>
+        <?php endif ?>
         <?php if ($s['estado'] === 'PendienteContingencia' && tiene_permiso('evaluaciones.registrar-contingencia')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/contingencia") ?>" class="btn btn-primary"><i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>Registrar evaluación de contingencia</a>
         <?php endif ?>
@@ -52,8 +61,14 @@ $this->section('contenido');
                 <dt class="col-sm-5 fw-medium">Registrada</dt><dd class="col-sm-7"><?= esc(formato_fecha_hora($s['fecha_registro'])) ?><?= $s['analista'] ? ' por ' . esc($s['analista']) : '' ?></dd>
                 <dt class="col-sm-5 fw-medium">Último movimiento</dt><dd class="col-sm-7"><?= esc(formato_fecha_hora($s['ultimo_movimiento'])) ?></dd>
             </dl>
-            <?php if (($s['aprobacion'] ?? null) !== null): $ap = $s['aprobacion']; ?>
+            <?php if (($s['aprobacion'] ?? null) !== null && $s['estado'] === 'AprobadaPendienteLiquidacion'): $ap = $s['aprobacion']; ?>
                 <div class="alert alert-success mt-3 mb-0"><strong>Aprobada<?= (int) $ap['automatica'] === 1 ? ' automáticamente' : '' ?></strong>: <?= esc(formato_importe($ap['importe_aprobado'])) ?> en <?= (int) $ap['cuotas_aprobadas'] ?> cuotas. La aprobación vence el <?= esc(formato_fecha_hora($ap['vence_aprobacion'])) ?> (72 horas hábiles, RN-49).</div>
+            <?php endif ?>
+            <?php if (($s['liquidacion'] ?? null) !== null): $li = $s['liquidacion']; ?>
+                <div class="alert alert-success mt-3 mb-0"><strong>Liquidada</strong> el <?= esc(formato_fecha_hora($li['fecha'])) ?>: <?= esc(formato_importe($li['importe_neto'])) ?> por <?= $li['medio_desembolso'] === 'Efectivo' ? 'caja' : 'transferencia' ?>. Crédito N.º <?= (int) $li['credito_numero'] ?>.</div>
+            <?php endif ?>
+            <?php if ($s['estado'] === 'Cancelada' && $s['motivo_cancelacion']): ?>
+                <div class="alert alert-secondary mt-3 mb-0"><strong>Cancelada:</strong> <?= esc((string) $s['motivo_cancelacion']) ?></div>
             <?php endif ?>
             <?php if ($s['devolucion'] !== null): ?>
                 <div class="alert alert-warning mt-3 mb-0"><strong>Devuelta por el Gerente</strong> para retomar <?= esc(mb_strtolower(EstadosSolicitud::etiqueta(EstadosSolicitud::ETAPAS_RETORNO[$s['devolucion']['etapa_retorno']] ?? ''))) ?>: <?= esc((string) $s['devolucion']['fundamento']) ?></div>

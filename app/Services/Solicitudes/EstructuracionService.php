@@ -299,6 +299,86 @@ class EstructuracionService extends BaseService
         });
     }
 
+    // ── CU-26 (plan de la aprobación convencional) ─────────────────────────────
+
+    /**
+     * Capacidad de pago actual del cliente de la solicitud, con sus obligaciones vigentes y comprometidas (RN-18).
+     *
+     * @param array<string, mixed> $s
+     */
+    public function capacidadActual(array $s): Decimal
+    {
+        $cliente = $this->db->table('clientes')->select('id, ingresos_declarados, fecha_alta')->where('id', (int) $s['cliente_id'])->get()->getRowArray();
+        $internos = (new EvaluacionService($this->db))->antecedentesInternos((array) $cliente, (int) $s['id']);
+        $p = (new ParametroService($this->db))->vigente('Estructuracion')['valores'];
+
+        return CapacidadPago::capacidad(Decimal::of($internos['ingresos']), Decimal::of((string) $p['porcentaje_afectacion']), Decimal::of($internos['obligaciones']));
+    }
+
+    /**
+     * CU-26 paso 5 y A8: alternativa del plan que aprueba el Gerente. Con una alternativa vigente, la valida; con un
+     * importe y cuotas definidos, los valida contra la línea (RN-76) y la capacidad, genera una estructuración nueva y
+     * agrega esa combinación como alternativa. Dentro de la transacción de la resolución.
+     *
+     * @param array<string, mixed> $s solicitud bloqueada
+     * @return array<string, mixed> alternativa (bloqueada)
+     */
+    public function alternativaParaAprobar(array $s, string $plan, ?int $alternativaId, ?string $importe, ?int $cuotas): array
+    {
+        $capacidad = $this->capacidadActual($s);
+        if ($plan === 'definida') {
+            $version = $this->version((int) $s['version_condiciones_id']);
+            $v = Simulador::validar($version, (string) $importe, (string) $cuotas);
+            if ($v['errores'] !== []) {
+                throw new ValidacionException($v['errores'], 'RN-76');
+            }
+            $iva = (string) (new ParametroService($this->db))->vigente('Estructuracion')['valores']['alicuota_iva'];
+            $calculo = Simulador::calcular($version, (string) $v['importe'], (int) $v['cuotas'], $iva, new DateTimeImmutable($this->hoyNegocio()));
+            if ($calculo['primera_cuota']->compare($capacidad) > 0) {
+                throw new ValidacionException(['importe' => 'La primera cuota (' . formato_importe($calculo['primera_cuota']->toFixed(2)) . ') supera la capacidad de pago del cliente (' . formato_importe($capacidad->toFixed(2)) . ').'], 'RN-22');
+            }
+            $estructuracion = $this->generar($s);
+            $existente = $this->db->query(
+                "SELECT id FROM dbo.alternativas_financiacion WHERE estructuracion_id = ? AND importe = ? AND cantidad_cuotas = ? AND estado = 'Vigente'",
+                [$estructuracion['estructuracion_id'], (string) $v['importe'], (int) $v['cuotas']],
+            )->getRowArray();
+            if ($existente !== null) {
+                $alternativaId = (int) $existente['id'];
+            } else {
+                $vence = $this->db->query('SELECT MAX(vence) AS v FROM dbo.alternativas_financiacion WHERE estructuracion_id = ?', [$estructuracion['estructuracion_id']])->getRowArray()['v']
+                    ?? (new DateTimeImmutable($this->ahoraUtc()))->modify('+' . Simulador::VIGENCIA_DIAS . ' days')->format('Y-m-d H:i:s.vP');
+                $this->db->table('alternativas_financiacion')->insert([
+                    'estructuracion_id' => $estructuracion['estructuracion_id'], 'importe' => (string) $v['importe'], 'cantidad_cuotas' => (int) $v['cuotas'],
+                    'valor_cuota' => $calculo['primera_cuota']->toFixed(2), 'tea' => $calculo['tea']->toFixed(12), 'cftea' => $calculo['cftea']->toFixed(12),
+                    'total_a_pagar' => $calculo['total_a_pagar']->toFixed(2), 'vence' => $vence, 'estado' => 'Vigente',
+                ]);
+                $alternativaId = (int) $this->db->insertID();
+            }
+        }
+        $a = $this->db->query(
+            'SELECT a.* FROM dbo.alternativas_financiacion a WITH (UPDLOCK, ROWLOCK) JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id WHERE a.id = ? AND e.solicitud_id = ?',
+            [(int) $alternativaId, (int) $s['id']],
+        )->getRowArray();
+        if ($a === null) {
+            throw new ValidacionException(['alternativa_id' => 'La alternativa no corresponde a la solicitud.'], 'RN-22');
+        }
+        $permitido = $plan === 'confirmada' ? ['Confirmada'] : ['Vigente'];
+        if (!in_array($a['estado'], $permitido, true) || ($a['estado'] === 'Vigente' && new DateTimeImmutable((string) $a['vence']) <= new DateTimeImmutable('now'))) {
+            throw new ValidacionException(['alternativa_id' => 'La alternativa ya no está vigente (RN-48): elija otra o defina el importe y las cuotas.'], 'RN-48');
+        }
+        if (Decimal::of((string) $a['valor_cuota'])->compare($capacidad) > 0) {
+            throw new ValidacionException([$plan === 'definida' ? 'importe' : 'plan' => 'La primera cuota del plan supera la capacidad de pago actual del cliente (' . formato_importe($capacidad->toFixed(2)) . '): elija otro plan.'], 'RN-22');
+        }
+
+        return $a;
+    }
+
+    /** RN-49: vencimiento de una aprobación registrada ahora. */
+    public function vencimientoAprobacion(): string
+    {
+        return $this->venceAprobacion();
+    }
+
     // ── Auxiliares ─────────────────────────────────────────────────────────────
 
     /** @return array<string, mixed> solicitud bloqueada en Pendiente de selección de plan */
@@ -334,7 +414,7 @@ class EstructuracionService extends BaseService
     }
 
     /** @return array<string, mixed> condiciones de la versión con el estado de su línea */
-    private function version(int $versionId): array
+    public function version(int $versionId): array
     {
         $v = $this->db->query(
             'SELECT v.id, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, '

@@ -21,6 +21,7 @@ class Menu extends BaseConfig
             ['texto' => 'Clientes', 'ruta' => 'clientes.localizar', 'permiso' => 'clientes.localizar'],
             ['texto' => 'Solicitudes', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
             ['texto' => 'Contingencias', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
+            ['texto' => 'Resolver solicitudes', 'ruta' => 'solicitudes.resolver', 'permiso' => 'solicitudes.resolver'],
             ['texto' => 'Simulador', 'ruta' => 'solicitudes.simular', 'permiso' => 'solicitudes.simular'],
             ['texto' => 'Comparar líneas', 'ruta' => 'simulaciones.comparar', 'permiso' => 'solicitudes.simular-comparativa'],
             ['texto' => 'Líneas de crédito', 'ruta' => 'lineas.localizar', 'permiso' => 'lineas.localizar'],
@@ -28,6 +29,7 @@ class Menu extends BaseConfig
         ['titulo' => 'Caja y cobranzas', 'icono' => 'bi-safe', 'opciones' => [
             ['texto' => 'Mi caja', 'ruta' => 'cajas.abrir', 'permiso' => 'cajas.abrir'],
             ['texto' => 'Cobro en ventanilla', 'ruta' => 'cobros.registrar', 'permiso' => 'cobros.registrar'],
+            ['texto' => 'Liquidar créditos', 'ruta' => 'creditos.liquidar', 'permiso' => 'creditos.liquidar'],
             ['texto' => 'Informe de caja diaria', 'ruta' => 'cajas.informe-diario', 'permiso' => 'cajas.informe-diario'],
             ['texto' => 'Cajas', 'ruta' => 'cajas.registrar', 'permiso' => 'cajas.registrar'],
         ]],
