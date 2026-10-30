@@ -25,6 +25,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-19 | 30/10/2026 | Propuesta |
 | D-20 | 30/10/2026 | Propuesta |
 | D-21 | 30/10/2026 | Propuesta |
+| D-22 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -255,3 +256,42 @@ El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye
 - Pantallas Mi caja, Cajas y Fondos.
 
 `LiquidacionService` usa `CajaService::jornadaOperable`. Cambian CU-72 (A5), CU-80 (paso 2), CU-85 (A2, A3), RN-28 y el modelo de datos (4.3).
+
+## D-22 · Parámetros de estructuración, vencimientos automáticos y calendario operativo (CU-59, CU-89, CU-82)
+
+**Contexto.** Al construir D06 quedaron sin precisar en la v11:
+- **CU-59.** Enumera categorías de parámetros («tratamiento de obligaciones», «criterios de exclusión de ingresos», «combinaciones permitidas») sin definir sus valores. El motor solo usa el porcentaje de afectación, la alícuota de IVA, el redondeo, los escalones y la vigencia de las alternativas.
+- **CU-89.** No define qué solicitudes «dependen» de una evaluación vencida, ni el orden entre el vencimiento de la evaluación y el de la aprobación.
+- **CU-82.** No dice si se puede dar de baja el día de hoy.
+
+**Decisión.**
+1. **Parámetros de estructuración (CU-59).** Son seis:
+   - porcentaje máximo de afectación (1 % a 100 %);
+   - alícuota de IVA (0 % a 100 %);
+   - vigencia de las alternativas (1 a 30 días corridos);
+   - múltiplo de redondeo del monto máximo;
+   - escalones de importe (hasta 6, el primero 100 % y decrecientes);
+   - tope global por cliente (opcional).
+
+   El tope limita el monto máximo financiable de todas las líneas en las alternativas (CU-87), en la comparación de líneas (CU-99) y en el plan que define el Gerente (CU-26). Los demás criterios de CU-59 quedan fijos en esta versión: se consideran los ingresos declarados y las cuotas vigentes y comprometidas de RN-18. Cada cambio es una versión con fecha de vigencia no retroactiva y las operaciones ya generadas conservan la suya (RN-15).
+2. **Vencimientos (CU-89).** Cada 15 minutos, cada elemento en su propia transacción y releído con bloqueo (A1):
+   - Las simulaciones y alternativas vencidas pasan a Vencida.
+   - Las autorizaciones de acceso vencidas pasan a Vencida.
+   - Primero se procesan las aprobaciones vencidas: la solicitud pasa a Vencida y se libera la reserva. Si el vencimiento de la aprobación coincide con el de la evaluación, prevalece la aprobación (RN-49).
+   - Después, las evaluaciones vencidas. Si la solicitud está en Pendiente de selección de plan, Pendiente de resolución o Aprobada pendiente de liquidación, vuelve a Pendiente de evaluación: la aprobación queda sin efecto, se libera la reserva y vencen sus alternativas. La evaluación automática la vuelve a evaluar en su próxima ejecución.
+   - Por último, las solicitudes en Pendiente de documentación o Devuelta para revisión sin movimientos durante 30 días corridos pasan a Vencida (RN-72).
+
+   Cada cambio genera una alerta de vencimiento al Analista que registró la solicitud. Las propuestas de refinanciación, las órdenes de pago y las devoluciones se incorporan en la iteración 3.
+3. **Calendario operativo (CU-82).** Se pueden agregar fechas desde hoy en adelante, de a una o con la carga anual. La carga anual tiene una línea por fecha («dd/mm/aaaa; descripción; tipo»); cada fecha se valida por separado y se informan las rechazadas. Se pueden dar de baja días de hoy en adelante. Los vencimientos ya calculados no cambian.
+4. **Localización y consulta (CU-29, CU-30).**
+   - **Criterios de búsqueda:** documento o CUIT/CUIL, línea y rango de fechas de registro, con la validación del rango (A2).
+   - **Cajero (A3):** sin permiso de consulta, el número de la solicitud lo lleva a la liquidación cuando corresponde.
+   - **Consulta:** suma las alternativas, las afectaciones de fondos y las alertas de la solicitud, y marca como «No registrada» lo que todavía no existe (A4).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `ValidadorParametrosEstructuracion` y `CalendarioOperativo`, con 4 pruebas, más 1 prueba del tope en `EstructuracionTest`.
+- `CalendarioService` y `VencimientoService`.
+- Comando `vencimientos:controlar`, habilitado en el planificador.
+- Pantallas de parámetros de estructuración y del calendario operativo.
+
+Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).

@@ -32,9 +32,10 @@ class SolicitudService extends BaseService
     private const REVERIFICAN = ['EnEvaluacion', 'PendienteContingencia', 'PendienteSeleccionPlan', 'PendienteResolucion', 'AprobadaPendienteLiquidacion'];
 
     /**
-     * CU-29 (parcial): solicitudes por número, cliente o estado; sin criterios, las más recientes.
+     * CU-29: solicitudes por número, cliente (nombre, documento o CUIT/CUIL), línea, estado y rango de fechas de
+     * registro; sin criterios, las más recientes. Las fechas llegan validadas (aaaa-mm-dd).
      *
-     * @param array{numero?: string, texto?: string, estado?: string, cliente?: string} $c
+     * @param array{numero?: string, texto?: string, estado?: string, cliente?: string, documento?: string, linea?: string, desde?: string, hasta?: string} $c
      * @return list<array<string, mixed>>
      */
     public function buscar(array $c): array
@@ -55,6 +56,22 @@ class SolicitudService extends BaseService
         }
         if (isset(EstadosSolicitud::ETIQUETAS[$c['estado'] ?? ''])) {
             $b->where('s.estado', $c['estado']);
+        }
+        $documento = preg_replace('/\D/', '', (string) ($c['documento'] ?? '')) ?? '';
+        if ($documento !== '') {
+            $b->groupStart()->where('c.cuit_cuil', $documento)
+                ->orWhereIn('c.id', static fn ($q) => $q->select('cliente_id')->from('personas_humanas')->where('nro_documento', $documento))
+                ->groupEnd();
+        }
+        if (ctype_digit((string) ($c['linea'] ?? ''))) {
+            $b->where('l.id', (int) $c['linea']);
+        }
+        $zona = config('Sigccr')->zonaNegocio;
+        if (($c['desde'] ?? '') !== '') {
+            $b->where('s.fecha_registro >=', (new \DateTimeImmutable($c['desde'] . ' 00:00:00', new \DateTimeZone($zona)))->format('Y-m-d H:i:sP'));
+        }
+        if (($c['hasta'] ?? '') !== '') {
+            $b->where('s.fecha_registro <', (new \DateTimeImmutable($c['hasta'] . ' 00:00:00', new \DateTimeZone($zona)))->modify('+1 day')->format('Y-m-d H:i:sP'));
         }
 
         return $b->orderBy('s.fecha_registro', 'DESC')->get(200)->getResultArray();
@@ -112,6 +129,23 @@ class SolicitudService extends BaseService
             'SELECT TOP (1) l.id, l.fecha, l.importe_neto, l.medio_desembolso, cr.numero AS credito_numero FROM dbo.liquidaciones l JOIN dbo.creditos cr ON cr.id = l.credito_id WHERE l.solicitud_id = ?',
             [$id],
         )->getRowArray();
+        // CU-30 paso 5: alternativas, afectaciones de fondos y alertas de la solicitud
+        $s['alternativas'] = $this->db->query(
+            "SELECT COUNT(*) AS total, SUM(CASE WHEN a.estado = 'Vigente' AND a.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END) AS vigentes, "
+            . "MAX(CASE WHEN a.estado = 'Confirmada' THEN a.id END) AS confirmada_id FROM dbo.alternativas_financiacion a "
+            . 'JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id WHERE e.solicitud_id = ?',
+            [$id],
+        )->getRowArray();
+        $s['confirmada'] = empty($s['alternativas']['confirmada_id']) ? null : $this->db->table('alternativas_financiacion')
+            ->select('importe, cantidad_cuotas, valor_cuota, cftea, fecha_conformidad, medio_conformidad')->where('id', (int) $s['alternativas']['confirmada_id'])->get()->getRowArray();
+        $s['afectaciones'] = $this->db->query(
+            "SELECT tipo, importe, fecha, estado FROM dbo.afectaciones_fondos WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? ORDER BY fecha DESC, id DESC",
+            [$id],
+        )->getResultArray();
+        $s['alertas'] = $this->db->query(
+            "SELECT TOP (20) tipo, causa, accion_pendiente, fecha_generacion, estado, fecha_resolucion FROM dbo.alertas WHERE objeto_tipo = 'solicitudes_credito' AND objeto_id = ? ORDER BY fecha_generacion DESC, id DESC",
+            [(string) $id],
+        )->getResultArray();
         $s['transiciones'] = $this->db->query(
             "SELECT t.estado_origen, t.estado_destino, t.fecha_hora, t.motivo, t.proceso, ui.nombre + ' ' + ui.apellido AS responsable "
             . 'FROM dbo.transiciones_solicitud t LEFT JOIN dbo.usuarios_internos ui ON ui.id = t.usuario_id WHERE t.solicitud_id = ? ORDER BY t.fecha_hora, t.id',
@@ -119,6 +153,12 @@ class SolicitudService extends BaseService
         )->getResultArray();
 
         return $s;
+    }
+
+    /** @return list<array{id: int, nombre: string}> líneas para el filtro de CU-29 */
+    public function lineas(): array
+    {
+        return array_map(static fn ($l) => ['id' => (int) $l['id'], 'nombre' => (string) $l['nombre']], $this->db->table('lineas_credito')->select('id, nombre')->orderBy('nombre')->get()->getResultArray());
     }
 
     /** Estado actual de la solicitud (para los mensajes posteriores a una operación). */

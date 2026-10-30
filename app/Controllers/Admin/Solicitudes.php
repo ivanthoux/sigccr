@@ -7,6 +7,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Solicitudes\EstadosSolicitud;
+use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Clientes\LegajoService;
 use App\Services\Solicitudes\EvaluacionService;
@@ -30,9 +31,29 @@ class Solicitudes extends BaseController
     /** CU-29: listado con filtros; sin filtros, las más recientes. */
     public function index(): string
     {
-        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['numero', 'texto', 'estado', 'cliente'])));
+        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['numero', 'texto', 'estado', 'cliente', 'documento', 'linea', 'desde', 'hasta'])));
+        // A2: rango de fechas válido
+        $errores = [];
+        $filtro = $criterios;
+        foreach (['desde', 'hasta'] as $k) {
+            if (trim($criterios[$k] ?? '') !== '') {
+                $filtro[$k] = Campos::fecha($criterios[$k]) ?? '';
+                if ($filtro[$k] === '') {
+                    $errores[$k] = 'Ingrese una fecha válida (dd/mm/aaaa).';
+                }
+            }
+        }
+        if ($errores === [] && ($filtro['desde'] ?? '') !== '' && ($filtro['hasta'] ?? '') !== '' && $filtro['desde'] > $filtro['hasta']) {
+            $errores['hasta'] = 'La fecha final no puede ser anterior a la inicial.';
+        }
 
-        return view('solicitudes/index', ['titulo' => 'Solicitudes de crédito', 'criterios' => $criterios, 'solicitudes' => $this->servicio->buscar($criterios)]);
+        return view('solicitudes/index', [
+            'titulo' => 'Solicitudes de crédito',
+            'criterios' => $criterios,
+            'errores' => $errores,
+            'lineas' => $this->servicio->lineas(),
+            'solicitudes' => $errores === [] ? $this->servicio->buscar($filtro) : [],
+        ]);
     }
 
     /** CU-22 pasos 1 a 4: cliente y sus simulaciones vigentes. */

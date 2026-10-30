@@ -59,6 +59,14 @@ final class EstructuracionTest extends TestCase
         $this->assertSame('1500000.00', $r['monto_maximo']->toFixed(2));
     }
 
+    public function testElTopeGlobalPorClienteLimitaElMontoMaximo(): void
+    {
+        $r = Estructurador::generar(self::VERSION, self::PARAMETROS + ['tope_global_cliente' => '300000.00'], Decimal::of('20000000'), Decimal::zero(), '200000.00', 12, new DateTimeImmutable('2026-11-04'));
+        $this->assertSame('300000.00', $r['monto_maximo']->toFixed(2));
+        $r = Estructurador::generar(self::VERSION, self::PARAMETROS + ['tope_global_cliente' => '40000.00'], Decimal::of('20000000'), Decimal::zero(), '200000.00', 12, new DateTimeImmutable('2026-11-04'));
+        $this->assertStringContainsString('A2', (string) $r['motivo']);
+    }
+
     public function testSinCapacidadOSinMinimoNoHayAlternativas(): void
     {
         $r = $this->generar('300000', '95000');

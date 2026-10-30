@@ -69,6 +69,10 @@ final class Estructurador
         $iva = Decimal::of((string) $parametros['alicuota_iva']);
         $minimo = Decimal::of((string) $version['monto_minimo']);
         $maximo = Decimal::of((string) $version['monto_maximo']);
+        // Tope global por cliente de los parámetros de estructuración (CU-59, D-22)
+        if (($parametros['tope_global_cliente'] ?? null) !== null) {
+            $maximo = Decimal::min($maximo, Decimal::of((string) $parametros['tope_global_cliente']));
+        }
         $paso = Decimal::of((string) ($parametros['paso_redondeo'] ?? '1000'));
         $plazos = self::plazosSugeridos((int) $version['cuotas_minimas'], (int) $version['cuotas_maximas']);
         if ($cuotasPedidas >= (int) $version['cuotas_minimas'] && $cuotasPedidas <= (int) $version['cuotas_maximas'] && !in_array($cuotasPedidas, $plazos, true)) {

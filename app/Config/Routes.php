@@ -92,6 +92,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('fondos/(:num)/corregir', 'Admin\Fondos::corregir/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
         $routes->post('fondos/(:num)/confirmar', 'Admin\Fondos::confirmar/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
         $routes->post('fondos/(:num)/anular', 'Admin\Fondos::anular/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        // CU-82 Calendario operativo (RN-49)
+        $routes->get('calendario', 'Admin\Calendario::index', ['as' => 'calendario.actualizar', 'filter' => 'permiso:calendario.actualizar']);
+        $routes->post('calendario', 'Admin\Calendario::agregar', ['filter' => 'permiso:calendario.actualizar']);
+        $routes->post('calendario/baja', 'Admin\Calendario::baja', ['filter' => 'permiso:calendario.actualizar']);
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
@@ -147,6 +151,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->group('parametros', static function (RouteCollection $routes): void {
             $routes->get('evaluacion', 'Admin\Parametros::evaluacion', ['as' => 'parametros.evaluacion', 'filter' => 'permiso:parametros.evaluacion']);
             $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
+            $routes->get('estructuracion', 'Admin\Parametros::estructuracion', ['as' => 'parametros.estructuracion', 'filter' => 'permiso:parametros.estructuracion']);
+            $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
         });
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:

@@ -332,7 +332,11 @@ class EstructuracionService extends BaseService
             if ($v['errores'] !== []) {
                 throw new ValidacionException($v['errores'], 'RN-76');
             }
-            $iva = (string) (new ParametroService($this->db))->vigente('Estructuracion')['valores']['alicuota_iva'];
+            $pe = (new ParametroService($this->db))->vigente('Estructuracion')['valores'];
+            $iva = (string) $pe['alicuota_iva'];
+            if (($pe['tope_global_cliente'] ?? null) !== null && Decimal::of((string) $v['importe'])->compare((string) $pe['tope_global_cliente']) > 0) {
+                throw new ValidacionException(['importe' => 'El importe supera el tope global por cliente (' . formato_importe((string) $pe['tope_global_cliente']) . ', CU-59).'], 'RN-76');
+            }
             $calculo = Simulador::calcular($version, (string) $v['importe'], (int) $v['cuotas'], $iva, new DateTimeImmutable($this->hoyNegocio()));
             if ($calculo['primera_cuota']->compare($capacidad) > 0) {
                 throw new ValidacionException(['importe' => 'La primera cuota (' . formato_importe($calculo['primera_cuota']->toFixed(2)) . ') supera la capacidad de pago del cliente (' . formato_importe($capacidad->toFixed(2)) . ').'], 'RN-22');
