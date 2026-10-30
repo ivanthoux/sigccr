@@ -5,7 +5,7 @@
  * Permite verificar el motor financiero sin Composer (por ejemplo, en un entorno sin red).
  * En el proyecto se ejecuta con PHPUnit:  vendor/bin/phpunit --testsuite Finanzas
  *
- * Uso: php tests/_local/run.php
+ * Uso: php tests/_local/run.php [Finanzas|Seguridad]
  */
 
 namespace PHPUnit\Framework {
@@ -87,6 +87,38 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertStringStartsWith(string $prefijo, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!str_starts_with($texto, $prefijo)) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no empieza con '{$prefijo}'");
+            }
+        }
+
+        public function assertMatchesRegularExpression(string $patron, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (preg_match($patron, $texto) !== 1) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no coincide con {$patron}");
+            }
+        }
+
+        public function assertStringContainsString(string $aguja, string $texto, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!str_contains($texto, $aguja)) {
+                $this->fail(($msg ? "$msg: " : '') . "'{$texto}' no contiene '{$aguja}'");
+            }
+        }
+
+        public function assertArrayHasKey(int|string $clave, array $a, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (!array_key_exists($clave, $a)) {
+                $this->fail(($msg ? "$msg: " : '') . 'falta la clave ' . var_export($clave, true));
+            }
+        }
+
         public function assertNull(mixed $v, string $msg = ''): void
         {
             $this->assertions++;
@@ -128,12 +160,13 @@ namespace {
         }
     });
 
-    $files = glob(dirname(__DIR__) . '/unit/Finanzas/*Test.php');
+    $suite = preg_replace('/[^A-Za-z]/', '', $argv[1] ?? 'Finanzas');
+    $files = glob(dirname(__DIR__) . "/unit/{$suite}/*Test.php");
     $total = $fallas = $aserciones = 0;
     $inicio = microtime(true);
     foreach ($files as $f) {
         require_once $f;
-        $class = 'Tests\\Unit\\Finanzas\\' . basename($f, '.php');
+        $class = "Tests\\Unit\\{$suite}\\" . basename($f, '.php');
         foreach (get_class_methods($class) as $m) {
             if (!str_starts_with($m, 'test')) {
                 continue;

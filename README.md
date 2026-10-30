@@ -60,10 +60,15 @@ curl -k https://localhost/estado
 
 Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCCR_DB_GRUPO=migraciones`): CodeIgniter guarda el historial de migraciones con el grupo por defecto y `sigccr_app` no tiene permiso para crear tablas.
 
+**Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor. Para ver el último con su enlace: `docker compose exec app php spark sigccr:correos` (o `sigccr:correos 5` para los cinco últimos).
+
+**Portal de clientes:** un cliente registrado activa su acceso en `https://localhost/portal/activar` con su documento (o CUIT) y su correo verificado (CU-04), y después ingresa en `https://localhost/portal/login` con ese correo y su contraseña (CU-01 a CU-03). La cuenta de un cliente no sirve para el panel ni la de un usuario interno para el portal (RN-08). **Cola de comunicaciones:** el contenedor scheduler ejecuta `comunicaciones:enviar` cada minuto para los reintentos (CU-95); a mano: `docker compose exec app php spark comunicaciones:enviar`. Con `sigccr.adaptadorComunicaciones = real` y los datos `sigccr.smtp*` del `.env`, los correos salen por SMTP.
+
 **Problemas frecuentes**
 
 - *db unhealthy* y en `docker compose logs db` aparece `Login failed for user 'sa'`: la contraseña de `.env.docker` cambió después del primer arranque y el volumen conserva la original. Con la base vacía: `docker compose down -v && docker compose up -d`.
 - *No tests executed!* con `Configuration: phpunit.dist.xml`: es el archivo del appstarter; borrarlo (`rm phpunit.dist.xml`). Los scripts de Composer ya indican `-c phpunit.xml.dist`.
+- *404 de Nginx en todas las páginas* (incluso `/estado`) después de `git pull` o de cambiar de rama: el contenedor web quedó apuntando a la carpeta `public/` anterior. Recrear los contenedores de la aplicación (la base no se toca): `docker compose up -d --force-recreate web app scheduler`. Conviene hacerlo siempre después de un `git pull`.
 - *Cache unable to write to writable/cache*: el volumen de `writable/` se recreó vacío. Desde esta versión el contenedor lo prepara al arrancar: `docker compose up -d --force-recreate app scheduler`.
 
 Para producción se usan las mismas imágenes; cambian `.env.docker` (`MSSQL_PID=Express`), `.env` (`CI_ENVIRONMENT = production`, credenciales y adaptadores reales) y el certificado de Nginx (RNF-04).

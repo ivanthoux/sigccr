@@ -11,6 +11,14 @@
         <testsuite name="Finanzas">
             <directory>./tests/unit/Finanzas</directory>
         </testsuite>
+        <!-- Lógica pura de todas las áreas (finanzas, seguridad, validación): no necesita la base -->
+        <testsuite name="Unitarias">
+            <directory>./tests/unit</directory>
+        </testsuite>
+        <!-- Autorización de cada ruta con cada rol (C10): usa la configuración de rutas, sin base de datos -->
+        <testsuite name="Rutas">
+            <directory>./tests/rutas</directory>
+        </testsuite>
         <testsuite name="App">
             <directory>./tests</directory>
             <exclude>./tests/_local</exclude>

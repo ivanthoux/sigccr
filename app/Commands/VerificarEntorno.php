@@ -71,8 +71,10 @@ class VerificarEntorno extends BaseCommand
             return "{$r['c']}, READ_COMMITTED_SNAPSHOT activo";
         });
         $this->verificar('DECIMAL y datetimeoffset (ida y vuelta)', static function () use ($db) {
-            $r = $db->query("SELECT CAST(? AS DECIMAL(19,2)) AS imp, CAST(? AS DECIMAL(18,12)) AS tasa, CAST(? AS DATETIMEOFFSET(3)) AS ts",
-                ['19701.75', '0.000821917808', '2026-10-25 15:30:00.123+00:00'])->getRowArray();
+            $r = $db->query(
+                "SELECT CAST(? AS DECIMAL(19,2)) AS imp, CAST(? AS DECIMAL(18,12)) AS tasa, CAST(? AS DATETIMEOFFSET(3)) AS ts",
+                ['19701.75', '0.000821917808', '2026-10-25 15:30:00.123+00:00']
+            )->getRowArray();
             // El controlador sqlsrv devuelve los decimales como texto y puede omitir el cero inicial (".0008...").
             $impOk = Decimal::of((string) $r['imp'])->equals('19701.75');
             $tasaOk = Decimal::of((string) $r['tasa'])->equals('0.000821917808');

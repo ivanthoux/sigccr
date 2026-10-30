@@ -19,8 +19,12 @@ final class AmortizacionFrancesaTest extends TestCase
     private function planRn68(): \App\Libraries\Finanzas\Plan
     {
         return AmortizacionFrancesa::plan(
-            Decimal::of('100000'), Decimal::of('0.60'), 6, new DateTimeImmutable('2026-01-10'),
-            Decimal::of('500'), Decimal::of('0.21'),
+            Decimal::of('100000'),
+            Decimal::of('0.60'),
+            6,
+            new DateTimeImmutable('2026-01-10'),
+            Decimal::of('500'),
+            Decimal::of('0.21'),
         );
     }
 

@@ -2,7 +2,10 @@
 
 namespace App\Controllers;
 
+use App\Exceptions\ReglaNegocioException;
+use App\Exceptions\ValidacionException;
 use CodeIgniter\Controller;
+use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
@@ -45,5 +48,16 @@ abstract class BaseController extends Controller
 
         // Preload any models, libraries, etc, here.
         // $this->session = service('session');
+    }
+
+    /**
+     * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
+     * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
+     */
+    protected function volverConError(ReglaNegocioException $e): RedirectResponse
+    {
+        return redirect()->back()->withInput()
+            ->with('error', $e->getMessage())
+            ->with('errores', $e instanceof ValidacionException ? $e->errores : []);
     }
 }

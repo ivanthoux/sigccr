@@ -1,0 +1,40 @@
+sequenceDiagram
+autonumber
+participant T as Temporizador (cron, cada minuto)
+participant K as EnviarComunicaciones «comando»
+participant S as ComunicacionService
+participant PE as PoliticaEnvio
+participant P as ComunicacionesInterface
+participant AL as AlertaService
+participant DB as SQL Server
+T->>K: php spark comunicaciones:enviar
+K->>DB: sp_getapplock exclusivo (RNF-10)
+alt otra ejecución en curso
+K-->>T: termina sin procesar
+end
+K->>DB: ejecuciones_proceso EnCurso
+K->>S: pendientes()
+S->>DB: Pendiente o ReintentoProgramado con el horario cumplido
+loop cada comunicación, en su propia transacción
+K->>S: enviar(id)
+S->>DB: lee la comunicación con UPDLOCK
+S->>PE: motivoCancelacion(tipo, autorización, oferta, consentimiento)
+alt ya no es válida (A1)
+S->>DB: intento Cancelada y elimina los datos cifrados
+else sigue siendo válida
+S->>S: descifra los datos y arma el correo con su plantilla
+S->>P: enviar(destino, asunto, cuerpo, identificador de operación)
+P-->>S: Aceptado, FalloTransitorio, FalloDefinitivo o Incierto
+S->>DB: intentos_envio
+S->>PE: despuesDelIntento(resultado, intentos, primer intento)
+PE-->>S: estado y reintento a 1, 3 o 5 min del primer intento (RNF-09)
+S->>DB: actualiza la comunicación y elimina los datos al finalizar
+opt Fallida o EnRevision (A3, A4)
+S->>AL: alerta de Integración al Administrador
+end
+end
+end
+K->>DB: ejecuciones_proceso Finalizada o ConErrores
+opt terminó con errores
+K->>AL: alerta de Proceso al Administrador (RNF-16)
+end

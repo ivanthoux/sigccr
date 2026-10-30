@@ -10,8 +10,13 @@ use DomainException;
  * Imputación de pagos y aplicaciones de saldo a favor (RN-29, RN-56, RN-57).
  *
  * Las cuotas se atienden en el orden recibido (de la más antigua a la más reciente) y, dentro de cada cuota, según la
- * prelación de RN-29: punitorios, intereses ordinarios, gastos y cargos, IVA y capital. El concepto no capitalizable
- * de las cuotas refinanciadas se imputa antes del capital (pendiente de validación, ver observaciones de 4.1.1).
+ * prelación de RN-29: punitorios, intereses ordinarios, gastos y cargos, IVA, concepto no capitalizable (D-04) y
+ * capital.
+ *
+ * Pago parcial (D-12): el cobro ordinario admite cualquier importe positivo que no supere el total exigible de las
+ * cuotas seleccionadas. Si no alcanza para cancelar la última cuota, esa cuota recibe una imputación parcial y sigue
+ * Pendiente o Vencida por su saldo. Solo las imputaciones excepcionales (RN-56, RN-57) pueden recibir un importe mayor
+ * al total: el excedente vuelve como remanente para registrarse como saldo a favor.
  */
 final class Imputador
 {
@@ -19,18 +24,18 @@ final class Imputador
 
     /**
      * @param list<array{id: int|string, conceptos: array<string, Decimal>}> $cuotas pendientes exigibles por concepto, con dos decimales
-     * @param bool $parcialExcepcional true solo para RN-56 y RN-57; en el cobro ordinario el importe debe cubrir cuotas completas
+     * @param bool $excepcional true solo para RN-56 y RN-57: admite un importe mayor al total y devuelve el remanente
      *
      * @return array{imputaciones: list<array{cuota: int|string, concepto: string, importe: Decimal, parcial: bool}>, remanente: Decimal, canceladas: list<int|string>}
      */
-    public static function imputar(Decimal $importe, array $cuotas, bool $parcialExcepcional = false): array
+    public static function imputar(Decimal $importe, array $cuotas, bool $excepcional = false): array
     {
         if (!$importe->isPositive()) {
             throw new DomainException('El importe a imputar debe ser positivo.');
         }
         $totalDeuda = Decimal::sum(array_map(static fn ($c) => self::totalCuota($c['conceptos']), $cuotas));
-        if (!$parcialExcepcional && !$importe->equals($totalDeuda)) {
-            throw new DomainException('El cobro ordinario debe coincidir con el total exigible de las cuotas seleccionadas (RN-29).');
+        if (!$excepcional && $importe->compare($totalDeuda) > 0) {
+            throw new DomainException('El importe del cobro supera el total exigible de las cuotas seleccionadas (RN-29).');
         }
 
         $resto = $importe;
@@ -65,6 +70,22 @@ final class Imputador
         }
 
         return ['imputaciones' => $imputaciones, 'remanente' => $resto, 'canceladas' => $canceladas];
+    }
+
+    /**
+     * Saldo de una cuota después de imputarle importes por concepto (pago parcial, D-12).
+     *
+     * @param array<string, Decimal> $pendientes
+     * @param list<array{cuota: int|string, concepto: string, importe: Decimal, parcial: bool}> $imputaciones de esa cuota
+     * @return array<string, Decimal>
+     */
+    public static function saldoDespues(array $pendientes, array $imputaciones): array
+    {
+        foreach ($imputaciones as $i) {
+            $pendientes[$i['concepto']] = ($pendientes[$i['concepto']] ?? Decimal::zero())->sub($i['importe']);
+        }
+
+        return $pendientes;
     }
 
     /** @param array<string, Decimal> $conceptos */

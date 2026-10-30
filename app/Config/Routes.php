@@ -7,28 +7,120 @@ use CodeIgniter\Router\RouteCollection;
  *
  * @var RouteCollection $routes
  */
-$routes->get('/', static fn () => redirect()->to('admin'));
+// Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
+$routes->get('/', 'Portada::index', ['as' => 'portada']);
 
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');
 
 // Panel administrativo
 $routes->group('admin', static function (RouteCollection $routes): void {
-    // Iteración 1 (SS-01): inicio y cierre de sesión
-    // $routes->get('login', 'Admin\Acceso::login');
-    // $routes->post('login', 'Admin\Acceso::autenticar');
-    // $routes->post('logout', 'Admin\Acceso::cerrar', ['filter' => 'auth:panel']);
+    // SS-01: acceso sin sesión (CU-01, CU-02). El límite por dirección de origen se aplica en Config\Filters (RN-62).
+    $routes->get('login', 'Admin\Acceso::login', ['as' => 'acceso.login']);
+    $routes->post('login', 'Admin\Acceso::autenticar');
+    $routes->get('recuperar', 'Admin\Acceso::recuperar', ['as' => 'acceso.recuperar']);
+    $routes->post('recuperar', 'Admin\Acceso::solicitarRecuperacion');
+    $routes->get('restablecer/(:segment)', 'Admin\Acceso::restablecer/$1');
+    $routes->post('restablecer/(:segment)', 'Admin\Acceso::guardarContrasena/$1');
+    $routes->get('verificar-correo/(:segment)', 'Admin\Acceso::verificarCorreo/$1');
+    $routes->post('verificar-correo/(:segment)', 'Admin\Acceso::confirmarCorreo/$1');
 
     $routes->group('', ['filter' => 'auth:panel'], static function (RouteCollection $routes): void {
-        // Ejemplo del patrón de declaración:
-        // $routes->get('clientes', 'Admin\Clientes::index', ['filter' => 'permiso:clientes.consultar']);
-        // $routes->post('clientes', 'Admin\Clientes::store', ['filter' => 'permiso:clientes.registrar']);
+        $routes->get('/', 'Admin\Inicio::index', ['as' => 'panel.inicio']);
+        // CU-03: confirmación y cierre de sesión
+        $routes->get('salir', 'Admin\Acceso::confirmarCierre', ['as' => 'acceso.salir']);
+        $routes->post('salir', 'Admin\Acceso::cerrar');
+
+        // SS-01 Usuarios internos (CU-05 a CU-10, CU-53)
+        $routes->group('usuarios', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Usuarios::index', ['as' => 'usuarios.localizar', 'filter' => 'permiso:usuarios.localizar']);
+            $routes->get('nuevo', 'Admin\Usuarios::nuevo', ['as' => 'usuarios.registrar', 'filter' => 'permiso:usuarios.registrar']);
+            $routes->post('', 'Admin\Usuarios::registrar', ['filter' => 'permiso:usuarios.registrar']);
+            $routes->get('(:num)', 'Admin\Usuarios::ver/$1', ['filter' => 'permiso:usuarios.localizar']);
+            $routes->get('(:num)/editar', 'Admin\Usuarios::editar/$1', ['filter' => 'permiso:usuarios.modificar']);
+            $routes->post('(:num)/editar', 'Admin\Usuarios::actualizar/$1', ['filter' => 'permiso:usuarios.modificar']);
+            $routes->get('(:num)/restablecer', 'Admin\Usuarios::confirmar/$1/restablecer', ['filter' => 'permiso:usuarios.restablecer-credenciales']);
+            $routes->post('(:num)/restablecer', 'Admin\Usuarios::restablecer/$1', ['filter' => 'permiso:usuarios.restablecer-credenciales']);
+            $routes->get('(:num)/desactivar', 'Admin\Usuarios::confirmar/$1/desactivar', ['filter' => 'permiso:usuarios.desactivar']);
+            $routes->post('(:num)/desactivar', 'Admin\Usuarios::desactivar/$1', ['filter' => 'permiso:usuarios.desactivar']);
+            $routes->get('(:num)/reactivar', 'Admin\Usuarios::confirmar/$1/reactivar', ['filter' => 'permiso:usuarios.reactivar']);
+            $routes->post('(:num)/reactivar', 'Admin\Usuarios::reactivar/$1', ['filter' => 'permiso:usuarios.reactivar']);
+            $routes->get('(:num)/rol', 'Admin\Usuarios::confirmar/$1/rol', ['filter' => 'permiso:usuarios.asignar-rol']);
+            $routes->post('(:num)/rol', 'Admin\Usuarios::asignarRol/$1', ['filter' => 'permiso:usuarios.asignar-rol']);
+        });
+
+        // SS-02 Clientes (CU-11 a CU-15, CU-54)
+        $routes->group('clientes', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
+            $routes->get('nuevo', 'Admin\Clientes::nuevo', ['as' => 'clientes.registrar', 'filter' => 'permiso:clientes.registrar']);
+            $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
+            $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);
+            $routes->post('(:num)/documentos', 'Admin\Clientes::agregarDocumentos/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->get('(:num)/editar', 'Admin\Clientes::editar/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->post('(:num)/editar', 'Admin\Clientes::actualizar/$1', ['filter' => 'permiso:clientes.modificar']);
+            $routes->get('(:num)/desactivar', 'Admin\Clientes::confirmar/$1/desactivar', ['filter' => 'permiso:clientes.desactivar']);
+            $routes->post('(:num)/desactivar', 'Admin\Clientes::desactivar/$1', ['filter' => 'permiso:clientes.desactivar']);
+            $routes->get('(:num)/reactivar', 'Admin\Clientes::confirmar/$1/reactivar', ['filter' => 'permiso:clientes.reactivar']);
+            $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
+        });
+
+        // SS-10 Alertas (CU-83)
+        $routes->get('alertas', 'Admin\Alertas::index', ['as' => 'alertas.consultar', 'filter' => 'permiso:alertas.consultar']);
+        $routes->get('alertas/(:num)', 'Admin\Alertas::ver/$1', ['filter' => 'permiso:alertas.consultar']);
+
+        // SS-03 Líneas de crédito (CU-16 a CU-20, CU-73)
+        $routes->group('lineas', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Lineas::index', ['as' => 'lineas.localizar', 'filter' => 'permiso:lineas.localizar']);
+            $routes->get('nueva', 'Admin\Lineas::nuevo', ['as' => 'lineas.registrar', 'filter' => 'permiso:lineas.registrar']);
+            $routes->post('', 'Admin\Lineas::registrar', ['filter' => 'permiso:lineas.registrar']);
+            $routes->get('(:num)', 'Admin\Lineas::ver/$1', ['filter' => 'permiso:lineas.consultar']);
+            $routes->get('(:num)/editar', 'Admin\Lineas::editar/$1', ['filter' => 'permiso:lineas.modificar']);
+            $routes->post('(:num)/editar', 'Admin\Lineas::actualizar/$1', ['filter' => 'permiso:lineas.modificar']);
+            $routes->get('(:num)/suspender', 'Admin\Lineas::confirmar/$1/suspender', ['filter' => 'permiso:lineas.suspender']);
+            $routes->post('(:num)/suspender', 'Admin\Lineas::suspender/$1', ['filter' => 'permiso:lineas.suspender']);
+            $routes->get('(:num)/reactivar', 'Admin\Lineas::confirmar/$1/reactivar', ['filter' => 'permiso:lineas.reactivar']);
+            $routes->post('(:num)/reactivar', 'Admin\Lineas::reactivar/$1', ['filter' => 'permiso:lineas.reactivar']);
+        });
+
+        // SS-10 Parámetros del motor de evaluación (CU-58, D-13)
+        $routes->group('parametros', static function (RouteCollection $routes): void {
+            $routes->get('evaluacion', 'Admin\Parametros::evaluacion', ['as' => 'parametros.evaluacion', 'filter' => 'permiso:parametros.evaluacion']);
+            $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
+        });
+
+        // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
+        // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
     });
 });
 
-// Portal de autogestión (iteración 4)
+// Portal de autogestión del cliente (SS-07)
 $routes->group('portal', static function (RouteCollection $routes): void {
-    // $routes->get('login', 'Portal\Acceso::login');
+    // Verificación del correo del cliente desde el enlace (sin sesión)
+    $routes->get('verificar-correo/(:segment)', 'Portal\Verificacion::mostrar/$1');
+    $routes->post('verificar-correo/(:segment)', 'Portal\Verificacion::confirmar/$1');
+    // CU-04 Activar o Rehabilitar Acceso del Cliente (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('activar', 'Portal\Activacion::solicitud', ['as' => 'portal.activar']);
+    $routes->post('activar', 'Portal\Activacion::solicitar');
+    $routes->get('activar/(:segment)', 'Portal\Activacion::contrasena/$1');
+    $routes->post('activar/(:segment)', 'Portal\Activacion::guardarContrasena/$1');
+    // CU-01 y CU-02 del Cliente (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('login', 'Portal\Acceso::login', ['as' => 'portal.login']);
+    $routes->post('login', 'Portal\Acceso::autenticar');
+    $routes->get('recuperar', 'Portal\Acceso::recuperar', ['as' => 'portal.recuperar']);
+    $routes->post('recuperar', 'Portal\Acceso::solicitarRecuperacion');
+    $routes->get('restablecer/(:segment)', 'Portal\Acceso::restablecer/$1');
+    $routes->post('restablecer/(:segment)', 'Portal\Acceso::guardarContrasena/$1');
+
+    // Con sesión de cliente (RN-08): 15 minutos de inactividad (RNF-11)
+    $routes->group('', ['filter' => 'auth:portal'], static function (RouteCollection $routes): void {
+        $routes->get('/', 'Portal\Inicio::index', ['as' => 'portal.inicio']);
+        // CU-03 del Cliente
+        $routes->get('salir', 'Portal\Acceso::confirmarCierre', ['as' => 'portal.salir']);
+        $routes->post('salir', 'Portal\Acceso::cerrar');
+        // Iteración 4: CU-45 a CU-49 con sus nombres de ruta de Config\Menu::$portal
+    });
 });
 
 // Notificaciones de servicios externos (sin sesión ni CSRF; se validan por firma, RNF-08)

@@ -1,8 +1,14 @@
 .env
 .env.docker
-vendor/
-writable/*
+/vendor/
+# writable/: se versionan solo las subcarpetas vacías que el framework necesita al iniciar (cache, logs, session,
+# uploads, debugbar), para que un clon nuevo (por ejemplo, el de la integración continua) funcione sin Docker.
+writable/**
+!writable/
 !writable/.gitkeep
+!writable/*/
+writable/*/*/
+!writable/*/.gitkeep
 docker/nginx/certs/*.key
 docker/nginx/certs/*.crt
 docker-compose.override.yml

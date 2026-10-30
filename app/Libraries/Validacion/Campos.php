@@ -1,0 +1,216 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Libraries\Validacion;
+
+/**
+ * Normalización y validación de campos comunes del SIG-CCR (sin acceso a la base). Cada validación devuelve el
+ * mensaje de error para el usuario o null si el valor es válido; los valores vacíos se tratan con obligatorio().
+ */
+final class Campos
+{
+    public const TIPOS_DOCUMENTO = ['DNI', 'LC', 'LE', 'Pasaporte'];
+
+    /** Recorta y colapsa los espacios internos. */
+    public static function texto(mixed $valor): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', (string) ($valor ?? '')) ?? '');
+    }
+
+    /** Correo en minúsculas y sin espacios. */
+    public static function correo(mixed $valor): string
+    {
+        return mb_strtolower(str_replace(' ', '', self::texto($valor)));
+    }
+
+    /**
+     * Número de documento en mayúsculas y sin espacios en los extremos. Solo se quitan los puntos de un número escrito
+     * con separador de miles (28.999.111); cualquier otro carácter se conserva para que numeroDocumento() lo rechace
+     * (por ejemplo, «28999111.»).
+     */
+    public static function documento(mixed $valor): string
+    {
+        $v = strtoupper(self::texto($valor));
+
+        return preg_match('/^\d{1,3}(\.\d{3})+$/', $v) === 1 ? str_replace('.', '', $v) : $v;
+    }
+
+    /** Número de documento para buscar o identificarse: sin puntos, espacios ni guiones. */
+    public static function documentoFlexible(mixed $valor): string
+    {
+        return strtoupper(str_replace(['.', ' ', '-'], '', self::texto($valor)));
+    }
+
+    public static function obligatorio(string $valor, string $nombreCampo): ?string
+    {
+        return $valor === '' ? "Complete {$nombreCampo}." : null;
+    }
+
+    public static function largoMaximo(string $valor, int $maximo, string $nombreCampo): ?string
+    {
+        return mb_strlen($valor) > $maximo ? ucfirst($nombreCampo) . " admite hasta {$maximo} caracteres." : null;
+    }
+
+    /** Nombres y apellidos: letras (con tildes y ñ), espacios, apóstrofo, guion y punto. */
+    public static function nombrePersona(string $valor, string $nombreCampo): ?string
+    {
+        if ($valor === '') {
+            return null;
+        }
+        if (preg_match("/^[\\p{L}][\\p{L} '.\\-]*$/u", $valor) !== 1) {
+            return ucfirst($nombreCampo) . ' solo admite letras, espacios, apóstrofos y guiones.';
+        }
+
+        return self::largoMaximo($valor, 80, $nombreCampo);
+    }
+
+    public static function formatoCorreo(string $valor): ?string
+    {
+        if ($valor === '') {
+            return null;
+        }
+        if (mb_strlen($valor) > 254 || filter_var($valor, FILTER_VALIDATE_EMAIL) === false || !str_contains(substr($valor, strrpos($valor, '@') ?: 0), '.')) {
+            return 'Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.';
+        }
+
+        return null;
+    }
+
+    public static function tipoDocumento(string $valor): ?string
+    {
+        return $valor !== '' && !in_array($valor, self::TIPOS_DOCUMENTO, true) ? 'Seleccione un tipo de documento válido.' : null;
+    }
+
+    /** DNI, LC y LE: 6 a 9 dígitos; pasaporte: 5 a 15 letras o dígitos. */
+    public static function numeroDocumento(string $tipo, string $numero): ?string
+    {
+        if ($numero === '') {
+            return null;
+        }
+        if ($tipo === 'Pasaporte') {
+            return preg_match('/^[A-Z0-9]{5,15}$/', $numero) === 1 ? null : 'El pasaporte debe tener entre 5 y 15 letras o números.';
+        }
+        if (preg_match('/^\d{6,9}$/', $numero) !== 1) {
+            return 'El documento debe tener entre 6 y 9 dígitos, sin puntos.';
+        }
+
+        return (int) $numero === 0 ? 'El número de documento no es válido.' : null;
+    }
+
+    /** Prefijos de CUIT/CUIL por tipo de persona (AFIP): 20, 23, 24 y 27 para personas humanas; 30, 33 y 34 para jurídicas. */
+    public const PREFIJOS_CUIT = ['PersonaHumana' => ['20', '23', '24', '27'], 'PersonaJuridica' => ['30', '33', '34']];
+
+    /**
+     * CUIT o CUIL: 11 dígitos, prefijo válido para el tipo de persona y dígito verificador (módulo 11). El dígito
+     * depende del prefijo: al cambiar 20 por 27 cambia también el último dígito, y el mensaje indica cuál corresponde.
+     *
+     * @param 'PersonaHumana'|'PersonaJuridica'|null $tipo null admite cualquier prefijo válido
+     */
+    public static function cuit(string $valor, ?string $tipo = null): ?string
+    {
+        if ($valor === '') {
+            return null;
+        }
+        $c = str_replace(['-', ' ', '.'], '', $valor);
+        if (preg_match('/^\d{11}$/', $c) !== 1) {
+            return 'El CUIT o CUIL debe tener 11 dígitos.';
+        }
+        $prefijo = substr($c, 0, 2);
+        $validos = $tipo === null ? array_merge(...array_values(self::PREFIJOS_CUIT)) : self::PREFIJOS_CUIT[$tipo];
+        if (!in_array($prefijo, $validos, true)) {
+            return $tipo === 'PersonaHumana' ? 'El CUIL o CUIT de una persona humana empieza con 20, 23, 24 o 27.'
+                : ($tipo === 'PersonaJuridica' ? 'El CUIT de una persona jurídica empieza con 30, 33 o 34.' : 'El CUIT o CUIL tiene un prefijo inválido.');
+        }
+        $dv = self::digitoVerificadorCuit(substr($c, 0, 10));
+        if ($dv === null) {
+            return "Con el prefijo {$prefijo} ese número no tiene un CUIT o CUIL válido: verifique el prefijo asignado (por ejemplo, 23 o 33).";
+        }
+
+        return (int) $c[10] === $dv ? null
+            : 'El dígito verificador no corresponde: para ' . $prefijo . '-' . substr($c, 2, 8) . " el último dígito es {$dv}.";
+    }
+
+    /** Dígito verificador de los 10 primeros dígitos de un CUIT o CUIL, o null si el resultado es 10 (combinación no asignable). */
+    public static function digitoVerificadorCuit(string $diezDigitos): ?int
+    {
+        $pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+        $suma = 0;
+        foreach ($pesos as $i => $p) {
+            $suma += (int) $diezDigitos[$i] * $p;
+        }
+        $dv = 11 - ($suma % 11);
+
+        return $dv === 11 ? 0 : ($dv === 10 ? null : $dv);
+    }
+
+    /** Texto de motivo de una operación (auditoría): entre 5 y 1000 caracteres. */
+    public static function motivo(string $valor): ?string
+    {
+        $largo = mb_strlen($valor);
+        if ($largo < 5) {
+            return 'Indique el motivo de la operación (al menos 5 caracteres).';
+        }
+
+        return $largo > 1000 ? 'El motivo admite hasta 1000 caracteres.' : null;
+    }
+
+    /**
+     * Importe ingresado con formato local ("1.234.567,89", "1234567,89" o "1234567.89") normalizado a "1234567.89".
+     * Devuelve null si no es un importe válido con hasta dos decimales.
+     */
+    public static function importe(mixed $valor): ?string
+    {
+        $t = str_replace([' ', '$'], '', self::texto($valor));
+        if ($t === '') {
+            return null;
+        }
+        if (preg_match('/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/', $t) === 1 || str_contains($t, ',')) {
+            $t = str_replace(['.', ','], ['', '.'], $t);
+        }
+        if (preg_match('/^\d{1,17}(\.\d{1,2})?$/', $t) !== 1) {
+            return null;
+        }
+        [$entero, $dec] = array_pad(explode('.', $t), 2, '');
+
+        return ltrim($entero, '0') === '' ? '0.' . str_pad($dec, 2, '0') : ltrim($entero, '0') . '.' . str_pad($dec, 2, '0');
+    }
+
+    /** Fecha dd/mm/aaaa o aaaa-mm-dd normalizada a aaaa-mm-dd; null si no es una fecha válida. */
+    public static function fecha(mixed $valor): ?string
+    {
+        $t = self::texto($valor);
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $t, $m) === 1) {
+            [$a, $mes, $d] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        } elseif (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $t, $m) === 1) {
+            [$d, $mes, $a] = [(int) $m[1], (int) $m[2], (int) $m[3]];
+        } else {
+            return null;
+        }
+
+        return checkdate($mes, $d, $a) && $a >= 1900 ? sprintf('%04d-%02d-%02d', $a, $mes, $d) : null;
+    }
+
+    /** Años cumplidos entre dos fechas aaaa-mm-dd. */
+    public static function edad(string $nacimiento, string $hoy): int
+    {
+        return (new \DateTimeImmutable($nacimiento))->diff(new \DateTimeImmutable($hoy))->y;
+    }
+
+    /** Teléfono informativo (RN-08): dígitos, espacios, +, guiones y paréntesis; entre 6 y 30 caracteres. */
+    public static function telefono(string $valor): ?string
+    {
+        if ($valor === '') {
+            return null;
+        }
+
+        return preg_match('/^\+?[\d\s()\-]{6,30}$/', $valor) === 1 && preg_match_all('/\d/', $valor) >= 6
+            ? null : 'Ingrese un teléfono válido (solo números, espacios, guiones o +).';
+    }
+
+    /** CUIL coherente con el DNI: los ocho dígitos centrales son el documento. */
+    public static function cuilCorrespondeADni(string $cuil, string $dni): bool
+    {
+        return strlen($cuil) === 11 && substr($cuil, 2, 8) === str_pad($dni, 8, '0', STR_PAD_LEFT);
+    }
+}

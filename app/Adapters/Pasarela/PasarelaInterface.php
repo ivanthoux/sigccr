@@ -23,6 +23,10 @@ interface PasarelaInterface
      */
     public function consultarPagos(string $referenciaExterna): array;
 
-    /** Valida la firma o el secreto compartido de una notificación recibida (RNF-08). */
+    /**
+     * Valida la firma o el secreto compartido de una notificación recibida (RNF-08).
+     *
+     * @param array<string, string> $cabeceras
+     */
     public function firmaValida(string $cuerpo, array $cabeceras): bool;
 }
