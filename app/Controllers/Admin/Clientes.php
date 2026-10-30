@@ -6,10 +6,8 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
-use App\Libraries\Clientes\ArchivoLegajo;
 use App\Services\Clientes\ClienteService;
 use CodeIgniter\HTTP\DownloadResponse;
-use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -49,7 +47,7 @@ class Clientes extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $id = $this->servicio->registrar((array) $this->request->getPost(), $this->archivos(), (int) session('cuenta')['id']);
+            $id = $this->servicio->registrar((array) $this->request->getPost(), $this->archivosLegajo(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -118,7 +116,7 @@ class Clientes extends BaseController
     public function agregarDocumentos(int $id): RedirectResponse
     {
         try {
-            $n = $this->servicio->agregarDocumentos($id, $this->archivos(), (int) session('cuenta')['id']);
+            $n = $this->servicio->agregarDocumentos($id, $this->archivosLegajo(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -175,32 +173,5 @@ class Clientes extends BaseController
         }
 
         return redirect()->to(site_url("admin/clientes/{$id}"))->with('exito', $mensaje);
-    }
-
-    /**
-     * Archivos de documentos[<código>][] para el servicio. Los rechazados por PHP (por tamaño) se informan como
-     * excedidos para que el servicio marque el campo.
-     *
-     * @return list<array{codigo: string, nombre: string, temporal: string, tamano: int}>
-     */
-    private function archivos(): array
-    {
-        $resultado = [];
-        foreach ((array) ($this->request->getFiles()['documentos'] ?? []) as $codigo => $lista) {
-            foreach (is_array($lista) ? $lista : [$lista] as $f) {
-                if (!$f instanceof UploadedFile || $f->getError() === UPLOAD_ERR_NO_FILE) {
-                    continue;
-                }
-                $excedido = in_array($f->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true);
-                $resultado[] = [
-                    'codigo' => (string) $codigo,
-                    'nombre' => $f->getClientName(),
-                    'temporal' => $f->isValid() ? $f->getTempName() : '',
-                    'tamano' => $excedido ? ArchivoLegajo::TAMANO_MAXIMO + 1 : ($f->isValid() ? (int) $f->getSize() : 0),
-                ];
-            }
-        }
-
-        return $resultado;
     }
 }

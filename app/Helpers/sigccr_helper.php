@@ -146,3 +146,31 @@ if (!function_exists('formato_cuit')) {
         return $cuit === null || strlen($cuit) !== 11 ? (string) $cuit : substr($cuit, 0, 2) . '-' . substr($cuit, 2, 8) . '-' . substr($cuit, 10);
     }
 }
+
+if (!function_exists('formato_porcentaje')) {
+    /** Tasa en tanto por uno como porcentaje local: 0.795856 -> 79,59 % (RN-63). */
+    function formato_porcentaje(string|Decimal|null $tasa, int $decimales = 2): string
+    {
+        if ($tasa === null || $tasa === '') {
+            return '';
+        }
+
+        return str_replace('.', ',', ($tasa instanceof Decimal ? $tasa : Decimal::of($tasa))->toPercent($decimales)) . ' %';
+    }
+}
+
+if (!function_exists('etiqueta_estado_solicitud')) {
+    /** Insignia del estado de una solicitud (4.2.3). */
+    function etiqueta_estado_solicitud(string $estado, ?string $tipoRechazo = null): string
+    {
+        $clase = match (true) {
+            in_array($estado, ['Liquidada', 'AprobadaPendienteLiquidacion'], true) => 'text-bg-success',
+            in_array($estado, ['Rechazada', 'Cancelada', 'Vencida'], true) => 'text-bg-secondary',
+            in_array($estado, ['PendienteDocumentacion', 'DevueltaRevision', 'PendienteContingencia'], true) => 'text-bg-warning',
+            default => 'text-bg-light border',
+        };
+        $texto = \App\Libraries\Solicitudes\EstadosSolicitud::etiqueta($estado) . ($estado === 'Rechazada' && $tipoRechazo === 'Documental' ? ' (documental)' : '');
+
+        return '<span class="badge rounded-pill ' . $clase . '">' . esc($texto) . '</span>';
+    }
+}
