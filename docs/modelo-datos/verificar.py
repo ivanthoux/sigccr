@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+"""Compara la especificación (spec.py) con los scripts de migración de app/Database/Sql.
+
+Aplica en orden los *_subir.sql (CREATE TABLE, ALTER ADD/DROP COLUMN, sp_rename y DROP de restricciones o índices) y
+verifica que el esquema resultante tenga las mismas tablas, columnas, restricciones e índices que genera gen.py.
+Uso: python verificar.py   (desde esta carpeta, después de python gen.py)
+"""
+import glob, os, re, sys
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+SQL = os.path.join(AQUI, '..', '..', 'app', 'Database', 'Sql')
+generado = open(os.path.join(AQUI, 'out', 'sigccr_esquema.sql'), encoding='utf-8').read()
+repo = '\n'.join(open(f, encoding='utf-8').read() for f in sorted(glob.glob(os.path.join(SQL, '*_subir.sql'))))
+PAT = r'CONSTRAINT (\w+)|INDEX (\w+)|CREATE TABLE dbo\.(\w+)'
+
+
+def objetos(sql):
+    return {''.join(t) for t in re.findall(PAT, sql)}
+
+
+def tablas(sql):
+    t = {}
+    for m in re.finditer(r'CREATE TABLE dbo\.(\w+) \((.*?)\n\);', sql, re.S):
+        t[m.group(1)] = [l.strip().split()[0] for l in m.group(2).split('\n')
+                         if l.strip() and not l.strip().startswith(('CONSTRAINT', '--'))]
+    return t
+
+
+esperado, real = objetos(generado), objetos(repo)
+eliminados = {''.join(t) for t in re.findall(r'DROP CONSTRAINT (\w+)|DROP INDEX (\w+)', repo)}
+renombrados = dict(re.findall(r"sp_rename 'dbo\.(\w+)', '(\w+)', 'OBJECT'", repo))
+real = {renombrados.get(o, o) for o in real} - eliminados
+# Una restricción eliminada y vuelta a crear (por ejemplo, un CHECK que cambia) cuenta como presente
+real |= {o for o in esperado if o in eliminados and len(re.findall(rf'(?:CONSTRAINT|INDEX) {o}\b', repo)) > 1}
+
+cols = tablas(repo)
+for m in re.finditer(r'ALTER TABLE dbo\.(\w+) ADD (?!CONSTRAINT)(\w+) [^;]*?(?:, (\w+) [A-Z][^;]*)?;', repo):
+    cols[m.group(1)] += [c for c in (m.group(2), m.group(3)) if c]
+for m in re.finditer(r'ALTER TABLE dbo\.(\w+) DROP COLUMN ([\w, ]+);', repo):
+    for c in m.group(2).split(','):
+        cols[m.group(1)].remove(c.strip())
+for m in re.finditer(r"sp_rename 'dbo\.(\w+)\.(\w+)', '(\w+)', 'COLUMN'", repo):
+    cols[m.group(1)][cols[m.group(1)].index(m.group(2))] = m.group(3)
+
+errores = [f'falta en las migraciones: {o}' for o in sorted(esperado - real)]
+errores += [f'no está en la especificación: {o}' for o in sorted(real - esperado)]
+for t, c in tablas(generado).items():
+    if set(c) != set(cols.get(t, [])):
+        errores.append(f'{t}: columnas distintas {sorted(set(c) ^ set(cols.get(t, [])))}')
+print('\n'.join(errores) if errores else f'Esquema alineado: {len(tablas(generado))} tablas.')
+sys.exit(1 if errores else 0)
