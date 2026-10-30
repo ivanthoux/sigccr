@@ -41,7 +41,9 @@ class Menu extends BaseConfig
             ['texto' => 'Tablero gerencial', 'ruta' => 'tablero.consultar', 'permiso' => 'tablero.consultar'],
             ['texto' => 'Reportes', 'ruta' => 'reportes.cartera', 'permiso' => 'reportes.cartera'],
             ['texto' => 'Fondos', 'ruta' => 'fondos.movimientos', 'permiso' => 'fondos.registrar-movimiento'],
-            ['texto' => 'Parámetros', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
+            ['texto' => 'Parámetros de evaluación', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
+            ['texto' => 'Parámetros de estructuración', 'ruta' => 'parametros.estructuracion', 'permiso' => 'parametros.estructuracion'],
+            ['texto' => 'Calendario operativo', 'ruta' => 'calendario.actualizar', 'permiso' => 'calendario.actualizar'],
         ]],
         ['titulo' => 'Administración', 'icono' => 'bi-gear', 'opciones' => [
             ['texto' => 'Usuarios', 'ruta' => 'usuarios.localizar', 'permiso' => 'usuarios.localizar'],

@@ -77,7 +77,7 @@ class ComparativaService extends BaseService
                 $capacidad,
                 array_map(static fn ($l) => [
                     'id' => (int) $l['id'], 'nombre' => (string) $l['nombre'], 'tna' => (string) $l['tna'], 'gasto_administrativo_cuota' => (string) $l['gasto_administrativo_cuota'],
-                    'gasto_otorgamiento_pct' => (string) $l['gasto_otorgamiento_pct'], 'monto_minimo' => (string) $l['monto_minimo'], 'monto_maximo' => (string) $l['monto_maximo'],
+                    'gasto_otorgamiento_pct' => (string) $l['gasto_otorgamiento_pct'], 'monto_minimo' => (string) $l['monto_minimo'], 'monto_maximo' => ($p['tope_global_cliente'] ?? null) === null ? (string) $l['monto_maximo'] : Decimal::min(Decimal::of((string) $l['monto_maximo']), Decimal::of((string) $p['tope_global_cliente']))->toFixed(2),
                     'cuotas_minimas' => (int) $l['cuotas_minimas'], 'cuotas_maximas' => (int) $l['cuotas_maximas'], 'motivo_no_admitida' => $l['motivo_no_admitida'],
                 ], $lineas),
                 Decimal::of((string) $p['alicuota_iva']),

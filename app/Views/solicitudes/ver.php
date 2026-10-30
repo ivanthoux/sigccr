@@ -89,7 +89,6 @@ $this->section('contenido');
             <?php endif ?>
         </section>
     </div>
-    <?php if ($evaluacion !== null || $s['estado'] === 'PendienteEvaluacion'): ?>
     <div class="col-12">
         <section class="hoja p-4" aria-labelledby="titulo-evaluacion">
             <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
@@ -99,7 +98,7 @@ $this->section('contenido');
                 <?php endif ?>
             </div>
             <?php if ($evaluacion === null): ?>
-                <p class="mb-0">Pendiente: el proceso automático la realizará en los próximos minutos.</p>
+                <p class="mb-0"><?= in_array($s['estado'], ['PendienteEvaluacion', 'EnEvaluacion'], true) ? 'Pendiente: el proceso automático la realizará en los próximos minutos.' : 'No registrada.' ?></p>
             <?php else: ?>
                 <dl class="dimensiones-evaluacion mb-0">
                     <div><dt>Procesamiento</dt><dd><?= esc(D::etiqueta(D::PROCESAMIENTO, $evaluacion['procesamiento'])) ?></dd></div>
@@ -111,7 +110,42 @@ $this->section('contenido');
             <?php endif ?>
         </section>
     </div>
-    <?php endif ?>
+    <div class="col-lg-4">
+        <section class="hoja p-4 h-100" aria-labelledby="titulo-alternativas">
+            <h2 class="h6" id="titulo-alternativas">Alternativas de financiación</h2>
+            <?php if ((int) ($s['alternativas']['total'] ?? 0) === 0): ?>
+                <p class="mb-0 small">No registradas.</p>
+            <?php else: ?>
+                <p class="small mb-1"><?= (int) $s['alternativas']['total'] ?> consideradas, <?= (int) $s['alternativas']['vigentes'] ?> vigentes.</p>
+                <?php if ($s['confirmada']): $cf = $s['confirmada']; ?><p class="small mb-0">Confirmada: <strong><?= esc(formato_importe($cf['importe'])) ?> en <?= (int) $cf['cantidad_cuotas'] ?> cuotas</strong>, CFTEA <?= esc(formato_porcentaje((string) $cf['cftea'])) ?> (<?= esc((string) $cf['medio_conformidad']) ?>, <?= esc(formato_fecha($cf['fecha_conformidad'])) ?>).</p><?php endif ?>
+                <?php if (tiene_permiso('alternativas.consultar')): ?><a class="small" href="<?= site_url("admin/solicitudes/{$id}/alternativas") ?>">Ver las alternativas</a><?php endif ?>
+            <?php endif ?>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="hoja p-4 h-100" aria-labelledby="titulo-afectaciones">
+            <h2 class="h6" id="titulo-afectaciones">Afectaciones de fondos</h2>
+            <?php if ($s['afectaciones'] === []): ?>
+                <p class="mb-0 small">No registradas.</p>
+            <?php else: ?>
+                <ul class="list-unstyled small mb-0">
+                    <?php foreach ($s['afectaciones'] as $af): ?><li><?= esc($af['tipo']) ?> de <?= esc(formato_importe($af['importe'])) ?> · <?= esc(mb_strtolower($af['estado'])) ?> · <?= esc(formato_fecha($af['fecha'])) ?></li><?php endforeach ?>
+                </ul>
+            <?php endif ?>
+        </section>
+    </div>
+    <div class="col-lg-4">
+        <section class="hoja p-4 h-100" aria-labelledby="titulo-alertas">
+            <h2 class="h6" id="titulo-alertas">Alertas</h2>
+            <?php if ($s['alertas'] === []): ?>
+                <p class="mb-0 small">Sin alertas.</p>
+            <?php else: ?>
+                <ul class="list-unstyled small mb-0">
+                    <?php foreach (array_slice($s['alertas'], 0, 5) as $al): ?><li class="mb-1"><span class="badge rounded-pill <?= $al['estado'] === 'Pendiente' ? 'text-bg-warning' : 'text-bg-light border' ?>"><?= esc($al['estado']) ?></span> <?= esc($al['causa']) ?></li><?php endforeach ?>
+                </ul>
+            <?php endif ?>
+        </section>
+    </div>
     <div class="col-12">
         <section class="hoja p-4" aria-labelledby="titulo-revisiones">
             <h2 class="h5" id="titulo-revisiones">Revisiones documentales</h2>
