@@ -40,6 +40,7 @@ class Menu extends BaseConfig
         ['titulo' => 'Gestión', 'icono' => 'bi-graph-up', 'opciones' => [
             ['texto' => 'Tablero gerencial', 'ruta' => 'tablero.consultar', 'permiso' => 'tablero.consultar'],
             ['texto' => 'Reportes', 'ruta' => 'reportes.cartera', 'permiso' => 'reportes.cartera'],
+            ['texto' => 'Fondos', 'ruta' => 'fondos.movimientos', 'permiso' => 'fondos.registrar-movimiento'],
             ['texto' => 'Parámetros', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
         ]],
         ['titulo' => 'Administración', 'icono' => 'bi-gear', 'opciones' => [

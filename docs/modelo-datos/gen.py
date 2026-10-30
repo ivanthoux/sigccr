@@ -37,7 +37,7 @@ for t in TABLES:
         r = TB[rt]
         keys = [r.pkcols or [c.name for c in r.cols if c.pk]] + [u[1] for u in r.uq if u[2] is None]
         if rc not in keys: errors.append(f'{t.name} {n}: {rt}{rc} no es clave')
-    kw = set('AND OR NOT IN IS NULL BETWEEN LIKE ISJSON CAST AS DATE'.split())
+    kw = set('AND OR NOT IN IS NULL BETWEEN LIKE ISJSON CAST AS DATE DATEADD DAY'.split())
     for n, expr in t.ck:
         e2 = re.sub(r"'[^']*'", '', expr)
         for tok in re.findall(r'[A-Za-z_][A-Za-z_0-9]*', e2):
