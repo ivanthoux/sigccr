@@ -302,8 +302,14 @@ class SolicitudService extends BaseService
                 'observaciones' => $texto === '' ? null : $texto, 'motivo_rechazo' => $resultado === 'Rechazada' ? $motivo : null,
             ]);
             $destino = RevisionLegajo::estadoSolicitud($resultado);
-            $this->cambiarEstado($s, $destino, $usuarioId, $resultado === 'Rechazada' ? $motivo : ($resultado === 'Observada' ? $texto : null), $versionLeida,
-                $resultado === 'Rechazada' ? ['tipo_rechazo' => 'Documental'] : []);
+            $this->cambiarEstado(
+                $s,
+                $destino,
+                $usuarioId,
+                $resultado === 'Rechazada' ? $motivo : ($resultado === 'Observada' ? $texto : null),
+                $versionLeida,
+                $resultado === 'Rechazada' ? ['tipo_rechazo' => 'Documental'] : []
+            );
             (new AuditoriaService($this->db))->registrar('solicitudes.verificar_legajo', 'solicitudes_credito', $id, 'Exitoso', $destino === 'Rechazada' ? $motivo : null, [
                 'revision' => $revision, 'resultado' => $resultado, 'faltantes' => $r['faltantes'],
                 'documentos' => array_map(static fn ($v) => $v['resultado'], $r['verificaciones']),
@@ -402,8 +408,15 @@ class SolicitudService extends BaseService
             $this->db->query("UPDATE dbo.afectaciones_fondos SET estado = 'Liberada', version_fila = version_fila + 1 WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'", [$sid]);
             $this->cambiarEstado($s, 'PendienteVerificacion', $usuarioId, 'Se incorporó un documento clave al legajo (RN-61).', null);
             $this->nuevaRevision($sid, (int) $s['version_condiciones_id']);
-            $alertas->generar('Operativa', "Se incorporó un documento clave al legajo de la solicitud N.º {$s['numero']}: volvió a verificación y su evaluación quedó invalidada (RN-61).",
-                'Verificar nuevamente el legajo (CU-23).', $s['usuario_id'] === null ? 'AnalistaCredito' : null, $s['usuario_id'] === null ? null : (int) $s['usuario_id'], 'solicitudes_credito', $sid);
+            $alertas->generar(
+                'Operativa',
+                "Se incorporó un documento clave al legajo de la solicitud N.º {$s['numero']}: volvió a verificación y su evaluación quedó invalidada (RN-61).",
+                'Verificar nuevamente el legajo (CU-23).',
+                $s['usuario_id'] === null ? 'AnalistaCredito' : null,
+                $s['usuario_id'] === null ? null : (int) $s['usuario_id'],
+                'solicitudes_credito',
+                $sid
+            );
         }
 
         return count($ids);

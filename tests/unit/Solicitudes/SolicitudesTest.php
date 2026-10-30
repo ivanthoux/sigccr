@@ -65,8 +65,10 @@ final class SolicitudesTest extends TestCase
         $pyme = ['admite_persona_juridica' => 1, 'antiguedad_minima_meses' => 24, 'categorias' => ['Empresa']];
         $empresa = $this->cliente(['tipo_cliente' => 'PersonaJuridica', 'categoria_ingresos' => 'Empresa', 'fecha_nacimiento' => null]);
         $this->assertNull(Elegibilidad::motivoNoAdmitida($this->version($pyme), ['fecha_constitucion' => '2024-11-04'] + $empresa, self::HOY));
-        $this->assertSame('La empresa no alcanza la antigüedad mínima de la línea (24 meses).',
-            Elegibilidad::motivoNoAdmitida($this->version($pyme), ['fecha_constitucion' => '2024-11-05'] + $empresa, self::HOY));
+        $this->assertSame(
+            'La empresa no alcanza la antigüedad mínima de la línea (24 meses).',
+            Elegibilidad::motivoNoAdmitida($this->version($pyme), ['fecha_constitucion' => '2024-11-05'] + $empresa, self::HOY)
+        );
         $this->assertSame(23, Elegibilidad::mesesCumplidos('2024-11-05', self::HOY));
     }
 
@@ -145,8 +147,14 @@ final class SolicitudesTest extends TestCase
 
     public function testRevisionVerificada(): void
     {
-        $r = RevisionLegajo::validar(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], ['DOC_IDENTIDAD' => [10], 'RECIBO_SUELDO' => [11]],
-            [10 => ['resultado' => 'Conforme'], 11 => ['resultado' => 'Conforme']], 'Verificada', '', '');
+        $r = RevisionLegajo::validar(
+            ['DOC_IDENTIDAD', 'RECIBO_SUELDO'],
+            ['DOC_IDENTIDAD' => [10], 'RECIBO_SUELDO' => [11]],
+            [10 => ['resultado' => 'Conforme'], 11 => ['resultado' => 'Conforme']],
+            'Verificada',
+            '',
+            ''
+        );
         $this->assertSame([], $r['errores']);
         $this->assertSame([], $r['faltantes']);
         $this->assertSame(['resultado' => 'Conforme', 'motivo' => null, 'observacion' => null], $r['verificaciones'][10]);
@@ -196,11 +204,19 @@ final class SolicitudesTest extends TestCase
 
     public function testCadaDocumentoNecesitaResultadoYMotivo(): void
     {
-        $r = RevisionLegajo::validar(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], ['DOC_IDENTIDAD' => [10], 'RECIBO_SUELDO' => [11]],
-            [10 => ['resultado' => 'Observado'], 11 => []], 'Observada', 'Faltan datos del recibo de sueldo de octubre.', '');
+        $r = RevisionLegajo::validar(
+            ['DOC_IDENTIDAD', 'RECIBO_SUELDO'],
+            ['DOC_IDENTIDAD' => [10], 'RECIBO_SUELDO' => [11]],
+            [10 => ['resultado' => 'Observado'], 11 => []],
+            'Observada',
+            'Faltan datos del recibo de sueldo de octubre.',
+            ''
+        );
         $this->assertSame('Indique el motivo de la observación del documento.', $r['errores']['doc_10']);
         $this->assertSame('Indique el resultado de este documento.', $r['errores']['doc_11']);
-        $this->assertSame('Seleccione el resultado de la revisión: verificada, observada o rechazada.',
-            RevisionLegajo::validar([], [], [], '', '', '')['errores']['resultado']);
+        $this->assertSame(
+            'Seleccione el resultado de la revisión: verificada, observada o rechazada.',
+            RevisionLegajo::validar([], [], [], '', '', '')['errores']['resultado']
+        );
     }
 }
