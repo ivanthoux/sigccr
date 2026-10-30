@@ -20,6 +20,7 @@ class Menu extends BaseConfig
         ['titulo' => 'Crédito', 'icono' => 'bi-cash-coin', 'opciones' => [
             ['texto' => 'Clientes', 'ruta' => 'clientes.localizar', 'permiso' => 'clientes.localizar'],
             ['texto' => 'Solicitudes', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
+            ['texto' => 'Contingencias', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
             ['texto' => 'Simulador', 'ruta' => 'solicitudes.simular', 'permiso' => 'solicitudes.simular'],
             ['texto' => 'Líneas de crédito', 'ruta' => 'lineas.localizar', 'permiso' => 'lineas.localizar'],
         ]],

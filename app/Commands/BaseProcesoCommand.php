@@ -117,6 +117,24 @@ abstract class BaseProcesoCommand extends BaseCommand
     }
 
     /**
+     * Procesa un elemento que maneja sus propias transacciones, por ejemplo porque espera a un servicio externo entre
+     * ellas y no debe retener bloqueos (CU-86). Cuenta el elemento y registra el error sin interrumpir los demás.
+     *
+     * @param callable(): void $operacion
+     */
+    protected function procesarConTransaccionesPropias(string $descripcion, callable $operacion): void
+    {
+        try {
+            $operacion();
+            $this->procesados++;
+        } catch (Throwable $e) {
+            $this->errores++;
+            $this->detalleErrores[] = "{$descripcion}: {$e->getMessage()}";
+            log_message('error', "{$this->name} {$descripcion}: {$e->getMessage()}");
+        }
+    }
+
+    /**
      * Fechas de negocio sin una ejecución finalizada, desde la última procesada hasta ayer u hoy (RNF-10 e).
      *
      * @return list<string>

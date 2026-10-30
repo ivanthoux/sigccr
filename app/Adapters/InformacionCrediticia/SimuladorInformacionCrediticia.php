@@ -12,8 +12,11 @@ use App\Adapters\ServicioNoDisponibleException;
  */
 class SimuladorInformacionCrediticia implements InformacionCrediticiaInterface
 {
+    private string $codigo = '';
+
     public function consultar(string $cuitCuil): array
     {
+        $this->codigo = substr($cuitCuil, -1) === '9' ? 'Timeout' : '200';
         $digito = (int) substr($cuitCuil, -1);
         if ($digito === 9) {
             throw new ServicioNoDisponibleException('Simulador: tiempo de espera agotado.');
@@ -25,5 +28,10 @@ class SimuladorInformacionCrediticia implements InformacionCrediticiaInterface
         $periodo = date('Ym', strtotime('first day of last month'));
 
         return [['entidad' => 'BANCO SIMULADO S.A.', 'periodo' => $periodo, 'situacion' => $situacion, 'monto' => '250000.00']];
+    }
+
+    public function intercambios(): array
+    {
+        return $this->codigo === '' ? [] : [['operacion' => 'Simulador', 'codigo' => $this->codigo, 'duracion_ms' => 0, 'intento' => 1]];
     }
 }

@@ -20,6 +20,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-14 | 28/10/2026 | Validada (29/10/2026) |
 | D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
 | D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
+| D-17 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -133,3 +134,15 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Sin cambios de esquema. `AutorizacionService::emitirSinComunicacion()`, `ActivacionService::continuarTrasVerificacion()` y la plantilla `verificacion_correo_cliente`. Cambian CU-04 (A6, activación desde la verificación del correo), CU-11 (paso 8) y la tabla de realizaciones de 4.5.1 en la v11.
 
+## D-17 · Evaluación automática en dos transacciones y registro de la contingencia (CU-86, CU-25)
+
+**Contexto.** Al construir la evaluación crediticia (D02) aparecieron tres situaciones que la v11 no detalla. La consulta a la Central de Deudores puede demorar hasta 30 segundos (10 s por petición y dos reintentos, RNF-08): si la evaluación completa se hiciera en una sola transacción, la solicitud quedaría bloqueada durante la espera. CU-86 A7 indica que ante un error interno la solicitud queda Pendiente de evaluación, pero el diagrama de estados de 4.2.3 no tiene la transición de En evaluación a Pendiente de evaluación, ni el de 4.2.4 prevé un intento que quede En proceso porque el proceso se interrumpió. Por último, el esquema exige que la contingencia tenga resultado nulo o «Requiere análisis gerencial», pero CU-25 no dice cuál de los dos registra, ni dónde se guardan los antecedentes verificables que describe el Analista.
+
+**Decisión.**
+1. CU-86 se ejecuta en dos transacciones por solicitud: la primera registra el intento En proceso con la versión de parámetros vigente y pasa la solicitud a En evaluación; la consulta externa se hace fuera de toda transacción; la segunda calcula los indicadores y aplica el resultado solo si la solicitud sigue En evaluación (si no, el resultado queda Finalizado con vigencia Invalidada como antecedente, A4 y A5). Para no producir bloqueos mutuos, se bloquea siempre primero la solicitud y después la evaluación.
+2. Un error interno posterior al inicio, o un intento En proceso con más de 15 minutos (ejecución interrumpida), deja el intento No completado con su motivo y devuelve la solicitud a Pendiente de evaluación, sin alerta, para la próxima ejecución. Se agrega la transición En evaluación → Pendiente de evaluación (A7). La falta de respuesta del servicio externo sigue llevando a Pendiente de evaluación de contingencia, sin reintento automático (A3, RN-21).
+3. El inicio inmediato al verificar un legajo (CU-86 paso 1) toma el mismo bloqueo de aplicación que el proceso programado; si el proceso está en curso, no hace nada y la solicitud se evalúa en la ejecución siguiente (cada 5 minutos).
+4. La evaluación de contingencia se registra Finalizada, Vigente por la vigencia configurada y con resultado «Requiere análisis gerencial»: la recomendación del Analista (Favorable o Desfavorable) y su justificación se guardan aparte y no aprueban la solicitud (RN-21). Los tipos de antecedentes verificables utilizados y su descripción se guardan con los antecedentes internos del cliente en `indicadores`; las deudas que el Analista transcribe de una consulta manual a la Central de Deudores se guardan en `antecedentes_externos` con fuente «Manual».
+5. Indicadores internos de RN-69: el comportamiento de pago es el máximo atraso de las cuotas vencidas en los últimos 12 meses (las pagadas, hasta la fecha efectiva del pago; las impagas, hasta hoy) y no hay antecedentes si no hay cuotas vencidas en ese período; las obligaciones son la próxima cuota impaga de cada crédito Activo o En mora más la primera cuota de las demás solicitudes en trámite del cliente (RN-18). De la Central de Deudores se toman los períodos desde doce meses antes del mes en curso; la situación vigente es la peor del último período informado.
+
+**Consecuencias.** Sin cambios de esquema. `EvaluacionService`, comando `evaluacion:ejecutar` (cada 5 minutos en el planificador), `AntecedentesBcra`, `DimensionesEvaluacion`, `Contingencia` y el adaptador `BcraInformacionCrediticia` (API pública de la Central de Deudores, `sigccr.adaptadorInformacionCrediticia = real`). Cambian el diagrama de estados de la solicitud de 4.2.3 (nueva transición), el de la evaluación de 4.2.4 (EnProceso → NoCompletada por error interno o interrupción), CU-86 (A7) y CU-25 (paso 7, resultado registrado).

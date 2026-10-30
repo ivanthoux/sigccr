@@ -18,7 +18,8 @@ final class EstadosSolicitud
         'PendienteVerificacion' => ['PendienteDocumentacion', 'PendienteEvaluacion', 'Rechazada'],
         'PendienteDocumentacion' => ['PendienteVerificacion', 'Vencida'],
         'PendienteEvaluacion' => ['EnEvaluacion'],
-        'EnEvaluacion' => ['PendienteSeleccionPlan', 'PendienteResolucion', 'Rechazada', 'PendienteContingencia', 'PendienteVerificacion'],
+        // EnEvaluacion → PendienteEvaluacion: error interno o ejecución interrumpida; se reintenta en la próxima (CU-86 A7)
+        'EnEvaluacion' => ['PendienteSeleccionPlan', 'PendienteResolucion', 'Rechazada', 'PendienteContingencia', 'PendienteVerificacion', 'PendienteEvaluacion'],
         'PendienteContingencia' => ['PendienteResolucion', 'PendienteVerificacion'],
         'PendienteSeleccionPlan' => ['AprobadaPendienteLiquidacion', 'PendienteResolucion', 'PendienteEvaluacion', 'PendienteVerificacion'],
         'PendienteResolucion' => ['AprobadaPendienteLiquidacion', 'Rechazada', 'DevueltaRevision', 'PendienteEvaluacion', 'PendienteVerificacion'],

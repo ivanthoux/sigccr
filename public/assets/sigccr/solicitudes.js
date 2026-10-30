@@ -24,3 +24,14 @@
     resultados.forEach((r) => r.addEventListener('change', mostrar));
     mostrar();
 })();
+
+/* CU-25: la tabla de deudas de la consulta manual se muestra al marcar ese antecedente. */
+(function () {
+    'use strict';
+    document.querySelectorAll('input[data-muestra]').forEach((casilla) => {
+        const destino = document.querySelector(casilla.dataset.muestra);
+        if (destino) {
+            casilla.addEventListener('change', () => { destino.hidden = !casilla.checked; });
+        }
+    });
+})();

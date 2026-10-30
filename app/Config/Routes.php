@@ -70,6 +70,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('simulaciones', 'Admin\Simulaciones::index', ['as' => 'solicitudes.simular', 'filter' => 'permiso:solicitudes.simular']);
         $routes->post('simulaciones', 'Admin\Simulaciones::simular', ['filter' => 'permiso:solicitudes.simular']);
         $routes->get('simulaciones/(:num)', 'Admin\Simulaciones::ver/$1', ['filter' => 'permiso:solicitudes.simular']);
+        $routes->get('evaluaciones/contingencia', 'Admin\Evaluaciones::pendientes', ['as' => 'evaluaciones.contingencia', 'filter' => 'permiso:evaluaciones.registrar-contingencia']);
         $routes->group('solicitudes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
             $routes->get('nueva', 'Admin\Solicitudes::nueva', ['as' => 'solicitudes.registrar', 'filter' => 'permiso:solicitudes.registrar']);
@@ -81,6 +82,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/documentos', 'Admin\Solicitudes::incorporarDocumentos/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
             $routes->get('(:num)/corregir', 'Admin\Solicitudes::correccion/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
             $routes->post('(:num)/corregir', 'Admin\Solicitudes::corregir/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
+            // CU-24 y CU-25: evaluación crediticia (la automática, CU-86, la ejecuta el proceso evaluacion:ejecutar)
+            $routes->get('(:num)/evaluacion', 'Admin\Evaluaciones::ver/$1', ['filter' => 'permiso:evaluaciones.consultar']);
+            $routes->get('(:num)/contingencia', 'Admin\Evaluaciones::contingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
+            $routes->post('(:num)/contingencia', 'Admin\Evaluaciones::registrarContingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
         });
 
         // SS-10 Alertas (CU-83)
