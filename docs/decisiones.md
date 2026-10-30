@@ -24,6 +24,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-18 | 30/10/2026 | Propuesta |
 | D-19 | 30/10/2026 | Propuesta |
 | D-20 | 30/10/2026 | Propuesta |
+| D-21 | 30/10/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -227,3 +228,30 @@ CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay 
 - `FondosService::liberarDeSolicitud` y `consumir`.
 
 El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye en D05; hasta entonces se puede liquidar por transferencia. Cambian CU-26 (A8), CU-27 (pasos 4 y 6, A7) y RN-22.
+
+## D-21 · Vigencia de las asignaciones de caja y corrección de movimientos de fondos (CU-72, CU-80, CU-85)
+
+**Contexto.** Al construir cajas y fondos (D05) se encontraron cuatro diferencias entre los casos de uso y el esquema:
+- **Vigencia de la asignación.** El esquema consideraba vigente una asignación «mientras su fin es nulo», pero CU-72 permite cargar una fecha de fin. Además, una asignación finalizada el mismo día en que comenzó seguiría vigente ese día.
+- **Observaciones de la caja.** CU-80 pide observaciones, y la tabla `cajas` no tiene esa columna.
+- **Correcciones de fondos.** CU-85 corrige un movimiento con un «movimiento inverso vinculado» y exige motivo para corregir o anular, pero `movimientos_fondos` no tiene vínculo ni motivo.
+- **Jornada de días anteriores.** RN-28 exige cerrar la jornada de un día anterior antes de operar, sin decir qué operaciones lo verifican.
+
+**Decisión.**
+1. **Vigencia de la asignación.** Una asignación está vigente desde su fecha de inicio hasta su fecha de fin inclusive, o sin fin. Finalizarla (CU-72 A5, o al inhabilitar la caja en CU-81) fija el fin en el día anterior. Si todavía no había comenzado, queda con un período vacío (fin = inicio − 1), que el CHECK ahora admite. Una caja y un Cajero no pueden tener otra asignación vigente o futura.
+2. **Observaciones de la caja.** `cajas.observaciones` guarda las observaciones del alta.
+3. **Correcciones de fondos.** `movimientos_fondos.movimiento_corregido_id` (única) y `motivo` registran la corrección:
+   - el movimiento inverso tiene el mismo tipo e importe y el carácter opuesto, y se fecha hoy;
+   - un movimiento se corrige una sola vez y una corrección no se corrige;
+   - un movimiento programado no se corrige: se confirma cuando llega su fecha o se anula con motivo.
+
+   Un egreso realizado, una corrección que resulta en egreso y la confirmación de un egreso programado no pueden superar el disponible libre (A1). Se usa el mismo bloqueo de aplicación que las reservas.
+4. **Jornada de días anteriores.** Un Cajero solo puede registrar operaciones (desembolsos en efectivo y, en la iteración 3, cobros) en una jornada abierta hoy, con la misma asignación con que la abrió y todavía vigente. La jornada de un día anterior se puede cerrar, pero no operar. El fondo inicial, si es mayor que cero, queda como movimiento de la jornada.
+
+**Consecuencias.** Migración 14 (`cajas.observaciones`, `movimientos_fondos.movimiento_corregido_id` y `motivo`, y el CHECK de `asignaciones_caja`). Componentes nuevos:
+- `ReglasCaja`, con 5 pruebas.
+- `CajaService` (CU-31, CU-36, CU-72, CU-80, CU-81).
+- `FondosService` (CU-85).
+- Pantallas Mi caja, Cajas y Fondos.
+
+`LiquidacionService` usa `CajaService::jornadaOperable`. Cambian CU-72 (A5), CU-80 (paso 2), CU-85 (A2, A3), RN-28 y el modelo de datos (4.3).

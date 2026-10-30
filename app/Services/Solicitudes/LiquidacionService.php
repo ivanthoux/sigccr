@@ -12,6 +12,7 @@ use App\Libraries\Solicitudes\Desembolso;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\Simulador;
 use App\Services\BaseService;
+use App\Services\Caja\CajaService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
@@ -76,7 +77,7 @@ class LiquidacionService extends BaseService
         }
         $s['requiere_conformidad'] = $s['alternativa_id'] !== null && $s['estado_alternativa'] !== 'Confirmada';
         $s['reserva'] = $this->db->query("SELECT TOP (1) importe FROM dbo.afectaciones_fondos WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'", [$solicitudId])->getRowArray()['importe'] ?? null;
-        $s['jornada'] = $this->jornadaAbierta((int) (session('cuenta')['id'] ?? 0));
+        $s['jornada'] = (new CajaService($this->db))->jornadaOperable((int) (session('cuenta')['id'] ?? 0));
 
         return $s;
     }
@@ -144,10 +145,11 @@ class LiquidacionService extends BaseService
             // A4: el efectivo requiere la jornada de caja abierta del Cajero (RN-28)
             $jornada = null;
             if ($v['datos']['medio'] === 'Efectivo') {
-                $jornada = $this->jornadaAbierta($usuarioId, true);
+                $jornada = (new CajaService($this->db))->jornadaOperable($usuarioId);
                 if ($jornada === null) {
-                    throw new ValidacionException(['medio' => 'Para desembolsar en efectivo debe tener su caja abierta (CU-31) con una asignación vigente (CU-72).'], 'RN-28');
+                    throw new ValidacionException(['medio' => 'Para desembolsar en efectivo debe tener su caja abierta hoy (CU-31) con una asignación vigente (CU-72). Si quedó abierta una jornada de un día anterior, ciérrela primero (RN-28).'], 'RN-28');
                 }
+                $this->bloquear('jornadas_caja', [(int) $jornada['id']]);
             }
 
             // Pasos 7 y 8: crédito, plan definitivo, liquidación, egreso y reserva consumida
@@ -225,19 +227,5 @@ class LiquidacionService extends BaseService
         $l['cuotas'] = $this->db->table('cuotas')->where('credito_id', (int) $l['credito_id'])->orderBy('numero')->get()->getResultArray();
 
         return $l;
-    }
-
-    /** @return ?array<string, mixed> jornada de caja abierta del usuario con su asignación vigente (RN-28) */
-    private function jornadaAbierta(int $usuarioId, bool $bloquear = false): ?array
-    {
-        if ($usuarioId === 0) {
-            return null;
-        }
-
-        return $this->db->query(
-            'SELECT j.id, j.caja_id, c.denominacion FROM dbo.jornadas_caja j' . ($bloquear ? ' WITH (UPDLOCK, ROWLOCK)' : '') . ' JOIN dbo.cajas c ON c.id = j.caja_id '
-            . "JOIN dbo.asignaciones_caja a ON a.id = j.asignacion_caja_id AND a.hasta IS NULL WHERE j.usuario_id = ? AND j.estado = 'Abierta'",
-            [$usuarioId],
-        )->getRowArray();
     }
 }

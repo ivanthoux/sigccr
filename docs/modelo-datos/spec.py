@@ -680,17 +680,18 @@ add('cajas', 'SS-05', 'Caja', 'Unidades operativas de cobro (CU-80, CU-81).', [
     C('codigo', 'VARCHAR(10)', uq=True),
     C('denominacion', 'NVARCHAR(60)'),
     C('ubicacion', 'NVARCHAR(100)', null=True),
+    C('observaciones', 'NVARCHAR(300)', null=True, d='Observaciones del alta (CU-80).'),
     EN('estado', 'EstadoCaja', default="'Habilitada'"),
 ])
 
-add('asignaciones_caja', 'SS-05', 'AsignacionCaja', 'Asignación de una caja a un cajero; vigente mientras hasta es nulo (RN-28).', [
+add('asignaciones_caja', 'SS-05', 'AsignacionCaja', 'Asignación de una caja a un cajero, vigente desde su inicio hasta su fin inclusive (RN-28). Finalizarla fija el fin en el día anterior; una asignación finalizada antes de comenzar queda con un período vacío (fin = inicio − 1, D-21).', [
     ID(),
     FK('caja_id', 'cajas'),
     FK('usuario_id', 'usuarios_internos', d='Cajero asignado.'),
     C('desde', D), C('hasta', D, null=True),
 ], uq=[('UQ_asignaciones_caja_vigente', ['caja_id'], 'hasta IS NULL'),
        ('UQ_asignaciones_caja_clave', ['id', 'caja_id', 'usuario_id'], None)],
-   ck=[('CK_asignaciones_caja_periodo', 'hasta IS NULL OR hasta >= desde')])
+   ck=[('CK_asignaciones_caja_periodo', 'hasta IS NULL OR hasta >= DATEADD(day, -1, desde)')])
 
 add('jornadas_caja', 'SS-05', 'JornadaCaja', 'Operaciones entre la apertura y el cierre de una caja. caja_id y usuario_id se repiten desde la asignación para impedir, con índices únicos, dos jornadas abiertas por caja o por cajero (RN-28).', [
     ID(),
@@ -909,7 +910,10 @@ add('movimientos_fondos', 'SS-05', 'MovimientoFondos', 'Ingresos y egresos de fo
     C('referencia', 'VARCHAR(100)', null=True),
     EN('estado', 'EstadoMovimientoFondos', default="'Realizado'"),
     FK('usuario_id', 'usuarios_internos'),
-], ck=[('CK_movimientos_fondos_importe', 'importe > 0')],
+    FK('movimiento_corregido_id', 'movimientos_fondos', null=True, uq=True, d='Movimiento que este corrige con el importe inverso (RN-44, CU-85 A2); cada movimiento se corrige una sola vez.'),
+    C('motivo', 'NVARCHAR(300)', null=True, d='Motivo de la corrección o de la anulación de un movimiento programado (CU-85 A2, A3).'),
+], ck=[('CK_movimientos_fondos_importe', 'importe > 0'),
+       ('CK_movimientos_fondos_motivo', "(movimiento_corregido_id IS NULL AND estado <> 'Anulado') OR motivo IS NOT NULL")],
    idx=[('IX_movimientos_fondos_fecha', ['fecha', 'estado'], None, None)])
 
 add('afectaciones_fondos', 'SS-05', 'AfectacionFondos', 'Compromisos temporales y reservas de fondos. El compromiso se convierte en reserva en la misma fila, sin un segundo descuento (RN-41).', [

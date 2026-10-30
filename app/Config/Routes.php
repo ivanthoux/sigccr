@@ -77,6 +77,21 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('simulaciones/comparar', 'Admin\Comparativas::simular', ['filter' => 'permiso:solicitudes.simular-comparativa']);
         $routes->get('simulaciones/comparar/(:num)', 'Admin\Comparativas::ver/$1', ['filter' => 'permiso:solicitudes.simular-comparativa']);
         $routes->get('evaluaciones/contingencia', 'Admin\Evaluaciones::pendientes', ['as' => 'evaluaciones.contingencia', 'filter' => 'permiso:evaluaciones.registrar-contingencia']);
+        // SS-05 Cajas y fondos (CU-31, CU-36, CU-72, CU-80, CU-81, CU-85)
+        $routes->get('caja', 'Admin\MiCaja::index', ['as' => 'cajas.abrir', 'filter' => 'permiso:cajas.abrir']);
+        $routes->post('caja', 'Admin\MiCaja::abrir', ['filter' => 'permiso:cajas.abrir']);
+        $routes->get('caja/cierre', 'Admin\MiCaja::cierre', ['as' => 'cajas.cerrar', 'filter' => 'permiso:cajas.cerrar']);
+        $routes->post('caja/cierre', 'Admin\MiCaja::cerrar', ['filter' => 'permiso:cajas.cerrar']);
+        $routes->get('cajas', 'Admin\Cajas::index', ['as' => 'cajas.registrar', 'filter' => 'permiso:cajas.registrar']);
+        $routes->post('cajas', 'Admin\Cajas::registrar', ['filter' => 'permiso:cajas.registrar']);
+        $routes->post('cajas/(:num)/asignar', 'Admin\Cajas::asignar/$1', ['filter' => 'permiso:cajas.asignar-cajero']);
+        $routes->post('cajas/(:num)/finalizar-asignacion', 'Admin\Cajas::finalizarAsignacion/$1', ['filter' => 'permiso:cajas.asignar-cajero']);
+        $routes->post('cajas/(:num)/estado', 'Admin\Cajas::cambiarEstado/$1', ['filter' => 'permiso:cajas.cambiar-estado']);
+        $routes->get('fondos', 'Admin\Fondos::index', ['as' => 'fondos.movimientos', 'filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos', 'Admin\Fondos::registrar', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/corregir', 'Admin\Fondos::corregir/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/confirmar', 'Admin\Fondos::confirmar/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/anular', 'Admin\Fondos::anular/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);

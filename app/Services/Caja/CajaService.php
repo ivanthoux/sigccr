@@ -1,0 +1,294 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Caja;
+
+use App\Exceptions\ReglaNegocioException;
+use App\Exceptions\ValidacionException;
+use App\Libraries\Caja\ReglasCaja;
+use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Validacion\Campos;
+use App\Services\BaseService;
+use App\Services\Comunes\AuditoriaService;
+use DateTimeImmutable;
+use DateTimeZone;
+
+/**
+ * Cajas y jornadas (SS-05): CU-80 Registrar Caja, CU-81 Cambiar Estado de Caja, CU-72 Asignar Caja a Cajero,
+ * CU-31 Registrar Apertura de Caja y CU-36 Registrar Cierre de Caja. RN-28, RN-32, RN-44, RN-59.
+ *
+ * Una asignación está vigente desde su inicio hasta su fin inclusive; finalizarla fija el fin en el día anterior
+ * (D-21). Los índices únicos de jornadas_caja impiden dos jornadas abiertas por caja o por cajero.
+ */
+class CajaService extends BaseService
+{
+    // ── CU-80, CU-81 y CU-72 (Gerente) ─────────────────────────────────────────
+
+    /**
+     * Cajas con su asignación vigente o futura y su jornada abierta.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listar(): array
+    {
+        $hoy = $this->hoyNegocio();
+
+        return $this->db->query(
+            "SELECT c.*, a.id AS asignacion_id, a.desde, a.hasta, a.usuario_id AS cajero_id, ui.apellido + ', ' + ui.nombre AS cajero, "
+            . 'j.id AS jornada_id, j.apertura FROM dbo.cajas c '
+            . 'OUTER APPLY (SELECT TOP (1) x.* FROM dbo.asignaciones_caja x WHERE x.caja_id = c.id AND (x.hasta IS NULL OR x.hasta >= CAST(? AS date)) ORDER BY x.desde) a '
+            . 'LEFT JOIN dbo.usuarios_internos ui ON ui.id = a.usuario_id '
+            . "LEFT JOIN dbo.jornadas_caja j ON j.caja_id = c.id AND j.estado = 'Abierta' ORDER BY c.codigo",
+            [$hoy],
+        )->getResultArray();
+    }
+
+    /** CU-80 pasos 4 a 6 (A1, A2). */
+    public function registrar(array $datos): int
+    {
+        $v = ReglasCaja::validarCaja($datos);
+        if ($v['errores'] === [] && $this->db->table('cajas')->where('codigo', $v['datos']['codigo'])->countAllResults() > 0) {
+            $v['errores']['codigo'] = 'Ya existe una caja con ese código.';
+        }
+        if ($v['errores'] !== []) {
+            throw new ValidacionException($v['errores']);
+        }
+
+        return $this->transaccion(function () use ($v): int {
+            $this->db->table('cajas')->insert($v['datos'] + ['estado' => 'Habilitada']);
+            $id = (int) $this->db->insertID();
+            (new AuditoriaService($this->db))->registrar('cajas.registrar', 'cajas', $id, 'Exitoso', null, $v['datos']);
+
+            return $id;
+        });
+    }
+
+    /** CU-81 pasos 3 a 7 (A1, A2). */
+    public function cambiarEstado(int $cajaId, string $accion, string $motivo): string
+    {
+        $texto = Campos::texto($motivo);
+        if (($error = Campos::motivo($texto)) !== null) {
+            throw new ValidacionException(['motivo' => $error]);
+        }
+
+        return $this->transaccion(function () use ($cajaId, $accion, $texto): string {
+            $c = $this->bloquear('cajas', [$cajaId])[0] ?? null;
+            if ($c === null) {
+                throw new ReglaNegocioException('La caja no existe.');
+            }
+            $destino = $accion === 'inhabilitar' ? 'Inhabilitada' : 'Habilitada';
+            if ($c['estado'] === $destino) {
+                throw new ReglaNegocioException("La caja ya está {$destino}.");
+            }
+            if ($destino === 'Inhabilitada') {
+                if ($this->db->table('jornadas_caja')->where('caja_id', $cajaId)->where('estado', 'Abierta')->countAllResults() > 0) {
+                    throw new ReglaNegocioException('La caja tiene una jornada abierta: el Cajero debe cerrarla antes de inhabilitarla (CU-36).');
+                }
+                foreach ($this->db->query('SELECT id FROM dbo.asignaciones_caja WITH (UPDLOCK) WHERE caja_id = ? AND (hasta IS NULL OR hasta >= CAST(? AS date))', [$cajaId, $this->hoyNegocio()])->getResultArray() as $a) {
+                    $this->terminarAsignacion((int) $a['id']);
+                }
+            }
+            $this->db->table('cajas')->where('id', $cajaId)->update(['estado' => $destino]);
+            (new AuditoriaService($this->db))->registrar('cajas.cambiar_estado', 'cajas', $cajaId, 'Exitoso', $texto, ['anterior' => $c['estado'], 'nuevo' => $destino]);
+
+            return $destino;
+        });
+    }
+
+    /**
+     * CU-72 paso 2: Cajeros con su cuenta habilitada.
+     *
+     * @return list<array{id: int, nombre: string, asignada: ?string}>
+     */
+    public function cajeros(): array
+    {
+        return array_map(static fn ($f) => ['id' => (int) $f['id'], 'nombre' => (string) $f['nombre'], 'asignada' => $f['asignada']], $this->db->query(
+            "SELECT u.id, u.apellido + ', ' + u.nombre AS nombre, (SELECT TOP (1) c.codigo FROM dbo.asignaciones_caja a JOIN dbo.cajas c ON c.id = a.caja_id "
+            . 'WHERE a.usuario_id = u.id AND (a.hasta IS NULL OR a.hasta >= CAST(? AS date))) AS asignada '
+            . "FROM dbo.usuarios_internos u JOIN dbo.roles r ON r.id = u.rol_id JOIN dbo.cuentas_acceso ca ON ca.id = u.id WHERE r.codigo = 'Cajero' AND ca.estado = 'Habilitada' ORDER BY u.apellido, u.nombre",
+            [$this->hoyNegocio()],
+        )->getResultArray());
+    }
+
+    /** CU-72 pasos 3 a 8 (A1 a A3). */
+    public function asignar(int $cajaId, int $cajeroId, string $desdeTexto, string $hastaTexto): int
+    {
+        $hoy = $this->hoyNegocio();
+        $v = ReglasCaja::validarVigencia($desdeTexto, $hastaTexto, $hoy);
+        if ($v['errores'] !== []) {
+            throw new ValidacionException($v['errores']);
+        }
+
+        return $this->transaccion(function () use ($cajaId, $cajeroId, $v, $hoy): int {
+            $c = $this->bloquear('cajas', [$cajaId])[0] ?? null;
+            if ($c === null || $c['estado'] !== 'Habilitada') {
+                throw new ReglaNegocioException('La caja no existe o está inhabilitada (CU-81).');
+            }
+            $cajero = array_values(array_filter($this->cajeros(), static fn ($x) => $x['id'] === $cajeroId))[0] ?? null;
+            if ($cajero === null) {
+                throw new ValidacionException(['cajero_id' => 'Seleccione un Cajero con la cuenta habilitada.']);
+            }
+            // A1: la caja no puede tener otra asignación vigente o futura; A2: el Cajero tampoco
+            if ($this->db->query('SELECT 1 FROM dbo.asignaciones_caja WITH (UPDLOCK, HOLDLOCK) WHERE caja_id = ? AND (hasta IS NULL OR hasta >= CAST(? AS date))', [$cajaId, $hoy])->getRowArray() !== null) {
+                throw new ReglaNegocioException('La caja ya está asignada: finalice la asignación vigente antes de asignarla a otro Cajero.');
+            }
+            if ($cajero['asignada'] !== null) {
+                throw new ReglaNegocioException("El Cajero ya tiene asignada la caja {$cajero['asignada']}: finalice esa asignación antes de continuar.");
+            }
+            $this->db->table('asignaciones_caja')->insert(['caja_id' => $cajaId, 'usuario_id' => $cajeroId, 'desde' => $v['desde'], 'hasta' => $v['hasta']]);
+            $id = (int) $this->db->insertID();
+            (new AuditoriaService($this->db))->registrar('cajas.asignar_cajero', 'cajas', $cajaId, 'Exitoso', null, ['asignacion' => $id, 'cajero' => $cajeroId, 'desde' => $v['desde'], 'hasta' => $v['hasta']]);
+
+            return $id;
+        });
+    }
+
+    /** CU-72 A5: finaliza la asignación vigente de la caja, si no tiene una jornada abierta. */
+    public function finalizarAsignacion(int $cajaId, string $motivo): void
+    {
+        $texto = Campos::texto($motivo);
+        if (($error = Campos::motivo($texto)) !== null) {
+            throw new ValidacionException(['motivo_fin' => $error]);
+        }
+        $this->transaccion(function () use ($cajaId, $texto): void {
+            $a = $this->db->query('SELECT id FROM dbo.asignaciones_caja WITH (UPDLOCK) WHERE caja_id = ? AND (hasta IS NULL OR hasta >= CAST(? AS date))', [$cajaId, $this->hoyNegocio()])->getRowArray();
+            if ($a === null) {
+                throw new ReglaNegocioException('La caja no tiene una asignación vigente.');
+            }
+            if ($this->db->table('jornadas_caja')->where('caja_id', $cajaId)->where('estado', 'Abierta')->countAllResults() > 0) {
+                throw new ReglaNegocioException('La caja tiene una jornada abierta: el Cajero debe cerrarla antes de finalizar la asignación (CU-36).');
+            }
+            $this->terminarAsignacion((int) $a['id']);
+            (new AuditoriaService($this->db))->registrar('cajas.finalizar_asignacion', 'cajas', $cajaId, 'Exitoso', $texto, ['asignacion' => (int) $a['id']]);
+        });
+    }
+
+    // ── CU-31 y CU-36 (Cajero) ─────────────────────────────────────────────────
+
+    /**
+     * CU-31 paso 2 (A1, A2, A4): asignación vigente y jornada abierta del Cajero.
+     *
+     * @return array{asignacion: ?array<string, mixed>, jornada: ?array<string, mixed>}
+     */
+    public function situacion(int $usuarioId): array
+    {
+        $hoy = $this->hoyNegocio();
+        $asignacion = $this->db->query(
+            'SELECT a.*, c.codigo, c.denominacion, c.ubicacion, c.estado AS estado_caja FROM dbo.asignaciones_caja a JOIN dbo.cajas c ON c.id = a.caja_id '
+            . 'WHERE a.usuario_id = ? AND a.desde <= CAST(? AS date) AND (a.hasta IS NULL OR a.hasta >= CAST(? AS date))',
+            [$usuarioId, $hoy, $hoy],
+        )->getRowArray();
+        $jornada = $this->db->query(
+            'SELECT j.*, c.codigo, c.denominacion FROM dbo.jornadas_caja j JOIN dbo.cajas c ON c.id = j.caja_id WHERE j.usuario_id = ? AND j.estado = ?',
+            [$usuarioId, 'Abierta'],
+        )->getRowArray();
+        if ($jornada !== null) {
+            $jornada['fecha_local'] = (new DateTimeImmutable((string) $jornada['apertura']))->setTimezone(new DateTimeZone(config('Sigccr')->zonaNegocio))->format('Y-m-d');
+            $jornada['anterior'] = $jornada['fecha_local'] < $hoy;
+            $jornada['resumen'] = $this->resumen((int) $jornada['id'], (string) $jornada['fondo_inicial']);
+        }
+
+        return ['asignacion' => $asignacion, 'jornada' => $jornada];
+    }
+
+    /**
+     * Jornada en la que el Cajero puede registrar operaciones: abierta hoy y con la asignación vigente (RN-28). La
+     * usan los desembolsos en efectivo (CU-27) y los cobros (CU-33).
+     *
+     * @return ?array<string, mixed>
+     */
+    public function jornadaOperable(int $usuarioId): ?array
+    {
+        $s = $this->situacion($usuarioId);
+        if ($s['jornada'] === null || $s['asignacion'] === null || $s['jornada']['anterior'] || (int) $s['asignacion']['id'] !== (int) $s['jornada']['asignacion_caja_id']) {
+            return null;
+        }
+
+        return $s['jornada'];
+    }
+
+    /** CU-31 pasos 4 a 7 (A1 a A4). */
+    public function abrir(int $usuarioId, string $fondoTexto): int
+    {
+        $fondo = ReglasCaja::importeNoNegativo($fondoTexto);
+        if ($fondo === null) {
+            throw new ValidacionException(['fondo_inicial' => 'Ingrese el fondo inicial en efectivo (un importe no negativo, por ejemplo 50.000,00).']);
+        }
+
+        return $this->transaccion(function () use ($usuarioId, $fondo): int {
+            $s = $this->situacion($usuarioId);
+            if ($s['jornada'] !== null) {
+                throw new ReglaNegocioException('Ya tiene una caja abierta (' . $s['jornada']['codigo'] . '): ciérrela antes de abrir otra (RN-28).');
+            }
+            if ($s['asignacion'] === null || $s['asignacion']['estado_caja'] !== 'Habilitada') {
+                throw new ReglaNegocioException('No tiene una caja asignada y habilitada: solicite la asignación al Gerente (CU-72).');
+            }
+            $ahora = $this->ahoraUtc();
+            $this->db->table('jornadas_caja')->insert([
+                'asignacion_caja_id' => (int) $s['asignacion']['id'], 'caja_id' => (int) $s['asignacion']['caja_id'], 'usuario_id' => $usuarioId,
+                'apertura' => $ahora, 'fondo_inicial' => $fondo, 'estado' => 'Abierta',
+            ]);
+            $id = (int) $this->db->insertID();
+            if (Decimal::of($fondo)->isPositive()) {
+                $this->db->table('movimientos_caja')->insert(['jornada_caja_id' => $id, 'fecha_hora' => $ahora, 'tipo' => 'FondoInicial', 'importe' => $fondo, 'medio' => 'Efectivo', 'concepto' => 'Fondo inicial de la jornada']);
+            }
+            (new AuditoriaService($this->db))->registrar('cajas.abrir', 'jornadas_caja', $id, 'Exitoso', null, ['caja' => $s['asignacion']['codigo'], 'fondo_inicial' => $fondo]);
+
+            return $id;
+        });
+    }
+
+    /**
+     * CU-36 pasos 5 a 10 (A1 a A3, A5).
+     *
+     * @return array{esperado: string, declarado: string, diferencia: string}
+     */
+    public function cerrar(int $usuarioId, int $versionLeida, string $declaradoTexto, string $explicacion): array
+    {
+        return $this->transaccion(function () use ($usuarioId, $versionLeida, $declaradoTexto, $explicacion): array {
+            $s = $this->situacion($usuarioId);
+            if ($s['jornada'] === null) {
+                throw new ReglaNegocioException('No tiene una caja abierta.');
+            }
+            $j = $this->bloquear('jornadas_caja', [(int) $s['jornada']['id']])[0];
+            $resumen = $this->resumen((int) $j['id'], (string) $j['fondo_inicial']);
+            $v = ReglasCaja::validarCierre($declaradoTexto, $explicacion, $resumen['esperado']);
+            if ($v['errores'] !== []) {
+                throw new ValidacionException($v['errores'], 'RN-32');
+            }
+            $this->actualizarConVersion('jornadas_caja', (int) $j['id'], $versionLeida, [
+                'cierre' => $this->ahoraUtc(), 'efectivo_esperado' => $resumen['esperado'], 'efectivo_declarado' => $v['declarado'],
+                'diferencia' => $v['diferencia'], 'explicacion' => $v['explicacion'] === '' ? null : $v['explicacion'], 'estado' => 'Cerrada',
+            ]);
+            (new AuditoriaService($this->db))->registrar('cajas.cerrar', 'jornadas_caja', (int) $j['id'], 'Exitoso', $v['explicacion'] === '' ? null : $v['explicacion'], [
+                'esperado' => $resumen['esperado'], 'declarado' => $v['declarado'], 'diferencia' => $v['diferencia'], 'movimientos' => $resumen['cantidad'],
+            ]);
+
+            return ['esperado' => $resumen['esperado'], 'declarado' => (string) $v['declarado'], 'diferencia' => (string) $v['diferencia']];
+        });
+    }
+
+    /**
+     * RN-32: arqueo de la jornada y sus movimientos.
+     *
+     * @return array<string, mixed>
+     */
+    private function resumen(int $jornadaId, string $fondoInicial): array
+    {
+        $movimientos = $this->db->table('movimientos_caja')->select('id, fecha_hora, tipo, medio, importe, concepto')
+            ->where('jornada_caja_id', $jornadaId)->orderBy('fecha_hora')->get()->getResultArray();
+
+        return ReglasCaja::arqueo($fondoInicial, array_map(static fn ($m) => ['tipo' => (string) $m['tipo'], 'medio' => (string) $m['medio'], 'importe' => (string) $m['importe']], $movimientos))
+            + ['movimientos' => $movimientos];
+    }
+
+    /** Fin de una asignación: el día anterior (o período vacío si todavía no comenzó). */
+    private function terminarAsignacion(int $asignacionId): void
+    {
+        $this->db->query(
+            'UPDATE dbo.asignaciones_caja SET hasta = CASE WHEN desde < CAST(? AS date) THEN DATEADD(day, -1, CAST(? AS date)) ELSE DATEADD(day, -1, desde) END WHERE id = ?',
+            [$this->hoyNegocio(), $this->hoyNegocio(), $asignacionId],
+        );
+    }
+}
