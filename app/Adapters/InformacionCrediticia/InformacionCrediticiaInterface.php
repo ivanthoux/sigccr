@@ -17,4 +17,12 @@ interface InformacionCrediticiaInterface
      * @throws \App\Adapters\ServicioNoDisponibleException
      */
     public function consultar(string $cuitCuil): array;
+
+    /**
+     * Peticiones de la última consulta con su resultado y duración, para intercambios_externos (RNF-08). No incluyen
+     * datos del cliente.
+     *
+     * @return list<array{operacion: string, codigo: string, duracion_ms: int, intento: int}>
+     */
+    public function intercambios(): array;
 }

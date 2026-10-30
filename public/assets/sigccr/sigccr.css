@@ -207,3 +207,13 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .historial-estados li:last-child { border-left-color: transparent; }
 .list-group { --bs-list-group-active-bg: var(--tinta); --bs-list-group-active-border-color: var(--tinta); }
 .resumen-plan .importe { text-align: left; }
+
+/* ── Evaluación crediticia (D02) ─────────────────────────────────────────── */
+.dimensiones-evaluacion { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
+.dimensiones-evaluacion > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
+.dimensiones-evaluacion dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); }
+.dimensiones-evaluacion dd { margin: 0; font-weight: 600; }
+.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: #fff; background: var(--texto-2); }
+.categoria-a, .categoria-b { background: var(--verde); }
+.categoria-c { background: var(--ambar); }
+.categoria-d, .categoria-e { background: var(--rojo); }

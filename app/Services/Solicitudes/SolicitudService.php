@@ -315,7 +315,8 @@ class SolicitudService extends BaseService
                 'documentos' => array_map(static fn ($v) => $v['resultado'], $r['verificaciones']),
             ]);
 
-            // Paso 7: la evaluación crediticia automática (CU-86, iteración 2 · D02) toma las solicitudes Pendientes de evaluación
+            // Paso 7: la evaluación crediticia automática (CU-86) toma las solicitudes Pendientes de evaluación; el
+            // controlador la inicia inmediatamente después de confirmar esta transacción (EvaluacionService::iniciarInmediata)
             return $destino;
         });
     }
@@ -428,10 +429,12 @@ class SolicitudService extends BaseService
      * Cambia el estado según 4.2.3 y registra la transición. Con $versionLeida (pantalla) controla la concurrencia (RN-24);
      * sin ella, la fila ya está bloqueada por la operación.
      *
+     * La usan también la evaluación (CU-86, con el nombre del proceso automático) y la contingencia (CU-25).
+     *
      * @param array<string, mixed> $s fila bloqueada de la solicitud
      * @param array<string, mixed> $extra columnas adicionales (tipo_rechazo)
      */
-    private function cambiarEstado(array $s, string $destino, ?int $usuarioId, ?string $motivo, ?int $versionLeida, array $extra = []): void
+    public function cambiarEstado(array $s, string $destino, ?int $usuarioId, ?string $motivo, ?int $versionLeida, array $extra = [], ?string $proceso = null): void
     {
         if (!EstadosSolicitud::puede((string) $s['estado'], $destino)) {
             throw new ReglaNegocioException('La solicitud no puede pasar de «' . EstadosSolicitud::etiqueta((string) $s['estado']) . '» a «' . EstadosSolicitud::etiqueta($destino) . '».', 'RN-24');
@@ -442,7 +445,7 @@ class SolicitudService extends BaseService
         } else {
             $this->db->table('solicitudes_credito')->set($datos)->set('version_fila', 'version_fila + 1', false)->where('id', (int) $s['id'])->update();
         }
-        $this->registrarTransicion((int) $s['id'], (string) $s['estado'], $destino, $usuarioId, $motivo);
+        $this->registrarTransicion((int) $s['id'], (string) $s['estado'], $destino, $usuarioId, $motivo, $proceso);
     }
 
     private function registrarTransicion(int $solicitudId, ?string $origen, string $destino, ?int $usuarioId, ?string $motivo, ?string $proceso = null): void

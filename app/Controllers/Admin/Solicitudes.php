@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Services\Clientes\ClienteService;
 use App\Services\Clientes\LegajoService;
+use App\Services\Solicitudes\EvaluacionService;
 use App\Services\Solicitudes\SimulacionService;
 use App\Services\Solicitudes\SolicitudService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -104,7 +105,12 @@ class Solicitudes extends BaseController
         }
         $this->servicio->registrarConsulta($id);
 
-        return view('solicitudes/ver', ['titulo' => 'Solicitud N.º ' . $s['numero'], 's' => $s, 'tipos' => (new LegajoService())->tiposDocumentacion()]);
+        return view('solicitudes/ver', [
+            'titulo' => 'Solicitud N.º ' . $s['numero'],
+            's' => $s,
+            'tipos' => (new LegajoService())->tiposDocumentacion(),
+            'evaluacion' => (new EvaluacionService())->deSolicitud($id)[0] ?? null,
+        ]);
     }
 
     /** CU-23 pasos 3 y 4. */
@@ -138,8 +144,16 @@ class Solicitudes extends BaseController
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
-        $mensaje = match ($estado) {
-            'PendienteEvaluacion' => 'Legajo verificado: la solicitud queda pendiente de evaluación crediticia.',
+        // CU-86 paso 1: la evaluación automática se inicia inmediatamente; si el proceso programado está en curso, la toma él
+        $evaluacion = $estado === 'PendienteEvaluacion' ? (new EvaluacionService())->iniciarInmediata($id) : null;
+        $mensaje = match ($evaluacion) {
+            'Favorable' => 'Legajo verificado. Evaluación crediticia favorable: la solicitud queda pendiente de selección de plan.',
+            'RequiereAnalisisGerencial' => 'Legajo verificado. La evaluación crediticia requiere análisis gerencial: la solicitud queda pendiente de resolución del Gerente.',
+            'Desfavorable' => 'Legajo verificado. Evaluación crediticia desfavorable: la solicitud fue rechazada por causa crediticia.',
+            'NoCompletada' => 'Legajo verificado. La evaluación automática no pudo completarse: la solicitud queda pendiente de evaluación de contingencia.',
+            default => null,
+        } ?? match ($estado) {
+            'PendienteEvaluacion' => 'Legajo verificado: la solicitud queda pendiente de evaluación crediticia, que se realizará en los próximos minutos.',
             'PendienteDocumentacion' => 'Legajo observado: la solicitud queda pendiente de documentación hasta que se registren las correcciones.',
             default => 'Legajo rechazado por causa documental: la solicitud finalizó.',
         };

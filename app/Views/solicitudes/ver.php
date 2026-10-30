@@ -6,7 +6,9 @@
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed> $s
  * @var list<array<string, mixed>> $tipos
+ * @var array<string, mixed>|null $evaluacion la evaluación más reciente (CU-24)
  */
+use App\Libraries\Evaluacion\DimensionesEvaluacion as D;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\RevisionLegajo;
 
@@ -25,6 +27,9 @@ $this->section('contenido');
     <div class="d-flex gap-2 flex-wrap">
         <?php if ($s['estado'] === 'PendienteVerificacion' && tiene_permiso('solicitudes.verificar-legajo')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/verificar") ?>" class="btn btn-primary"><i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Verificar legajo</a>
+        <?php endif ?>
+        <?php if ($s['estado'] === 'PendienteContingencia' && tiene_permiso('evaluaciones.registrar-contingencia')): ?>
+            <a href="<?= site_url("admin/solicitudes/{$id}/contingencia") ?>" class="btn btn-primary"><i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>Registrar evaluación de contingencia</a>
         <?php endif ?>
         <?php if (in_array($s['estado'], EstadosSolicitud::CORREGIBLES, true) && tiene_permiso('solicitudes.registrar-correccion')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/corregir") ?>" class="btn btn-primary"><i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Registrar corrección</a>
@@ -63,6 +68,29 @@ $this->section('contenido');
             <?php endif ?>
         </section>
     </div>
+    <?php if ($evaluacion !== null || $s['estado'] === 'PendienteEvaluacion'): ?>
+    <div class="col-12">
+        <section class="hoja p-4" aria-labelledby="titulo-evaluacion">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <h2 class="h5" id="titulo-evaluacion">Evaluación crediticia</h2>
+                <?php if ($evaluacion !== null && tiene_permiso('evaluaciones.consultar')): ?>
+                    <a href="<?= site_url("admin/solicitudes/{$id}/evaluacion") ?>" class="btn btn-sm btn-outline-secondary">Ver detalle de la evaluación</a>
+                <?php endif ?>
+            </div>
+            <?php if ($evaluacion === null): ?>
+                <p class="mb-0">Pendiente: el proceso automático la realizará en los próximos minutos.</p>
+            <?php else: ?>
+                <dl class="dimensiones-evaluacion mb-0">
+                    <div><dt>Procesamiento</dt><dd><?= esc(D::etiqueta(D::PROCESAMIENTO, $evaluacion['procesamiento'])) ?></dd></div>
+                    <div><dt>Resultado</dt><dd><?= esc(D::etiqueta(D::RESULTADO, $evaluacion['resultado'])) ?><?= $evaluacion['categoria_riesgo'] ? ' · categoría ' . esc($evaluacion['categoria_riesgo']) : '' ?></dd></div>
+                    <div><dt>Modalidad</dt><dd><?= esc(D::etiqueta(D::MODALIDAD, $evaluacion['modalidad'])) ?></dd></div>
+                    <div><dt>Vigencia</dt><dd><?= esc(D::etiqueta(D::VIGENCIA, $evaluacion['vigencia_efectiva'])) ?><?= $evaluacion['vence'] && $evaluacion['vigencia_efectiva'] === 'Vigente' ? ' hasta ' . esc(formato_fecha($evaluacion['vence'])) : '' ?></dd></div>
+                </dl>
+                <?php if ($evaluacion['procesamiento'] === 'NoCompletada'): ?><p class="small mt-2 mb-0"><?= esc((string) $evaluacion['motivo_no_completada']) ?></p><?php endif ?>
+            <?php endif ?>
+        </section>
+    </div>
+    <?php endif ?>
     <div class="col-12">
         <section class="hoja p-4" aria-labelledby="titulo-revisiones">
             <h2 class="h5" id="titulo-revisiones">Revisiones documentales</h2>

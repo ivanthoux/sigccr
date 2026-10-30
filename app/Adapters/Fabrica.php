@@ -7,6 +7,7 @@ namespace App\Adapters;
 use App\Adapters\Comunicaciones\ComunicacionesInterface;
 use App\Adapters\Comunicaciones\SimuladorComunicaciones;
 use App\Adapters\Comunicaciones\SmtpComunicaciones;
+use App\Adapters\InformacionCrediticia\BcraInformacionCrediticia;
 use App\Adapters\InformacionCrediticia\InformacionCrediticiaInterface;
 use App\Adapters\InformacionCrediticia\SimuladorInformacionCrediticia;
 use App\Adapters\Pasarela\PasarelaInterface;
@@ -21,9 +22,16 @@ final class Fabrica
 {
     public static function informacionCrediticia(): InformacionCrediticiaInterface
     {
-        return match (config('Sigccr')->adaptadorInformacionCrediticia) {
+        $c = config('Sigccr');
+
+        return match ($c->adaptadorInformacionCrediticia) {
             'simulador' => new SimuladorInformacionCrediticia(),
-            default => throw new RuntimeException('Adaptador real de información crediticia pendiente (iteración 2).'),
+            'real', 'bcra' => new BcraInformacionCrediticia(
+                $c->informacionCrediticiaUrl !== '' ? $c->informacionCrediticiaUrl : BcraInformacionCrediticia::URL,
+                $c->tiempoEsperaExterno,
+                $c->reintentosInformacionCrediticia,
+            ),
+            default => throw new RuntimeException('Adaptador de información crediticia desconocido: use simulador o real.'),
         };
     }
 
