@@ -47,7 +47,6 @@ services:
       - ./:/var/www/html
       - storage:/var/www/html/writable
       - backups:/var/opt/sigccr/backups
-      - ./docker/scheduler/crontab:/etc/cron.d/sigccr:ro
     environment:
       TZ: America/Argentina/Buenos_Aires   # cron dispara en hora local de negocio (RNF-10 f)
     networks: [sigccr_net]
