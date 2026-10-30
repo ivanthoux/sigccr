@@ -77,6 +77,12 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('simulaciones/comparar', 'Admin\Comparativas::simular', ['filter' => 'permiso:solicitudes.simular-comparativa']);
         $routes->get('simulaciones/comparar/(:num)', 'Admin\Comparativas::ver/$1', ['filter' => 'permiso:solicitudes.simular-comparativa']);
         $routes->get('evaluaciones/contingencia', 'Admin\Evaluaciones::pendientes', ['as' => 'evaluaciones.contingencia', 'filter' => 'permiso:evaluaciones.registrar-contingencia']);
+        // CU-26 y CU-27: bandejas del Gerente y del Cajero
+        $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
+        $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
+        $routes->get('liquidaciones/(:num)', 'Admin\Liquidaciones::ver/$1', ['filter' => 'permiso:creditos.liquidar']);
+        $routes->post('liquidaciones/(:num)', 'Admin\Liquidaciones::liquidar/$1', ['filter' => 'permiso:creditos.liquidar']);
+        $routes->get('liquidaciones/(:num)/constancia', 'Admin\Liquidaciones::constancia/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->group('solicitudes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
             $routes->get('nueva', 'Admin\Solicitudes::nueva', ['as' => 'solicitudes.registrar', 'filter' => 'permiso:solicitudes.registrar']);
@@ -97,6 +103,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/alternativas/regenerar', 'Admin\Alternativas::regenerar/$1', ['filter' => 'permiso:alternativas.consultar']);
             $routes->get('(:num)/alternativas/(:num)', 'Admin\Alternativas::ver/$1/$2', ['filter' => 'permiso:alternativas.consultar']);
             $routes->post('(:num)/alternativas/(:num)/confirmar', 'Admin\Alternativas::confirmar/$1/$2', ['filter' => 'permiso:alternativas.confirmar']);
+            // CU-26 y CU-28
+            $routes->get('(:num)/resolver', 'Admin\Resoluciones::ver/$1', ['filter' => 'permiso:solicitudes.resolver']);
+            $routes->post('(:num)/resolver', 'Admin\Resoluciones::resolver/$1', ['filter' => 'permiso:solicitudes.resolver']);
+            $routes->get('(:num)/cancelar', 'Admin\Resoluciones::cancelacion/$1', ['filter' => 'permiso:solicitudes.cancelar']);
+            $routes->post('(:num)/cancelar', 'Admin\Resoluciones::cancelar/$1', ['filter' => 'permiso:solicitudes.cancelar']);
         });
 
         // SS-10 Alertas (CU-83)

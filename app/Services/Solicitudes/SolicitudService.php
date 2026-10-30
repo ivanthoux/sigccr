@@ -108,6 +108,10 @@ class SolicitudService extends BaseService
             . "WHERE r.solicitud_id = ? AND r.decision = 'Aprobada' AND r.vigente = 1",
             [$id],
         )->getRowArray();
+        $s['liquidacion'] = $this->db->query(
+            'SELECT TOP (1) l.id, l.fecha, l.importe_neto, l.medio_desembolso, cr.numero AS credito_numero FROM dbo.liquidaciones l JOIN dbo.creditos cr ON cr.id = l.credito_id WHERE l.solicitud_id = ?',
+            [$id],
+        )->getRowArray();
         $s['transiciones'] = $this->db->query(
             "SELECT t.estado_origen, t.estado_destino, t.fecha_hora, t.motivo, t.proceso, ui.nombre + ' ' + ui.apellido AS responsable "
             . 'FROM dbo.transiciones_solicitud t LEFT JOIN dbo.usuarios_internos ui ON ui.id = t.usuario_id WHERE t.solicitud_id = ? ORDER BY t.fecha_hora, t.id',

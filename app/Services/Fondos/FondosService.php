@@ -60,4 +60,30 @@ class FondosService extends BaseService
 
         return (int) $this->db->insertID();
     }
+
+    /** Reserva o compromiso vigente de una solicitud (RN-41), o null. */
+    public function afectacionVigente(int $solicitudId): ?array
+    {
+        return $this->db->query(
+            "SELECT * FROM dbo.afectaciones_fondos WITH (UPDLOCK, ROWLOCK) WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'",
+            [$solicitudId],
+        )->getRowArray();
+    }
+
+    /** Rechazo, cancelación, vencimiento o pérdida de vigencia de la aprobación liberan la afectación (RN-41). */
+    public function liberarDeSolicitud(int $solicitudId): int
+    {
+        $this->db->query(
+            "UPDATE dbo.afectaciones_fondos SET estado = 'Liberada', version_fila = version_fila + 1 WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'",
+            [$solicitudId],
+        );
+
+        return $this->db->affectedRows();
+    }
+
+    /** La liquidación consume la reserva; el egreso queda registrado por el desembolso (RN-41, RN-71). */
+    public function consumir(int $afectacionId): void
+    {
+        $this->db->query("UPDATE dbo.afectaciones_fondos SET estado = 'Consumida', version_fila = version_fila + 1 WHERE id = ? AND estado = 'Vigente'", [$afectacionId]);
+    }
 }
