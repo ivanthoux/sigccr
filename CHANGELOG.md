@@ -4,9 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
-## [0.2.0] - 2026-11-03
+## [0.2.0] - 2026-10-29
 
-Control 1: iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financiero aprobado por sus casos de prueba (2.2.2 del documento).
+Control 1 (previsto para el 03/11/2026): iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financiero aprobado por sus casos de prueba (2.2.2 del documento).
 
 ### Agregado
 - Portada pública en la raíz del sitio: ingreso al portal, activación del acceso y recuperación para los clientes, y un enlace al panel para el personal.
