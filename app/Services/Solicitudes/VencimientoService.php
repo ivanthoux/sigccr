@@ -122,8 +122,10 @@ class VencimientoService extends BaseService
     {
         return $this->transaccion(function () use ($solicitudId): bool {
             $s = $this->bloquear('solicitudes_credito', [$solicitudId])[0] ?? null;
-            if ($s === null || !in_array($s['estado'], ['PendienteDocumentacion', 'DevueltaRevision'], true)
-                || $this->db->query('SELECT 1 FROM dbo.solicitudes_credito WHERE id = ? AND ultimo_movimiento <= DATEADD(day, ?, SYSDATETIMEOFFSET())', [$solicitudId, -self::DIAS_INACTIVIDAD])->getRowArray() === null) {
+            if (
+                $s === null || !in_array($s['estado'], ['PendienteDocumentacion', 'DevueltaRevision'], true)
+                || $this->db->query('SELECT 1 FROM dbo.solicitudes_credito WHERE id = ? AND ultimo_movimiento <= DATEADD(day, ?, SYSDATETIMEOFFSET())', [$solicitudId, -self::DIAS_INACTIVIDAD])->getRowArray() === null
+            ) {
                 return false;
             }
             $liberadas = (new FondosService($this->db))->liberarDeSolicitud($solicitudId);
