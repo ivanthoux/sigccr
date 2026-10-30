@@ -455,12 +455,23 @@ class EvaluacionService extends BaseService
         }
         $destino = DimensionesEvaluacion::estadoSolicitud($r['resultado']);
         $motivo = "Evaluación automática: categoría {$r['categoria']}, {$r['puntaje']->toFixed(2)} puntos, resultado " . mb_strtolower($etiqueta) . '.';
+        // Paso 10: con resultado favorable se generan las alternativas (CU-87); sin alternativas viables resuelve el Gerente (A6)
+        $sinAlternativas = null;
+        if ($destino === 'PendienteSeleccionPlan') {
+            $estructuracion = (new EstructuracionService($this->db))->generar($s, null, $proceso);
+            if ($estructuracion['viables'] === 0) {
+                $destino = 'PendienteResolucion';
+                $sinAlternativas = (string) $estructuracion['motivo'];
+                $motivo .= ' Sin alternativas viables: ' . $sinAlternativas;
+            }
+        }
         (new SolicitudService($this->db))->cambiarEstado($s, $destino, null, $motivo, null, $destino === 'Rechazada' ? ['tipo_rechazo' => 'Crediticio'] : [], $proceso);
         $alertas = new AlertaService($this->db);
         $alertas->resolver('solicitudes_credito', (int) $s['id'], "Proceso {$proceso}");
-        $this->alertar($s, $destino, match ($destino) {
-            'PendienteSeleccionPlan' => ["Solicitud N.º {$s['numero']}: evaluación favorable (categoría {$r['categoria']}).", 'Seleccionar el plan de financiación con el cliente.'],
-            'PendienteResolucion' => ["Solicitud N.º {$s['numero']}: la evaluación requiere análisis gerencial (categoría {$r['categoria']}).", 'Resolver la solicitud por el procedimiento convencional (CU-26).'],
+        $this->alertar($s, $destino, match (true) {
+            $destino === 'PendienteSeleccionPlan' => ["Solicitud N.º {$s['numero']}: evaluación favorable (categoría {$r['categoria']}); las alternativas de financiación están disponibles.", 'Presentar las alternativas al cliente y confirmar la elegida (CU-64, CU-79).'],
+            $sinAlternativas !== null => ["Solicitud N.º {$s['numero']}: evaluación favorable sin alternativas viables. {$sinAlternativas}", 'Resolver la solicitud por el procedimiento convencional (CU-26).'],
+            $destino === 'PendienteResolucion' => ["Solicitud N.º {$s['numero']}: la evaluación requiere análisis gerencial (categoría {$r['categoria']}).", 'Resolver la solicitud por el procedimiento convencional (CU-26).'],
             default => null,
         });
         $auditoria->registrar('evaluaciones.ejecutar', 'solicitudes_credito', (int) $s['id'], 'Exitoso', $motivo, [

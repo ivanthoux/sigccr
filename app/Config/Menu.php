@@ -22,6 +22,7 @@ class Menu extends BaseConfig
             ['texto' => 'Solicitudes', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
             ['texto' => 'Contingencias', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
             ['texto' => 'Simulador', 'ruta' => 'solicitudes.simular', 'permiso' => 'solicitudes.simular'],
+            ['texto' => 'Comparar líneas', 'ruta' => 'simulaciones.comparar', 'permiso' => 'solicitudes.simular-comparativa'],
             ['texto' => 'Líneas de crédito', 'ruta' => 'lineas.localizar', 'permiso' => 'lineas.localizar'],
         ]],
         ['titulo' => 'Caja y cobranzas', 'icono' => 'bi-safe', 'opciones' => [

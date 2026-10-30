@@ -28,6 +28,9 @@ $this->section('contenido');
         <?php if ($s['estado'] === 'PendienteVerificacion' && tiene_permiso('solicitudes.verificar-legajo')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/verificar") ?>" class="btn btn-primary"><i class="bi bi-clipboard-check me-1" aria-hidden="true"></i>Verificar legajo</a>
         <?php endif ?>
+        <?php if (in_array($s['estado'], ['PendienteSeleccionPlan', 'AprobadaPendienteLiquidacion', 'PendienteResolucion'], true) && tiene_permiso('alternativas.consultar')): ?>
+            <a href="<?= site_url("admin/solicitudes/{$id}/alternativas") ?>" class="btn <?= $s['estado'] === 'PendienteSeleccionPlan' ? 'btn-primary' : 'btn-outline-secondary' ?>"><i class="bi bi-list-check me-1" aria-hidden="true"></i>Alternativas de financiación</a>
+        <?php endif ?>
         <?php if ($s['estado'] === 'PendienteContingencia' && tiene_permiso('evaluaciones.registrar-contingencia')): ?>
             <a href="<?= site_url("admin/solicitudes/{$id}/contingencia") ?>" class="btn btn-primary"><i class="bi bi-clipboard2-pulse me-1" aria-hidden="true"></i>Registrar evaluación de contingencia</a>
         <?php endif ?>
@@ -49,6 +52,9 @@ $this->section('contenido');
                 <dt class="col-sm-5 fw-medium">Registrada</dt><dd class="col-sm-7"><?= esc(formato_fecha_hora($s['fecha_registro'])) ?><?= $s['analista'] ? ' por ' . esc($s['analista']) : '' ?></dd>
                 <dt class="col-sm-5 fw-medium">Último movimiento</dt><dd class="col-sm-7"><?= esc(formato_fecha_hora($s['ultimo_movimiento'])) ?></dd>
             </dl>
+            <?php if (($s['aprobacion'] ?? null) !== null): $ap = $s['aprobacion']; ?>
+                <div class="alert alert-success mt-3 mb-0"><strong>Aprobada<?= (int) $ap['automatica'] === 1 ? ' automáticamente' : '' ?></strong>: <?= esc(formato_importe($ap['importe_aprobado'])) ?> en <?= (int) $ap['cuotas_aprobadas'] ?> cuotas. La aprobación vence el <?= esc(formato_fecha_hora($ap['vence_aprobacion'])) ?> (72 horas hábiles, RN-49).</div>
+            <?php endif ?>
             <?php if ($s['devolucion'] !== null): ?>
                 <div class="alert alert-warning mt-3 mb-0"><strong>Devuelta por el Gerente</strong> para retomar <?= esc(mb_strtolower(EstadosSolicitud::etiqueta(EstadosSolicitud::ETAPAS_RETORNO[$s['devolucion']['etapa_retorno']] ?? ''))) ?>: <?= esc((string) $s['devolucion']['fundamento']) ?></div>
             <?php endif ?>

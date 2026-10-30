@@ -147,7 +147,9 @@ class Solicitudes extends BaseController
         // CU-86 paso 1: la evaluación automática se inicia inmediatamente; si el proceso programado está en curso, la toma él
         $evaluacion = $estado === 'PendienteEvaluacion' ? (new EvaluacionService())->iniciarInmediata($id) : null;
         $mensaje = match ($evaluacion) {
-            'Favorable' => 'Legajo verificado. Evaluación crediticia favorable: la solicitud queda pendiente de selección de plan.',
+            'Favorable' => $this->servicio->estado($id) === 'PendienteSeleccionPlan'
+                ? 'Legajo verificado. Evaluación crediticia favorable: las alternativas de financiación están listas para presentarlas al cliente.'
+                : 'Legajo verificado. Evaluación crediticia favorable, pero sin alternativas viables para su capacidad de pago: la solicitud pasó a resolución del Gerente.',
             'RequiereAnalisisGerencial' => 'Legajo verificado. La evaluación crediticia requiere análisis gerencial: la solicitud queda pendiente de resolución del Gerente.',
             'Desfavorable' => 'Legajo verificado. Evaluación crediticia desfavorable: la solicitud fue rechazada por causa crediticia.',
             'NoCompletada' => 'Legajo verificado. La evaluación automática no pudo completarse: la solicitud queda pendiente de evaluación de contingencia.',
