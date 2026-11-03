@@ -28,12 +28,13 @@ class Comparativas extends BaseController
             ]);
         }
         try {
-            $cliente = (new SimulacionService())->cliente($clienteId);
+            $simulaciones = new SimulacionService();
+            $cliente = $simulaciones->cliente($clienteId);
         } catch (ReglaNegocioException $e) {
             return redirect()->route('simulaciones.comparar')->with('error', $e->getMessage());
         }
 
-        return view('comparativas/nueva', ['titulo' => 'Simular todas las líneas', 'cliente' => $cliente]);
+        return view('comparativas/nueva', ['titulo' => 'Simular todas las líneas', 'cliente' => $cliente, 'perfil' => $simulaciones->perfil($cliente)]);
     }
 
     /** Pasos 4 a 10. */

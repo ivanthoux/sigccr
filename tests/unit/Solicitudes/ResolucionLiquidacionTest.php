@@ -45,7 +45,7 @@ final class ResolucionLiquidacionTest extends TestCase
         $this->assertArrayHasKey('decision', ResolucionGerencial::validar([], false)['errores']);
     }
 
-    public function testCbuYCvuConDigitosVerificadores(): void
+    public function testCbuConDigitosVerificadores(): void
     {
         $this->assertTrue(Desembolso::cbuValido('2850590940090418135201'));
         $this->assertTrue(Desembolso::cbuValido('0170099220000067797370'));
@@ -53,13 +53,18 @@ final class ResolucionLiquidacionTest extends TestCase
         $this->assertFalse(Desembolso::cbuValido('28505909400904181352'));
     }
 
-    public function testEfectivoExigeElDocumentoDelCliente(): void
+    /** D-27: solo transferencia a un CBU; el documento del destinatario se exige igual (RN-25) y no se admite CVU. */
+    public function testSoloTransferenciaACbuConElDocumentoDelCliente(): void
     {
-        $ok = Desembolso::validar(['medio' => 'Efectivo', 'documento_verificado' => '28.734.006'], self::CLIENTE, '488000.00', self::HOY, false);
-        $this->assertSame([], $ok['errores']);
         $e = Desembolso::validar(['medio' => 'Efectivo', 'documento_verificado' => '30111222'], self::CLIENTE, '488000.00', self::HOY, true)['errores'];
         $this->assertStringContainsString('tercero', $e['documento_verificado']);
         $this->assertArrayHasKey('conformidad', $e);
+        $this->assertArrayHasKey('cbu', $e);
+        $this->assertTrue(Desembolso::cbuValido('0000003110000123456781'));
+        $this->assertTrue(Desembolso::esCvu('0000003110000123456781'));
+        $this->assertFalse(Desembolso::esCvu('2850590940090418135201'));
+        $cvu = Desembolso::validar(['cbu' => '0000003110000123456781'], self::CLIENTE, '488000.00', self::HOY, false)['errores'];
+        $this->assertStringContainsString('CVU', $cvu['cbu']);
     }
 
     public function testTransferenciaSoloACuentaDelClientePorElNeto(): void

@@ -150,6 +150,7 @@ $this->section('contenido');
                 <?= error_campo('motivo') ?>
             </div>
         </div>
+        <?= view('partials/confirmar_cambio') ?>
         <div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">Registrar nueva versión</button></div>
     </section>
 </form>

@@ -51,7 +51,11 @@ class Parametros extends BaseController
             if ($errores !== []) {
                 throw new ValidacionException($errores, 'RN-69');
             }
-            $r = (new ParametroService())->registrarVersion('Evaluacion', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
+            $parametros = new ParametroService();
+            if ($this->request->getPost('confirmar_cambio') !== '1' && ($n = $parametros->solicitudesEnTramite()) > 0) {
+                throw new ValidacionException(['confirmar_cambio' => "Hay {$n} solicitud(es) en trámite. Las evaluaciones ya iniciadas conservan los parámetros con los que se hicieron (RN-15): confirme el cambio para registrar la nueva versión."], 'RN-15');
+            }
+            $r = $parametros->registrarVersion('Evaluacion', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -92,7 +96,11 @@ class Parametros extends BaseController
             if ($errores !== []) {
                 throw new ValidacionException($errores, 'RN-15');
             }
-            $r = (new ParametroService())->registrarVersion('Estructuracion', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
+            $parametros = new ParametroService();
+            if ($this->request->getPost('confirmar_cambio') !== '1' && ($n = $parametros->solicitudesEnTramite()) > 0) {
+                throw new ValidacionException(['confirmar_cambio' => "Hay {$n} solicitud(es) en trámite. Las alternativas ya generadas conservan sus condiciones (RN-15): confirme el cambio para registrar la nueva versión."], 'RN-15');
+            }
+            $r = $parametros->registrarVersion('Estructuracion', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

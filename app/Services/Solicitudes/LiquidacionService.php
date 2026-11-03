@@ -12,7 +12,6 @@ use App\Libraries\Solicitudes\Desembolso;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\Simulador;
 use App\Services\BaseService;
-use App\Services\Caja\CajaService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
@@ -23,7 +22,7 @@ use DateTimeImmutable;
  * CU-27 Liquidar Crédito Aprobado (RN-22, RN-25, RN-26, RN-41, RN-49, RN-50 a RN-52, RN-68, RN-71).
  *
  * En una sola transacción: registra el crédito con su plan definitivo de cuotas (primer vencimiento a los 30 días de
- * la liquidación), la liquidación con el neto desembolsado (y su egreso de caja si es en efectivo), consume la
+ * la liquidación), la liquidación con el neto desembolsado (siempre por transferencia a un CBU del cliente, D-27), consume la
  * reserva y deja la solicitud Liquidada. La clave única de liquidaciones.solicitud_id impide un segundo desembolso.
  */
 class LiquidacionService extends BaseService
@@ -77,7 +76,6 @@ class LiquidacionService extends BaseService
         }
         $s['requiere_conformidad'] = $s['alternativa_id'] !== null && $s['estado_alternativa'] !== 'Confirmada';
         $s['reserva'] = $this->db->query("SELECT TOP (1) importe FROM dbo.afectaciones_fondos WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'", [$solicitudId])->getRowArray()['importe'] ?? null;
-        $s['jornada'] = (new CajaService($this->db))->jornadaOperable((int) (session('cuenta')['id'] ?? 0));
 
         return $s;
     }
@@ -142,16 +140,6 @@ class LiquidacionService extends BaseService
             if ($reserva === null || Decimal::of((string) $reserva['importe'])->compare($neto) < 0) {
                 throw new ReglaNegocioException('La solicitud no tiene una reserva de fondos suficiente para el desembolso: no se puede liquidar. Comuníquelo al Gerente (RN-41).', 'RN-41');
             }
-            // A4: el efectivo requiere la jornada de caja abierta del Cajero (RN-28)
-            $jornada = null;
-            if ($v['datos']['medio'] === 'Efectivo') {
-                $jornada = (new CajaService($this->db))->jornadaOperable($usuarioId);
-                if ($jornada === null) {
-                    throw new ValidacionException(['medio' => 'Para desembolsar en efectivo debe tener su caja abierta hoy (CU-31) con una asignación vigente (CU-72). Si quedó abierta una jornada de un día anterior, ciérrela primero (RN-28).'], 'RN-28');
-                }
-                $this->bloquear('jornadas_caja', [(int) $jornada['id']]);
-            }
-
             // Pasos 7 y 8: crédito, plan definitivo, liquidación, egreso y reserva consumida
             $ahora = $this->ahoraUtc();
             $hoy = $this->hoyNegocio();
@@ -173,19 +161,11 @@ class LiquidacionService extends BaseService
                     'gastos_pendiente' => $q->gastos->toFixed(2), 'iva_pendiente' => $q->iva->toFixed(2), 'estado' => 'Pendiente',
                 ]);
             }
-            $movimiento = null;
-            if ($jornada !== null) {
-                $this->db->table('movimientos_caja')->insert([
-                    'jornada_caja_id' => (int) $jornada['id'], 'fecha_hora' => $ahora, 'tipo' => 'Desembolso', 'importe' => $neto, 'medio' => 'Efectivo',
-                    'concepto' => "Desembolso de la solicitud N.º {$s['numero']}",
-                ]);
-                $movimiento = (int) $this->db->insertID();
-            }
             $this->db->table('liquidaciones')->insert([
                 'solicitud_id' => $solicitudId, 'credito_id' => $creditoId, 'fecha' => $ahora,
                 'capital' => $capital->toFixed(2), 'gasto_otorgamiento' => $s['calculo']['gasto_otorgamiento']->toFixed(2), 'iva_gastos' => $s['calculo']['iva_otorgamiento']->toFixed(2),
                 'importe_neto' => $neto, 'medio_desembolso' => $v['datos']['medio'], 'cuenta_destino' => $v['datos']['cbu'], 'comprobante' => $v['datos']['comprobante'],
-                'movimiento_caja_id' => $movimiento, 'usuario_id' => $usuarioId,
+                'movimiento_caja_id' => null, 'usuario_id' => $usuarioId,
             ]);
             $liquidacionId = (int) $this->db->insertID();
             $fondos->consumir((int) $reserva['id']);

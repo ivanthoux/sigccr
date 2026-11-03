@@ -134,7 +134,10 @@ class Clientes extends BaseController
             return redirect()->to(site_url("admin/clientes/{$id}"))->with('error', $e->getMessage());
         }
 
-        return $this->response->download($d['ruta'], null)->setFileName($d['nombre'])->setContentType($d['mime']);
+        $r = $this->response->download($d['ruta'], null)->setFileName($d['nombre'])->setContentType($d['mime']);
+
+        // ?ver=1 abre el PDF o la imagen en el navegador, por ejemplo desde la resolución gerencial (D-23)
+        return $this->request->getGet('ver') === '1' ? $r->inline() : $r;
     }
 
     /** CU-13 y CU-14: confirmación con motivo. */

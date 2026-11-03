@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Comunes;
 
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Services\BaseService;
 
 /**
@@ -46,6 +47,12 @@ class ParametroService extends BaseService
             ->select("v.id, v.numero, v.vigente_desde, v.motivo, u.apellido + ', ' + u.nombre AS usuario")
             ->join('usuarios_internos u', 'u.id = v.usuario_id', 'left')
             ->where('v.tipo', $tipo)->orderBy('v.numero', 'DESC')->get($limite)->getResultArray();
+    }
+
+    /** D-24: solicitudes que no finalizaron (siguen en trámite y conservan los parámetros con que se evaluaron o estructuraron). */
+    public function solicitudesEnTramite(): int
+    {
+        return $this->db->table('solicitudes_credito')->whereNotIn('estado', EstadosSolicitud::FINALES)->countAllResults();
     }
 
     /**

@@ -82,5 +82,22 @@
             },
         });
         document.querySelectorAll('table[data-tabla]').forEach((t) => new window.DataTable(t));
+
+        // Plan de cuotas (D-23): de a 12 cuotas por página, sin búsqueda ni orden; al imprimir se muestran todas
+        document.querySelectorAll('table[data-plan-cuotas]').forEach((t) => {
+            if (t.tBodies[0].rows.length <= 12) {
+                return;
+            }
+            const plan = new window.DataTable(t, {
+                pageLength: 12,
+                lengthMenu: [[12, 24, 60, -1], [12, 24, 60, 'Todas']],
+                searching: false,
+                ordering: false,
+                language: { info: 'Cuotas _START_ a _END_ de _TOTAL_', lengthMenu: 'Mostrar _MENU_ cuotas' },
+            });
+            let largo = 12;
+            window.addEventListener('beforeprint', () => { largo = plan.page.len(); plan.page.len(-1).draw(false); });
+            window.addEventListener('afterprint', () => { plan.page.len(largo).draw(false); });
+        });
     }
 })();

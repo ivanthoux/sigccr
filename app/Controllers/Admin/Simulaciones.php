@@ -44,6 +44,7 @@ class Simulaciones extends BaseController
         return view('simulaciones/nueva', [
             'titulo' => 'Simular crédito',
             'cliente' => $cliente,
+            'perfil' => $this->servicio->perfil($cliente),
             'lineas' => $lineas,
             'linea' => array_values(array_filter($lineas, static fn ($l) => (int) $l['id'] === $lineaId && $l['motivo_no_admitida'] === null))[0] ?? null,
         ]);

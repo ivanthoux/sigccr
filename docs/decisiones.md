@@ -26,6 +26,13 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-20 | 30/10/2026 | Propuesta |
 | D-21 | 30/10/2026 | Propuesta |
 | D-22 | 30/10/2026 | Propuesta |
+| D-23 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-24 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-25 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-26 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-27 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-28 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-29 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -295,3 +302,53 @@ El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye
 - Pantallas de parámetros de estructuración y del calendario operativo.
 
 Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
+
+## D-23 · Ajustes de validación y de presentación observados en la presentación del 02/11/2026 (CU-16, CU-17, CU-21, CU-26, CU-99)
+
+**Contexto.** En la presentación del avance se observó que:
+- una línea admite el mismo importe mínimo y máximo, la misma cantidad mínima y máxima de cuotas y la misma edad mínima y máxima;
+- el simulador no muestra los datos del cliente que sustentan la operación;
+- un plan de muchas cuotas obliga a desplazarse mucho para recorrerlo;
+- el Gerente no puede abrir la documentación del legajo desde la pantalla de resolución.
+
+**Decisión.**
+1. **Rangos de la línea (RN-14).** El máximo debe ser estrictamente mayor que el mínimo en el importe prestable, en la cantidad de cuotas y en las edades admitidas. La restricción se aplica en la validación y en las restricciones CHECK de `versiones_condiciones`; las versiones ya registradas no se modifican.
+2. **Datos del cliente en la simulación y la comparación (CU-21, CU-99).** Se muestran el documento o CUIT, la edad (o la antigüedad de la empresa), la situación laboral (categoría de ingresos), el empleador o la actividad, los ingresos declarados, las cuotas vigentes y comprometidas y la capacidad de pago con los parámetros vigentes. Es información interna: no consulta la Central de Deudores (RN-17).
+3. **Plan de cuotas paginado.** Con más de 12 cuotas, el plan se presenta de a 12 por página, con la opción de ver 24, 60 o todas; al imprimir se muestran todas.
+4. **Documentación en la resolución (CU-26).** La pantalla de resolución lista los documentos vigentes del legajo con su resultado en la última verificación y los abre en otra pestaña, sin descargarlos.
+
+**Consecuencias.** Cambian `ValidadorLinea`, `SimulacionService::perfil`, la vista parcial del plan, la de resolución y la descarga de documentos (`?ver=1` los muestra en el navegador). Cambian RN-14 y CU-16, CU-17, CU-21, CU-26 y CU-99.
+
+## D-24 · Confirmación de cambios con solicitudes en trámite (CU-17, CU-58, CU-59)
+
+**Contexto.** Una nueva versión de condiciones de una línea o de los parámetros de evaluación o estructuración no altera las operaciones ya generadas (RN-15), pero quien la registra no sabe cuántas solicitudes en trámite quedan con la versión anterior.
+
+**Decisión.** Si hay solicitudes en trámite (estados no finales) con la versión vigente de la línea, o cualquier solicitud en trámite al cambiar los parámetros de evaluación o de estructuración, el sistema informa cuántas son, explica que conservan su versión y exige marcar una confirmación antes de registrar el cambio. Sin solicitudes en trámite, el cambio se registra directamente.
+
+**Consecuencias.** `LineaService::modificar` recibe la confirmación; el controlador de parámetros cuenta las solicitudes en trámite (`ParametroService::solicitudesEnTramite`). Se agrega un paso alternativo a CU-17, CU-58 y CU-59.
+
+## D-27 · Desembolso solo por transferencia a una cuenta bancaria del cliente (CU-27; cobros de la iteración 3)
+
+**Contexto.** El artículo 1 de la Ley 25.345 (prevención de la evasión fiscal) dispone que los pagos de sumas superiores a $ 1.000 que no se realicen mediante depósitos en entidades financieras, giros o transferencias bancarias, cheques, tarjetas u otros medios que indique el Poder Ejecutivo no surten efectos entre las partes ni frente a terceros. El monto no se actualizó desde 2001, por lo que alcanza a prácticamente cualquier desembolso o cuota. Además, el director pidió que las transferencias se hagan solo a cuentas bancarias, no a CVU de billeteras virtuales.
+
+**Decisión.**
+1. **Desembolso (CU-27).** Se realiza solo por transferencia a una cuenta bancaria del cliente, identificada con un CBU válido de 22 dígitos cuyo titular es el cliente. Se rechazan las claves que comienzan con 000 (CVU de proveedores de servicios de pago). Se elimina el desembolso en efectivo por caja.
+2. **Cobros (iteración 3).** Las cuotas se cobran por transferencia o depósito bancario con comprobante, sin efectivo. La caja deja de manejar efectivo y se rediseña en la iteración 3 como registro y conciliación de los movimientos bancarios; hasta entonces sus pantallas no participan del desembolso.
+
+**Consecuencias.** Cambian `Desembolso` (un solo medio, `esCvu`), `LiquidacionService` (sin egreso de caja) y la pantalla de liquidación. Las liquidaciones en efectivo ya registradas se conservan. Cambian CU-27 (pasos 5 y A4), RN-28 y el alcance de CU-31, CU-32, CU-33 y CU-36, que se revisan en la iteración 3.
+
+## D-29 · Requerimientos nuevos diferidos a la iteración 3
+
+**Contexto.** En la presentación del 02/11/2026 se pidieron, además de los ajustes de D-23 a D-28:
+- que el cliente pueda registrarse por su cuenta;
+- que los datos personales se completen a partir del CUIL;
+- que el sistema emita un documento de consentimiento del préstamo para firmar, que se escanea y se incorpora al legajo;
+- un estudio de los requisitos legales del BCRA y de la legislación argentina.
+
+**Decisión.**
+1. **Pre-registro en el portal.** El cliente carga sus datos y su documentación; queda «Pendiente de validación» hasta que el Analista verifica su identidad y lo da de alta (CU-11). No puede solicitar crédito hasta entonces.
+2. **Datos a partir del CUIL.** Se define un adaptador de padrón (como el de la Central de Deudores, RNF-05), con un simulador para desarrollo y pruebas y la conexión al padrón de ARCA (servicio `ws_sr_padron_a13`, que requiere certificado y CUIT de la entidad) como implementación real. Los datos obtenidos se proponen en el formulario y el Analista los confirma.
+3. **Constancia de consentimiento.** Al aprobarse la solicitud se genera el contrato o la solicitud de préstamo para firmar, con los datos que exige la normativa (estudio legal). El Cajero incorpora la copia firmada y escaneada al legajo, y sin ella no se puede liquidar.
+4. **Estudio legal.** Se elabora como documento del proyecto y alimenta las reglas de negocio y el contenido del contrato.
+
+**Consecuencias.** Se agregan casos de uso al SS-02 (pre-registro), al SS-04 (constancia firmada) y un adaptador al SS-11. Se replanifica la iteración 3.

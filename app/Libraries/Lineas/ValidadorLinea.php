@@ -117,14 +117,14 @@ final class ValidadorLinea
         $r['monto_maximo'] = [
             Campos::obligatorio($d['monto_maximo_texto'], 'el importe máximo prestable'),
             $d['monto_maximo_texto'] !== '' && $d['monto_maximo'] === null ? 'Ingrese un importe válido, por ejemplo 1.500.000,00.' : null,
-            $d['monto_minimo'] !== null && $d['monto_maximo'] !== null && Decimal::of($d['monto_minimo'])->compare($d['monto_maximo']) > 0
-                ? 'El importe máximo no puede ser menor que el mínimo (RN-14).' : null,
+            $d['monto_minimo'] !== null && $d['monto_maximo'] !== null && Decimal::of($d['monto_minimo'])->compare($d['monto_maximo']) >= 0
+                ? 'El importe máximo debe ser mayor que el mínimo (RN-14, D-23).' : null,
         ];
         $r['cuotas_minimas'] = [$d['cuotas_minimas'] === null || $d['cuotas_minimas'] < 1 ? 'Ingrese la cantidad mínima de cuotas (al menos 1).' : null];
         $r['cuotas_maximas'] = [
             $d['cuotas_maximas'] === null || $d['cuotas_maximas'] < 1 ? 'Ingrese la cantidad máxima de cuotas.' : null,
             $d['cuotas_maximas'] !== null && $d['cuotas_maximas'] > self::CUOTAS_MAXIMAS ? 'La cantidad máxima de cuotas no puede superar ' . self::CUOTAS_MAXIMAS . '.' : null,
-            $d['cuotas_minimas'] !== null && $d['cuotas_maximas'] !== null && $d['cuotas_minimas'] > $d['cuotas_maximas'] ? 'La cantidad máxima de cuotas no puede ser menor que la mínima (RN-14).' : null,
+            $d['cuotas_minimas'] !== null && $d['cuotas_maximas'] !== null && $d['cuotas_minimas'] >= $d['cuotas_maximas'] ? 'La cantidad máxima de cuotas debe ser mayor que la mínima (RN-14, D-23).' : null,
         ];
 
         $r['tipos_cliente'] = [!$d['admite_persona_humana'] && !$d['admite_persona_juridica'] ? 'Seleccione al menos un tipo de cliente admitido.' : null];
@@ -136,7 +136,7 @@ final class ValidadorLinea
             $r['edad_maxima'] = [
                 $d['edad_maxima_texto'] !== '' && $d['edad_maxima'] === null ? 'Ingrese la edad máxima en años.' : null,
                 $d['edad_maxima'] !== null && ($d['edad_maxima'] < self::EDAD_MINIMA_LEGAL || $d['edad_maxima'] > 100) ? 'La edad máxima debe estar entre 18 y 100 años.' : null,
-                $d['edad_minima'] !== null && $d['edad_maxima'] !== null && $d['edad_minima'] > $d['edad_maxima'] ? 'La edad máxima no puede ser menor que la mínima (RN-14).' : null,
+                $d['edad_minima'] !== null && $d['edad_maxima'] !== null && $d['edad_minima'] >= $d['edad_maxima'] ? 'La edad máxima debe ser mayor que la mínima (RN-14, D-23).' : null,
             ];
         }
         if ($d['admite_persona_juridica']) {

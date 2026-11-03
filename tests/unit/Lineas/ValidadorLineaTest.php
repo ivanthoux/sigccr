@@ -42,7 +42,18 @@ final class ValidadorLineaTest extends TestCase
     public function testElMinimoNoPuedeSuperarAlMaximo(): void
     {
         $e = V::validar(V::normalizar($this->motos(['monto_minimo' => '2.000.000'])), self::CODIGOS, '2026-10-27');
-        $this->assertSame('El importe máximo no puede ser menor que el mínimo (RN-14).', $e['monto_maximo']);
+        $this->assertSame('El importe máximo debe ser mayor que el mínimo (RN-14, D-23).', $e['monto_maximo']);
+    }
+
+    /** D-23: el mínimo y el máximo de importes, cuotas y edades no pueden ser iguales. */
+    public function testMinimoYMaximoIgualesSeRechazan(): void
+    {
+        $e = V::validar(V::normalizar($this->motos([
+            'monto_minimo' => '1.500.000', 'cuotas_minimas' => '24', 'edad_minima' => '40', 'edad_maxima' => '40',
+        ])), self::CODIGOS, '2026-10-27');
+        $this->assertSame('El importe máximo debe ser mayor que el mínimo (RN-14, D-23).', $e['monto_maximo']);
+        $this->assertSame('La cantidad máxima de cuotas debe ser mayor que la mínima (RN-14, D-23).', $e['cuotas_maximas']);
+        $this->assertSame('La edad máxima debe ser mayor que la mínima (RN-14, D-23).', $e['edad_maxima']);
     }
 
     public function testImportesObligatoriosYPositivos(): void

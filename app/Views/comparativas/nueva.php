@@ -4,6 +4,7 @@
  *
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed> $cliente
+ * @var array<string, mixed> $perfil
  */
 use App\Services\Solicitudes\ComparativaService;
 
@@ -18,6 +19,7 @@ $this->section('contenido');
         <p><?= esc($cliente['denominacion']) ?> · ingresos declarados <?= esc(formato_importe($cliente['ingresos_declarados'])) ?></p>
     </div>
 </div>
+<?= view('partials/perfil_cliente', ['cliente' => $cliente, 'perfil' => $perfil]) ?>
 <form method="post" action="<?= url_to('simulaciones.comparar') ?>" class="hoja p-4" style="max-width: 48rem" novalidate>
     <?= csrf_field() ?>
     <input type="hidden" name="cliente_id" value="<?= (int) $cliente['id'] ?>">

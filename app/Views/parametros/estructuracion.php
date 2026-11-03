@@ -54,6 +54,7 @@ $this->section('contenido');
                 <?= error_campo('motivo') ?>
             </div>
         </div>
+        <?= view('partials/confirmar_cambio') ?>
         <p class="small text-body-secondary mt-2 mb-0">Las simulaciones, alternativas y ofertas ya generadas conservan sus condiciones durante su vigencia (RN-15).</p>
         <div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-primary">Registrar nueva versión</button></div>
     </section>

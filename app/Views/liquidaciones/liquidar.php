@@ -9,7 +9,6 @@ use App\Libraries\Solicitudes\Desembolso;
 
 $id = (int) $s['id'];
 $juridica = $s['tipo_cliente'] === 'PersonaJuridica';
-$medio = (string) (old('medio') ?? ($s['jornada'] ? 'Efectivo' : 'Transferencia'));
 $neto = $s['calculo']['neto']->toFixed(2);
 $this->extend('layouts/panel');
 $this->section('contenido');
@@ -48,21 +47,13 @@ $this->section('contenido');
                 <?= error_campo('conformidad') ?>
             </div>
         <?php endif ?>
-        <fieldset class="col-12">
-            <legend class="form-label fs-6">Medio de desembolso</legend>
-            <?php foreach (Desembolso::MEDIOS as $k => $t): ?>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="medio" id="medio-<?= $k ?>" value="<?= $k ?>"<?= $medio === $k ? ' checked' : '' ?>>
-                    <label class="form-check-label" for="medio-<?= $k ?>"><?= esc($t) ?></label>
-                </div>
-            <?php endforeach ?>
-            <?= error_campo('medio') ?>
-            <div class="form-text" data-si-medio="Efectivo"><?= $s['jornada'] ? 'Se registra como egreso de su caja ' . esc((string) $s['jornada']['denominacion']) . '.' : 'No tiene una caja abierta: para pagar en efectivo debe abrirla primero (CU-31).' ?></div>
-        </fieldset>
-        <div class="col-12" data-si-medio="Transferencia">
+        <div class="col-12">
+            <p class="mb-0"><strong>Medio de desembolso:</strong> transferencia a una cuenta bancaria del cliente (CBU). No se admiten pagos en efectivo (Ley 25.345, art. 1) ni CVU de billeteras virtuales (D-27).</p>
+        </div>
+        <div class="col-12">
             <div class="row g-3">
                 <div class="col-md-7">
-                    <label for="cbu" class="form-label">CBU o CVU de destino</label>
+                    <label for="cbu" class="form-label">CBU de destino</label>
                     <input type="text" class="form-control<?= campo_invalido('cbu') ?>" id="cbu" name="cbu" inputmode="numeric" maxlength="26" value="<?= esc((string) old('cbu'), 'attr') ?>">
                     <?= error_campo('cbu') ?>
                 </div>

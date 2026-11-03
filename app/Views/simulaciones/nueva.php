@@ -4,6 +4,7 @@
  *
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed> $cliente
+ * @var array<string, mixed> $perfil
  * @var list<array<string, mixed>> $lineas
  * @var array<string, mixed>|null $linea
  */
@@ -21,6 +22,7 @@ $this->section('contenido');
     </div>
 </div>
 
+<?= view('partials/perfil_cliente', ['cliente' => $cliente, 'perfil' => $perfil]) ?>
 <?php if ($admitidas === []): ?>
     <div class="hoja p-4 mb-3"><p class="mb-0">El cliente no cumple los requisitos de ninguna línea activa (A1). Los motivos se detallan abajo.</p></div>
 <?php else: ?>

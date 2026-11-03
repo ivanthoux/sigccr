@@ -165,6 +165,7 @@ $this->section('contenido');
                     <?= error_campo('motivo') ?>
                 </div>
             </div>
+            <?= view('partials/confirmar_cambio') ?>
         </fieldset>
     <?php endif ?>
 

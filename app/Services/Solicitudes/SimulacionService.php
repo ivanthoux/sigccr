@@ -6,6 +6,7 @@ namespace App\Services\Solicitudes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Finanzas\CapacidadPago;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Lineas\Elegibilidad;
 use App\Libraries\Solicitudes\Simulador;
@@ -32,8 +33,8 @@ class SimulacionService extends BaseService
     public function cliente(int $id): array
     {
         $c = $this->db->query(
-            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, '
-            . 'ph.fecha_nacimiento, ph.tipo_documento, ph.nro_documento, pj.fecha_constitucion '
+            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, c.fecha_alta, '
+            . 'ph.fecha_nacimiento, ph.tipo_documento, ph.nro_documento, ph.ocupacion, ph.empleador, pj.fecha_constitucion, pj.actividad_principal '
             . 'FROM dbo.clientes c LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id WHERE c.id = ?',
             [$id],
         )->getRowArray();
@@ -42,6 +43,32 @@ class SimulacionService extends BaseService
         }
 
         return $c;
+    }
+
+    /**
+     * Datos del cliente que acompañan la simulación y la comparación (D-23): edad o antigüedad de la empresa,
+     * situación laboral, ingresos, obligaciones vigentes y comprometidas, y capacidad de pago con los parámetros de
+     * estructuración vigentes. Es informativo: no consulta la Central de Deudores (RN-17).
+     *
+     * @param array<string, mixed> $c fila de cliente()
+     * @return array{edad: ?int, antiguedad_empresa: ?int, ingresos: string, obligaciones: string, capacidad: string, afectacion: string, solicitudes_en_tramite: int}
+     */
+    public function perfil(array $c): array
+    {
+        $hoy = $this->hoyNegocio();
+        $internos = (new EvaluacionService($this->db))->antecedentesInternos($c, 0);
+        $p = (new ParametroService($this->db))->vigente('Estructuracion')['valores'];
+        $capacidad = CapacidadPago::capacidad(Decimal::of($internos['ingresos']), Decimal::of((string) $p['porcentaje_afectacion']), Decimal::of($internos['obligaciones']));
+
+        return [
+            'edad' => $c['fecha_nacimiento'] === null ? null : intdiv(Elegibilidad::mesesCumplidos(substr((string) $c['fecha_nacimiento'], 0, 10), $hoy), 12),
+            'antiguedad_empresa' => ($c['fecha_constitucion'] ?? null) === null ? null : Elegibilidad::mesesCumplidos(substr((string) $c['fecha_constitucion'], 0, 10), $hoy),
+            'ingresos' => $internos['ingresos'],
+            'obligaciones' => $internos['obligaciones'],
+            'capacidad' => $capacidad->toFixed(2),
+            'afectacion' => (string) $p['porcentaje_afectacion'],
+            'solicitudes_en_tramite' => $internos['solicitudes_en_tramite'],
+        ];
     }
 
     /**
