@@ -33,7 +33,11 @@ final class RequisitosDocumentales
         'PersonaJuridica' => ['CONST_CUIT', 'DOC_IDENTIDAD', 'PODER_REPRESENTACION'],
     ];
 
-    private const SUGERIDOS_POR_CATEGORIA = [
+    /**
+     * Documentación base inicial por categoría. Desde D-25 la configurable está en documentacion_sugerida
+     * (DocumentacionService); esta lista la carga la instalación.
+     */
+    public const SUGERIDOS_INICIALES = [
         'RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO'],
         'JubiladoPensionado' => ['DOC_IDENTIDAD', 'RECIBO_HABERES'],
         'Monotributista' => ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO', 'PAGOS_MONOTRIBUTO'],
@@ -48,10 +52,58 @@ final class RequisitosDocumentales
         return self::IDENTIFICACION[$tipoCliente] ?? self::IDENTIFICACION['PersonaHumana'];
     }
 
-    /** @return list<string> documentación base sugerida para la categoría; vacío si la categoría no existe */
-    public static function sugeridos(string $categoria): array
+    /** @return list<string> documentación base inicial de la categoría; vacío si la categoría no existe */
+    public static function sugeridosIniciales(string $categoria): array
     {
-        return self::SUGERIDOS_POR_CATEGORIA[$categoria] ?? [];
+        return self::SUGERIDOS_INICIALES[$categoria] ?? [];
+    }
+
+    /** Tipo de cliente de una categoría de ingresos. */
+    public static function tipoDeCategoria(string $categoria): ?string
+    {
+        foreach (self::CATEGORIAS as $tipo => $cats) {
+            if (isset($cats[$categoria])) {
+                return $tipo;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Validación de la documentación sugerida por categoría (D-25): cada categoría incluye la identificación de su
+     * tipo de cliente (D-14) y solo tipos de documento activos que le correspondan.
+     *
+     * @param array<string, list<string>> $porCategoria códigos marcados por categoría
+     * @param array<string, string>       $aplicaA      código => PersonaHumana | PersonaJuridica | Ambos (tipos activos)
+     * @return array<string, string> errores por categoría
+     */
+    public static function validarSugeridos(array $porCategoria, array $aplicaA): array
+    {
+        $e = [];
+        foreach (self::CATEGORIAS as $tipo => $cats) {
+            foreach ($cats as $cat => $nombre) {
+                $codigos = array_values(array_unique($porCategoria[$cat] ?? []));
+                $ajenos = array_filter($codigos, static fn (string $c): bool => !isset($aplicaA[$c]) || !in_array($aplicaA[$c], ['Ambos', $tipo], true));
+                $faltan = self::faltantes(self::identificacion($tipo), $codigos);
+                if ($ajenos !== []) {
+                    $e[$cat] = "{$nombre}: hay documentos inactivos o que no corresponden a este tipo de cliente.";
+                } elseif ($faltan !== []) {
+                    $e[$cat] = "{$nombre}: debe incluir la documentación de identificación del cliente (D-14).";
+                }
+            }
+        }
+
+        return $e;
+    }
+
+    /** Código de un tipo de documento nuevo a partir de su nombre: mayúsculas sin acentos y guiones bajos, hasta 30. */
+    public static function codigoPara(string $nombre): string
+    {
+        $t = strtr(mb_strtoupper($nombre), ['Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'Ü' => 'U', 'Ñ' => 'N']);
+        $t = trim((string) preg_replace('/[^A-Z0-9]+/', '_', $t), '_');
+
+        return substr($t === '' ? 'DOC' : $t, 0, 30);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Libraries\Solicitudes;
 
 use App\Libraries\Finanzas\CapacidadPago;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Finanzas\Tasas;
 use App\Libraries\Validacion\Campos;
 use DateTimeImmutable;
@@ -64,7 +65,7 @@ final class Estructurador
             return $vacio + ['motivo' => 'La capacidad de pago es nula o negativa: las cuotas vigentes y comprometidas ya ocupan el porcentaje máximo de afectación de los ingresos (CU-87 A1).'];
         }
         $tna = Decimal::of((string) $version['tna']);
-        $gasto = Decimal::of((string) $version['gasto_administrativo_cuota']);
+        $gasto = GastoAdministrativo::deVersion($version);
         $otorgamiento = Decimal::of((string) $version['gasto_otorgamiento_pct']);
         $iva = Decimal::of((string) $parametros['alicuota_iva']);
         $minimo = Decimal::of((string) $version['monto_minimo']);

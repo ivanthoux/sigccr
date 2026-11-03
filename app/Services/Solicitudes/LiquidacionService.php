@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Finanzas\AmortizacionFrancesa;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Solicitudes\Desembolso;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\Simulador;
@@ -57,7 +58,7 @@ class LiquidacionService extends BaseService
     {
         $s = $this->db->query(
             'SELECT s.*, c.denominacion, c.tipo_cliente, c.cuit_cuil, ph.tipo_documento, ph.nro_documento, pj.representante_nombre, pj.representante_documento, '
-            . 'l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, '
+            . 'l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, '
             . 'r.id AS resolucion_id, r.importe_aprobado, r.cuotas_aprobadas, r.vence_aprobacion, r.automatica, r.alternativa_id, a.estado AS estado_alternativa '
             . 'FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id '
             . 'LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id '
@@ -152,7 +153,7 @@ class LiquidacionService extends BaseService
                 'fecha_liquidacion' => $ahora, 'tolerancia_dias' => (int) ($morosidad['valores']['tolerancia_dias'] ?? 0), 'estado' => 'Activo',
             ]);
             $creditoId = (int) $this->db->insertID();
-            $plan = AmortizacionFrancesa::plan($capital, Decimal::of((string) $s['tna']), (int) $s['cuotas_aprobadas'], new DateTimeImmutable($hoy), Decimal::of((string) $s['gasto_administrativo_cuota']), $iva);
+            $plan = AmortizacionFrancesa::plan($capital, Decimal::of((string) $s['tna']), (int) $s['cuotas_aprobadas'], new DateTimeImmutable($hoy), GastoAdministrativo::deVersion($s)->porCuota($capital), $iva);
             foreach ($plan->cuotas as $q) {
                 $this->db->table('cuotas')->insert([
                     'credito_id' => $creditoId, 'numero' => $q->numero, 'vencimiento' => $q->vencimiento->format('Y-m-d'),

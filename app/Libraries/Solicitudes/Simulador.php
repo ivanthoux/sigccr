@@ -6,6 +6,7 @@ namespace App\Libraries\Solicitudes;
 
 use App\Libraries\Finanzas\AmortizacionFrancesa;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Finanzas\Plan;
 use App\Libraries\Finanzas\Tasas;
 use App\Libraries\Validacion\Campos;
@@ -60,7 +61,7 @@ final class Simulador
     /**
      * Paso 8: plan preliminar y costo financiero.
      *
-     * @param array{tna: string, gasto_otorgamiento_pct: string, gasto_administrativo_cuota: string} $version
+     * @param array{tna: string, gasto_otorgamiento_pct: string, gasto_administrativo_cuota: string, tipo_gasto_administrativo?: string, gasto_administrativo_pct?: ?string} $version
      * @return array{plan: Plan, tasa_mensual: Decimal, tea: Decimal, cftea: Decimal, gasto_otorgamiento: Decimal,
      *     iva_otorgamiento: Decimal, neto: Decimal, primera_cuota: Decimal, total_intereses: Decimal, total_a_pagar: Decimal}
      */
@@ -69,7 +70,7 @@ final class Simulador
         $capital = Decimal::of($importe);
         $tna = Decimal::of($version['tna']);
         $iva = Decimal::of($alicuotaIva);
-        $plan = AmortizacionFrancesa::plan($capital, $tna, $cuotas, $fechaBase, Decimal::of($version['gasto_administrativo_cuota']), $iva);
+        $plan = AmortizacionFrancesa::plan($capital, $tna, $cuotas, $fechaBase, GastoAdministrativo::deVersion($version)->porCuota($capital), $iva);
         $desembolso = Tasas::desembolso($capital, Decimal::of($version['gasto_otorgamiento_pct']), $iva);
 
         return [

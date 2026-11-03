@@ -7,7 +7,9 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Clientes\ClienteService;
+use App\Services\Comunes\DocumentacionService;
 use App\Services\Comunes\GeografiaService;
+use App\Services\Comunes\MonotributoService;
 use CodeIgniter\HTTP\DownloadResponse;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -67,7 +69,7 @@ class Clientes extends BaseController
         }
         $this->servicio->registrarConsulta($id, 'perfil');
 
-        return view('clientes/ver', ['titulo' => $cliente['denominacion'], 'c' => $cliente, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('clientes/ver', ['titulo' => $cliente['denominacion'], 'c' => $cliente, 'tipos' => $this->servicio->tiposDocumentacion(), 'sugeridos' => (new DocumentacionService())->sugeridos()[$cliente['categoria_ingresos']] ?? []]);
     }
 
     /** CU-15 pasos 4 a 7. */
@@ -199,6 +201,6 @@ class Clientes extends BaseController
         $g = new GeografiaService();
         $provincia = (int) (old('provincia_id') ?? $cliente['provincia_id'] ?? 0);
 
-        return ['provincias' => $g->provincias(), 'localidades' => $provincia === 0 ? [] : $g->localidades($provincia)];
+        return ['provincias' => $g->provincias(), 'localidades' => $provincia === 0 ? [] : $g->localidades($provincia), 'escalaMonotributo' => (new MonotributoService())->vigentes()];
     }
 }

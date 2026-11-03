@@ -149,7 +149,7 @@ class SimulacionService extends BaseService
         $s = $this->db->query(
             'SELECT s.id, s.cliente_id, s.version_condiciones_id, s.fecha_generacion, s.importe, s.cantidad_cuotas, s.valor_cuota, s.tea, s.cftea, '
             . 's.vence, s.estado, s.simulacion_comparativa_id, CASE WHEN s.estado = \'Vigente\' AND s.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END AS vigente, '
-            . 'c.denominacion, l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, '
+            . 'c.denominacion, l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, '
             . 'v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas '
             . 'FROM dbo.simulaciones s JOIN dbo.clientes c ON c.id = s.cliente_id JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id '
             . 'JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id WHERE s.id = ?',
@@ -202,9 +202,9 @@ class SimulacionService extends BaseService
     {
         $filas = $this->db->query(
             'SELECT l.id, l.codigo, l.nombre, l.estado, v.id AS version_id, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, '
-            . 'v.gasto_administrativo_cuota, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, v.edad_minima, v.edad_maxima, '
+            . 'v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, v.edad_minima, v.edad_maxima, '
             . 'v.antiguedad_minima_meses, v.admite_persona_humana, v.admite_persona_juridica, v.vigencia_inicio, v.vigencia_fin '
-            . 'FROM dbo.lineas_credito l CROSS APPLY (SELECT TOP (1) x.id, x.numero, x.tna, x.gasto_otorgamiento_pct, x.gasto_administrativo_cuota, x.monto_minimo, '
+            . 'FROM dbo.lineas_credito l CROSS APPLY (SELECT TOP (1) x.id, x.numero, x.tna, x.gasto_otorgamiento_pct, x.gasto_administrativo_cuota, x.tipo_gasto_administrativo, x.gasto_administrativo_pct, x.monto_minimo, '
             . 'x.monto_maximo, x.cuotas_minimas, x.cuotas_maximas, x.edad_minima, x.edad_maxima, x.antiguedad_minima_meses, x.admite_persona_humana, '
             . 'x.admite_persona_juridica, x.vigencia_inicio, x.vigencia_fin FROM dbo.versiones_condiciones x WHERE x.linea_credito_id = l.id '
             . 'AND x.vigente_desde <= ? ORDER BY x.vigente_desde DESC, x.numero DESC) v' . ($lineaId === null ? '' : ' WHERE l.id = ?') . ' ORDER BY l.nombre',

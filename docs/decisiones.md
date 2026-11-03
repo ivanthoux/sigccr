@@ -327,6 +327,27 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** `LineaService::modificar` recibe la confirmación; el controlador de parámetros cuenta las solicitudes en trámite (`ParametroService::solicitudesEnTramite`). Se agrega un paso alternativo a CU-17, CU-58 y CU-59.
 
+## D-25 · Catálogo de documentación configurable (CU-100; CU-11, CU-16, CU-17)
+
+**Contexto.** La exigencia de documentación por línea y categoría ya se configura en cada versión de condiciones (D-14), pero el catálogo de tipos de documento y la documentación base que se propone para cada categoría estaban fijos en el código. En la presentación se pidió poder agregar documentos que no figuran, por ejemplo uno más para relación de dependencia.
+
+**Decisión.**
+1. **Tipos de documento.** El Gerente registra tipos nuevos (nombre, a qué tipo de cliente corresponde y si es documento clave, RN-61); el código se genera a partir del nombre. Los tipos no se eliminan: se desactivan, porque los legajos y las versiones de condiciones los referencian. La identificación del alta (D-14) no se puede desactivar, y a quién corresponde un tipo no cambia si ya hay documentos de ese tipo en legajos.
+2. **Documentación base por categoría.** Se guarda en la tabla `documentacion_sugerida` y la propone el formulario de líneas; debe incluir la identificación del cliente de cada categoría. Cambiarla no altera las versiones de condiciones registradas.
+3. **Nuevo caso de uso.** CU-100 Configurar Catálogo de Documentación, del Gerente.
+
+**Consecuencias.** Tabla `documentacion_sugerida` (migración 15), `DocumentacionService`, pantalla «Documentación exigible» y `RequisitosDocumentales::validarSugeridos`. La lista inicial pasa a `RequisitosDocumentales::SUGERIDOS_INICIALES` y la carga la instalación. Cambian RN-11, la matriz de participación (3.6.2) y el modelo de datos (4.3).
+
+## D-26 · Categorías del monotributo (CU-101; CU-11, CU-12)
+
+**Contexto.** Para un cliente monotributista el sistema no registra su categoría del Régimen Simplificado, que acota sus ingresos.
+
+**Decisión.**
+1. **Escala versionada.** Las categorías A a K se guardan con su tope de ingresos brutos anuales y la fecha desde la que rige (`categorias_monotributo`), porque ARCA las actualiza cada semestre. La instalación carga la escala vigente desde el 01/08/2026. El Gerente registra cada nueva escala con fecha de hoy en adelante (CU-101 Actualizar Categorías del Monotributo); cada tope debe ser mayor que el de la categoría anterior.
+2. **Cliente monotributista.** Al registrarlo o modificarlo se informa su categoría, obligatoria desde esta decisión. Doce veces los ingresos mensuales declarados no pueden superar el tope de la categoría vigente: los ingresos que se declaran son netos y el tope es de ingresos brutos, así que superarlo indica una inconsistencia.
+
+**Consecuencias.** Tabla `categorias_monotributo` y columna `clientes.categoria_monotributo` (migración 15), `CategoriasMonotributo`, `MonotributoService` y la pantalla «Categorías del monotributo». Cambian CU-11 y CU-12 (validación), la matriz de participación y el modelo de datos.
+
 ## D-27 · Desembolso solo por transferencia a una cuenta bancaria del cliente (CU-27; cobros de la iteración 3)
 
 **Contexto.** El artículo 1 de la Ley 25.345 (prevención de la evasión fiscal) dispone que los pagos de sumas superiores a $ 1.000 que no se realicen mediante depósitos en entidades financieras, giros o transferencias bancarias, cheques, tarjetas u otros medios que indique el Poder Ejecutivo no surten efectos entre las partes ni frente a terceros. El monto no se actualizó desde 2001, por lo que alcanza a prácticamente cualquier desembolso o cuota. Además, el director pidió que las transferencias se hagan solo a cuentas bancarias, no a CVU de billeteras virtuales.
@@ -336,6 +357,17 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 2. **Cobros (iteración 3).** Las cuotas se cobran por transferencia o depósito bancario con comprobante, sin efectivo. La caja deja de manejar efectivo y se rediseña en la iteración 3 como registro y conciliación de los movimientos bancarios; hasta entonces sus pantallas no participan del desembolso.
 
 **Consecuencias.** Cambian `Desembolso` (un solo medio, `esCvu`), `LiquidacionService` (sin egreso de caja) y la pantalla de liquidación. Las liquidaciones en efectivo ya registradas se conservan. Cambian CU-27 (pasos 5 y A4), RN-28 y el alcance de CU-31, CU-32, CU-33 y CU-36, que se revisan en la iteración 3.
+
+## D-28 · Gasto administrativo fijo o porcentual (CU-16, CU-17; CU-21, CU-87, CU-99, CU-27)
+
+**Contexto.** RN-68 define el gasto administrativo como un importe fijo por cuota. En la presentación se pidió que la línea pueda definirlo también como porcentaje.
+
+**Decisión.**
+1. **Dos modalidades.** Cada versión de condiciones define el gasto administrativo como importe fijo por cuota o como porcentaje del capital otorgado que se cobra en cada cuota, hasta el 10 % (por ejemplo, 0,5 % de $ 800.000 son $ 4.000 más IVA en cada cuota). En los dos casos el gasto es igual en todas las cuotas y la cuota del sistema francés se mantiene constante. Lleva IVA (RN-68) e integra el CFTEA (RN-63).
+2. **Capital máximo (CU-87, CU-99).** Con gasto porcentual, el capital máximo para n cuotas es C ≤ (K − g_fijo · (1 + IVA)) / (1 / a(n, i) + IVA · i + p · (1 + IVA)), donde p es el porcentaje; el resultado se verifica con el plan real, como en D-01.
+3. **Versiones anteriores.** Las versiones registradas antes de esta decisión son de importe fijo.
+
+**Consecuencias.** Columnas `versiones_condiciones.tipo_gasto_administrativo` y `gasto_administrativo_pct` con su restricción de consistencia (migración 15). Componente `GastoAdministrativo`, usado por `Simulador`, `CapacidadPago`, `ComparadorLineas`, `Estructurador` y `LiquidacionService`, con 4 pruebas nuevas. Cambian RN-68, CU-16 y CU-17 (paso de condiciones), el modelo de datos y los casos de prueba del motor financiero.
 
 ## D-29 · Requerimientos nuevos diferidos a la iteración 3
 

@@ -159,6 +159,16 @@ if (!function_exists('formato_porcentaje')) {
     }
 }
 
+if (!function_exists('texto_gasto_administrativo')) {
+    /** Gasto administrativo de una versión de condiciones: importe fijo o porcentaje del capital por cuota (D-28). */
+    function texto_gasto_administrativo(array $version): string
+    {
+        return ($version['tipo_gasto_administrativo'] ?? 'Fijo') === 'Porcentual'
+            ? formato_porcentaje((string) $version['gasto_administrativo_pct'], 2) . ' del capital por cuota'
+            : formato_importe((string) $version['gasto_administrativo_cuota']) . ' por cuota';
+    }
+}
+
 if (!function_exists('etiqueta_estado_solicitud')) {
     /** Insignia del estado de una solicitud (4.2.3). */
     function etiqueta_estado_solicitud(string $estado, ?string $tipoRechazo = null): string

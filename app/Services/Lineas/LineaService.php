@@ -23,7 +23,7 @@ class LineaService extends BaseService
 {
     /** Columnas de condiciones de versiones_condiciones. */
     private const CONDICIONES = [
-        'tna', 'gasto_otorgamiento_pct', 'gasto_administrativo_cuota', 'monto_minimo', 'monto_maximo', 'cuotas_minimas',
+        'tna', 'gasto_otorgamiento_pct', 'gasto_administrativo_cuota', 'tipo_gasto_administrativo', 'gasto_administrativo_pct', 'monto_minimo', 'monto_maximo', 'cuotas_minimas',
         'cuotas_maximas', 'edad_minima', 'edad_maxima', 'antiguedad_minima_meses', 'admite_persona_humana',
         'admite_persona_juridica', 'vigencia_inicio', 'vigencia_fin',
     ];
@@ -268,6 +268,7 @@ class LineaService extends BaseService
         $this->db->table('versiones_condiciones')->insert([
             'linea_credito_id' => $lineaId, 'numero' => $numero, 'vigente_desde' => $vigenteDesde,
             'tna' => $d['tna'], 'gasto_otorgamiento_pct' => $d['gasto_otorgamiento_pct'], 'gasto_administrativo_cuota' => $d['gasto_administrativo_cuota'],
+            'tipo_gasto_administrativo' => $d['tipo_gasto_administrativo'], 'gasto_administrativo_pct' => $d['gasto_administrativo_pct'],
             'monto_minimo' => $d['monto_minimo'], 'monto_maximo' => $d['monto_maximo'],
             'cuotas_minimas' => $d['cuotas_minimas'], 'cuotas_maximas' => $d['cuotas_maximas'],
             'edad_minima' => $d['edad_minima'], 'edad_maxima' => $d['edad_maxima'], 'antiguedad_minima_meses' => $d['antiguedad_minima_meses'],

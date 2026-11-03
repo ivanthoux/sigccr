@@ -112,4 +112,22 @@ final class ValidadorLineaTest extends TestCase
         $this->assertSame('Vencida', V::estadoEfectivo('Activa', '2026-10-26', '2026-10-27'));
         $this->assertSame('Suspendida', V::estadoEfectivo('Suspendida', '2027-01-01', '2026-10-27'));
     }
+
+    /** D-28: gasto administrativo como porcentaje del capital en cada cuota. */
+    public function testGastoAdministrativoPorcentual(): void
+    {
+        $d = V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => '0,5', 'gasto_administrativo_cuota' => '']));
+        $this->assertSame('Porcentual', $d['tipo_gasto_administrativo']);
+        $this->assertSame('0.005000', $d['gasto_administrativo_pct']);
+        $this->assertSame('0.00', $d['gasto_administrativo_cuota']);
+        $this->assertArrayNotHasKey('gasto_administrativo_cuota', V::validar($d, self::CODIGOS, '2026-10-27'));
+        $this->assertArrayNotHasKey('gasto_administrativo_pct', V::validar($d, self::CODIGOS, '2026-10-27'));
+        $e = V::validar(V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => '15'])), self::CODIGOS, '2026-10-27');
+        $this->assertStringContainsString('10 %', $e['gasto_administrativo_pct']);
+        $e = V::validar(V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => ''])), self::CODIGOS, '2026-10-27');
+        $this->assertArrayHasKey('gasto_administrativo_pct', $e);
+        $fijo = V::normalizar($this->motos());
+        $this->assertSame('Fijo', $fijo['tipo_gasto_administrativo']);
+        $this->assertNull($fijo['gasto_administrativo_pct']);
+    }
 }

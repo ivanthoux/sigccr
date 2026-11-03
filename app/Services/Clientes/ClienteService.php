@@ -16,6 +16,7 @@ use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ComunicacionService;
 use App\Services\Comunes\GeografiaService;
+use App\Services\Comunes\MonotributoService;
 use Throwable;
 
 /**
@@ -162,7 +163,7 @@ class ClienteService extends BaseService
     public function registrar(array $datos, array $archivos, int $usuarioId): int
     {
         $d = ValidadorCliente::normalizar($datos);
-        $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio());
+        $errores = ValidadorCliente::validar($d, true, $this->hoyNegocio(), (new MonotributoService($this->db))->vigentes());
         $this->validarLocalidad($d, null, $errores);
         $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
@@ -183,7 +184,7 @@ class ClienteService extends BaseService
                     'denominacion' => ValidadorCliente::denominacion($d), 'correo' => $d['correo'],
                     'telefono' => $d['telefono'] === '' ? null : $d['telefono'], 'domicilio' => $d['domicilio'],
                     'localidad_id' => $d['localidad_id'], 'codigo_postal' => $d['codigo_postal'],
-                    'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'],
+                    'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'], 'categoria_monotributo' => $d['categoria_monotributo'], 'categoria_monotributo' => $d['categoria_monotributo'],
                     'estado' => 'Activo', 'fecha_alta' => $this->hoyNegocio(), 'creado_en' => $ahora,
                 ]);
                 $id = (int) $this->db->insertID();
@@ -230,7 +231,7 @@ class ClienteService extends BaseService
     {
         $actual = $this->obtener($id);
         $d = ValidadorCliente::normalizar(['tipo_cliente' => $actual['tipo_cliente']] + $datos);
-        $errores = ValidadorCliente::validar($d, false, $this->hoyNegocio());
+        $errores = ValidadorCliente::validar($d, false, $this->hoyNegocio(), (new MonotributoService($this->db))->vigentes());
         $this->validarLocalidad($d, $actual['localidad_id'] === null ? null : (int) $actual['localidad_id'], $errores);
         $correoNuevo = $d['correo'] !== $actual['correo'] ? $d['correo'] : null;
         $evidencia = Campos::texto($evidenciaIdentidad);

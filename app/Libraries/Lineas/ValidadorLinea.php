@@ -41,6 +41,8 @@ final class ValidadorLinea
             }
         }
 
+        $porcentual = ($d['tipo_gasto_administrativo'] ?? 'Fijo') === 'Porcentual' ? 'Porcentual' : 'Fijo';
+
         return [
             'codigo' => strtoupper(str_replace(' ', '-', $t('codigo'))),
             'nombre' => $t('nombre'),
@@ -49,8 +51,12 @@ final class ValidadorLinea
             'tna' => self::porcentaje($d['tna'] ?? ''),
             'gasto_otorgamiento_texto' => $t('gasto_otorgamiento_pct'),
             'gasto_otorgamiento_pct' => self::porcentaje($d['gasto_otorgamiento_pct'] ?? ''),
-            'gasto_administrativo_texto' => $t('gasto_administrativo_cuota'),
-            'gasto_administrativo_cuota' => Campos::importe($d['gasto_administrativo_cuota'] ?? ''),
+            // D-28: el gasto administrativo es un importe fijo o un porcentaje del capital en cada cuota
+            'tipo_gasto_administrativo' => $porcentual,
+            'gasto_administrativo_texto' => $porcentual === 'Porcentual' ? '0' : $t('gasto_administrativo_cuota'),
+            'gasto_administrativo_cuota' => $porcentual === 'Porcentual' ? '0.00' : Campos::importe($d['gasto_administrativo_cuota'] ?? ''),
+            'gasto_administrativo_pct_texto' => $porcentual === 'Porcentual' ? $t('gasto_administrativo_pct') : '',
+            'gasto_administrativo_pct' => $porcentual === 'Porcentual' ? self::porcentaje($d['gasto_administrativo_pct'] ?? '') : null,
             'monto_minimo_texto' => $t('monto_minimo'),
             'monto_minimo' => Campos::importe($d['monto_minimo'] ?? ''),
             'monto_maximo_texto' => $t('monto_maximo'),
@@ -103,9 +109,15 @@ final class ValidadorLinea
             $d['gasto_otorgamiento_texto'] !== '' && $d['gasto_otorgamiento_pct'] === null ? 'Ingrese el gasto de otorgamiento en porcentaje del capital.' : null,
             $d['gasto_otorgamiento_pct'] !== null && Decimal::of($d['gasto_otorgamiento_pct'])->compare(1) >= 0 ? 'El gasto de otorgamiento debe ser menor que el 100 % del capital.' : null,
         ];
-        $r['gasto_administrativo_cuota'] = [
+        $r['gasto_administrativo_cuota'] = $d['tipo_gasto_administrativo'] === 'Porcentual' ? [] : [
             Campos::obligatorio($d['gasto_administrativo_texto'], 'el gasto administrativo por cuota (0 si no tiene)'),
             $d['gasto_administrativo_texto'] !== '' && $d['gasto_administrativo_cuota'] === null ? 'Ingrese un importe válido, por ejemplo 500,00.' : null,
+        ];
+        $r['gasto_administrativo_pct'] = $d['tipo_gasto_administrativo'] !== 'Porcentual' ? [] : [
+            Campos::obligatorio($d['gasto_administrativo_pct_texto'], 'el porcentaje del capital que se cobra en cada cuota'),
+            $d['gasto_administrativo_pct_texto'] !== '' && $d['gasto_administrativo_pct'] === null ? 'Ingrese el porcentaje del capital, por ejemplo 0,5.' : null,
+            $d['gasto_administrativo_pct'] !== null && !Decimal::of($d['gasto_administrativo_pct'])->isPositive() ? 'El porcentaje debe ser mayor que cero; si la línea no tiene gasto, elija «Importe fijo por cuota» con 0.' : null,
+            $d['gasto_administrativo_pct'] !== null && Decimal::of($d['gasto_administrativo_pct'])->compare('0.1') > 0 ? 'El gasto administrativo no puede superar el 10 % del capital por cuota.' : null,
         ];
 
         // D-09 / RN-76: importe mínimo y máximo prestable de la línea

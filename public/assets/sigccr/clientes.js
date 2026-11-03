@@ -17,6 +17,9 @@
         form.querySelectorAll('[data-aplica]').forEach((el) => { el.hidden = !['Ambos', tipo].includes(el.dataset.aplica); });
         const exigidos = requisitos[tipo] || [];
         form.querySelectorAll('[data-obligatorio]').forEach((el) => { el.hidden = !exigidos.includes(el.dataset.obligatorio); });
+        // D-26: la categoría del monotributo solo para monotributistas
+        const categoria = form.querySelector('#categoria_ingresos')?.value;
+        form.querySelectorAll('[data-si-categoria]').forEach((el) => { el.hidden = tipo !== 'PersonaHumana' || el.dataset.siCategoria !== categoria; });
     }
 
     form.querySelectorAll('input[name="tipo_cliente"], #categoria_ingresos').forEach((el) => el.addEventListener('change', actualizar));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Database\Seeds;
 
+use App\Libraries\Clientes\RequisitosDocumentales;
 use CodeIgniter\Database\Seeder;
 
 /** Documentación base por categoría de ingresos (RN-11). Cada línea puede exigir documentación adicional. */
@@ -27,6 +28,15 @@ class TiposDocumentacionSeeder extends Seeder
         foreach ($tipos as [$codigo, $nombre, $aplica, $clave]) {
             if ($this->db->table('tipos_documentacion')->where('codigo', $codigo)->countAllResults() === 0) {
                 $this->db->table('tipos_documentacion')->insert(['codigo' => $codigo, 'nombre' => $nombre, 'aplica_a' => $aplica, 'es_clave' => $clave, 'activo' => 1]);
+            }
+        }
+        // Documentación base por categoría (D-25): solo en una instalación nueva, sin pisar la configurada
+        if ($this->db->tableExists('documentacion_sugerida') && $this->db->table('documentacion_sugerida')->countAllResults() === 0) {
+            $ids = array_column($this->db->table('tipos_documentacion')->select('id, codigo')->get()->getResultArray(), 'id', 'codigo');
+            foreach (RequisitosDocumentales::SUGERIDOS_INICIALES as $categoria => $codigos) {
+                foreach ($codigos as $c) {
+                    $this->db->table('documentacion_sugerida')->insert(['categoria_ingresos' => $categoria, 'tipo_documentacion_id' => (int) $ids[$c]]);
+                }
             }
         }
     }

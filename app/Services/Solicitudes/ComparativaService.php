@@ -9,6 +9,7 @@ use App\Exceptions\ValidacionException;
 use App\Libraries\Finanzas\CapacidadPago;
 use App\Libraries\Finanzas\ComparadorLineas;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Solicitudes\Simulador;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -77,6 +78,7 @@ class ComparativaService extends BaseService
                 $capacidad,
                 array_map(static fn ($l) => [
                     'id' => (int) $l['id'], 'nombre' => (string) $l['nombre'], 'tna' => (string) $l['tna'], 'gasto_administrativo_cuota' => (string) $l['gasto_administrativo_cuota'],
+                    'tipo_gasto_administrativo' => (string) ($l['tipo_gasto_administrativo'] ?? 'Fijo'), 'gasto_administrativo_pct' => $l['gasto_administrativo_pct'] ?? null,
                     'gasto_otorgamiento_pct' => (string) $l['gasto_otorgamiento_pct'], 'monto_minimo' => (string) $l['monto_minimo'], 'monto_maximo' => ($p['tope_global_cliente'] ?? null) === null ? (string) $l['monto_maximo'] : Decimal::min(Decimal::of((string) $l['monto_maximo']), Decimal::of((string) $p['tope_global_cliente']))->toFixed(2),
                     'cuotas_minimas' => (int) $l['cuotas_minimas'], 'cuotas_maximas' => (int) $l['cuotas_maximas'], 'motivo_no_admitida' => $l['motivo_no_admitida'],
                 ], $lineas),
@@ -169,7 +171,7 @@ class ComparativaService extends BaseService
         $iva = Decimal::of((string) ($l['calculo']['alicuota_iva'] ?? '0.21'));
         $maximo = Decimal::zero();
         foreach (range((int) $l['cuotas_minimas'], (int) $l['cuotas_maximas']) as $n) {
-            $maximo = Decimal::max($maximo, CapacidadPago::capitalMaximo(Decimal::of((string) $c['capacidad_pago']), Decimal::of((string) $l['tna']), $n, Decimal::of((string) $l['gasto_administrativo_cuota']), $iva, Decimal::of($c['paso'])));
+            $maximo = Decimal::max($maximo, CapacidadPago::capitalMaximo(Decimal::of((string) $c['capacidad_pago']), Decimal::of((string) $l['tna']), $n, GastoAdministrativo::deVersion($l), $iva, Decimal::of($c['paso'])));
         }
 
         return Decimal::min($maximo, Decimal::of((string) $l['monto_maximo']));

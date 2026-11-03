@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Cambiado (observaciones de la presentación del 02/11/2026, D-23 a D-29)
+- Líneas: el máximo debe ser mayor que el mínimo en importes, cuotas y edades (RN-14); gasto administrativo fijo o porcentual del capital en cada cuota (`GastoAdministrativo`, RN-68, D-28).
+- Simulación y comparación: datos del cliente (edad, situación laboral, empleador, ingresos, obligaciones y capacidad de pago); plan de cuotas paginado de a 12.
+- Resolución del Gerente: documentación del legajo con su verificación, abierta en el navegador.
+- Confirmación al registrar una nueva versión de condiciones o de parámetros con solicitudes en trámite (D-24).
+- Desembolso solo por transferencia a un CBU del cliente; sin efectivo ni CVU (Ley 25.345, D-27).
+
+### Agregado (D-25 y D-26)
+- CU-100 Configurar Catálogo de Documentación: tipos de documento nuevos y documentación base por categoría de ingresos.
+- CU-101 Actualizar Categorías del Monotributo: escala de ARCA versionada y categoría obligatoria del cliente monotributista, consistente con sus ingresos.
+- Migración 15 (`documentacion_sugerida`, `categorias_monotributo`, gasto porcentual y rangos estrictos); el modelo pasa a 77 tablas.
+
 ### Agregado (iteración 2 · D01: simulación, solicitud, verificación y correcciones)
 - CU-21 Simular Crédito: líneas admitidas para el cliente según estado, vigencia, tipo, categoría, edad o antigüedad (`Elegibilidad`, RN-13, RN-75), validación del importe y las cuotas (RN-14, RN-76) y plan preliminar con TEA, CFTEA, gastos e IVA (`Simulador`, RN-50 a RN-52, RN-63, RN-68), vigente por 7 días (RN-48).
 - CU-22 Registrar Solicitud desde una simulación vigente: cliente activo con CUIT/CUIL, línea no suspendida (RN-16), una sola solicitud en trámite por cliente y línea (RN-18) y la documentación que exige la versión de condiciones (RN-11, D-14).

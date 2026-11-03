@@ -65,7 +65,7 @@ $this->section('contenido');
             <dl class="row mb-0">
                 <dt class="col-sm-6">TNA</dt><dd class="col-sm-6 text-end"><?= $pct($v['tna']) ?></dd>
                 <dt class="col-sm-6">Gasto de otorgamiento</dt><dd class="col-sm-6 text-end"><?= $pct($v['gasto_otorgamiento_pct']) ?> del capital</dd>
-                <dt class="col-sm-6">Gasto administrativo por cuota</dt><dd class="col-sm-6 importe"><?= formato_importe((string) $v['gasto_administrativo_cuota']) ?></dd>
+                <dt class="col-sm-6">Gasto administrativo</dt><dd class="col-sm-6 text-end"><?= esc(texto_gasto_administrativo($v)) ?></dd>
             </dl>
         </section>
     </div>

@@ -96,6 +96,13 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('calendario', 'Admin\Calendario::index', ['as' => 'calendario.actualizar', 'filter' => 'permiso:calendario.actualizar']);
         $routes->post('calendario', 'Admin\Calendario::agregar', ['filter' => 'permiso:calendario.actualizar']);
         $routes->post('calendario/baja', 'Admin\Calendario::baja', ['filter' => 'permiso:calendario.actualizar']);
+        // CU-100 y CU-101: catálogo de documentación y categorías del monotributo (D-25, D-26)
+        $routes->get('documentacion', 'Admin\Documentacion::index', ['as' => 'documentacion.configurar', 'filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/tipos', 'Admin\Documentacion::registrarTipo', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/tipos/(:num)', 'Admin\Documentacion::modificarTipo/$1', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/sugeridos', 'Admin\Documentacion::guardarSugeridos', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->get('monotributo', 'Admin\Monotributo::index', ['as' => 'monotributo.actualizar', 'filter' => 'permiso:monotributo.actualizar']);
+        $routes->post('monotributo', 'Admin\Monotributo::registrar', ['filter' => 'permiso:monotributo.actualizar']);
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);

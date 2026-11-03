@@ -88,6 +88,8 @@ ENUMS = {
     'ServicioExterno': ['InformacionCrediticia', 'Pasarela', 'Comunicaciones'],
     'EstadoEjecucion': ['EnCurso', 'Finalizada', 'ConErrores', 'Fallida'],
     'AplicaDocumentacion': ['PersonaHumana', 'PersonaJuridica', 'Ambos'],
+    'TipoGastoAdministrativo': ['Fijo', 'Porcentual'],
+    'CategoriaMonotributo': ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'],
 }
 
 
@@ -163,6 +165,20 @@ add('tipos_documentacion', 'SS-10', '(catálogo)', 'Catálogo de tipos de docume
     C('es_clave', B, default='0', d='Indica si su cambio invalida la evaluación (documento clave, RN-61).'),
     C('activo', B, default='1', d='Disponible para nuevas exigencias.'),
 ])
+
+add('documentacion_sugerida', 'SS-10', '(catálogo)', 'Documentación base que se propone para cada categoría de ingresos al registrar o modificar una línea (RN-11, D-25). La exigencia efectiva la define cada versión de condiciones.', [
+    EN('categoria_ingresos', 'CategoriaIngresos'),
+    FK('tipo_documentacion_id', 'tipos_documentacion'),
+], pk=['categoria_ingresos', 'tipo_documentacion_id'])
+
+add('categorias_monotributo', 'SS-10', '(catálogo)', 'Categorías del Régimen Simplificado (monotributo) con su tope de ingresos brutos anuales, versionadas por fecha de vigencia porque ARCA las actualiza cada semestre (D-26).', [
+    ID(),
+    EN('categoria', 'CategoriaMonotributo'),
+    C('ingresos_brutos_anuales', M2, d='Tope de ingresos brutos de los últimos doce meses para la categoría.'),
+    C('vigente_desde', D, d='Fecha desde la que rige el tope.'),
+    CREADO(),
+], uq=[('UQ_categorias_monotributo_vigencia', ['categoria', 'vigente_desde'], None)],
+   ck=[('CK_categorias_monotributo_tope', 'ingresos_brutos_anuales > 0')])
 
 add('provincias', 'SS-10', '(catálogo)', 'Provincias de la República Argentina y Ciudad Autónoma de Buenos Aires, identificadas por su código INDEC (Servicio de Normalización de Datos Geográficos, georef). Se ubica en servicios comunes como catálogo de referencia geográfica.', [
     C('id', 'INT', pk=True, d='Código INDEC de la provincia (por ejemplo, 54 Misiones, 18 Corrientes).'),
@@ -368,6 +384,7 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
     FK('localidad_id', 'localidades', null=True, d='Localidad del domicilio; obligatoria en el alta y en cada modificación (D-18), nula en clientes anteriores.'),
     C('codigo_postal', 'VARCHAR(8)', null=True, d='Código postal: cuatro dígitos o CPA de ocho caracteres (por ejemplo, N3350ABC).'),
     EN('categoria_ingresos', 'CategoriaIngresos'),
+    EN('categoria_monotributo', 'CategoriaMonotributo', null=True, d='Categoría del monotributo; obligatoria para los monotributistas desde D-26, nula en las demás categorías.'),
     EN('estado', 'EstadoCliente', default="'Activo'"),
     FK('cuenta_cliente_id', 'cuentas_cliente', null=True, uq=True, d='Cuenta de acceso al portal; nula hasta que el cliente la solicita.'),
     C('fecha_alta', D, d='Fecha local de alta en el padrón, informada por la aplicación (antigüedad, RN-69).'),
@@ -378,7 +395,8 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
    ck=[('CK_clientes_cuit_juridica', "tipo_cliente = 'PersonaHumana' OR cuit_cuil IS NOT NULL"),
        ('CK_clientes_cuit_formato', "cuit_cuil IS NULL OR cuit_cuil NOT LIKE '%[^0-9]%'"),
        ('CK_clientes_categoria', "(tipo_cliente = 'PersonaJuridica' AND categoria_ingresos = 'Empresa') OR (tipo_cliente = 'PersonaHumana' AND categoria_ingresos <> 'Empresa')"),
-       ('CK_clientes_ingresos', 'ingresos_declarados >= 0')],
+       ('CK_clientes_ingresos', 'ingresos_declarados >= 0'),
+       ('CK_clientes_monotributo', "categoria_monotributo IS NULL OR categoria_ingresos = 'Monotributista'")],
    idx=[('IX_clientes_denominacion', ['denominacion'], ['estado', 'tipo_cliente'], None)])
 
 add('personas_humanas', 'SS-02', 'PersonaHumana', 'Subclase de Cliente identificada por su documento.', [
@@ -451,7 +469,9 @@ add('versiones_condiciones', 'SS-03', 'VersionCondiciones', 'Condiciones version
     C('vigente_desde', TS),
     C('tna', TASA, d='Tasa nominal anual en tanto por uno.'),
     C('gasto_otorgamiento_pct', TASA, d='Porcentaje del capital en tanto por uno (RN-68).'),
-    C('gasto_administrativo_cuota', M2, d='Gasto fijo por cuota (RN-68).'),
+    C('gasto_administrativo_cuota', M2, d='Gasto fijo por cuota (RN-68); 0 cuando el gasto es porcentual.'),
+    EN('tipo_gasto_administrativo', 'TipoGastoAdministrativo', default="'Fijo'", d='Importe fijo por cuota o porcentaje del capital en cada cuota (D-28).'),
+    C('gasto_administrativo_pct', TASA, null=True, d='Porcentaje del capital que se cobra en cada cuota, en tanto por uno (D-28); nulo si el gasto es fijo.'),
     C('monto_minimo', M2), C('monto_maximo', M2),
     C('cuotas_minimas', 'SMALLINT'), C('cuotas_maximas', 'SMALLINT'),
     C('edad_minima', 'TINYINT', null=True, d='Solo personas humanas.'),
@@ -461,9 +481,10 @@ add('versiones_condiciones', 'SS-03', 'VersionCondiciones', 'Condiciones version
     C('admite_persona_juridica', B),
     C('vigencia_inicio', D), C('vigencia_fin', D),
 ], uq=[('UQ_versiones_condiciones_numero', ['linea_credito_id', 'numero'], None)],
-   ck=[('CK_versiones_condiciones_montos', 'monto_minimo > 0 AND monto_minimo <= monto_maximo'),
-       ('CK_versiones_condiciones_cuotas', 'cuotas_minimas >= 1 AND cuotas_minimas <= cuotas_maximas'),
-       ('CK_versiones_condiciones_edades', 'edad_minima IS NULL OR edad_maxima IS NULL OR edad_minima <= edad_maxima'),
+   ck=[('CK_versiones_condiciones_montos', 'monto_minimo > 0 AND monto_minimo < monto_maximo'),
+       ('CK_versiones_condiciones_cuotas', 'cuotas_minimas >= 1 AND cuotas_minimas < cuotas_maximas'),
+       ('CK_versiones_condiciones_edades', 'edad_minima IS NULL OR edad_maxima IS NULL OR edad_minima < edad_maxima'),
+       ('CK_versiones_condiciones_gasto_administrativo', "(tipo_gasto_administrativo = 'Fijo' AND gasto_administrativo_pct IS NULL) OR (tipo_gasto_administrativo = 'Porcentual' AND gasto_administrativo_pct > 0 AND gasto_administrativo_pct <= 0.1 AND gasto_administrativo_cuota = 0)"),
        ('CK_versiones_condiciones_vigencia', 'vigencia_inicio <= vigencia_fin'),
        ('CK_versiones_condiciones_tasas', 'tna >= 0 AND gasto_otorgamiento_pct >= 0 AND gasto_otorgamiento_pct < 1 AND gasto_administrativo_cuota >= 0'),
        ('CK_versiones_condiciones_tipos', 'admite_persona_humana = 1 OR admite_persona_juridica = 1')])

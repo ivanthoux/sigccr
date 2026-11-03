@@ -217,7 +217,7 @@ class EvaluacionService extends BaseService
 
         $marcas = implode(', ', array_fill(0, count(EstadosSolicitud::FINALES), '?'));
         $otras = $this->db->query(
-            'SELECT s.importe, s.cantidad_cuotas, s.fecha_registro, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota '
+            'SELECT s.importe, s.cantidad_cuotas, s.fecha_registro, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct '
             . 'FROM dbo.solicitudes_credito s JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id '
             . "WHERE s.cliente_id = ? AND s.id <> ? AND s.estado NOT IN ({$marcas})",
             [$clienteId, $solicitudId, ...EstadosSolicitud::FINALES],
