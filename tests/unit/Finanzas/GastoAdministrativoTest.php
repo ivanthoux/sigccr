@@ -41,7 +41,9 @@ final class GastoAdministrativoTest extends TestCase
             $this->assertSame('4000.00', $q->gastos->toFixed(2));
             $this->assertSame($q->interes->add(4000)->mul('0.21')->round(2)->toFixed(2), $q->iva->toFixed(2));
         }
+        // CP-F28: cuota ordinaria 95.421,62 + gasto 4.000,00 + IVA 10.920,00
         $this->assertSame('48000.00', $c['plan']->cuotas[0]->interes->toFixed(2));
+        $this->assertSame('110341.62', $c['primera_cuota']->toFixed(2));
         // el gasto porcentual encarece el crédito respecto de uno sin gasto administrativo
         $sin = Simulador::calcular(['gasto_administrativo_cuota' => '0.00', 'tipo_gasto_administrativo' => 'Fijo', 'gasto_administrativo_pct' => null] + $version, '800000.00', 12, '0.21', new DateTimeImmutable('2026-11-04'));
         $this->assertSame(1, $c['cftea']->compare($sin['cftea']));
@@ -56,11 +58,12 @@ final class GastoAdministrativoTest extends TestCase
         $iva = Decimal::of('0.21');
         $gasto = GastoAdministrativo::porcentual('0.005');
         $c = CapacidadPago::capitalMaximo($k, $tna, 12, $gasto, $iva, Decimal::of('1000'));
-        $this->assertTrue($c->isPositive());
+        // CP-F29: 772.000 (1.ª cuota 99.877,82); 773.000 supera la capacidad (100.007,19)
+        $this->assertSame('772000', (string) $c);
         $fecha = new DateTimeImmutable('2026-01-10');
         $cuota = static fn (Decimal $capital): Decimal => AmortizacionFrancesa::plan($capital, $tna, 12, $fecha, $gasto->porCuota($capital), $iva)->cuotaTotalMaxima();
-        $this->assertTrue($cuota($c)->compare($k) <= 0);
-        $this->assertSame(1, $cuota($c->add(1000))->compare($k));
+        $this->assertSame('99877.82', $cuota($c)->toFixed(2));
+        $this->assertSame('100007.19', $cuota($c->add(1000))->toFixed(2));
         // con un gasto porcentual el máximo es menor que sin gasto
         $this->assertSame(-1, $c->compare(CapacidadPago::capitalMaximo($k, $tna, 12, Decimal::zero(), $iva, Decimal::of('1000'))));
     }
