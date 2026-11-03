@@ -421,7 +421,7 @@ class EstructuracionService extends BaseService
     public function version(int $versionId): array
     {
         $v = $this->db->query(
-            'SELECT v.id, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, '
+            'SELECT v.id, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, '
             . 'l.estado AS estado_linea FROM dbo.versiones_condiciones v JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id WHERE v.id = ?',
             [$versionId],
         )->getRowArray();

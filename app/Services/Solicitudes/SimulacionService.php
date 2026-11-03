@@ -6,6 +6,7 @@ namespace App\Services\Solicitudes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Finanzas\CapacidadPago;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Lineas\Elegibilidad;
 use App\Libraries\Solicitudes\Simulador;
@@ -32,8 +33,8 @@ class SimulacionService extends BaseService
     public function cliente(int $id): array
     {
         $c = $this->db->query(
-            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, '
-            . 'ph.fecha_nacimiento, ph.tipo_documento, ph.nro_documento, pj.fecha_constitucion '
+            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, c.fecha_alta, '
+            . 'ph.fecha_nacimiento, ph.tipo_documento, ph.nro_documento, ph.ocupacion, ph.empleador, pj.fecha_constitucion, pj.actividad_principal '
             . 'FROM dbo.clientes c LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id WHERE c.id = ?',
             [$id],
         )->getRowArray();
@@ -42,6 +43,32 @@ class SimulacionService extends BaseService
         }
 
         return $c;
+    }
+
+    /**
+     * Datos del cliente que acompañan la simulación y la comparación (D-23): edad o antigüedad de la empresa,
+     * situación laboral, ingresos, obligaciones vigentes y comprometidas, y capacidad de pago con los parámetros de
+     * estructuración vigentes. Es informativo: no consulta la Central de Deudores (RN-17).
+     *
+     * @param array<string, mixed> $c fila de cliente()
+     * @return array{edad: ?int, antiguedad_empresa: ?int, ingresos: string, obligaciones: string, capacidad: string, afectacion: string, solicitudes_en_tramite: int}
+     */
+    public function perfil(array $c): array
+    {
+        $hoy = $this->hoyNegocio();
+        $internos = (new EvaluacionService($this->db))->antecedentesInternos($c, 0);
+        $p = (new ParametroService($this->db))->vigente('Estructuracion')['valores'];
+        $capacidad = CapacidadPago::capacidad(Decimal::of($internos['ingresos']), Decimal::of((string) $p['porcentaje_afectacion']), Decimal::of($internos['obligaciones']));
+
+        return [
+            'edad' => $c['fecha_nacimiento'] === null ? null : intdiv(Elegibilidad::mesesCumplidos(substr((string) $c['fecha_nacimiento'], 0, 10), $hoy), 12),
+            'antiguedad_empresa' => ($c['fecha_constitucion'] ?? null) === null ? null : Elegibilidad::mesesCumplidos(substr((string) $c['fecha_constitucion'], 0, 10), $hoy),
+            'ingresos' => $internos['ingresos'],
+            'obligaciones' => $internos['obligaciones'],
+            'capacidad' => $capacidad->toFixed(2),
+            'afectacion' => (string) $p['porcentaje_afectacion'],
+            'solicitudes_en_tramite' => $internos['solicitudes_en_tramite'],
+        ];
     }
 
     /**
@@ -122,7 +149,7 @@ class SimulacionService extends BaseService
         $s = $this->db->query(
             'SELECT s.id, s.cliente_id, s.version_condiciones_id, s.fecha_generacion, s.importe, s.cantidad_cuotas, s.valor_cuota, s.tea, s.cftea, '
             . 's.vence, s.estado, s.simulacion_comparativa_id, CASE WHEN s.estado = \'Vigente\' AND s.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END AS vigente, '
-            . 'c.denominacion, l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, '
+            . 'c.denominacion, l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, '
             . 'v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas '
             . 'FROM dbo.simulaciones s JOIN dbo.clientes c ON c.id = s.cliente_id JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id '
             . 'JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id WHERE s.id = ?',
@@ -175,9 +202,9 @@ class SimulacionService extends BaseService
     {
         $filas = $this->db->query(
             'SELECT l.id, l.codigo, l.nombre, l.estado, v.id AS version_id, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, '
-            . 'v.gasto_administrativo_cuota, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, v.edad_minima, v.edad_maxima, '
+            . 'v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, v.edad_minima, v.edad_maxima, '
             . 'v.antiguedad_minima_meses, v.admite_persona_humana, v.admite_persona_juridica, v.vigencia_inicio, v.vigencia_fin '
-            . 'FROM dbo.lineas_credito l CROSS APPLY (SELECT TOP (1) x.id, x.numero, x.tna, x.gasto_otorgamiento_pct, x.gasto_administrativo_cuota, x.monto_minimo, '
+            . 'FROM dbo.lineas_credito l CROSS APPLY (SELECT TOP (1) x.id, x.numero, x.tna, x.gasto_otorgamiento_pct, x.gasto_administrativo_cuota, x.tipo_gasto_administrativo, x.gasto_administrativo_pct, x.monto_minimo, '
             . 'x.monto_maximo, x.cuotas_minimas, x.cuotas_maximas, x.edad_minima, x.edad_maxima, x.antiguedad_minima_meses, x.admite_persona_humana, '
             . 'x.admite_persona_juridica, x.vigencia_inicio, x.vigencia_fin FROM dbo.versiones_condiciones x WHERE x.linea_credito_id = l.id '
             . 'AND x.vigente_desde <= ? ORDER BY x.vigente_desde DESC, x.numero DESC) v' . ($lineaId === null ? '' : ' WHERE l.id = ?') . ' ORDER BY l.nombre',

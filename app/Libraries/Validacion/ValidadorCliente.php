@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Libraries\Validacion;
 
 use App\Libraries\Clientes\CatalogoGeografico;
+use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Clientes\RequisitosDocumentales;
 
 /**
@@ -36,6 +37,7 @@ final class ValidadorCliente
             'ingresos_texto' => $t('ingresos_declarados'),
             'ingresos_declarados' => Campos::importe($d['ingresos_declarados'] ?? ''),
             'categoria_ingresos' => $tipo === 'PersonaJuridica' ? 'Empresa' : $t('categoria_ingresos'),
+            'categoria_monotributo' => $tipo === 'PersonaHumana' && $t('categoria_ingresos') === 'Monotributista' ? strtoupper($t('categoria_monotributo')) : null,
             'cuit_cuil' => str_replace(['-', ' ', '.'], '', $t('cuit_cuil')),
             'acepta_politica' => !empty($d['acepta_politica']),
             'acepta_comunicaciones' => !empty($d['acepta_comunicaciones']),
@@ -69,9 +71,10 @@ final class ValidadorCliente
      * @param array<string, mixed> $d datos normalizados
      * @param bool $alta en el alta se exige aceptar la política de tratamiento de datos (A7)
      * @param string $hoy fecha de negocio aaaa-mm-dd
+     * @param array<string, array{tope: string, vigente_desde: string}> $escalaMonotributo topes vigentes (D-26)
      * @return array<string, string> campo => mensaje
      */
-    public static function validar(array $d, bool $alta, string $hoy): array
+    public static function validar(array $d, bool $alta, string $hoy, array $escalaMonotributo = []): array
     {
         $juridica = $d['tipo_cliente'] === 'PersonaJuridica';
         $r = [];
@@ -124,6 +127,13 @@ final class ValidadorCliente
             $d['categoria_ingresos'] === '' ? 'Seleccione la categoría de ingresos.' : null,
             $d['categoria_ingresos'] !== '' && !RequisitosDocumentales::categoriaValida($d['tipo_cliente'], $d['categoria_ingresos']) ? 'Seleccione una categoría de ingresos válida.' : null,
         ];
+        // D-26: el monotributista informa su categoría, consistente con sus ingresos declarados
+        if (($d['categoria_ingresos'] ?? '') === 'Monotributista') {
+            $r['categoria_monotributo'] = [
+                ($d['categoria_monotributo'] ?? '') === '' ? 'Seleccione la categoría del monotributo.'
+                    : ($d['ingresos_declarados'] === null ? null : CategoriasMonotributo::inconsistencia((string) $d['categoria_monotributo'], (string) $d['ingresos_declarados'], $escalaMonotributo)),
+            ];
+        }
         if ($alta) {
             $r['acepta_politica'] = [$d['acepta_politica'] ? null : 'El cliente debe aceptar la política de tratamiento de datos personales.'];
         }

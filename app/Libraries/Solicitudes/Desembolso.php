@@ -13,7 +13,12 @@ use App\Libraries\Validacion\Campos;
  */
 final class Desembolso
 {
-    public const MEDIOS = ['Efectivo' => 'Efectivo por caja', 'Transferencia' => 'Transferencia a una cuenta del cliente'];
+    /**
+     * D-27: el desembolso se hace solo por transferencia a una cuenta bancaria (CBU) del cliente. La Ley 25.345, art. 1,
+     * priva de efectos a los pagos de más de $ 1.000 que no se hacen por medios bancarios, y no se admiten CVU de
+     * billeteras virtuales.
+     */
+    public const MEDIOS = ['Transferencia' => 'Transferencia a una cuenta bancaria del cliente (CBU)'];
 
     /**
      * @param array<string, mixed> $d medio, documento_verificado, conformidad (si el plan la requiere), cbu,
@@ -25,10 +30,7 @@ final class Desembolso
     public static function validar(array $d, array $cliente, string $neto, string $hoy, bool $requiereConformidad): array
     {
         $e = [];
-        $medio = (string) ($d['medio'] ?? '');
-        if (!isset(self::MEDIOS[$medio])) {
-            $e['medio'] = 'Seleccione el medio de desembolso.';
-        }
+        $medio = 'Transferencia';
         // Identidad del destinatario: se reingresa el número del documento que presenta y se compara con el padrón
         $esperado = $cliente['tipo_cliente'] === 'PersonaJuridica' ? (string) $cliente['representante_documento'] : (string) $cliente['nro_documento'];
         $documento = Campos::documento($d['documento_verificado'] ?? '');
@@ -40,38 +42,43 @@ final class Desembolso
         if ($requiereConformidad && empty($d['conformidad'])) {
             $e['conformidad'] = 'El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).';
         }
-        $datos = ['medio' => $medio, 'cbu' => null, 'comprobante' => null, 'evidencia' => null];
-        if ($medio === 'Transferencia') {
-            $cbu = preg_replace('/\D/', '', (string) ($d['cbu'] ?? '')) ?? '';
-            if (!self::cbuValido($cbu)) {
-                $e['cbu'] = 'Ingrese un CBU o CVU válido de 22 dígitos.';
-            }
-            $titular = preg_replace('/\D/', '', (string) ($d['cuit_titular'] ?? '')) ?? '';
-            if ($titular === '' || $titular !== (string) $cliente['cuit_cuil']) {
-                $e['cuit_titular'] = $cliente['cuit_cuil'] === null
-                    ? 'El cliente no tiene CUIT/CUIL registrado: regístrelo antes de transferir (CU-12).'
-                    : 'El titular de la cuenta debe ser el cliente (' . self::guiones((string) $cliente['cuit_cuil']) . '): no se admiten cuentas de terceros (RN-25).';
-            }
-            $evidencia = Campos::texto($d['evidencia_titularidad'] ?? '');
-            if (mb_strlen($evidencia) < 10) {
-                $e['evidencia_titularidad'] = 'Describa cómo verificó la titularidad de la cuenta (al menos 10 caracteres).';
-            }
-            $numero = Campos::texto($d['comprobante'] ?? '');
-            if ($numero === '' || mb_strlen($numero) > 60) {
-                $e['comprobante'] = 'Ingrese el número de operación de la transferencia.';
-            }
-            $fecha = Campos::fecha($d['fecha_transferencia'] ?? '');
-            if ($fecha === null || $fecha > $hoy) {
-                $e['fecha_transferencia'] = 'Ingrese la fecha de la transferencia (no futura).';
-            }
-            $importe = Campos::importe($d['importe_transferencia'] ?? '');
-            if ($importe === null || !Decimal::of($importe)->equals($neto)) {
-                $e['importe_transferencia'] = 'El importe transferido debe ser el neto a desembolsar.';
-            }
-            $datos = ['medio' => $medio, 'cbu' => $cbu, 'comprobante' => mb_substr("Op. {$numero} del " . ($fecha ?? ''), 0, 100), 'evidencia' => $evidencia];
+        $cbu = preg_replace('/\D/', '', (string) ($d['cbu'] ?? '')) ?? '';
+        if (!self::cbuValido($cbu)) {
+            $e['cbu'] = 'Ingrese un CBU válido de 22 dígitos.';
+        } elseif (self::esCvu($cbu)) {
+            $e['cbu'] = 'Es un CVU de una billetera virtual: el desembolso se transfiere solo a una cuenta bancaria del cliente, con CBU (D-27).';
         }
+        $titular = preg_replace('/\D/', '', (string) ($d['cuit_titular'] ?? '')) ?? '';
+        if ($titular === '' || $titular !== (string) $cliente['cuit_cuil']) {
+            $e['cuit_titular'] = $cliente['cuit_cuil'] === null
+                ? 'El cliente no tiene CUIT/CUIL registrado: regístrelo antes de transferir (CU-12).'
+                : 'El titular de la cuenta debe ser el cliente (' . self::guiones((string) $cliente['cuit_cuil']) . '): no se admiten cuentas de terceros (RN-25).';
+        }
+        $evidencia = Campos::texto($d['evidencia_titularidad'] ?? '');
+        if (mb_strlen($evidencia) < 10) {
+            $e['evidencia_titularidad'] = 'Describa cómo verificó la titularidad de la cuenta (al menos 10 caracteres).';
+        }
+        $numero = Campos::texto($d['comprobante'] ?? '');
+        if ($numero === '' || mb_strlen($numero) > 60) {
+            $e['comprobante'] = 'Ingrese el número de operación de la transferencia.';
+        }
+        $fecha = Campos::fecha($d['fecha_transferencia'] ?? '');
+        if ($fecha === null || $fecha > $hoy) {
+            $e['fecha_transferencia'] = 'Ingrese la fecha de la transferencia (no futura).';
+        }
+        $importe = Campos::importe($d['importe_transferencia'] ?? '');
+        if ($importe === null || !Decimal::of($importe)->equals($neto)) {
+            $e['importe_transferencia'] = 'El importe transferido debe ser el neto a desembolsar.';
+        }
+        $datos = ['medio' => $medio, 'cbu' => $cbu, 'comprobante' => mb_substr("Op. {$numero} del " . ($fecha ?? ''), 0, 100), 'evidencia' => $evidencia];
 
         return ['errores' => $e, 'datos' => $datos];
+    }
+
+    /** Un CVU (clave virtual uniforme) lleva 000 donde el CBU lleva el código de la entidad financiera. */
+    public static function esCvu(string $clave): bool
+    {
+        return str_starts_with($clave, '000');
     }
 
     /** CBU o CVU: 22 dígitos con los dígitos verificadores de sus dos bloques. */

@@ -89,7 +89,7 @@ class SolicitudService extends BaseService
             'SELECT s.id, s.numero, s.cliente_id, s.version_condiciones_id, s.simulacion_id, s.origen, s.fecha_registro, s.importe, s.cantidad_cuotas, '
             . 's.estado, s.tipo_rechazo, s.motivo_cancelacion, s.ultimo_movimiento, s.version_fila, s.usuario_id, '
             . "c.denominacion, c.categoria_ingresos, c.tipo_cliente, c.cuit_cuil, ui.nombre + ' ' + ui.apellido AS analista, "
-            . 'l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, '
+            . 'l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.gasto_otorgamiento_pct, v.gasto_administrativo_cuota, v.tipo_gasto_administrativo, v.gasto_administrativo_pct, '
             . 'v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas '
             . 'FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id '
             . 'JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id LEFT JOIN dbo.usuarios_internos ui ON ui.id = s.usuario_id WHERE s.id = ?',

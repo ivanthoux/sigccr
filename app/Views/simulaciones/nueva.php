@@ -4,6 +4,7 @@
  *
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed> $cliente
+ * @var array<string, mixed> $perfil
  * @var list<array<string, mixed>> $lineas
  * @var array<string, mixed>|null $linea
  */
@@ -21,6 +22,7 @@ $this->section('contenido');
     </div>
 </div>
 
+<?= view('partials/perfil_cliente', ['cliente' => $cliente, 'perfil' => $perfil]) ?>
 <?php if ($admitidas === []): ?>
     <div class="hoja p-4 mb-3"><p class="mb-0">El cliente no cumple los requisitos de ninguna línea activa (A1). Los motivos se detallan abajo.</p></div>
 <?php else: ?>
@@ -42,7 +44,7 @@ $this->section('contenido');
         <h2 class="h5" id="titulo-simular"><?= esc($linea['nombre']) ?> <span class="badge text-bg-light border">versión <?= (int) $linea['version'] ?></span></h2>
         <dl class="row small mb-3">
             <dt class="col-sm-4">Tasa nominal anual</dt><dd class="col-sm-8"><?= esc(formato_porcentaje($linea['tna'])) ?></dd>
-            <dt class="col-sm-4">Gastos (RN-68)</dt><dd class="col-sm-8">Otorgamiento <?= esc(formato_porcentaje($linea['gasto_otorgamiento_pct'])) ?> del capital, administrativo <?= esc(formato_importe($linea['gasto_administrativo_cuota'])) ?> por cuota, más IVA</dd>
+            <dt class="col-sm-4">Gastos (RN-68)</dt><dd class="col-sm-8">Otorgamiento <?= esc(formato_porcentaje($linea['gasto_otorgamiento_pct'])) ?> del capital, administrativo <?= esc(texto_gasto_administrativo($linea)) ?>, más IVA</dd>
             <dt class="col-sm-4">Importe prestable</dt><dd class="col-sm-8"><?= esc(formato_importe($linea['monto_minimo'])) ?> a <?= esc(formato_importe($linea['monto_maximo'])) ?> (RN-76)</dd>
             <dt class="col-sm-4">Cuotas</dt><dd class="col-sm-8"><?= (int) $linea['cuotas_minimas'] ?> a <?= (int) $linea['cuotas_maximas'] ?></dd>
             <dt class="col-sm-4">Vigencia de la línea</dt><dd class="col-sm-8">Del <?= esc(formato_fecha($linea['vigencia_inicio'])) ?> al <?= esc(formato_fecha($linea['vigencia_fin'])) ?></dd>

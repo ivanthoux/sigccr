@@ -15,7 +15,7 @@ Complementa las pruebas automáticas (suites Finanzas, Unitarias y Rutas), que v
 
 Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* con la etiqueta `bug`, el identificador del caso y lo observado. La iteración se considera aprobada cuando todos los casos dan OK o sus fallas están corregidas. Con eso se publica la etiqueta `v0.3.0` (Control 2, 13/11/2026).
 
-Las secciones siguen el orden del circuito: primero se preparan los fondos y la caja, porque la aprobación reserva fondos y el desembolso en efectivo exige una caja abierta.
+Las secciones siguen el orden del circuito: primero se preparan los fondos y la caja, porque la aprobación reserva fondos. Desde D-27 el desembolso es solo por transferencia a un CBU del cliente; la caja se sigue probando como está y se rediseña en la iteración 3. La sección 10 cubre los cambios pedidos en la presentación del 02/11/2026 (D-23 a D-28).
 
 ## Preparación
 
@@ -23,7 +23,7 @@ Las secciones siguen el orden del circuito: primero se preparan los fondos y la 
    ```bash
    git checkout develop && git pull
    docker compose up -d --force-recreate web app scheduler
-   docker compose exec app composer migrar      # aplica las migraciones pendientes (hasta la 14)
+   docker compose exec app composer migrar      # aplica las migraciones pendientes (hasta la 15)
    docker compose exec app bash -c 'SIGCCR_DB_GRUPO=migraciones php spark db:seed PermisosSeeder'
    ```
    Después de cargar los permisos, cerrar la sesión y volver a ingresar con cada usuario.
@@ -81,7 +81,7 @@ Para las transferencias:
 | G-08 | Inhabilitar con jornada abierta | Como Gerente, intentar inhabilitar `CAJA-01` y finalizar su asignación mientras la jornada está abierta. | Ambas se rechazan: «La caja tiene una jornada abierta: el Cajero debe cerrarla antes de…» | |
 | G-09 | Sin caja asignada | Con otro usuario Cajero sin asignación, abrir Mi caja e intentar la apertura. | «No tiene una caja asignada y habilitada: solicite la asignación al Gerente (CU-72).» | |
 
-El cierre de la caja (CU-36) se prueba en la sección 6, después del desembolso en efectivo.
+El cierre de la caja (CU-36) se prueba en la sección 6.
 
 ## 2. Simulación y comparación de líneas (CU-21 y CU-99)
 
@@ -149,13 +149,13 @@ El cierre de la caja (CU-36) se prueba en la sección 6, después del desembolso
 | G-49 | Devolver | Devolver la solicitud de G-32 a la etapa «Verificación». | «Solicitud devuelta para revisión: el Analista debe retomar …»; queda Devuelta para revisión y vuelve con una corrección (CU-84) a Pendiente de verificación. | |
 | G-50 | Aprobar sin fondos | Con el disponible libre menor que el neto, aprobar la solicitud de G-41. | «Fondos insuficientes para el desembolso de …»: no se aprueba y se puede rechazar o devolver. | |
 | G-51 | Bandeja del Cajero | Como Cajero, abrir Caja y cobranzas → Liquidar créditos. | Las solicitudes aprobadas pendientes de liquidación, con su vencimiento. | |
-| G-52 | Validaciones del desembolso | En la solicitud de G-38, liquidar sin medio; con un documento distinto del cliente; por transferencia con el CBU inválido, sin evidencia de titularidad, sin número de operación, con fecha futura y con un importe distinto del neto. | Cada error junto a su campo («El documento no coincide…», «Ingrese un CBU o CVU válido de 22 dígitos.», «El importe transferido debe ser el neto a desembolsar.»). | |
+| G-52 | Validaciones del desembolso | En la solicitud de G-38, liquidar con un documento distinto del cliente; con el CBU inválido, sin evidencia de titularidad, sin número de operación, con fecha futura y con un importe distinto del neto. | Cada error junto a su campo («El documento no coincide…», «Ingrese un CBU válido de 22 dígitos.», «El importe transferido debe ser el neto a desembolsar.»). | |
 | G-53 | Liquidar por transferencia | Liquidar la solicitud de G-38 con el CBU válido, la evidencia, el número de operación, la fecha de hoy y el neto. | «Crédito liquidado: se desembolsaron …»; constancia de desembolso imprimible; la reserva se consume y figura el egreso en Fondos. | |
 | G-54 | Liquidación repetida | Volver a abrir la URL de la liquidación de G-53 y enviar. | «La solicitud ya fue liquidada el …» | |
-| G-55 | Conformidad del plan del Gerente | Liquidar la solicitud de G-46 en efectivo sin marcar la conformidad. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).» | |
-| G-56 | Liquidar en efectivo | Repetir G-55 con la conformidad y con la caja abierta (G-07). | «Crédito liquidado…»; el desembolso queda en la jornada de `CAJA-01`. | |
-| G-57 | Efectivo sin caja | Como otro Cajero sin caja abierta, intentar un desembolso en efectivo. | «No tiene una caja abierta.» | |
-| G-58 | Cierre con diferencia | Como Cajero, cerrar la caja declarando un efectivo distinto de fondo inicial − desembolsos y sin explicación; luego con explicación. | La primera: «Hay una diferencia de …» y pide la explicación; la segunda cierra la jornada con la diferencia registrada. | |
+| G-55 | Conformidad del plan del Gerente | Liquidar la solicitud de G-46 por transferencia sin marcar la conformidad. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).» | |
+| G-56 | Liquidar el plan del Gerente | Repetir G-55 con la conformidad marcada y los datos de la transferencia. | «Crédito liquidado…» con el neto del plan definido por el Gerente. | |
+| G-57 | Sin efectivo ni CVU (D-27) | En otra liquidación, comprobar que no se ofrece el efectivo y cargar el CVU `0000003110000123456781`. | La pantalla indica que el desembolso es solo por transferencia a un CBU; el CVU se rechaza: «Es un CVU de una billetera virtual…». | |
+| G-58 | Cierre con diferencia | Como Cajero, cerrar la caja declarando un efectivo distinto del fondo inicial y sin explicación; luego con explicación. | La primera: «Hay una diferencia de …» y pide la explicación; la segunda cierra la jornada con la diferencia registrada. | |
 | G-59 | Cierre sin diferencia | Al día siguiente (o con otra jornada), cerrar con el efectivo exacto. | La jornada se cierra sin explicación; el efectivo esperado coincide con el informado. | |
 | G-60 | Inhabilitar y rehabilitar caja | Con la jornada cerrada, inhabilitar `CAJA-01` con motivo; intentar asignarla; rehabilitarla. | «Caja inhabilitada: su asignación quedó finalizada y no podrá abrirse.»; la asignación se rechaza; «Caja rehabilitada: ya se puede asignar.» | |
 | G-61 | Cancelar | Como Analista, cancelar con motivo una solicitud en trámite; luego cancelar una aprobada (pide la confirmación adicional); por último, intentar cancelar una Liquidada. | «Solicitud cancelada. Se liberaron sus afectaciones de fondos…»; la aprobada exige la confirmación y libera la reserva; la Liquidada: «La solicitud ya finalizó: no se puede cancelar.» | |
@@ -201,8 +201,27 @@ En cada caso se adelanta la fecha con SQL (reemplazar el número de solicitud) y
 | G-84 | Pantalla angosta | Abrir las alternativas, la resolución y la liquidación con 360 px de ancho. | Formularios en una columna y tablas con desplazamiento propio, sin desplazamiento horizontal de la página. | |
 | G-85 | Auditoría y fondos | Consultar en la base `registros_auditoria` y `movimientos_fondos` las operaciones de esta prueba. | Cada operación tiene su registro; la suma de reservas, consumos y liberaciones coincide con el disponible que muestra Fondos. | |
 
+## 10. Observaciones de la presentación del 02/11/2026 (D-23 a D-28)
+
+Antes de esta sección: aplicar la migración 15 y volver a cargar los permisos (preparación, paso 1).
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| G-86 | Rangos iguales (D-23) | Registrar una línea con importe mínimo y máximo de $ 500.000; luego con 12 cuotas mínimas y máximas; luego con edad mínima y máxima de 40. | «El importe máximo debe ser mayor que el mínimo…», «La cantidad máxima de cuotas debe ser mayor que la mínima…» y «La edad máxima debe ser mayor que la mínima…». | |
+| G-87 | Gasto administrativo porcentual (D-28) | Registrar una línea con «Porcentaje del capital en cada cuota» de 0,5; probar 15 y vacío. Simular $ 800.000 en 12 cuotas. | 15 y vacío se rechazan junto al campo; la línea muestra «0,50 % del capital por cuota»; en la simulación cada cuota tiene $ 4.000,00 de gastos y su IVA. | |
+| G-88 | Gasto fijo sin cambios | Simular con una línea registrada antes de la migración 15. | Muestra el importe fijo por cuota y el mismo plan que antes. | |
+| G-89 | Datos del cliente en el simulador | Simular y comparar líneas para un cliente con cuotas vigentes o una solicitud en trámite. | Recuadro con documento, edad, situación laboral, empleador, ingresos, cuotas vigentes y comprometidas y capacidad de pago. | |
+| G-90 | Plan paginado | Simular 36 cuotas; cambiar a 24 y a «Todas»; imprimir la simulación. | Muestra 12 cuotas por página con «Cuotas 1 a 12 de 36»; la impresión incluye las 36. | |
+| G-91 | Documentos en la resolución | Como Gerente, abrir una solicitud pendiente de resolución y usar «Ver» en cada documento. | Lista los documentos con su resultado de verificación; cada uno se abre en otra pestaña sin descargarse. | |
+| G-92 | Confirmación al modificar una línea (D-24) | Con una solicitud en trámite de una línea, modificar su TNA. Enviar sin marcar la confirmación y luego marcándola. | Primero: «Hay N solicitud(es) en trámite… confirme el cambio…» con la casilla; después se registra la versión nueva y la solicitud conserva la anterior. | |
+| G-93 | Confirmación de parámetros (D-24) | Con solicitudes en trámite, registrar una versión de los parámetros de estructuración y otra de evaluación. | Piden la confirmación y la registran al marcarla. | |
+| G-94 | Nuevo tipo de documento (D-25) | En Gestión → Documentación exigible, registrar «Certificado de servicios del empleador» para personas humanas; marcarlo en «Relación de dependencia» y guardar. Registrar una línea nueva. | El tipo queda activo con su código; en la línea nueva, la categoría Relación de dependencia trae marcado el certificado. | |
+| G-95 | Reglas del catálogo (D-25) | Quitar el documento de identidad de una categoría y guardar; intentar desactivar el documento de identidad; cambiar «Corresponde a» de un tipo con documentos en legajos. | Se rechaza cada uno con su motivo; desactivar un tipo sin restricciones lo deja Inactivo. | |
+| G-96 | Escala del monotributo (D-26) | En Gestión → Categorías del monotributo, registrar una escala con fecha pasada; luego con el tope de B menor que el de A; luego una válida desde el 01/02/2027. | Las dos primeras se rechazan; la válida figura como «Próxima» en las escalas registradas. | |
+| G-97 | Cliente monotributista (D-26) | Registrar un monotributista sin categoría; luego con categoría A e ingresos de $ 1.200.000; luego con categoría B. | «Seleccione la categoría del monotributo.»; «Doce meses de los ingresos declarados… superan el tope de la categoría A…»; con B se registra y el perfil muestra la categoría. | |
+
 ## Registro
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | Iván Ezequiel Thoux | de 85 | | |
+| | Iván Ezequiel Thoux | de 97 | | |

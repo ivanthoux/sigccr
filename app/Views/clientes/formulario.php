@@ -7,6 +7,7 @@
  * @var list<array{id: int, codigo: string, nombre: string, aplica_a: string}> $tipos
  * @var list<array{id: int, nombre: string}> $provincias
  * @var list<array{id: int, nombre: string}> $localidades de la provincia elegida (D-18)
+ * @var array<string, array{tope: string, vigente_desde: string}> $escalaMonotributo categorías vigentes (D-26)
  */
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
@@ -149,6 +150,15 @@ $this->section('contenido');
                     <?php foreach (RequisitosDocumentales::CATEGORIAS['PersonaHumana'] as $k => $t): ?><option value="<?= $k ?>"<?= $v('categoria_ingresos') === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?>
                 </select>
                 <?= error_campo('categoria_ingresos') ?>
+            </div>
+            <div class="col-md-6" data-solo="PersonaHumana" data-si-categoria="Monotributista"<?= $v('categoria_ingresos') === 'Monotributista' ? '' : ' hidden' ?>>
+                <label for="categoria_monotributo" class="form-label">Categoría del monotributo</label>
+                <select class="form-select<?= campo_invalido('categoria_monotributo') ?>" id="categoria_monotributo" name="categoria_monotributo">
+                    <option value="">Seleccione</option>
+                    <?php foreach ($escalaMonotributo as $k => $e): ?><option value="<?= $k ?>"<?= trim($v('categoria_monotributo')) === $k ? ' selected' : '' ?>><?= $k ?> · hasta <?= esc(formato_importe($e['tope'])) ?> anuales</option><?php endforeach ?>
+                </select>
+                <?= error_campo('categoria_monotributo') ?>
+                <div class="form-text">Topes de ingresos brutos anuales vigentes<?= $escalaMonotributo === [] ? '' : ' desde el ' . esc(formato_fecha(reset($escalaMonotributo)['vigente_desde'])) ?> (ARCA).</div>
             </div>
             <?= $campo('ingresos_declarados', '<span data-solo="PersonaHumana">Ingresos mensuales declarados ($)</span><span data-solo="PersonaJuridica">Ingresos netos mensuales promedio ($)</span>', $texto('ingresos_declarados', 25, 'inputmode="decimal"'), 'Por ejemplo 850.000,00.') ?>
         </div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Clientes;
 
 use App\Libraries\Clientes\ArchivoLegajo;
+use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Clientes\ReglasClientes;
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
@@ -142,9 +143,9 @@ final class ClientesTest extends TestCase
 
     public function testDocumentacionSugeridaPorCategoria(): void
     {
-        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::sugeridos('RelacionDependencia'));
-        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Monotributista'), ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
-        $this->assertCount(5, RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Empresa'), []));
+        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::sugeridosIniciales('RelacionDependencia'));
+        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridosIniciales('Monotributista'), ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
+        $this->assertCount(5, RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridosIniciales('Empresa'), []));
     }
 
     public function testLaLineaDefineLoExigidoEnLaSolicitud(): void
@@ -202,5 +203,31 @@ final class ClientesTest extends TestCase
         $antes = ['ingresos_declarados' => '850000.00', 'telefono' => '351', 'categoria_ingresos' => 'RelacionDependencia'];
         $this->assertSame([], ReglasClientes::cambiosRelevantes($antes, [...$antes, 'telefono' => '3515']));
         $this->assertSame(['ingresos_declarados'], ReglasClientes::cambiosRelevantes($antes, [...$antes, 'ingresos_declarados' => '900000.00']));
+    }
+
+    /** D-25: la documentación propuesta incluye la identificación y solo tipos activos que corresponden. */
+    public function testDocumentacionSugeridaConfigurable(): void
+    {
+        $aplica = ['DOC_IDENTIDAD' => 'Ambos', 'RECIBO_SUELDO' => 'PersonaHumana', 'CERT_SERVICIOS' => 'PersonaHumana', 'CONST_CUIT' => 'PersonaJuridica', 'PODER_REPRESENTACION' => 'PersonaJuridica'];
+        $base = array_map(static fn () => ['DOC_IDENTIDAD'], RequisitosDocumentales::CATEGORIAS['PersonaHumana']) + ['Empresa' => ['CONST_CUIT', 'DOC_IDENTIDAD', 'PODER_REPRESENTACION']];
+        $this->assertSame([], RequisitosDocumentales::validarSugeridos(['RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO', 'CERT_SERVICIOS']] + $base, $aplica));
+        $e = RequisitosDocumentales::validarSugeridos(['RelacionDependencia' => ['RECIBO_SUELDO'], 'Monotributista' => ['DOC_IDENTIDAD', 'CONST_CUIT']] + $base, $aplica);
+        $this->assertStringContainsString('identificación', $e['RelacionDependencia']);
+        $this->assertStringContainsString('no corresponden', $e['Monotributista']);
+        $this->assertSame('CERTIFICADO_DE_SERVICIOS_DEL_E', RequisitosDocumentales::codigoPara('Certificado de servicios del empleador'));
+        $this->assertSame('CONSTANCIA_DE_CBU_N_1', RequisitosDocumentales::codigoPara('Constancia de CBU (n.º 1)'));
+    }
+
+    /** D-26: categoría del monotributo obligatoria y consistente con los ingresos declarados. */
+    public function testCategoriaDelMonotributo(): void
+    {
+        $escala = ['A' => ['tope' => '12009410.45', 'vigente_desde' => '2026-08-01'], 'B' => ['tope' => '17595182.74', 'vigente_desde' => '2026-08-01']];
+        $this->assertNull(CategoriasMonotributo::inconsistencia('A', '1000000.00', $escala));
+        $this->assertStringContainsString('superan el tope de la categoría A', (string) CategoriasMonotributo::inconsistencia('A', '1200000.00', $escala));
+        $this->assertNull(CategoriasMonotributo::inconsistencia('B', '1200000.00', $escala));
+        $this->assertNotNull(CategoriasMonotributo::inconsistencia('K', '100.00', $escala));
+        $v = CategoriasMonotributo::validarEscala(['A' => '100,00', 'B' => '90,00'] + array_fill_keys(['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'], ''));
+        $this->assertStringContainsString('mayor que el de la anterior', $v['errores']['tope_B']);
+        $this->assertArrayHasKey('tope_K', $v['errores']);
     }
 }

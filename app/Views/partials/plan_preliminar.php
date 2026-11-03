@@ -20,7 +20,7 @@ $plan = $calculo['plan'];
 </dl>
 <p class="small text-body-secondary">Gasto de otorgamiento <?= esc(formato_importe($calculo['gasto_otorgamiento'])) ?> más IVA <?= esc(formato_importe($calculo['iva_otorgamiento'])) ?>, descontados del desembolso. Total de intereses <?= esc(formato_importe($calculo['total_intereses'])) ?>. Alícuota de IVA <?= esc(formato_porcentaje($calculo['alicuota_iva'] ?? '0.21', 0)) ?>. Los vencimientos son preliminares: se fijan a 30 días de la liquidación (RN-52).</p>
 <div class="table-responsive">
-    <table class="table table-sm align-middle mb-0">
+    <table class="table table-sm align-middle mb-0" data-plan-cuotas>
         <thead><tr><th>Cuota</th><th>Vencimiento</th><th class="text-end">Capital</th><th class="text-end">Interés</th><th class="text-end">Gastos</th><th class="text-end">IVA</th><th class="text-end">Total</th></tr></thead>
         <tbody>
         <?php foreach ($plan->cuotas as $q): ?>

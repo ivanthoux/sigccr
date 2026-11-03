@@ -23,7 +23,7 @@ class LineaService extends BaseService
 {
     /** Columnas de condiciones de versiones_condiciones. */
     private const CONDICIONES = [
-        'tna', 'gasto_otorgamiento_pct', 'gasto_administrativo_cuota', 'monto_minimo', 'monto_maximo', 'cuotas_minimas',
+        'tna', 'gasto_otorgamiento_pct', 'gasto_administrativo_cuota', 'tipo_gasto_administrativo', 'gasto_administrativo_pct', 'monto_minimo', 'monto_maximo', 'cuotas_minimas',
         'cuotas_maximas', 'edad_minima', 'edad_maxima', 'antiguedad_minima_meses', 'admite_persona_humana',
         'admite_persona_juridica', 'vigencia_inicio', 'vigencia_fin',
     ];
@@ -151,7 +151,7 @@ class LineaService extends BaseService
      * @param array<string, mixed> $datos
      * @return array{version: int, vigente_desde: string, operaciones_anteriores: int}
      */
-    public function modificar(int $id, int $versionLeida, array $datos, string $fechaVigencia, string $motivo): array
+    public function modificar(int $id, int $versionLeida, array $datos, string $fechaVigencia, string $motivo, bool $confirmado = false): array
     {
         $d = ValidadorLinea::normalizar($datos);
         $hoy = $this->hoyNegocio();
@@ -170,7 +170,7 @@ class LineaService extends BaseService
             throw new ValidacionException($errores, 'RN-14');
         }
 
-        return $this->transaccion(function () use ($id, $versionLeida, $d, $fecha, $hoy, $motivo): array {
+        return $this->transaccion(function () use ($id, $versionLeida, $d, $fecha, $hoy, $motivo, $confirmado): array {
             $linea = $this->bloquear('lineas_credito', [$id])[0] ?? null;
             if ($linea === null) {
                 throw new ReglaNegocioException('La línea de crédito no existe.');
@@ -180,6 +180,11 @@ class LineaService extends BaseService
                 throw new ValidacionException(['nombre' => 'Ya existe otra línea con ese nombre.']);
             }
             $anterior = $this->db->query('SELECT TOP (1) id, numero FROM dbo.versiones_condiciones WHERE linea_credito_id = ? AND vigente_desde <= ? ORDER BY vigente_desde DESC, numero DESC', [$id, $this->ahoraUtc()])->getRowArray();
+            // D-24: con solicitudes en trámite sobre la versión vigente, el cambio se confirma de forma explícita
+            $enCurso = $anterior === null ? ['solicitudes_en_curso' => 0, 'simulaciones_vigentes' => 0] : $this->operaciones([(int) $anterior['id']]);
+            if (!$confirmado && $enCurso['solicitudes_en_curso'] > 0) {
+                throw new ValidacionException(['confirmar_cambio' => "Hay {$enCurso['solicitudes_en_curso']} solicitud(es) en trámite y {$enCurso['simulaciones_vigentes']} simulación(es) vigente(s) con la versión {$anterior['numero']} de condiciones. Conservan esa versión (RN-15): confirme el cambio para registrar la nueva."], 'RN-15');
+            }
             $numero = (int) $this->db->query('SELECT ISNULL(MAX(numero), 0) + 1 AS n FROM dbo.versiones_condiciones WHERE linea_credito_id = ?', [$id])->getRow()->n;
             $vigenteDesde = $fecha === $hoy ? $this->ahoraUtc()
                 : Time::parse($fecha . ' 00:00:00', config('Sigccr')->zonaNegocio)->setTimezone('UTC')->format('Y-m-d H:i:s.vP');
@@ -263,6 +268,7 @@ class LineaService extends BaseService
         $this->db->table('versiones_condiciones')->insert([
             'linea_credito_id' => $lineaId, 'numero' => $numero, 'vigente_desde' => $vigenteDesde,
             'tna' => $d['tna'], 'gasto_otorgamiento_pct' => $d['gasto_otorgamiento_pct'], 'gasto_administrativo_cuota' => $d['gasto_administrativo_cuota'],
+            'tipo_gasto_administrativo' => $d['tipo_gasto_administrativo'], 'gasto_administrativo_pct' => $d['gasto_administrativo_pct'],
             'monto_minimo' => $d['monto_minimo'], 'monto_maximo' => $d['monto_maximo'],
             'cuotas_minimas' => $d['cuotas_minimas'], 'cuotas_maximas' => $d['cuotas_maximas'],
             'edad_minima' => $d['edad_minima'], 'edad_maxima' => $d['edad_maxima'], 'antiguedad_minima_meses' => $d['antiguedad_minima_meses'],

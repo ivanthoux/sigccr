@@ -20,6 +20,13 @@
         });
     }
 
+    // D-28: importe fijo o porcentaje del capital
+    function actualizarGasto() {
+        const elegido = form.querySelector('[data-tipo-gasto]:checked');
+        form.querySelectorAll('[data-si-gasto]').forEach((el) => { el.hidden = !elegido || el.dataset.siGasto !== elegido.value; });
+    }
+    form.querySelectorAll('[data-tipo-gasto]').forEach((el) => el.addEventListener('change', actualizarGasto));
+
     form.querySelectorAll('#admite_persona_humana, #admite_persona_juridica, [data-categoria]').forEach((el) => el.addEventListener('change', actualizar));
     actualizar();
 })();

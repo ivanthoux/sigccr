@@ -59,6 +59,8 @@ $this->section('contenido');
     </div>
 </div>
 
+<?= view('solicitudes/_legajo', ['s' => $s]) ?>
+
 <form method="post" action="<?= site_url("admin/solicitudes/{$id}/resolver") ?>" class="hoja p-4" novalidate>
     <?= csrf_field() ?>
     <input type="hidden" name="version_fila" value="<?= (int) $s['version_fila'] ?>">
