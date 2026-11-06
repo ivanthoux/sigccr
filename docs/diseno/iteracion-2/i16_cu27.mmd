@@ -1,0 +1,24 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin Liquidaciones
+participant LQ as LiquidacionService
+participant DS as Desembolso
+participant AF as AmortizacionFrancesa
+participant F as FondosService
+participant SO as SolicitudService
+participant DB as SQL Server
+CA->>C: GET liquidaciones/{id}: condiciones aprobadas, neto y plan
+CA->>C: POST CBU, titular, evidencia, comprobante y fecha
+C->>LQ: liquidar(id, versión, datos, usuario)
+LQ->>DB: BEGIN, bloquea la solicitud, sin liquidación anterior (A5, RN-26)
+LQ->>LQ: aprobación no vencida (A1) y evaluación vigente (A2)
+LQ->>DS: validar(datos, neto): solo transferencia a un CBU válido del cliente, no CVU (RN-25, RN-77)
+LQ->>F: afectacionVigente: reserva suficiente (A3)
+LQ->>DB: creditos Activo con la versión de morosidad
+LQ->>AF: plan(capital, TNA, cuotas, hoy, gasto por cuota, IVA) (RN-50 a RN-52)
+LQ->>DB: cuotas Pendiente y liquidaciones con la cuenta y el comprobante
+LQ->>F: consumir(reserva)
+LQ->>SO: Liquidada y auditoría
+LQ->>DB: COMMIT
+C-->>CA: crédito activo y constancia de desembolso

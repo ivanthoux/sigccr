@@ -1,0 +1,18 @@
+digraph evaluacion { rankdir=TB; graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+subgraph cluster_p { label="Dimensión: procesamiento"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ i1 [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+ i1 -> Pendiente [label="solicitud en\nPendienteEvaluacion"];
+ Pendiente -> EnProceso [label="inicio del proceso\n(CU-86)"];
+ EnProceso -> Finalizada [label="resultado\ndeterminado (CU-86)"];
+ EnProceso -> NoCompletada [label="servicio externo no disponible,\nerror interno o más de 15 min\nen proceso (CU-86)"];
+}
+subgraph cluster_v { label="Dimensión: vigencia (solo evaluaciones finalizadas)"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ i2 [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+ i2 -> Vigente [label="evaluación finalizada\n/ vence = fin + 30 días"];
+ Vigente -> Vencida [label="30 días corridos\n(CU-89, RN-20)"];
+ Vigente -> Invalidada [label="cambio relevante\n(RN-12, RN-61)"];
+ Vigente -> Sustituida [label="nueva evaluación\n(RN-21)"];
+}
+}

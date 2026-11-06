@@ -1,0 +1,30 @@
+sequenceDiagram
+autonumber
+actor AN as Analista
+participant C as Admin Alternativas
+participant ES as EstructuracionService
+participant EV as EvaluacionService
+participant CP as CapacidadPago
+participant F as FondosService
+participant SO as SolicitudService
+participant DB as SQL Server
+AN->>C: POST confirmar alternativa con la conformidad del cliente
+C->>ES: confirmar(solicitud, alternativa, versión, datos, usuario)
+ES->>DB: BEGIN, solicitud PendienteSeleccionPlan con su version_fila (RN-24)
+ES->>ES: evaluación vigente (A5) y alternativa Vigente, no vencida (A2, RN-48)
+ES->>EV: antecedentesInternos(cliente)
+ES->>CP: capacidad(ingresos, afectación, obligaciones)
+alt la cuota supera la capacidad
+ES->>DB: alternativa Descartada y generar() nuevas (A3)
+else viable
+ES->>DB: alternativa Confirmada con fecha y medio de la conformidad (RN-23)
+ES->>F: reservarParaSolicitud(neto) (RN-41)
+alt línea no activa o fondos insuficientes
+ES->>SO: cambiarEstado PendienteResolucion (A1, A4)
+else
+ES->>DB: resolución automática Aprobada, vence en 72 horas hábiles (RN-49)
+ES->>SO: cambiarEstado AprobadaPendienteLiquidacion
+end
+end
+ES->>DB: auditoría y COMMIT
+C-->>AN: estado resultante y vencimiento de la aprobación

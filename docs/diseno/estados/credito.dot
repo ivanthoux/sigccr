@@ -1,0 +1,18 @@
+digraph credito { rankdir=LR; graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+fin [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+dec [shape=diamond, style=filled, fillcolor=white, color=black, width=0.35, height=0.35, fixedsize=true, label=""];
+ini -> Activo [label="liquidación (CU-27) o refinanciación\naplicada (CU-74)"];
+Activo -> EnMora [label="una cuota pasa a\nVencida (CU-88)"];
+EnMora -> Activo [label="se cancelan todas las\ncuotas vencidas"];
+Activo -> Cancelado [label="todas las cuotas pagadas\n(cobros o CU-97)"];
+EnMora -> Cancelado [label="todas las cuotas pagadas\n(cobros o CU-97)"];
+Cancelado -> dec [label="anulación de un\ncobro (CU-37)"];
+dec -> Activo [label="[sin cuotas\nvencidas]"];
+dec -> EnMora [label="[con cuotas\nvencidas]"];
+EnMora -> Refinanciado [label="refinanciación aplicada\n(CU-74, RN-70)"];
+Activo -> Revocado [label="restitución confirmada\n[dentro de 10 días hábiles]\n(CU-102, RN-79)"];
+Refinanciado -> fin; Revocado -> fin;
+}

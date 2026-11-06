@@ -1,0 +1,31 @@
+sequenceDiagram
+autonumber
+actor GE as Gerente
+participant C as Admin Resoluciones
+participant R as ResolucionService
+participant RG as ResolucionGerencial
+participant ES as EstructuracionService
+participant F as FondosService
+participant SO as SolicitudService
+participant DB as SQL Server
+GE->>C: GET resoluciones/{id}
+C->>R: antecedentes(id): legajo con sus documentos, evaluación, alternativas, capacidad y fondos
+GE->>C: POST decisión, plan y fundamento con version_fila
+C->>R: resolver(id, versión, datos, usuario)
+R->>DB: BEGIN, bloquea la solicitud PendienteResolucion (RN-24)
+R->>RG: validar(datos, tiene alternativa confirmada) (RN-22)
+alt Rechazar
+R->>F: liberarDeSolicitud
+R->>SO: Rechazada (A1)
+else Devolver para revisión
+R->>F: liberarDeSolicitud
+R->>SO: DevueltaRevision con la etapa a retomar y alerta al Analista (A2)
+else Aprobar
+R->>ES: evaluación vigente y documentación verificada (A3, A5)
+R->>ES: alternativaParaAprobar(plan): dentro de la línea, la capacidad y el tope (RN-76, RN-83)
+R->>F: reservarParaSolicitud(neto) (A4, RN-71)
+R->>DB: resolución Aprobada, vence en 72 horas hábiles
+R->>SO: AprobadaPendienteLiquidacion y alerta al Analista
+end
+R->>DB: auditoría y COMMIT
+C-->>GE: nuevo estado de la solicitud
