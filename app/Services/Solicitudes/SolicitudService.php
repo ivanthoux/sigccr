@@ -12,6 +12,7 @@ use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\RevisionLegajo;
 use App\Libraries\Solicitudes\Simulador;
 use App\Libraries\Validacion\Campos;
+use App\Libraries\Validacion\ValidadorCliente;
 use App\Services\BaseService;
 use App\Services\Clientes\LegajoService;
 use App\Services\Comunes\AlertaService;
@@ -222,8 +223,10 @@ class SolicitudService extends BaseService
                 if ($cliente === null || $datos['estado'] !== 'Activo') {
                     throw new ReglaNegocioException('El cliente está desactivado: no puede registrar solicitudes.');
                 }
-                if (($datos['cuit_cuil'] ?? null) === null || $datos['cuit_cuil'] === '') {
-                    throw new ReglaNegocioException('El cliente no tiene CUIT/CUIL informado: complételo con «Modificar datos» antes de registrar la solicitud.', 'CU-22');
+                // RN-80: identificación completa del cliente (Resolución UIF 200/2024) antes de registrar la solicitud
+                $faltan = ValidadorCliente::identificacionIncompleta($datos);
+                if ($faltan !== []) {
+                    throw new ReglaNegocioException('Antes de registrar la solicitud complete la identificación del cliente con «Modificar datos»: falta ' . implode(', ', $faltan) . ' (RN-80).', 'RN-80');
                 }
                 $lineaId = (int) $sim['linea_credito_id'];
                 $this->bloquear('lineas_credito', [$lineaId]);

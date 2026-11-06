@@ -9,8 +9,12 @@ use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Clientes\RequisitosDocumentales;
 
 /**
- * Datos de un cliente (CU-11 pasos 2 a 5 y A7, A8; CU-12 paso 5; RN-07, RN-08, RN-75). La unicidad del documento,
- * del CUIT/CUIL y del correo la verifica el servicio contra la base.
+ * Datos de un cliente (CU-11 pasos 2 a 5 y A7, A8, A11; CU-12 paso 5; RN-07, RN-08, RN-75, RN-80). La unicidad del
+ * documento, del CUIT/CUIL y del correo la verifica el servicio contra la base.
+ *
+ * RN-80 (Resolución UIF 200/2024): la persona humana informa su nacionalidad y su actividad laboral o profesional
+ * principal, y todo cliente declara si es persona expuesta políticamente. Los clientes registrados antes de D-31
+ * completan estos datos en su próxima modificación.
  */
 final class ValidadorCliente
 {
@@ -41,6 +45,11 @@ final class ValidadorCliente
             'cuit_cuil' => str_replace(['-', ' ', '.'], '', $t('cuit_cuil')),
             'acepta_politica' => !empty($d['acepta_politica']),
             'acepta_comunicaciones' => !empty($d['acepta_comunicaciones']),
+            'persona_expuesta' => match ($t('persona_expuesta')) {
+                'Si' => true,
+                'No' => false,
+                default => null,
+            },
         ];
         if ($tipo === 'PersonaJuridica') {
             return $comunes + [
@@ -62,6 +71,7 @@ final class ValidadorCliente
             'fecha_nacimiento_texto' => $t('fecha_nacimiento'),
             'fecha_nacimiento' => Campos::fecha($d['fecha_nacimiento'] ?? ''),
             'estado_civil' => $t('estado_civil'),
+            'nacionalidad' => $t('nacionalidad'),
             'ocupacion' => $t('ocupacion'),
             'empleador' => $t('empleador'),
         ];
@@ -108,7 +118,8 @@ final class ValidadorCliente
                 $d['fecha_nacimiento'] !== null && $d['fecha_nacimiento'] <= $hoy && Campos::edad($d['fecha_nacimiento'], $hoy) < self::EDAD_MINIMA ? 'El cliente debe ser mayor de edad (' . self::EDAD_MINIMA . ' años).' : null,
             ];
             $r['estado_civil'] = [$d['estado_civil'] !== '' && !isset(self::ESTADOS_CIVILES[$d['estado_civil']]) ? 'Seleccione un estado civil válido.' : null];
-            $r['ocupacion'] = [Campos::largoMaximo($d['ocupacion'], 100, 'la ocupación')];
+            $r['nacionalidad'] = [Campos::obligatorio($d['nacionalidad'], 'la nacionalidad'), Campos::largoMaximo($d['nacionalidad'], 60, 'la nacionalidad')];
+            $r['ocupacion'] = [Campos::obligatorio($d['ocupacion'], 'la actividad laboral o profesional principal'), Campos::largoMaximo($d['ocupacion'], 100, 'la actividad laboral o profesional')];
             $r['empleador'] = [Campos::largoMaximo($d['empleador'], 150, 'el empleador o actividad')];
         }
 
@@ -134,6 +145,7 @@ final class ValidadorCliente
                     : ($d['ingresos_declarados'] === null ? null : CategoriasMonotributo::inconsistencia((string) $d['categoria_monotributo'], (string) $d['ingresos_declarados'], $escalaMonotributo)),
             ];
         }
+        $r['persona_expuesta'] = [$d['persona_expuesta'] === null ? 'Registre la declaración jurada sobre la condición de persona expuesta políticamente (RN-80).' : null];
         if ($alta) {
             $r['acepta_politica'] = [$d['acepta_politica'] ? null : 'El cliente debe aceptar la política de tratamiento de datos personales.'];
         }
@@ -159,5 +171,34 @@ final class ValidadorCliente
     public static function denominacion(array $d): string
     {
         return $d['tipo_cliente'] === 'PersonaJuridica' ? $d['razon_social'] : $d['apellido'] . ', ' . $d['nombre'];
+    }
+
+    /**
+     * RN-80: datos de identificación que faltan para registrar una solicitud (CU-22). Cubre a los clientes registrados
+     * antes de D-31, que completan los datos con CU-12.
+     *
+     * @param array<string, mixed> $c fila del cliente con su subclase
+     * @return list<string>
+     */
+    public static function identificacionIncompleta(array $c): array
+    {
+        $vacio = static fn ($v): bool => $v === null || trim((string) $v) === '';
+        $faltan = [];
+        if ($vacio($c['cuit_cuil'] ?? null)) {
+            $faltan[] = 'CUIT/CUIL';
+        }
+        if (($c['tipo_cliente'] ?? '') === 'PersonaHumana') {
+            if ($vacio($c['nacionalidad'] ?? null)) {
+                $faltan[] = 'nacionalidad';
+            }
+            if ($vacio($c['ocupacion'] ?? null)) {
+                $faltan[] = 'actividad laboral o profesional principal';
+            }
+        }
+        if (($c['persona_expuesta'] ?? null) === null) {
+            $faltan[] = 'declaración de persona expuesta políticamente';
+        }
+
+        return $faltan;
     }
 }

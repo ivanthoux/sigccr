@@ -84,7 +84,7 @@ class ClienteService extends BaseService
     {
         $this->liberarBloqueosVencidos();
         $c = $this->db->query(
-            'SELECT c.*, ph.tipo_documento, ph.nro_documento, ph.nombre, ph.apellido, ph.fecha_nacimiento, ph.estado_civil, ph.ocupacion, ph.empleador, '
+            'SELECT c.*, ph.tipo_documento, ph.nro_documento, ph.nombre, ph.apellido, ph.fecha_nacimiento, ph.estado_civil, ph.nacionalidad, ph.ocupacion, ph.empleador, '
             . 'pj.razon_social, pj.fecha_constitucion, pj.actividad_principal, pj.representante_nombre, pj.representante_documento, pj.representante_cargo, '
             . 'ca.estado AS estado_cuenta, ca.correo_verificado, ca.correo AS correo_cuenta, '
             . 'lo.nombre AS localidad, lo.departamento, lo.provincia_id, pr.nombre AS provincia '
@@ -184,7 +184,8 @@ class ClienteService extends BaseService
                     'denominacion' => ValidadorCliente::denominacion($d), 'correo' => $d['correo'],
                     'telefono' => $d['telefono'] === '' ? null : $d['telefono'], 'domicilio' => $d['domicilio'],
                     'localidad_id' => $d['localidad_id'], 'codigo_postal' => $d['codigo_postal'],
-                    'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'], 'categoria_monotributo' => $d['categoria_monotributo'], 'categoria_monotributo' => $d['categoria_monotributo'],
+                    'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'], 'categoria_monotributo' => $d['categoria_monotributo'],
+                    'persona_expuesta' => $d['persona_expuesta'] ? 1 : 0, 'fecha_declaracion_pep' => $ahora,
                     'estado' => 'Activo', 'fecha_alta' => $this->hoyNegocio(), 'creado_en' => $ahora,
                 ]);
                 $id = (int) $this->db->insertID();
@@ -205,9 +206,12 @@ class ClienteService extends BaseService
                     $movidos[] = (new LegajoService($this->db))->guardar($id, $doc, $usuarioId)['ruta'];
                 }
                 $comunicacionId = (new AutorizacionService($this->db))->emitir($cuentaId, 'VerificacionCorreo', $d['correo'], $d['tipo_cliente'] === 'PersonaJuridica' ? $d['representante_nombre'] : $d['nombre'], self::RUTA_VERIFICACION, 'verificacion_correo_cliente');
+                if ($d['persona_expuesta']) {
+                    $this->alertarPersonaExpuesta($id, ValidadorCliente::denominacion($d));
+                }
                 (new AuditoriaService($this->db))->registrar('clientes.registrar', 'clientes', $id, 'Exitoso', null, [
                     'tipo' => $d['tipo_cliente'], 'denominacion' => ValidadorCliente::denominacion($d), 'categoria' => $d['categoria_ingresos'],
-                    'documentos' => count($documentos), 'comunicaciones_comerciales' => $d['acepta_comunicaciones'],
+                    'documentos' => count($documentos), 'comunicaciones_comerciales' => $d['acepta_comunicaciones'], 'persona_expuesta' => $d['persona_expuesta'],
                 ]);
 
                 return [$id, $comunicacionId];
@@ -255,6 +259,7 @@ class ClienteService extends BaseService
                 'telefono' => $d['telefono'] === '' ? null : $d['telefono'], 'domicilio' => $d['domicilio'],
                 'localidad_id' => $d['localidad_id'], 'codigo_postal' => $d['codigo_postal'],
                 'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'],
+                'categoria_monotributo' => $d['categoria_monotributo'], 'persona_expuesta' => $d['persona_expuesta'] ? 1 : 0,
             ] + $this->datosSubclase($d);
             $cambios = [];
             foreach ($nuevos as $campo => $valor) {
@@ -270,7 +275,15 @@ class ClienteService extends BaseService
                 throw new ReglaNegocioException('No hay cambios para guardar.');
             }
 
-            $this->actualizarConVersion('clientes', $id, $versionLeida, array_intersect_key($nuevos, array_flip(['cuit_cuil', 'denominacion', 'telefono', 'domicilio', 'localidad_id', 'codigo_postal', 'ingresos_declarados', 'categoria_ingresos'])) + ['actualizado_en' => $this->ahoraUtc()]);
+            $comunes = array_intersect_key($nuevos, array_flip(['cuit_cuil', 'denominacion', 'telefono', 'domicilio', 'localidad_id', 'codigo_postal', 'ingresos_declarados', 'categoria_ingresos', 'categoria_monotributo', 'persona_expuesta']));
+            // RN-80: la declaración de persona expuesta políticamente conserva su fecha mientras no cambie
+            if (isset($cambios['persona_expuesta'])) {
+                $comunes['fecha_declaracion_pep'] = $this->ahoraUtc();
+            }
+            $this->actualizarConVersion('clientes', $id, $versionLeida, $comunes + ['actualizado_en' => $this->ahoraUtc()]);
+            if (isset($cambios['persona_expuesta']) && $d['persona_expuesta']) {
+                $this->alertarPersonaExpuesta($id, ValidadorCliente::denominacion($d));
+            }
             $this->db->table($d['tipo_cliente'] === 'PersonaJuridica' ? 'personas_juridicas' : 'personas_humanas')->where('cliente_id', $id)->update($this->datosSubclase($d));
 
             if ($cambiaConsentimiento) {
@@ -470,6 +483,20 @@ class ClienteService extends BaseService
         }
     }
 
+    /** RN-80: un cliente que se declara persona expuesta políticamente requiere la debida diligencia reforzada. */
+    private function alertarPersonaExpuesta(int $clienteId, string $denominacion): void
+    {
+        (new AlertaService($this->db))->generar(
+            'Operativa',
+            "El cliente {$denominacion} se declaró persona expuesta políticamente (RN-80).",
+            'Aplicar la debida diligencia reforzada y documentarla en el legajo antes de otorgarle crédito (Resolución UIF 200/2024).',
+            'Gerente',
+            null,
+            'clientes',
+            $clienteId,
+        );
+    }
+
     private function datosSubclase(array $d): array
     {
         $nulo = static fn (string $v): ?string => $v === '' ? null : $v;
@@ -482,7 +509,7 @@ class ClienteService extends BaseService
 
         return [
             'tipo_documento' => $d['tipo_documento'], 'nro_documento' => $d['nro_documento'], 'nombre' => $d['nombre'], 'apellido' => $d['apellido'],
-            'fecha_nacimiento' => $d['fecha_nacimiento'], 'estado_civil' => $nulo($d['estado_civil']), 'ocupacion' => $nulo($d['ocupacion']), 'empleador' => $nulo($d['empleador']),
+            'fecha_nacimiento' => $d['fecha_nacimiento'], 'estado_civil' => $nulo($d['estado_civil']), 'nacionalidad' => $nulo($d['nacionalidad']), 'ocupacion' => $nulo($d['ocupacion']), 'empleador' => $nulo($d['empleador']),
         ];
     }
 

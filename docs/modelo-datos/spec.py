@@ -385,6 +385,8 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
     C('codigo_postal', 'VARCHAR(8)', null=True, d='Código postal: cuatro dígitos o CPA de ocho caracteres (por ejemplo, N3350ABC).'),
     EN('categoria_ingresos', 'CategoriaIngresos'),
     EN('categoria_monotributo', 'CategoriaMonotributo', null=True, d='Categoría del monotributo; obligatoria para los monotributistas desde D-26, nula en las demás categorías.'),
+    C('persona_expuesta', B, null=True, d='Declaración jurada de persona expuesta políticamente (RN-80); nula si el cliente registrado antes de D-31 todavía no la declaró.'),
+    C('fecha_declaracion_pep', TS, null=True, d='Fecha de la declaración.'),
     EN('estado', 'EstadoCliente', default="'Activo'"),
     FK('cuenta_cliente_id', 'cuentas_cliente', null=True, uq=True, d='Cuenta de acceso al portal; nula hasta que el cliente la solicita.'),
     C('fecha_alta', D, d='Fecha local de alta en el padrón, informada por la aplicación (antigüedad, RN-69).'),
@@ -396,7 +398,8 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
        ('CK_clientes_cuit_formato', "cuit_cuil IS NULL OR cuit_cuil NOT LIKE '%[^0-9]%'"),
        ('CK_clientes_categoria', "(tipo_cliente = 'PersonaJuridica' AND categoria_ingresos = 'Empresa') OR (tipo_cliente = 'PersonaHumana' AND categoria_ingresos <> 'Empresa')"),
        ('CK_clientes_ingresos', 'ingresos_declarados >= 0'),
-       ('CK_clientes_monotributo', "categoria_monotributo IS NULL OR categoria_ingresos = 'Monotributista'")],
+       ('CK_clientes_monotributo', "categoria_monotributo IS NULL OR categoria_ingresos = 'Monotributista'"),
+       ('CK_clientes_declaracion_pep', '(persona_expuesta IS NULL AND fecha_declaracion_pep IS NULL) OR (persona_expuesta IS NOT NULL AND fecha_declaracion_pep IS NOT NULL)')],
    idx=[('IX_clientes_denominacion', ['denominacion'], ['estado', 'tipo_cliente'], None)])
 
 add('personas_humanas', 'SS-02', 'PersonaHumana', 'Subclase de Cliente identificada por su documento.', [
@@ -408,7 +411,8 @@ add('personas_humanas', 'SS-02', 'PersonaHumana', 'Subclase de Cliente identific
     C('apellido', 'NVARCHAR(80)'),
     C('fecha_nacimiento', D, d='Utilizada para los límites de edad de la línea (RN-14).'),
     C('estado_civil', 'VARCHAR(20)', null=True),
-    C('ocupacion', 'NVARCHAR(100)', null=True),
+    C('ocupacion', 'NVARCHAR(100)', null=True, d='Actividad laboral o profesional principal; obligatoria desde D-31 (RN-80).'),
+    C('nacionalidad', 'NVARCHAR(60)', null=True, d='Obligatoria desde D-31 (RN-80); nula en clientes anteriores hasta su próxima modificación.'),
     C('empleador', 'NVARCHAR(150)', null=True),
 ], uq=[('UQ_personas_humanas_documento', ['tipo_documento', 'nro_documento'], None)],
    fkx=[('FK_personas_humanas_cliente', ['cliente_id', 'tipo_cliente'], 'clientes', ['id', 'tipo_cliente'])],
