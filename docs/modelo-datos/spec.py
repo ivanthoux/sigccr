@@ -684,6 +684,17 @@ add('resoluciones', 'SS-04', 'Resolucion', 'Decisiones sobre una solicitud, auto
        ('CK_resoluciones_devolucion', "decision <> 'DevueltaRevision' OR etapa_retorno IS NOT NULL")],
    idx=[('IX_resoluciones_vencimiento', ['vence_aprobacion'], None, "decision = 'Aprobada' AND vigente = 1")])
 
+add('contratos_prestamo', 'SS-04', 'ContratoPrestamo', 'Contrato de préstamo generado para cada aprobación vigente, con la constancia firmada incorporada al legajo y la fecha en que el cliente recibió el contrato, que inicia el plazo de revocación (RN-78, RN-79, D-31).', [
+    ID(),
+    FK('solicitud_id', 'solicitudes_credito'),
+    FK('resolucion_id', 'resoluciones', uq=True, d='Aprobación cuyas condiciones instrumenta.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    FK('documento_legajo_id', 'documentos_legajo', null=True, d='Copia escaneada de la constancia firmada (tipo CONTRATO_FIRMADO).'),
+    C('fecha_recepcion', D, null=True, d='Día en que el cliente recibió su ejemplar firmado.'),
+    C('fecha_registro', TS, null=True),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Analista que incorporó la constancia.'),
+], ck=[('CK_contratos_prestamo_constancia', '(documento_legajo_id IS NULL AND fecha_recepcion IS NULL AND fecha_registro IS NULL AND usuario_id IS NULL) OR (documento_legajo_id IS NOT NULL AND fecha_recepcion IS NOT NULL AND fecha_registro IS NOT NULL AND usuario_id IS NOT NULL)')])
+
 add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola liquidación por solicitud (RNF-06, RN-25).', [
     ID(),
     FK('solicitud_id', 'solicitudes_credito', uq=True),

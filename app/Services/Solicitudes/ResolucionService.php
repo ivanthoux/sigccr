@@ -113,6 +113,7 @@ class ResolucionService extends BaseService
                 'cuotas_aprobadas' => (int) $a['cantidad_cuotas'], 'vence_aprobacion' => $vence, 'vigente' => 1,
             ]);
             $solicitudes->cambiarEstado($s, 'AprobadaPendienteLiquidacion', $usuarioId, 'Aprobación del Gerente: ' . $d['fundamento'], null);
+            (new ContratoService($this->db))->generar($solicitudId);
             $this->cerrarAlertas($solicitudId);
             $this->alertarAnalista($s, "Solicitud N.º {$s['numero']} aprobada por el Gerente: " . formato_importe((string) $a['importe']) . " en {$a['cantidad_cuotas']} cuotas.", 'Coordinar la liquidación antes del ' . formato_fecha_hora($vence) . ' (CU-27).');
             $auditoria->registrar('solicitudes.resolver', 'solicitudes_credito', $solicitudId, 'Exitoso', $d['fundamento'], [

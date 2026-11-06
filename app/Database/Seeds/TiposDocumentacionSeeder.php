@@ -25,9 +25,12 @@ class TiposDocumentacionSeeder extends Seeder
             ['ESTADOS_CONTABLES', 'Últimos estados contables', 'PersonaJuridica', 1],
             ['PODER_REPRESENTACION', 'Instrumento que acredita la representación', 'PersonaJuridica', 1],
         ];
-        foreach ($tipos as [$codigo, $nombre, $aplica, $clave]) {
+        // Constancia firmada del contrato (RN-78): documento interno, inactivo para no ofrecerse como exigible
+        $tipos[] = ['CONTRATO_FIRMADO', 'Constancia firmada del contrato de préstamo', 'Ambos', 0, 0];
+        foreach ($tipos as $t) {
+            [$codigo, $nombre, $aplica, $clave] = $t;
             if ($this->db->table('tipos_documentacion')->where('codigo', $codigo)->countAllResults() === 0) {
-                $this->db->table('tipos_documentacion')->insert(['codigo' => $codigo, 'nombre' => $nombre, 'aplica_a' => $aplica, 'es_clave' => $clave, 'activo' => 1]);
+                $this->db->table('tipos_documentacion')->insert(['codigo' => $codigo, 'nombre' => $nombre, 'aplica_a' => $aplica, 'es_clave' => $clave, 'activo' => $t[4] ?? 1]);
             }
         }
         // Documentación base por categoría (D-25): solo en una instalación nueva, sin pisar la configurada

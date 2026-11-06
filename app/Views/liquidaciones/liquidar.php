@@ -1,6 +1,6 @@
 <?php
 /**
- * CU-27 Liquidar Crédito Aprobado, pasos 3 a 6 (A4, A7).
+ * CU-27 Liquidar Crédito Aprobado, pasos 3 a 6 (A4: constancia firmada del contrato, A7).
  *
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed> $s
@@ -20,6 +20,9 @@ $this->section('contenido');
         <p><?= esc($s['denominacion']) ?> · CUIT/CUIL <?= esc(formato_cuit($s['cuit_cuil'])) ?> · <?= esc($s['linea']) ?>, versión <?= (int) $s['version'] ?></p>
     </div>
 </div>
+<?php if (!$s['constancia']): ?>
+    <div class="alert alert-danger">Falta la constancia firmada del contrato de préstamo en el legajo: el Analista debe incorporarla antes de liquidar (CU-103, RN-25, RN-78).</div>
+<?php endif ?>
 <div class="alert alert-info">La aprobación vence el <strong><?= esc(formato_fecha_hora($s['vence_aprobacion'])) ?></strong>. Reserva de fondos: <?= $s['reserva'] !== null ? esc(formato_importe($s['reserva'])) : '<strong>sin reserva</strong>' ?>.</div>
 
 <section class="hoja p-4 mb-3" aria-labelledby="titulo-plan">
@@ -27,7 +30,7 @@ $this->section('contenido');
     <?= view('partials/plan_preliminar', ['calculo' => $s['calculo'], 'importe' => (string) $s['importe_aprobado'], 'tna' => (string) $s['tna']]) ?>
 </section>
 
-<form method="post" action="<?= site_url("admin/liquidaciones/{$id}") ?>" class="hoja p-4" novalidate>
+<form method="post" action="<?= site_url("admin/liquidaciones/{$id}") ?>" class="hoja p-4" novalidate<?= $s['constancia'] ? '' : ' inert' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="version_fila" value="<?= (int) $s['version_fila'] ?>">
     <h2 class="h5">Desembolso de <?= esc(formato_importe($neto)) ?></h2>

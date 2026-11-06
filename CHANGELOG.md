@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E09, D-31)
+- Contrato de préstamo (RN-78): se genera con cada aprobación, automática o del Gerente, e informa partes, importe y neto, TNA, TEA, el CFTEA destacado al doble del tamaño, total de intereses, plan francés con sus cuotas, gastos con IVA, tasa punitoria y tolerancia, cancelación anticipada sin comisión, pagos sin efectivo, jurisdicción del domicilio del cliente y, antes de las firmas, el derecho de revocación en caracteres destacados.
+- CU-103 Registrar Contrato Firmado (Analista): impresión del contrato y copia escaneada de la constancia firmada al legajo, con la fecha de recepción; puede reemplazarse antes de liquidar y la anterior se conserva.
+- CU-27 no liquida sin la constancia firmada de la aprobación vigente (RN-25, A4).
+- Migración 18: tabla `contratos_prestamo` y tipo de documento interno `CONTRATO_FIRMADO`. Datos de la entidad en `sigccr.entidadRazonSocial`, `sigccr.entidadCuit` y `sigccr.entidadDomicilio`.
+
 ### Agregado (E11, D-31)
 - Identificación del cliente para la UIF (RN-80, Resolución UIF 200/2024): nacionalidad y actividad laboral o profesional principal obligatorias para la persona humana, y declaración jurada de persona expuesta políticamente para todo cliente, con su fecha. La declaración afirmativa genera una alerta al Gerente para la debida diligencia reforzada.
 - CU-22 exige la identificación completa antes de registrar una solicitud; los clientes registrados antes la completan con CU-12.

@@ -7,6 +7,7 @@ namespace App\Services\Comunes;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\RequisitosDocumentales;
+use App\Libraries\Solicitudes\Contrato;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 
@@ -25,7 +26,8 @@ class DocumentacionService extends BaseService
         return array_map(static fn (array $t): array => ['id' => (int) $t['id'], 'es_clave' => (int) $t['es_clave'], 'activo' => (int) $t['activo'], 'usos' => (int) $t['usos']] + $t, $this->db->query(
             'SELECT t.id, t.codigo, t.nombre, t.aplica_a, t.es_clave, t.activo, '
             . '(SELECT COUNT(*) FROM dbo.documentos_legajo d WHERE d.tipo_documentacion_id = t.id) AS usos '
-            . 'FROM dbo.tipos_documentacion t ORDER BY t.activo DESC, t.id',
+            . 'FROM dbo.tipos_documentacion t WHERE t.codigo <> ? ORDER BY t.activo DESC, t.id',
+            [Contrato::TIPO_DOCUMENTO],
         )->getResultArray());
     }
 
@@ -90,6 +92,9 @@ class DocumentacionService extends BaseService
             }
             if ($this->db->table('tipos_documentacion')->where('nombre', $datos['nombre'])->where('id <>', $id)->countAllResults() > 0) {
                 throw new ValidacionException(['nombre' => 'Ya existe otro tipo de documento con ese nombre.']);
+            }
+            if ($actual['codigo'] === Contrato::TIPO_DOCUMENTO) {
+                throw new ReglaNegocioException('La constancia firmada del contrato es un documento interno del sistema (RN-78): no se modifica desde el catálogo.');
             }
             $identificacion = array_merge(...array_values(RequisitosDocumentales::IDENTIFICACION));
             if ($datos['activo'] === 0 && in_array($actual['codigo'], $identificacion, true)) {
