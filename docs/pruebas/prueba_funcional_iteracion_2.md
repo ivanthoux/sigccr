@@ -224,4 +224,4 @@ Antes de esta sección: aplicar la migración 15 y volver a cargar los permisos 
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | Iván Ezequiel Thoux | de 97 | | |
+| 06/11/2026 | Iván Ezequiel Thoux | 97 de 97 | Ninguna | Circuito completo de la solicitud, observaciones de la presentación (G-86 a G-97), vencimientos y permisos por rol correctos. Iteración 2 aprobada. |
