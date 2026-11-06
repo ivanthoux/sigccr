@@ -407,7 +407,7 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 **Decisión.**
 1. **Contrato (CU-103, RN-78).** Se genera al aprobarse la solicitud. El Analista lo entrega para la firma e incorpora la constancia escaneada con la fecha de recepción; el Cajero no liquida sin ella (RN-25). Precisa el punto 3 de D-29.
 2. **Revocación (CU-102, RN-79).** Dentro de los 10 días hábiles desde la recepción del contrato o el desembolso, lo último. El cliente restituye el capital y el interés devengado, sin gastos; confirmada la restitución, el crédito pasa a Revocado (nuevo estado de 4.2.7).
-3. **Identificación (RN-80).** CU-11 agrega nacionalidad, actividad principal obligatoria y la declaración sobre persona expuesta políticamente, que alerta al Gerente. La consulta del padrón de ARCA es opcional (A9, ACT-10).
+3. **Identificación (RN-80).** CU-11 agrega nacionalidad, actividad principal obligatoria y la declaración sobre persona expuesta políticamente, que alerta al Gerente. La declaración se guarda en `clientes` con su fecha (para la persona jurídica comprende a sus representantes y beneficiarios). Los clientes anteriores quedan con los datos vacíos: la validación los exige en la próxima modificación y CU-22 no registra solicitudes hasta completarlos. La consulta del padrón de ARCA es opcional (A9, ACT-10).
 4. **Pre-registro (CU-104).** Precisa el punto 1 de D-29.
 5. **Régimen informativo (CU-105, RN-84).** Clasificación mensual de los deudores en situaciones 1 a 5 y archivo para la Central de Deudores; la presentación ante el BCRA la hace la entidad.
 6. **Tope global (RN-83) y confirmación de cambios (RN-82)** quedan como reglas propias, ya implementadas en D-22 y D-24.

@@ -58,12 +58,14 @@ $this->section('contenido');
                     <?= $fila('CUIT/CUIL', $c['cuit_cuil'] ? esc(formato_cuit($c['cuit_cuil'])) : '<span class="text-body-secondary">Sin informar (obligatorio para solicitar crédito)</span>') ?>
                     <?= $fila('Fecha de nacimiento', esc(formato_fecha($c['fecha_nacimiento']))) ?>
                     <?= $fila('Estado civil', $c['estado_civil'] ? esc(ValidadorCliente::ESTADOS_CIVILES[$c['estado_civil']] ?? $c['estado_civil']) : null) ?>
-                    <?= $fila('Ocupación', $c['ocupacion'] ? esc($c['ocupacion']) : null) ?>
+                    <?= $fila('Nacionalidad', $c['nacionalidad'] ? esc($c['nacionalidad']) : null) ?>
+                    <?= $fila('Actividad principal', $c['ocupacion'] ? esc($c['ocupacion']) : null) ?>
                     <?= $fila('Empleador o actividad', $c['empleador'] ? esc($c['empleador']) : null) ?>
                 <?php endif ?>
                 <?= $fila('Categoría de ingresos', esc($categoria) . (($c['categoria_monotributo'] ?? null) ? ' · categoría ' . esc(trim((string) $c['categoria_monotributo'])) : '')) ?>
                 <?= $fila($juridica ? 'Ingresos netos mensuales' : 'Ingresos declarados', '<span class="importe d-inline">' . esc(formato_importe($c['ingresos_declarados'])) . '</span>') ?>
                 <?= $fila($juridica ? 'Domicilio legal' : 'Domicilio', esc($c['domicilio']) . ($c['localidad'] ? '<br><span class="small">' . esc($c['localidad']) . ', ' . esc($c['provincia']) . ($c['codigo_postal'] ? ' (CP ' . esc($c['codigo_postal']) . ')' : '') . '</span>' : ' <span class="badge rounded-pill text-bg-warning">Falta la localidad</span>')) ?>
+                <?= $fila('Persona expuesta políticamente', $c['persona_expuesta'] === null ? '<span class="badge rounded-pill text-bg-warning">Sin declarar (obligatorio para solicitar crédito, RN-80)</span>' : ((int) $c['persona_expuesta'] === 1 ? '<span class="badge rounded-pill text-bg-danger">Sí</span> <span class="small">declarada el ' . esc(formato_fecha_hora($c['fecha_declaracion_pep'])) . '</span>' : 'No <span class="small text-body-secondary">(declarada el ' . esc(formato_fecha_hora($c['fecha_declaracion_pep'])) . ')</span>')) ?>
                 <?= $fila('Teléfono', $c['telefono'] ? esc($c['telefono']) : null) ?>
                 <?= $fila('Correo electrónico', esc((string) $c['correo']) . ((int) $c['correo_verificado'] === 1 ? ' <span class="badge rounded-pill text-bg-success">Verificado</span>' : ' <span class="badge rounded-pill text-bg-light border">Sin verificar</span>')
                     . ($c['correo_pendiente'] ? '<div class="small text-body-secondary mt-1">Correo nuevo pendiente de verificación: ' . esc($c['correo_pendiente']) . '</div>' : '')) ?>

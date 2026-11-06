@@ -4,6 +4,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E11, D-31)
+- Identificación del cliente para la UIF (RN-80, Resolución UIF 200/2024): nacionalidad y actividad laboral o profesional principal obligatorias para la persona humana, y declaración jurada de persona expuesta políticamente para todo cliente, con su fecha. La declaración afirmativa genera una alerta al Gerente para la debida diligencia reforzada.
+- CU-22 exige la identificación completa antes de registrar una solicitud; los clientes registrados antes la completan con CU-12.
+- Migración 17: `personas_humanas.nacionalidad`, `clientes.persona_expuesta` y `clientes.fecha_declaracion_pep`.
+
+### Corregido (E11)
+- CU-12 no guardaba el cambio de la categoría del monotributo.
+
 ### Agregado (E02)
 - CU-37 Anular Cobro: el Gerente anula con motivo un cobro confirmado; se conserva como antecedente, las cuotas recuperan lo imputado por concepto y vuelven a Pendiente o Vencida, el crédito recupera su estado y el importe recibido queda como saldo a favor del cliente (RN-33, RN-57). Los cobros posteriores sobre las mismas cuotas se presentan y quedan identificados para su revisión (A2).
 

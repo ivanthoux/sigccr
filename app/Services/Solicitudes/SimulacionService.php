@@ -33,7 +33,7 @@ class SimulacionService extends BaseService
     public function cliente(int $id): array
     {
         $c = $this->db->query(
-            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, c.fecha_alta, '
+            'SELECT c.id, c.denominacion, c.tipo_cliente, c.categoria_ingresos, c.estado, c.cuit_cuil, c.ingresos_declarados, c.fecha_alta, c.persona_expuesta, ph.nacionalidad, '
             . 'ph.fecha_nacimiento, ph.tipo_documento, ph.nro_documento, ph.ocupacion, ph.empleador, pj.fecha_constitucion, pj.actividad_principal '
             . 'FROM dbo.clientes c LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id WHERE c.id = ?',
             [$id],

@@ -25,6 +25,7 @@ final class ClientesTest extends TestCase
             'nro_documento' => '30.111.222', 'cuit_cuil' => '27-30111222-?', 'fecha_nacimiento' => '15/03/1985', 'estado_civil' => 'Casado',
             'correo' => 'lucia@correo.com', 'telefono' => '+54 351 555-1234', 'domicilio' => 'San Martín 123', 'provincia_id' => '14', 'localidad_id' => '3', 'codigo_postal' => '5000',
             'ingresos_declarados' => '850.000,00', 'categoria_ingresos' => 'RelacionDependencia', 'acepta_politica' => '1',
+            'nacionalidad' => 'Argentina', 'ocupacion' => 'Docente', 'persona_expuesta' => 'No',
         ];
     }
 
@@ -36,6 +37,7 @@ final class ClientesTest extends TestCase
             'fecha_constitucion' => '2015-06-01', 'actividad_principal' => 'Elaboración de productos de panadería',
             'representante_nombre' => 'Jorge Pérez', 'representante_documento' => '20111222', 'representante_cargo' => 'Socio gerente',
             'correo' => 'admin@panificadora.com.ar', 'domicilio' => 'Belgrano 450', 'provincia_id' => '14', 'localidad_id' => '3', 'ingresos_declarados' => '12500000', 'acepta_politica' => 'on',
+            'persona_expuesta' => 'No',
         ];
     }
 
@@ -72,10 +74,10 @@ final class ClientesTest extends TestCase
     public function testFormularioVacioDePersonaHumana(): void
     {
         $e = $this->errores([]);
-        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica'] as $campo) {
+        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica', 'nacionalidad', 'ocupacion', 'persona_expuesta'] as $campo) {
             $this->assertArrayHasKey($campo, $e, $campo);
         }
-        $this->assertCount(11, $e);
+        $this->assertCount(14, $e);
     }
 
     public function testFormularioVacioDePersonaJuridica(): void
@@ -229,5 +231,22 @@ final class ClientesTest extends TestCase
         $v = CategoriasMonotributo::validarEscala(['A' => '100,00', 'B' => '90,00'] + array_fill_keys(['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'], ''));
         $this->assertStringContainsString('mayor que el de la anterior', $v['errores']['tope_B']);
         $this->assertArrayHasKey('tope_K', $v['errores']);
+    }
+
+    /** RN-80 (D-31): nacionalidad, actividad principal y declaración de persona expuesta políticamente. */
+    public function testIdentificacionParaLaUif(): void
+    {
+        $e = $this->errores(['nacionalidad' => '', 'ocupacion' => '', 'persona_expuesta' => ''] + $this->humana());
+        $this->assertSame(['nacionalidad', 'ocupacion', 'persona_expuesta'], array_keys(array_intersect_key($e, array_flip(['nacionalidad', 'ocupacion', 'persona_expuesta']))));
+        $this->assertArrayHasKey('persona_expuesta', $this->errores(['persona_expuesta' => ''] + $this->juridica()));
+        $pep = ValidadorCliente::normalizar(['persona_expuesta' => 'Si'] + $this->humana());
+        $this->assertTrue($pep['persona_expuesta']);
+        $this->assertFalse(ValidadorCliente::normalizar($this->humana())['persona_expuesta']);
+
+        // Cliente registrado antes de D-31: debe completar los datos antes de solicitar crédito
+        $anterior = ['tipo_cliente' => 'PersonaHumana', 'cuit_cuil' => '27301112224', 'nacionalidad' => null, 'ocupacion' => '', 'persona_expuesta' => null];
+        $this->assertSame(['nacionalidad', 'actividad laboral o profesional principal', 'declaración de persona expuesta políticamente'], ValidadorCliente::identificacionIncompleta($anterior));
+        $this->assertSame([], ValidadorCliente::identificacionIncompleta(['nacionalidad' => 'Argentina', 'ocupacion' => 'Docente', 'persona_expuesta' => 0] + $anterior));
+        $this->assertSame(['CUIT/CUIL'], ValidadorCliente::identificacionIncompleta(['tipo_cliente' => 'PersonaJuridica', 'cuit_cuil' => null, 'persona_expuesta' => 1]));
     }
 }
