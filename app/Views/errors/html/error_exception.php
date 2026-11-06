@@ -5,7 +5,7 @@ use CodeIgniter\CodeIgniter;
 $errorId = uniqid('error', true);
 ?>
 <!doctype html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="robots" content="noindex">
@@ -116,6 +116,7 @@ $errorId = uniqid('error', true);
                                     ( <a href="#" onclick="return toggle('<?= esc($argsId, 'attr') ?>');">arguments</a> )
                                     <div class="args" id="<?= esc($argsId, 'attr') ?>">
                                         <table cellspacing="0">
+                                        <thead><tr><th scope="col">Argument</th><th scope="col">Value</th></tr></thead>
 
                                         <?php
                                         $params = null;
