@@ -250,4 +250,3 @@ final class ClientesTest extends TestCase
         $this->assertSame(['CUIT/CUIL'], ValidadorCliente::identificacionIncompleta(['tipo_cliente' => 'PersonaJuridica', 'cuit_cuil' => null, 'persona_expuesta' => 1]));
     }
 }
-
