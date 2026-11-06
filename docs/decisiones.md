@@ -1,6 +1,6 @@
 # Registro de decisiones
 
-Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
+Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores y se aplican; quedan pendientes de ratificación por el director y, si las objeta, se reemplazan por decisiones nuevas; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
 | ID | Fecha | Estado |
 |---|---|---|
@@ -18,21 +18,21 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-12 | 27/10/2026 | Validada (29/10/2026) |
 | D-13 | 27/10/2026 | Validada (29/10/2026) |
 | D-14 | 28/10/2026 | Validada (29/10/2026) |
-| D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
-| D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
-| D-17 | 30/10/2026 | Propuesta |
-| D-18 | 30/10/2026 | Propuesta |
-| D-19 | 30/10/2026 | Propuesta |
-| D-20 | 30/10/2026 | Propuesta |
-| D-21 | 30/10/2026 | Propuesta |
-| D-22 | 30/10/2026 | Propuesta |
-| D-23 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-24 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-25 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-26 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-27 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-28 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
-| D-29 | 03/11/2026 | Propuesta (observaciones de la presentación del 02/11/2026) |
+| D-15 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-16 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-17 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-18 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-19 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-20 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-21 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-22 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-23 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-24 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-25 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-26 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-27 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-28 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 

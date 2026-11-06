@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.3.0] - 2026-11-06
+
+Control 2 (previsto para el 13/11/2026): iteración 2 completa (SS-04 y SS-05: simulación, solicitud, evaluación, alternativas, resolución, liquidación, cajas, fondos, parámetros y calendario) con las observaciones de la presentación del 02/11/2026. Prueba funcional aprobada el 06/11/2026 (97 de 97).
+
 ### Cambiado (observaciones de la presentación del 02/11/2026, D-23 a D-29)
 - Líneas: el máximo debe ser mayor que el mínimo en importes, cuotas y edades (RN-14); gasto administrativo fijo o porcentual del capital en cada cuota (`GastoAdministrativo`, RN-68, D-28).
 - Simulación y comparación: datos del cliente (edad, situación laboral, empleador, ingresos, obligaciones y capacidad de pago); plan de cuotas paginado de a 12.
@@ -111,6 +115,7 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...develop
+[0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ivanthoux/sigccr/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ivanthoux/sigccr/releases/tag/v0.1.0
