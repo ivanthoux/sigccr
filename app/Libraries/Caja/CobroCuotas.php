@@ -191,4 +191,3 @@ final class CobroCuotas
         return ['columnas' => $columnas, 'estado' => substr((string) $c['vencimiento'], 0, 10) < $hoy ? 'Vencida' : 'Pendiente'];
     }
 }
-

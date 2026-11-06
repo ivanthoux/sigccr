@@ -140,4 +140,3 @@ class Cobros extends BaseController
             . ' quedó como saldo a favor del cliente (RN-57).' . ($r['dependientes'] > 0 ? " Quedaron identificados {$r['dependientes']} cobro(s) posteriores para su revisión." : ''));
     }
 }
-

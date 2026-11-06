@@ -124,4 +124,3 @@ final class CobroCuotasTest extends TestCase
         $this->assertSame('Pendiente', CobroCuotas::restaurar($pagada, $imputaciones, '2026-10-01')['estado']);
     }
 }
-
