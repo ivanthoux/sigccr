@@ -37,9 +37,7 @@ $this->section('contenido');
         <?= csrf_field() ?>
         <h2 class="h5">Abrir la caja <?= esc($asignacion['codigo']) ?></h2>
         <p class="small"><?= esc($asignacion['denominacion']) ?><?= $asignacion['ubicacion'] ? ' · ' . esc($asignacion['ubicacion']) : '' ?>. Asignada desde el <?= esc(formato_fecha($asignacion['desde'])) ?><?= $asignacion['hasta'] ? ' hasta el ' . esc(formato_fecha($asignacion['hasta'])) : '' ?>.</p>
-        <label for="fondo_inicial" class="form-label">Fondo inicial en efectivo</label>
-        <input type="text" class="form-control<?= campo_invalido('fondo_inicial') ?>" id="fondo_inicial" name="fondo_inicial" inputmode="decimal" placeholder="50.000,00" value="<?= esc((string) old('fondo_inicial'), 'attr') ?>" required>
-        <?= error_campo('fondo_inicial') ?>
+        <p class="small mb-0">La caja no maneja efectivo: los cobros se reciben por transferencia, depósito o tarjeta, con su número de operación, y al cerrar se concilian con lo acreditado en las cuentas de la entidad (RN-77, RN-32).</p>
         <div class="text-end mt-3"><button type="submit" class="btn btn-primary"><i class="bi bi-unlock me-1" aria-hidden="true"></i>Abrir caja</button></div>
     </form>
 <?php endif ?>

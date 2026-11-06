@@ -8,8 +8,9 @@ use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Validacion\Campos;
 
 /**
- * Cajas, jornadas y movimientos de fondos (SS-05): validaciones de CU-80, CU-72, CU-31, CU-36 y CU-85 y el arqueo de
- * RN-32. Una asignación está vigente desde su fecha de inicio hasta su fecha de fin inclusive (o sin fin).
+ * Cajas, jornadas y movimientos de fondos (SS-05): validaciones de CU-80, CU-72, CU-36 y CU-85 y la conciliación de
+ * RN-32. La caja no maneja efectivo (D-30, RN-77). Una asignación está vigente desde su fecha de inicio hasta su
+ * fecha de fin inclusive (o sin fin).
  */
 final class ReglasCaja
 {
@@ -84,69 +85,80 @@ final class ReglasCaja
         return substr($desde, 0, 10) <= $hoy && ($hasta === null || substr($hasta, 0, 10) >= $hoy);
     }
 
-    /** CU-31 paso 5 y CU-36 paso 6 (A3): importe no negativo. */
-    public static function importeNoNegativo(string $texto): ?string
-    {
-        return Campos::importe($texto);
-    }
+    /** Medios con que se cobra en ventanilla y que el cierre concilia (RN-29, RN-77). */
+    public const MEDIOS_VENTANILLA = [
+        'Transferencia' => 'Transferencia o depósito',
+        'TarjetaDebito' => 'Tarjeta de débito',
+        'TarjetaCredito' => 'Tarjeta de crédito',
+    ];
 
     /**
-     * RN-32: resumen de la jornada. Los cobros aportan a cada medio el importe aplicado con él; solo el efectivo
-     * integra el arqueo. Efectivo esperado = fondo inicial + cobros en efectivo − desembolsos en efectivo.
+     * RN-32: total registrado por medio en los cobros de la jornada. Un cobro con varios medios aporta a cada uno el
+     * importe aplicado con él. Los movimientos de jornadas anteriores a D-30 (fondo inicial, efectivo, desembolsos)
+     * no se concilian.
      *
      * @param list<array{tipo: string, medio: string, importe: string}> $movimientos
-     * @return array{cobros_por_medio: array<string, string>, cobros_efectivo: string, desembolsos: string, cantidad: int, esperado: string}
+     * @return array{por_medio: array<string, string>, cantidad: int, total: string}
      */
-    public static function arqueo(string $fondoInicial, array $movimientos): array
+    public static function totalesPorMedio(array $movimientos): array
     {
-        $porMedio = [];
-        $efectivo = Decimal::zero();
-        $desembolsos = Decimal::zero();
+        $porMedio = array_fill_keys(array_keys(self::MEDIOS_VENTANILLA), '0.00');
+        $total = Decimal::zero();
         $cantidad = 0;
         foreach ($movimientos as $m) {
-            $importe = Decimal::of($m['importe']);
-            if ($m['tipo'] === 'Cobro') {
-                $cantidad++;
-                $porMedio[$m['medio']] = Decimal::of($porMedio[$m['medio']] ?? '0')->add($importe)->toFixed(2);
-                if ($m['medio'] === 'Efectivo') {
-                    $efectivo = $efectivo->add($importe);
-                }
-            } elseif ($m['tipo'] === 'Desembolso') {
-                $cantidad++;
-                $desembolsos = $desembolsos->add($importe);
+            if ($m['tipo'] !== 'Cobro' || !isset($porMedio[$m['medio']])) {
+                continue;
             }
+            $cantidad++;
+            $porMedio[$m['medio']] = Decimal::of($porMedio[$m['medio']])->add($m['importe'])->toFixed(2);
+            $total = $total->add($m['importe']);
         }
 
-        return [
-            'cobros_por_medio' => $porMedio,
-            'cobros_efectivo' => $efectivo->toFixed(2),
-            'desembolsos' => $desembolsos->toFixed(2),
-            'cantidad' => $cantidad,
-            'esperado' => Decimal::of($fondoInicial)->add($efectivo)->sub($desembolsos)->toFixed(2),
-        ];
+        return ['por_medio' => $porMedio, 'cantidad' => $cantidad, 'total' => $total->toFixed(2)];
     }
 
     /**
-     * CU-36 pasos 5 a 8 (A2, A3).
+     * CU-36 pasos 4 a 8 (A2, A3): conciliación de cada medio. El total acreditado es obligatorio para los medios con
+     * cobros registrados; para los demás, vacío equivale a cero. Toda diferencia exige una explicación.
      *
-     * @return array{errores: array<string, string>, declarado: ?string, diferencia: ?string, explicacion: string}
+     * @param array<string, string> $registrado total registrado por medio (totalesPorMedio)
+     * @param array<string, mixed> $acreditados texto ingresado por medio
+     * @param array<string, mixed> $explicaciones texto ingresado por medio
+     * @return array{errores: array<string, string>, conciliaciones: list<array{medio: string, total_registrado: string, total_acreditado: string, diferencia: string, explicacion: ?string}>}
      */
-    public static function validarCierre(string $declaradoTexto, string $explicacion, string $esperado): array
+    public static function validarConciliacion(array $registrado, array $acreditados, array $explicaciones): array
     {
         $e = [];
-        $declarado = Campos::importe($declaradoTexto);
-        if ($declarado === null) {
-            $e['efectivo_declarado'] = 'Ingrese el efectivo contado al cierre (un importe no negativo).';
-        }
-        $diferencia = $declarado === null ? null : Decimal::of($declarado)->sub($esperado)->toFixed(2);
-        $texto = Campos::texto($explicacion);
-        if ($diferencia !== null && !Decimal::of($diferencia)->isZero() && mb_strlen($texto) < 10) {
-            $e['explicacion'] = 'Hay una diferencia de ' . str_replace('.', ',', $diferencia) . ': explique su causa (al menos 10 caracteres).';
-        } elseif (mb_strlen($texto) > 500) {
-            $e['explicacion'] = 'La explicación admite hasta 500 caracteres.';
+        $filas = [];
+        foreach (self::MEDIOS_VENTANILLA as $medio => $nombre) {
+            $reg = $registrado[$medio] ?? '0.00';
+            $texto = trim((string) ($acreditados[$medio] ?? ''));
+            if ($texto === '' && Decimal::of($reg)->isZero()) {
+                $acreditado = '0.00';
+            } else {
+                $acreditado = Campos::importe($texto);
+                if ($acreditado === null) {
+                    $e["acreditado_{$medio}"] = "Ingrese el total acreditado por {$nombre} según el extracto o el resumen del procesador (un importe no negativo).";
+                    continue;
+                }
+            }
+            $diferencia = Decimal::of($acreditado)->sub($reg)->toFixed(2);
+            $explicacion = Campos::texto((string) ($explicaciones[$medio] ?? ''));
+            if (!Decimal::of($diferencia)->isZero() && mb_strlen($explicacion) < 10) {
+                $e["explicacion_{$medio}"] = 'Hay una diferencia de ' . str_replace('.', ',', $diferencia) . ': explique su causa (al menos 10 caracteres).';
+            } elseif (mb_strlen($explicacion) > 500) {
+                $e["explicacion_{$medio}"] = 'La explicación admite hasta 500 caracteres.';
+            }
+            if (Decimal::of($reg)->isZero() && Decimal::of($acreditado)->isZero()) {
+                continue;
+            }
+            $filas[] = [
+                'medio' => $medio, 'total_registrado' => Decimal::of($reg)->toFixed(2), 'total_acreditado' => $acreditado,
+                'diferencia' => $diferencia, 'explicacion' => $explicacion === '' ? null : $explicacion,
+            ];
         }
 
-        return ['errores' => $e, 'declarado' => $declarado, 'diferencia' => $diferencia, 'explicacion' => $texto];
+        return ['errores' => $e, 'conciliaciones' => $e === [] ? $filas : []];
     }
 
     /**

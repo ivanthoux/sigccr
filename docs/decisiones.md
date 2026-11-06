@@ -397,7 +397,7 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 3. **Cierre como conciliación (CU-36).** Para cada medio, el Cajero informa el total acreditado según el extracto o el resumen del procesador; el sistema calcula la diferencia con lo registrado y exige su explicación (RN-32). CU-32 y CU-56 informan la conciliación en lugar del arqueo.
 4. **Registros anteriores.** Las columnas del efectivo, el cambio y el fondo inicial se conservan para los registros anteriores; la migración de la iteración 3 impide nuevos valores.
 
-**Consecuencias.** Cambian `CajaService`, `MediosCobro`, `ReglasCaja`, las pantallas de caja y el esquema de `jornadas_caja`, `cobros`, `cobros_medios` y `movimientos_caja`. Cambian CU-31 a CU-33, CU-35, CU-36, CU-56, CU-67, CU-77, CU-97, RN-28, RN-29 y RN-32 (documento v12).
+**Consecuencias.** Cambian `CajaService` (`abrir()` sin fondo, `cerrar()` con la conciliación), `MediosCobro` (sin efectivo ni cambio; la suma de los medios debe igualar el importe), `ReglasCaja` (`totalesPorMedio()` y `validarConciliacion()` en lugar del arqueo) y las pantallas de caja. La migración 16 agrega `conciliaciones_jornada` y restricciones WITH NOCHECK sobre `jornadas_caja`, `cobros`, `cobros_medios`, `movimientos_caja` y `liquidaciones`. Cambian CU-31 a CU-33, CU-35, CU-36, CU-56, CU-67, CU-77, CU-97, RN-28, RN-29 y RN-32 (documento v12).
 
 ## D-31 · Contrato, revocación, identificación del cliente y régimen informativo (CU-102 a CU-105; RN-77 a RN-84)
 

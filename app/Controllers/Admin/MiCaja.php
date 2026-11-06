@@ -22,12 +22,12 @@ class MiCaja extends BaseController
     public function abrir(): RedirectResponse
     {
         try {
-            (new CajaService())->abrir((int) session('cuenta')['id'], (string) $this->request->getPost('fondo_inicial'));
+            (new CajaService())->abrir((int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
 
-        return redirect()->route('cajas.abrir')->with('exito', 'Caja abierta: ya puede registrar cobros y desembolsos en efectivo.');
+        return redirect()->route('cajas.abrir')->with('exito', 'Caja abierta: ya puede registrar cobros por transferencia, depósito o tarjeta.');
     }
 
     /** CU-36 pasos 2 y 3 (A1, A5). */
@@ -41,16 +41,25 @@ class MiCaja extends BaseController
         return view('cajas/cierre', ['titulo' => 'Cerrar caja', 'j' => $s['jornada']]);
     }
 
-    /** CU-36 pasos 5 a 10 (A2, A3). */
+    /** CU-36 pasos 4 a 10 (A2, A3): conciliación de cada medio de pago (RN-32, D-30). */
     public function cerrar(): RedirectResponse
     {
         try {
-            $r = (new CajaService())->cerrar((int) session('cuenta')['id'], (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('efectivo_declarado'), (string) $this->request->getPost('explicacion'));
+            $conciliacion = (new CajaService())->cerrar(
+                (int) session('cuenta')['id'],
+                (int) $this->request->getPost('version_fila'),
+                (array) $this->request->getPost('acreditado'),
+                (array) $this->request->getPost('explicacion'),
+            );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
-        $mensaje = 'Caja cerrada. Efectivo esperado ' . formato_importe($r['esperado']) . ', declarado ' . formato_importe($r['declarado'])
-            . ($r['diferencia'] === '0.00' ? ', sin diferencias.' : ', diferencia ' . formato_importe($r['diferencia']) . ' con su explicación.') . ' Su sesión sigue activa (RN-59).';
+        $diferencias = count(array_filter($conciliacion, static fn ($c) => $c['diferencia'] !== '0.00'));
+        $mensaje = 'Caja cerrada. ' . match (true) {
+            $conciliacion === [] => 'La jornada no registró cobros.',
+            $diferencias === 0 => 'La conciliación no tiene diferencias.',
+            default => "La conciliación registró diferencias en {$diferencias} medio(s), con su explicación.",
+        } . ' Su sesión sigue activa (RN-59).';
 
         return redirect()->route('cajas.abrir')->with('exito', $mensaje);
     }
