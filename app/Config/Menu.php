@@ -29,6 +29,8 @@ class Menu extends BaseConfig
         ['titulo' => 'Caja y cobranzas', 'icono' => 'bi-safe', 'opciones' => [
             ['texto' => 'Mi caja', 'ruta' => 'cajas.abrir', 'permiso' => 'cajas.abrir'],
             ['texto' => 'Cobro en ventanilla', 'ruta' => 'cobros.registrar', 'permiso' => 'cobros.registrar'],
+            ['texto' => 'Comprobantes de pago', 'ruta' => 'cobros.emitir-comprobante', 'permiso' => 'cobros.emitir-comprobante'],
+            ['texto' => 'Movimientos de caja', 'ruta' => 'cajas.consultar-movimientos', 'permiso' => 'cajas.consultar-movimientos'],
             ['texto' => 'Liquidar créditos', 'ruta' => 'creditos.liquidar', 'permiso' => 'creditos.liquidar'],
             ['texto' => 'Informe de caja diaria', 'ruta' => 'cajas.informe-diario', 'permiso' => 'cajas.informe-diario'],
             ['texto' => 'Cajas', 'ruta' => 'cajas.registrar', 'permiso' => 'cajas.registrar'],

@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E01, D-32)
+- CU-33 Registrar Cobro en Ventanilla: deuda del cliente por crédito y cuota con sus conceptos y días de atraso, advertencia de morosidad avanzada (RN-65), selección consecutiva desde la cuota más antigua, pago total o parcial (D-12) con uno o más medios bancarios, imputación por prelación (RN-29) y actualización del estado de las cuotas y del crédito.
+- CU-35 Emitir Comprobante de Pago: búsqueda por comprobante, cliente o fecha; impresión y reemisión auditadas sin generar un nuevo cobro (RN-31).
+- CU-32 Consultar Movimientos de Caja: jornadas por caja, Cajero, fecha y estado, con sus cobros por medio y la conciliación del cierre; el Cajero ve solo las propias.
+
 ### Cambiado (D-30)
 - Caja sin efectivo: la jornada se abre sin fondo inicial y se cierra conciliando, por medio de pago, los cobros registrados con lo acreditado según el extracto o el resumen del procesador; cada diferencia exige una explicación (CU-31, CU-36, RN-28, RN-32).
 - Cobro en ventanilla solo con transferencia o depósito y tarjeta de débito o de crédito, con número de operación y sin cambio (`MediosCobro`, RN-29, RN-77).

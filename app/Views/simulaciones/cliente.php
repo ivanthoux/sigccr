@@ -1,11 +1,12 @@
 <?php
 /**
- * CU-21 y CU-22 pasos 1 y 2: búsqueda del cliente (CU-54) para simular o registrar una solicitud.
+ * CU-21, CU-22 y CU-33 pasos 1 y 2: búsqueda del cliente (CU-54) para simular, registrar una solicitud o cobrar.
  *
  * @var CodeIgniter\View\View $this
  * @var string $texto
  * @var list<array<string, mixed>> $clientes
  * @var string $destino nombre de la ruta a la que continúa
+ * @var array<string, mixed>|null $jornada jornada de caja operable (solo para el cobro)
  */
 $this->extend('layouts/panel');
 $this->section('contenido');
@@ -16,10 +17,14 @@ $this->section('contenido');
         <p><?= match ($destino) {
             'solicitudes.simular' => 'Plan preliminar con las condiciones vigentes de una línea. No genera solicitud ni deuda (RN-17).',
             'simulaciones.comparar' => 'Compara todas las líneas para un cliente que no sabe qué crédito le conviene. No genera solicitud ni deuda (RN-17).',
+            'cobros.registrar' => 'Cobro de cuotas por transferencia, depósito o tarjeta, con su número de operación (RN-29, RN-77).',
             default => 'Formalice una simulación vigente del cliente.',
         } ?></p>
     </div>
 </div>
+<?php if ($destino === 'cobros.registrar' && ($jornada ?? null) === null): ?>
+    <div class="alert alert-warning">No tiene una caja abierta hoy: <a href="<?= url_to('cajas.abrir') ?>">ábrala</a> para registrar cobros (CU-31, RN-28). Puede consultar la deuda del cliente igualmente.</div>
+<?php endif ?>
 <form method="get" action="<?= url_to($destino) ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar cliente">
     <div class="row g-2 align-items-end">
         <div class="col-md-8 col-lg-6">

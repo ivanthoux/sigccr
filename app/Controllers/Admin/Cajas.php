@@ -6,10 +6,14 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Validacion\Campos;
 use App\Services\Caja\CajaService;
 use CodeIgniter\HTTP\RedirectResponse;
 
-/** Cajas del Gerente: CU-80 Registrar Caja, CU-81 Cambiar Estado de Caja y CU-72 Asignar Caja a Cajero. */
+/**
+ * Cajas del Gerente: CU-80 Registrar Caja, CU-81 Cambiar Estado de Caja y CU-72 Asignar Caja a Cajero; y CU-32
+ * Consultar Movimientos de Caja (Gerente y Cajero).
+ */
 class Cajas extends BaseController
 {
     private CajaService $servicio;
@@ -71,5 +75,41 @@ class Cajas extends BaseController
         }
 
         return redirect()->route('cajas.registrar')->with('exito', $estado === 'Inhabilitada' ? 'Caja inhabilitada: su asignación quedó finalizada y no podrá abrirse.' : 'Caja rehabilitada: ya se puede asignar.');
+    }
+
+    /** CU-32 pasos 1 a 4 (A1, A3). */
+    public function movimientos(): string
+    {
+        $f = [
+            'caja_id' => (int) $this->request->getGet('caja'),
+            'cajero_id' => (int) $this->request->getGet('cajero'),
+            'estado' => (string) $this->request->getGet('estado'),
+            'fecha' => Campos::fecha((string) $this->request->getGet('fecha')),
+            'fecha_texto' => (string) $this->request->getGet('fecha'),
+        ];
+        $soloCajero = $this->soloCajero();
+
+        return view('cajas/movimientos', [
+            'titulo' => 'Movimientos de caja', 'f' => $f, 'jornadas' => $this->servicio->jornadas($f, $soloCajero),
+            'cajas' => $this->servicio->listar(), 'cajeros' => $soloCajero === null ? $this->servicio->cajeros() : [],
+        ]);
+    }
+
+    /** CU-32 pasos 5 a 7 (A2, A3). */
+    public function jornada(int $id): string|RedirectResponse
+    {
+        try {
+            $j = $this->servicio->jornada($id, $this->soloCajero());
+        } catch (ReglaNegocioException $e) {
+            return redirect()->route('cajas.consultar-movimientos')->with('error', $e->getMessage());
+        }
+
+        return view('cajas/jornada', ['titulo' => 'Jornada de ' . $j['codigo'], 'j' => $j]);
+    }
+
+    /** CU-32 A3: el Cajero consulta solo sus jornadas; el Gerente, todas. */
+    private function soloCajero(): ?int
+    {
+        return session('cuenta')['rol'] === 'Cajero' ? (int) session('cuenta')['id'] : null;
     }
 }

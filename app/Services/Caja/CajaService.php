@@ -273,6 +273,60 @@ class CajaService extends BaseService
     }
 
     /**
+     * CU-32 pasos 2 a 4 (A1, A3): jornadas por caja, Cajero, fecha y estado. Un Cajero solo ve las propias.
+     *
+     * @param array<string, mixed> $f caja_id, cajero_id, fecha (Y-m-d), estado
+     * @return list<array<string, mixed>>
+     */
+    public function jornadas(array $f, ?int $soloCajero): array
+    {
+        $b = $this->db->table('jornadas_caja j')
+            ->select("j.id, j.apertura, j.cierre, j.estado, j.fondo_inicial, j.diferencia, c.codigo, c.denominacion, u.apellido + ', ' + u.nombre AS cajero, "
+                . '(SELECT COUNT(*) FROM dbo.conciliaciones_jornada x WHERE x.jornada_caja_id = j.id AND x.diferencia <> 0) AS medios_con_diferencia, '
+                . "(SELECT COALESCE(SUM(m.importe), 0) FROM dbo.movimientos_caja m WHERE m.jornada_caja_id = j.id AND m.tipo = 'Cobro') AS total_cobrado", false)
+            ->join('cajas c', 'c.id = j.caja_id')->join('usuarios_internos u', 'u.id = j.usuario_id');
+        if ($soloCajero !== null) {
+            $b->where('j.usuario_id', $soloCajero);
+        } elseif ((int) ($f['cajero_id'] ?? 0) > 0) {
+            $b->where('j.usuario_id', (int) $f['cajero_id']);
+        }
+        if ((int) ($f['caja_id'] ?? 0) > 0) {
+            $b->where('j.caja_id', (int) $f['caja_id']);
+        }
+        if (in_array($f['estado'] ?? '', ['Abierta', 'Cerrada'], true)) {
+            $b->where('j.estado', $f['estado']);
+        }
+        if (($f['fecha'] ?? null) !== null) {
+            // Fecha local de negocio (UTC−3, sin horario de verano)
+            $b->where("CAST(SWITCHOFFSET(j.apertura, '-03:00') AS date) = " . $this->db->escape((string) $f['fecha']), null, false);
+        }
+
+        return $b->orderBy('j.apertura', 'DESC')->limit(200)->get()->getResultArray();
+    }
+
+    /**
+     * CU-32 pasos 5 y 6 (A2, A3): detalle de una jornada con sus movimientos, totales por medio y conciliación.
+     *
+     * @return array<string, mixed>
+     */
+    public function jornada(int $id, ?int $soloCajero): array
+    {
+        $j = $this->db->query(
+            "SELECT j.*, c.codigo, c.denominacion, u.apellido + ', ' + u.nombre AS cajero FROM dbo.jornadas_caja j JOIN dbo.cajas c ON c.id = j.caja_id "
+            . 'JOIN dbo.usuarios_internos u ON u.id = j.usuario_id WHERE j.id = ?',
+            [$id],
+        )->getRowArray();
+        if ($j === null || ($soloCajero !== null && (int) $j['usuario_id'] !== $soloCajero)) {
+            throw new ReglaNegocioException('La jornada no existe o no le corresponde: un Cajero consulta solo sus jornadas (CU-32 A3).');
+        }
+        $j['resumen'] = $this->resumen($id);
+        $j['conciliacion'] = $this->conciliacion($id);
+        (new AuditoriaService($this->db))->registrar('cajas.consultar-movimientos', 'jornadas_caja', $id, 'Exitoso');
+
+        return $j;
+    }
+
+    /**
      * RN-32: movimientos de la jornada y total registrado por medio.
      *
      * @return array<string, mixed>
