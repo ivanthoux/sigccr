@@ -5,8 +5,10 @@
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed>|null $l
  * @var list<array{codigo: string, nombre: string, aplica_a: string}> $tipos
+ * @var array<string, list<string>> $sugeridos documentación base por categoría (D-25)
  */
 use App\Libraries\Clientes\RequisitosDocumentales;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Lineas\ValidadorLinea;
 
 $alta = $l === null;
@@ -17,6 +19,8 @@ $inicial = $alta ? [] : [
     'codigo' => $l['codigo'], 'nombre' => $l['nombre'], 'descripcion' => (string) $l['descripcion'],
     'tna' => ValidadorLinea::aPorcentaje((string) $vig['tna']), 'gasto_otorgamiento_pct' => ValidadorLinea::aPorcentaje((string) $vig['gasto_otorgamiento_pct']),
     'gasto_administrativo_cuota' => $importe((string) $vig['gasto_administrativo_cuota']),
+    'tipo_gasto_administrativo' => (string) ($vig['tipo_gasto_administrativo'] ?? 'Fijo'),
+    'gasto_administrativo_pct' => ($vig['gasto_administrativo_pct'] ?? null) === null ? '' : ValidadorLinea::aPorcentaje((string) $vig['gasto_administrativo_pct']),
     'monto_minimo' => $importe((string) $vig['monto_minimo']), 'monto_maximo' => $importe((string) $vig['monto_maximo']),
     'cuotas_minimas' => (string) $vig['cuotas_minimas'], 'cuotas_maximas' => (string) $vig['cuotas_maximas'],
     'edad_minima' => (string) $vig['edad_minima'], 'edad_maxima' => (string) $vig['edad_maxima'], 'antiguedad_minima_meses' => (string) $vig['antiguedad_minima_meses'],
@@ -30,7 +34,7 @@ $requisitosMarcados = [];
 foreach (RequisitosDocumentales::CATEGORIAS as $cats) {
     foreach (array_keys($cats) as $cat) {
         $requisitosMarcados[$cat] = $enviado ? (array) (old('requisitos')[$cat] ?? [])
-            : ($alta || !in_array($cat, $vig['categorias'], true) ? RequisitosDocumentales::sugeridos($cat) : array_column($vig['requisitos'][$cat] ?? [], 'codigo'));
+            : ($alta || !in_array($cat, $vig['categorias'], true) ? ($sugeridos[$cat] ?? []) : array_column($vig['requisitos'][$cat] ?? [], 'codigo'));
     }
 }
 $campo = static fn (string $nombre, string $etiqueta, string $html, string $ayuda = '', string $col = 'col-md-6'): string =>
@@ -84,7 +88,29 @@ $this->section('contenido');
         <div class="row g-3">
             <?= $campo('tna', 'TNA', $conSufijo('tna', '%', 'inputmode="decimal" required'), 'Tasa nominal anual. La TEA y el CFTEA se calculan en cada simulación (RN-63).', 'col-md-4') ?>
             <?= $campo('gasto_otorgamiento_pct', 'Gasto de otorgamiento', $conSufijo('gasto_otorgamiento_pct', '% del capital', 'inputmode="decimal" required'), 'Se descuenta del importe a desembolsar (RN-68).', 'col-md-4') ?>
-            <?= $campo('gasto_administrativo_cuota', 'Gasto administrativo por cuota', $conPrefijo('gasto_administrativo_cuota', 'inputmode="decimal" required'), 'Integra cada cuota; lleva IVA.', 'col-md-4') ?>
+            <?php $tipoGasto = $v('tipo_gasto_administrativo') === 'Porcentual' ? 'Porcentual' : 'Fijo'; ?>
+            <fieldset class="col-md-4">
+                <legend class="form-label fs-6 mb-2">Gasto administrativo por cuota</legend>
+                <?php foreach (GastoAdministrativo::TIPOS as $k => $t): ?>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tipo_gasto_administrativo" id="tipo-gasto-<?= $k ?>" value="<?= $k ?>"<?= $tipoGasto === $k ? ' checked' : '' ?> data-tipo-gasto>
+                        <label class="form-check-label" for="tipo-gasto-<?= $k ?>"><?= esc($t) ?></label>
+                    </div>
+                <?php endforeach ?>
+                <div class="form-text">Integra cada cuota y lleva IVA. Elija cómo se calcula (D-28).</div>
+            </fieldset>
+            <div class="col-md-4" data-si-gasto="Fijo"<?= $tipoGasto === 'Fijo' ? '' : ' hidden' ?>>
+                <label for="gasto_administrativo_cuota" class="form-label">Importe por cuota</label>
+                <?= $conPrefijo('gasto_administrativo_cuota', 'inputmode="decimal"') ?>
+                <?= error_campo('gasto_administrativo_cuota') ?>
+                <div class="form-text">El mismo importe en todas las cuotas; 0 si no tiene.</div>
+            </div>
+            <div class="col-md-4" data-si-gasto="Porcentual"<?= $tipoGasto === 'Porcentual' ? '' : ' hidden' ?>>
+                <label for="gasto_administrativo_pct" class="form-label">Porcentaje del capital</label>
+                <?= $conSufijo('gasto_administrativo_pct', '% por cuota', 'inputmode="decimal"') ?>
+                <?= error_campo('gasto_administrativo_pct') ?>
+                <div class="form-text">Por ejemplo 0,5: sobre $ 800.000 son $ 4.000 más IVA en cada cuota.</div>
+            </div>
         </div>
     </fieldset>
 
@@ -165,6 +191,7 @@ $this->section('contenido');
                     <?= error_campo('motivo') ?>
                 </div>
             </div>
+            <?= view('partials/confirmar_cambio') ?>
         </fieldset>
     <?php endif ?>
 

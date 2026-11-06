@@ -24,7 +24,7 @@ final class ComparadorLineas
     public const CRITERIO_COSTO = 'costo';
 
     /**
-     * @param list<array{id: int, nombre: string, tna: string, gasto_administrativo_cuota: string, gasto_otorgamiento_pct: string,
+     * @param list<array{id: int, nombre: string, tna: string, gasto_administrativo_cuota: string, tipo_gasto_administrativo?: string, gasto_administrativo_pct?: ?string, gasto_otorgamiento_pct: string,
      *     monto_minimo: string, monto_maximo: string, cuotas_minimas: int, cuotas_maximas: int, motivo_no_admitida?: ?string}> $lineas
      *     motivo_no_admitida informa por qué el cliente no cumple la elegibilidad de la línea (RN-75); null si la cumple
      *
@@ -58,7 +58,7 @@ final class ComparadorLineas
                 continue;
             }
             $tna = Decimal::of($l['tna']);
-            $gasto = Decimal::of($l['gasto_administrativo_cuota']);
+            $gasto = GastoAdministrativo::deVersion($l);
             $minimo = Decimal::of($l['monto_minimo']);
             $maximoLinea = Decimal::of($l['monto_maximo']);
             $plazos = range($l['cuotas_minimas'], $l['cuotas_maximas']);
@@ -93,7 +93,7 @@ final class ComparadorLineas
             }
             $elegido = null;
             foreach ($candidatos as $n) {
-                $plan = AmortizacionFrancesa::plan($importe, $tna, $n, $fechaReferencia, $gasto, $alicuotaIva);
+                $plan = AmortizacionFrancesa::plan($importe, $tna, $n, $fechaReferencia, $gasto->porCuota($importe), $alicuotaIva);
                 if ($plan->cuotaTotalMaxima()->compare($capacidad) <= 0) {
                     $elegido = [$n, $plan];
                     break;

@@ -6,11 +6,13 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
-use App\Libraries\Clientes\ArchivoLegajo;
 use App\Services\Clientes\ClienteService;
+use App\Services\Comunes\DocumentacionService;
+use App\Services\Comunes\GeografiaService;
+use App\Services\Comunes\MonotributoService;
 use CodeIgniter\HTTP\DownloadResponse;
-use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 
 /**
  * Padrón de clientes: CU-54 Localizar, CU-11 Registrar, CU-12 Modificar, CU-13 Desactivar, CU-14 Reactivar y
@@ -42,14 +44,14 @@ class Clientes extends BaseController
     /** CU-11 pasos 1 y 2. */
     public function nuevo(): string
     {
-        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'tipos' => $this->servicio->tiposDocumentacion()] + $this->geografia(null));
     }
 
     /** CU-11 pasos 3 a 9. */
     public function registrar(): RedirectResponse
     {
         try {
-            $id = $this->servicio->registrar((array) $this->request->getPost(), $this->archivos(), (int) session('cuenta')['id']);
+            $id = $this->servicio->registrar((array) $this->request->getPost(), $this->archivosLegajo(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -67,7 +69,7 @@ class Clientes extends BaseController
         }
         $this->servicio->registrarConsulta($id, 'perfil');
 
-        return view('clientes/ver', ['titulo' => $cliente['denominacion'], 'c' => $cliente, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('clientes/ver', ['titulo' => $cliente['denominacion'], 'c' => $cliente, 'tipos' => $this->servicio->tiposDocumentacion(), 'sugeridos' => (new DocumentacionService())->sugeridos()[$cliente['categoria_ingresos']] ?? []]);
     }
 
     /** CU-15 pasos 4 a 7. */
@@ -92,7 +94,7 @@ class Clientes extends BaseController
             return redirect()->route('clientes.localizar')->with('error', $e->getMessage());
         }
 
-        return view('clientes/formulario', ['titulo' => 'Modificar cliente', 'c' => $cliente, 'tipos' => []]);
+        return view('clientes/formulario', ['titulo' => 'Modificar cliente', 'c' => $cliente, 'tipos' => []] + $this->geografia($cliente));
     }
 
     /** CU-12 pasos 4 a 10. */
@@ -118,7 +120,7 @@ class Clientes extends BaseController
     public function agregarDocumentos(int $id): RedirectResponse
     {
         try {
-            $n = $this->servicio->agregarDocumentos($id, $this->archivos(), (int) session('cuenta')['id']);
+            $n = $this->servicio->agregarDocumentos($id, $this->archivosLegajo(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -134,7 +136,10 @@ class Clientes extends BaseController
             return redirect()->to(site_url("admin/clientes/{$id}"))->with('error', $e->getMessage());
         }
 
-        return $this->response->download($d['ruta'], null)->setFileName($d['nombre'])->setContentType($d['mime']);
+        $r = $this->response->download($d['ruta'], null)->setFileName($d['nombre'])->setContentType($d['mime']);
+
+        // ?ver=1 abre el PDF o la imagen en el navegador, por ejemplo desde la resolución gerencial (D-23)
+        return $this->request->getGet('ver') === '1' ? $r->inline() : $r;
     }
 
     /** CU-13 y CU-14: confirmación con motivo. */
@@ -178,29 +183,24 @@ class Clientes extends BaseController
     }
 
     /**
-     * Archivos de documentos[<código>][] para el servicio. Los rechazados por PHP (por tamaño) se informan como
-     * excedidos para que el servicio marque el campo.
-     *
-     * @return list<array{codigo: string, nombre: string, temporal: string, tamano: int}>
+     * D-18: localidades activas de una provincia para el formulario del cliente (se cargan al elegir la provincia).
      */
-    private function archivos(): array
+    public function localidades(int $provinciaId): ResponseInterface
     {
-        $resultado = [];
-        foreach ((array) ($this->request->getFiles()['documentos'] ?? []) as $codigo => $lista) {
-            foreach (is_array($lista) ? $lista : [$lista] as $f) {
-                if (!$f instanceof UploadedFile || $f->getError() === UPLOAD_ERR_NO_FILE) {
-                    continue;
-                }
-                $excedido = in_array($f->getError(), [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true);
-                $resultado[] = [
-                    'codigo' => (string) $codigo,
-                    'nombre' => $f->getClientName(),
-                    'temporal' => $f->isValid() ? $f->getTempName() : '',
-                    'tamano' => $excedido ? ArchivoLegajo::TAMANO_MAXIMO + 1 : ($f->isValid() ? (int) $f->getSize() : 0),
-                ];
-            }
-        }
+        return $this->response->setJSON((new GeografiaService())->localidades($provinciaId));
+    }
 
-        return $resultado;
+    /**
+     * Provincias y, si ya hay una elegida, sus localidades, para mostrar el formulario sin esperar la carga.
+     *
+     * @param array<string, mixed>|null $cliente
+     * @return array{provincias: list<array{id: int, nombre: string}>, localidades: list<array{id: int, nombre: string}>}
+     */
+    private function geografia(?array $cliente): array
+    {
+        $g = new GeografiaService();
+        $provincia = (int) (old('provincia_id') ?? $cliente['provincia_id'] ?? 0);
+
+        return ['provincias' => $g->provincias(), 'localidades' => $provincia === 0 ? [] : $g->localidades($provincia), 'escalaMonotributo' => (new MonotributoService())->vigentes()];
     }
 }

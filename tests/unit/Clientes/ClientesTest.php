@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Clientes;
 
 use App\Libraries\Clientes\ArchivoLegajo;
+use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Clientes\ReglasClientes;
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
@@ -22,7 +23,7 @@ final class ClientesTest extends TestCase
         return [
             'tipo_cliente' => 'PersonaHumana', 'nombre' => 'Lucía', 'apellido' => 'Fernández', 'tipo_documento' => 'DNI',
             'nro_documento' => '30.111.222', 'cuit_cuil' => '27-30111222-?', 'fecha_nacimiento' => '15/03/1985', 'estado_civil' => 'Casado',
-            'correo' => 'lucia@correo.com', 'telefono' => '+54 351 555-1234', 'domicilio' => 'San Martín 123, Córdoba',
+            'correo' => 'lucia@correo.com', 'telefono' => '+54 351 555-1234', 'domicilio' => 'San Martín 123', 'provincia_id' => '14', 'localidad_id' => '3', 'codigo_postal' => '5000',
             'ingresos_declarados' => '850.000,00', 'categoria_ingresos' => 'RelacionDependencia', 'acepta_politica' => '1',
         ];
     }
@@ -34,7 +35,7 @@ final class ClientesTest extends TestCase
             'tipo_cliente' => 'PersonaJuridica', 'razon_social' => 'Panificadora del Centro SRL', 'cuit_cuil' => '30-50001091-2',
             'fecha_constitucion' => '2015-06-01', 'actividad_principal' => 'Elaboración de productos de panadería',
             'representante_nombre' => 'Jorge Pérez', 'representante_documento' => '20111222', 'representante_cargo' => 'Socio gerente',
-            'correo' => 'admin@panificadora.com.ar', 'domicilio' => 'Belgrano 450, Córdoba', 'ingresos_declarados' => '12500000', 'acepta_politica' => 'on',
+            'correo' => 'admin@panificadora.com.ar', 'domicilio' => 'Belgrano 450', 'provincia_id' => '14', 'localidad_id' => '3', 'ingresos_declarados' => '12500000', 'acepta_politica' => 'on',
         ];
     }
 
@@ -71,10 +72,10 @@ final class ClientesTest extends TestCase
     public function testFormularioVacioDePersonaHumana(): void
     {
         $e = $this->errores([]);
-        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica'] as $campo) {
+        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica'] as $campo) {
             $this->assertArrayHasKey($campo, $e, $campo);
         }
-        $this->assertCount(10, $e);
+        $this->assertCount(11, $e);
     }
 
     public function testFormularioVacioDePersonaJuridica(): void
@@ -142,9 +143,9 @@ final class ClientesTest extends TestCase
 
     public function testDocumentacionSugeridaPorCategoria(): void
     {
-        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::sugeridos('RelacionDependencia'));
-        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Monotributista'), ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
-        $this->assertCount(5, RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos('Empresa'), []));
+        $this->assertSame(['DOC_IDENTIDAD', 'RECIBO_SUELDO'], RequisitosDocumentales::sugeridosIniciales('RelacionDependencia'));
+        $this->assertSame(['PAGOS_MONOTRIBUTO'], RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridosIniciales('Monotributista'), ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']));
+        $this->assertCount(5, RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridosIniciales('Empresa'), []));
     }
 
     public function testLaLineaDefineLoExigidoEnLaSolicitud(): void
@@ -202,5 +203,31 @@ final class ClientesTest extends TestCase
         $antes = ['ingresos_declarados' => '850000.00', 'telefono' => '351', 'categoria_ingresos' => 'RelacionDependencia'];
         $this->assertSame([], ReglasClientes::cambiosRelevantes($antes, [...$antes, 'telefono' => '3515']));
         $this->assertSame(['ingresos_declarados'], ReglasClientes::cambiosRelevantes($antes, [...$antes, 'ingresos_declarados' => '900000.00']));
+    }
+
+    /** D-25: la documentación propuesta incluye la identificación y solo tipos activos que corresponden. */
+    public function testDocumentacionSugeridaConfigurable(): void
+    {
+        $aplica = ['DOC_IDENTIDAD' => 'Ambos', 'RECIBO_SUELDO' => 'PersonaHumana', 'CERT_SERVICIOS' => 'PersonaHumana', 'CONST_CUIT' => 'PersonaJuridica', 'PODER_REPRESENTACION' => 'PersonaJuridica'];
+        $base = array_map(static fn () => ['DOC_IDENTIDAD'], RequisitosDocumentales::CATEGORIAS['PersonaHumana']) + ['Empresa' => ['CONST_CUIT', 'DOC_IDENTIDAD', 'PODER_REPRESENTACION']];
+        $this->assertSame([], RequisitosDocumentales::validarSugeridos(['RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO', 'CERT_SERVICIOS']] + $base, $aplica));
+        $e = RequisitosDocumentales::validarSugeridos(['RelacionDependencia' => ['RECIBO_SUELDO'], 'Monotributista' => ['DOC_IDENTIDAD', 'CONST_CUIT']] + $base, $aplica);
+        $this->assertStringContainsString('identificación', $e['RelacionDependencia']);
+        $this->assertStringContainsString('no corresponden', $e['Monotributista']);
+        $this->assertSame('CERTIFICADO_DE_SERVICIOS_DEL_E', RequisitosDocumentales::codigoPara('Certificado de servicios del empleador'));
+        $this->assertSame('CONSTANCIA_DE_CBU_N_1', RequisitosDocumentales::codigoPara('Constancia de CBU (n.º 1)'));
+    }
+
+    /** D-26: categoría del monotributo obligatoria y consistente con los ingresos declarados. */
+    public function testCategoriaDelMonotributo(): void
+    {
+        $escala = ['A' => ['tope' => '12009410.45', 'vigente_desde' => '2026-08-01'], 'B' => ['tope' => '17595182.74', 'vigente_desde' => '2026-08-01']];
+        $this->assertNull(CategoriasMonotributo::inconsistencia('A', '1000000.00', $escala));
+        $this->assertStringContainsString('superan el tope de la categoría A', (string) CategoriasMonotributo::inconsistencia('A', '1200000.00', $escala));
+        $this->assertNull(CategoriasMonotributo::inconsistencia('B', '1200000.00', $escala));
+        $this->assertNotNull(CategoriasMonotributo::inconsistencia('K', '100.00', $escala));
+        $v = CategoriasMonotributo::validarEscala(['A' => '100,00', 'B' => '90,00'] + array_fill_keys(['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'], ''));
+        $this->assertStringContainsString('mayor que el de la anterior', $v['errores']['tope_B']);
+        $this->assertArrayHasKey('tope_K', $v['errores']);
     }
 }

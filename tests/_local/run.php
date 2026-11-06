@@ -119,6 +119,22 @@ namespace PHPUnit\Framework {
             }
         }
 
+        public function assertArrayNotHasKey(int|string $clave, array $a, string $msg = ''): void
+        {
+            $this->assertions++;
+            if (array_key_exists($clave, $a)) {
+                $this->fail(($msg ? "$msg: " : '') . 'sobra la clave ' . var_export($clave, true));
+            }
+        }
+
+        public function assertNotNull(mixed $v, string $msg = ''): void
+        {
+            $this->assertions++;
+            if ($v === null) {
+                $this->fail($msg ?: 'no se esperaba null');
+            }
+        }
+
         public function assertNull(mixed $v, string $msg = ''): void
         {
             $this->assertions++;

@@ -3,6 +3,7 @@
  * CU-15 Consultar Perfil del cliente, con su legajo, consentimientos y operaciones disponibles.
  *
  * @var CodeIgniter\View\View $this
+ * @var list<string> $sugeridos documentación base de su categoría (D-25)
  * @var array<string, mixed> $c
  * @var list<array{id: int, codigo: string, nombre: string, aplica_a: string}> $tipos
  */
@@ -15,7 +16,7 @@ $activo = $c['estado'] === 'Activo';
 $categoria = RequisitosDocumentales::CATEGORIAS[$c['tipo_cliente']][$c['categoria_ingresos']] ?? $c['categoria_ingresos'];
 $presentes = array_column($c['documentos'], 'codigo');
 $faltantes = RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($c['tipo_cliente']), $presentes);
-$sugeridosFaltantes = RequisitosDocumentales::faltantes(RequisitosDocumentales::sugeridos($c['categoria_ingresos']), $presentes);
+$sugeridosFaltantes = RequisitosDocumentales::faltantes($sugeridos, $presentes);
 $nombresTipo = array_column($tipos, 'nombre', 'codigo');
 $fila = static fn (string $etiqueta, ?string $valor): string => $valor === null || $valor === '' ? '' : '<dt class="col-sm-5 fw-medium">' . $etiqueta . '</dt><dd class="col-sm-7">' . $valor . '</dd>';
 $politica = $c['consentimientos']['PoliticaDatos'];
@@ -60,9 +61,9 @@ $this->section('contenido');
                     <?= $fila('Ocupación', $c['ocupacion'] ? esc($c['ocupacion']) : null) ?>
                     <?= $fila('Empleador o actividad', $c['empleador'] ? esc($c['empleador']) : null) ?>
                 <?php endif ?>
-                <?= $fila('Categoría de ingresos', esc($categoria)) ?>
+                <?= $fila('Categoría de ingresos', esc($categoria) . (($c['categoria_monotributo'] ?? null) ? ' · categoría ' . esc(trim((string) $c['categoria_monotributo'])) : '')) ?>
                 <?= $fila($juridica ? 'Ingresos netos mensuales' : 'Ingresos declarados', '<span class="importe d-inline">' . esc(formato_importe($c['ingresos_declarados'])) . '</span>') ?>
-                <?= $fila($juridica ? 'Domicilio legal' : 'Domicilio', esc($c['domicilio'])) ?>
+                <?= $fila($juridica ? 'Domicilio legal' : 'Domicilio', esc($c['domicilio']) . ($c['localidad'] ? '<br><span class="small">' . esc($c['localidad']) . ', ' . esc($c['provincia']) . ($c['codigo_postal'] ? ' (CP ' . esc($c['codigo_postal']) . ')' : '') . '</span>' : ' <span class="badge rounded-pill text-bg-warning">Falta la localidad</span>')) ?>
                 <?= $fila('Teléfono', $c['telefono'] ? esc($c['telefono']) : null) ?>
                 <?= $fila('Correo electrónico', esc((string) $c['correo']) . ((int) $c['correo_verificado'] === 1 ? ' <span class="badge rounded-pill text-bg-success">Verificado</span>' : ' <span class="badge rounded-pill text-bg-light border">Sin verificar</span>')
                     . ($c['correo_pendiente'] ? '<div class="small text-body-secondary mt-1">Correo nuevo pendiente de verificación: ' . esc($c['correo_pendiente']) . '</div>' : '')) ?>

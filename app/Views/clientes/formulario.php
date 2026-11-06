@@ -5,6 +5,9 @@
  * @var CodeIgniter\View\View $this
  * @var array<string, mixed>|null $c
  * @var list<array{id: int, codigo: string, nombre: string, aplica_a: string}> $tipos
+ * @var list<array{id: int, nombre: string}> $provincias
+ * @var list<array{id: int, nombre: string}> $localidades de la provincia elegida (D-18)
+ * @var array<string, array{tope: string, vigente_desde: string}> $escalaMonotributo categorías vigentes (D-26)
  */
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
@@ -112,7 +115,26 @@ $this->section('contenido');
                     <div class="form-text">El cambio de correo en sucursal exige comprobar presencialmente el documento y la identidad (RN-58).</div>
                 </div>
             <?php endif ?>
-            <?= $campo('domicilio', '<span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span>', $texto('domicilio', 200), '', 'col-12') ?>
+            <div class="col-12"><h3 class="h6 mb-0 mt-1"><span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span></h3></div>
+            <?php $provincia = (string) $v('provincia_id'); $localidad = (string) $v('localidad_id'); ?>
+            <div class="col-md-4">
+                <label for="provincia_id" class="form-label">Provincia</label>
+                <select class="form-select<?= campo_invalido('provincia_id') ?>" id="provincia_id" name="provincia_id" required data-localidades="<?= esc(site_url('admin/clientes/localidades'), 'attr') ?>">
+                    <option value="">Seleccione…</option>
+                    <?php foreach ($provincias as $p): ?><option value="<?= $p['id'] ?>"<?= $provincia === (string) $p['id'] ? ' selected' : '' ?>><?= esc($p['nombre']) ?></option><?php endforeach ?>
+                </select>
+                <?= error_campo('provincia_id') ?>
+            </div>
+            <div class="col-md-5">
+                <label for="localidad_id" class="form-label">Localidad</label>
+                <select class="form-select<?= campo_invalido('localidad_id') ?>" id="localidad_id" name="localidad_id" required<?= $localidades === [] ? ' disabled' : '' ?>>
+                    <option value=""><?= $localidades === [] ? 'Elija primero la provincia' : 'Seleccione…' ?></option>
+                    <?php foreach ($localidades as $l): ?><option value="<?= $l['id'] ?>"<?= $localidad === (string) $l['id'] ? ' selected' : '' ?>><?= esc($l['nombre']) ?></option><?php endforeach ?>
+                </select>
+                <?= error_campo('localidad_id') ?>
+            </div>
+            <?= $campo('codigo_postal', 'Código postal <span class="text-body-secondary fw-normal">(opcional)</span>', $texto('codigo_postal', 8, 'autocomplete="postal-code"'), '', 'col-md-3') ?>
+            <?= $campo('domicilio', 'Calle y número', $texto('domicilio', 200, 'autocomplete="street-address"'), 'Con piso, departamento o referencias si corresponde.', 'col-12') ?>
         </div>
     </fieldset>
 
@@ -128,6 +150,15 @@ $this->section('contenido');
                     <?php foreach (RequisitosDocumentales::CATEGORIAS['PersonaHumana'] as $k => $t): ?><option value="<?= $k ?>"<?= $v('categoria_ingresos') === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?>
                 </select>
                 <?= error_campo('categoria_ingresos') ?>
+            </div>
+            <div class="col-md-6" data-solo="PersonaHumana" data-si-categoria="Monotributista"<?= $v('categoria_ingresos') === 'Monotributista' ? '' : ' hidden' ?>>
+                <label for="categoria_monotributo" class="form-label">Categoría del monotributo</label>
+                <select class="form-select<?= campo_invalido('categoria_monotributo') ?>" id="categoria_monotributo" name="categoria_monotributo">
+                    <option value="">Seleccione</option>
+                    <?php foreach ($escalaMonotributo as $k => $e): ?><option value="<?= $k ?>"<?= trim($v('categoria_monotributo')) === $k ? ' selected' : '' ?>><?= $k ?> · hasta <?= esc(formato_importe($e['tope'])) ?> anuales</option><?php endforeach ?>
+                </select>
+                <?= error_campo('categoria_monotributo') ?>
+                <div class="form-text">Topes de ingresos brutos anuales vigentes<?= $escalaMonotributo === [] ? '' : ' desde el ' . esc(formato_fecha(reset($escalaMonotributo)['vigente_desde'])) ?> (ARCA).</div>
             </div>
             <?= $campo('ingresos_declarados', '<span data-solo="PersonaHumana">Ingresos mensuales declarados ($)</span><span data-solo="PersonaJuridica">Ingresos netos mensuales promedio ($)</span>', $texto('ingresos_declarados', 25, 'inputmode="decimal"'), 'Por ejemplo 850.000,00.') ?>
         </div>

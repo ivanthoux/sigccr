@@ -6,6 +6,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
+use App\Services\Comunes\DocumentacionService;
 use App\Services\Lineas\LineaService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -51,7 +52,7 @@ class Lineas extends BaseController
     /** CU-16 pasos 1 y 2. */
     public function nuevo(): string
     {
-        return view('lineas/formulario', ['titulo' => 'Registrar línea de crédito', 'l' => null, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('lineas/formulario', ['titulo' => 'Registrar línea de crédito', 'l' => null, 'tipos' => $this->servicio->tiposDocumentacion(), 'sugeridos' => (new DocumentacionService())->sugeridos()]);
     }
 
     /** CU-16 pasos 3 a 6. */
@@ -75,7 +76,7 @@ class Lineas extends BaseController
             return redirect()->route('lineas.localizar')->with('error', $e->getMessage());
         }
 
-        return view('lineas/formulario', ['titulo' => 'Modificar línea de crédito', 'l' => $linea, 'tipos' => $this->servicio->tiposDocumentacion()]);
+        return view('lineas/formulario', ['titulo' => 'Modificar línea de crédito', 'l' => $linea, 'tipos' => $this->servicio->tiposDocumentacion(), 'sugeridos' => (new DocumentacionService())->sugeridos()]);
     }
 
     /** CU-17 pasos 4 a 9. */
@@ -88,6 +89,7 @@ class Lineas extends BaseController
                 (array) $this->request->getPost(),
                 (string) $this->request->getPost('fecha_vigencia'),
                 (string) $this->request->getPost('motivo'),
+                $this->request->getPost('confirmar_cambio') === '1',
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

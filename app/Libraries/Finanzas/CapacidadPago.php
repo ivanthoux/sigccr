@@ -16,6 +16,8 @@ use InvalidArgumentException;
  *   cuota + g + IVA · (C · i + g), con cuota = C / a(n, i) y a(n, i) = [1 − (1 + i)^−n] / i.
  * Imponiendo que no supere la capacidad K:
  *   C ≤ (K − g · (1 + IVA)) / (1 / a(n, i) + IVA · i)
+ * Con gasto porcentual (D-28), g = C · p en cada cuota y la condición queda
+ *   C ≤ (K − g_fijo · (1 + IVA)) / (1 / a(n, i) + IVA · i + p · (1 + IVA))
  * El resultado se redondea hacia abajo al múltiplo configurado y se verifica con el plan real (los redondeos de
  * centavos pueden exceder la capacidad), bajando un escalón cuando hace falta.
  *
@@ -34,28 +36,31 @@ final class CapacidadPago
         Decimal $capacidad,
         Decimal $tna,
         int $cuotas,
-        Decimal $gastoPorCuota,
+        Decimal|GastoAdministrativo $gastoPorCuota,
         Decimal $alicuotaIva,
         Decimal $paso,
     ): Decimal {
         if ($cuotas < 1) {
             throw new InvalidArgumentException('La cantidad de cuotas debe ser al menos 1.');
         }
-        $disponible = $capacidad->sub($gastoPorCuota->mul(Decimal::one()->add($alicuotaIva)));
+        $gasto = GastoAdministrativo::de($gastoPorCuota);
+        $conIva = Decimal::one()->add($alicuotaIva);
+        $disponible = $capacidad->sub($gasto->parteFija()->mul($conIva));
+        $porcentual = $gasto->proporcion()->mul($conIva);
         if (!$disponible->isPositive()) {
             return Decimal::zero();
         }
         $i = AmortizacionFrancesa::tasaMensual($tna);
         if ($i->isZero()) {
-            $bruto = $disponible->mul($cuotas);
+            $bruto = $disponible->div(Decimal::one()->div($cuotas)->add($porcentual));
         } else {
             $a = Decimal::one()->sub(Decimal::one()->add($i)->pow(-$cuotas))->div($i);
-            $bruto = $disponible->div(Decimal::one()->div($a)->add($alicuotaIva->mul($i)));
+            $bruto = $disponible->div(Decimal::one()->div($a)->add($alicuotaIva->mul($i))->add($porcentual));
         }
         $capital = $bruto->floorToMultiple($paso);
         $fecha = new DateTimeImmutable('2000-01-01');
         while ($capital->isPositive()) {
-            $plan = AmortizacionFrancesa::plan($capital, $tna, $cuotas, $fecha, $gastoPorCuota, $alicuotaIva);
+            $plan = AmortizacionFrancesa::plan($capital, $tna, $cuotas, $fecha, $gasto->porCuota($capital), $alicuotaIva);
             if ($plan->cuotaTotalMaxima()->compare($capacidad) <= 0) {
                 return $capital;
             }
@@ -77,7 +82,7 @@ final class CapacidadPago
         Decimal $capacidad,
         Decimal $tna,
         array $cuotasAdmitidas,
-        Decimal $gastoPorCuota,
+        Decimal|GastoAdministrativo $gastoPorCuota,
         Decimal $gastoOtorgamientoPct,
         Decimal $alicuotaIva,
         Decimal $montoMinimo,
@@ -86,9 +91,10 @@ final class CapacidadPago
         array $escalones,
         DateTimeImmutable $fechaReferencia,
     ): array {
+        $gasto = GastoAdministrativo::de($gastoPorCuota);
         $maximos = [];
         foreach ($cuotasAdmitidas as $n) {
-            $c = Decimal::min(self::capitalMaximo($capacidad, $tna, $n, $gastoPorCuota, $alicuotaIva, $paso), $montoMaximo);
+            $c = Decimal::min(self::capitalMaximo($capacidad, $tna, $n, $gasto, $alicuotaIva, $paso), $montoMaximo);
             if ($c->compare($montoMinimo) >= 0) {
                 $maximos[$n] = $c;
             }
@@ -111,7 +117,7 @@ final class CapacidadPago
                     $alternativas[] = $alt;
                     continue;
                 }
-                $plan = AmortizacionFrancesa::plan($importe, $tna, $n, $fechaReferencia, $gastoPorCuota, $alicuotaIva);
+                $plan = AmortizacionFrancesa::plan($importe, $tna, $n, $fechaReferencia, $gasto->porCuota($importe), $alicuotaIva);
                 $alt['plan'] = $plan;
                 if ($plan->cuotaTotalMaxima()->compare($capacidad) > 0) {
                     $alt['motivo'] = 'La cuota total con IVA supera la capacidad de pago.';

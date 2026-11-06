@@ -54,6 +54,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
             $routes->get('nuevo', 'Admin\Clientes::nuevo', ['as' => 'clientes.registrar', 'filter' => 'permiso:clientes.registrar']);
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
+            // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
+            $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);
@@ -64,6 +66,74 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/desactivar', 'Admin\Clientes::desactivar/$1', ['filter' => 'permiso:clientes.desactivar']);
             $routes->get('(:num)/reactivar', 'Admin\Clientes::confirmar/$1/reactivar', ['filter' => 'permiso:clientes.reactivar']);
             $routes->post('(:num)/reactivar', 'Admin\Clientes::reactivar/$1', ['filter' => 'permiso:clientes.reactivar']);
+        });
+
+        // SS-04 Simulación y solicitudes (CU-21 a CU-23, CU-84; localización y consulta de CU-29 y CU-30)
+        $routes->get('simulaciones', 'Admin\Simulaciones::index', ['as' => 'solicitudes.simular', 'filter' => 'permiso:solicitudes.simular']);
+        $routes->post('simulaciones', 'Admin\Simulaciones::simular', ['filter' => 'permiso:solicitudes.simular']);
+        $routes->get('simulaciones/(:num)', 'Admin\Simulaciones::ver/$1', ['filter' => 'permiso:solicitudes.simular']);
+        // CU-99 Simular todas las líneas (D-10)
+        $routes->get('simulaciones/comparar', 'Admin\Comparativas::index', ['as' => 'simulaciones.comparar', 'filter' => 'permiso:solicitudes.simular-comparativa']);
+        $routes->post('simulaciones/comparar', 'Admin\Comparativas::simular', ['filter' => 'permiso:solicitudes.simular-comparativa']);
+        $routes->get('simulaciones/comparar/(:num)', 'Admin\Comparativas::ver/$1', ['filter' => 'permiso:solicitudes.simular-comparativa']);
+        $routes->get('evaluaciones/contingencia', 'Admin\Evaluaciones::pendientes', ['as' => 'evaluaciones.contingencia', 'filter' => 'permiso:evaluaciones.registrar-contingencia']);
+        // SS-05 Cajas y fondos (CU-31, CU-36, CU-72, CU-80, CU-81, CU-85)
+        $routes->get('caja', 'Admin\MiCaja::index', ['as' => 'cajas.abrir', 'filter' => 'permiso:cajas.abrir']);
+        $routes->post('caja', 'Admin\MiCaja::abrir', ['filter' => 'permiso:cajas.abrir']);
+        $routes->get('caja/cierre', 'Admin\MiCaja::cierre', ['as' => 'cajas.cerrar', 'filter' => 'permiso:cajas.cerrar']);
+        $routes->post('caja/cierre', 'Admin\MiCaja::cerrar', ['filter' => 'permiso:cajas.cerrar']);
+        $routes->get('cajas', 'Admin\Cajas::index', ['as' => 'cajas.registrar', 'filter' => 'permiso:cajas.registrar']);
+        $routes->post('cajas', 'Admin\Cajas::registrar', ['filter' => 'permiso:cajas.registrar']);
+        $routes->post('cajas/(:num)/asignar', 'Admin\Cajas::asignar/$1', ['filter' => 'permiso:cajas.asignar-cajero']);
+        $routes->post('cajas/(:num)/finalizar-asignacion', 'Admin\Cajas::finalizarAsignacion/$1', ['filter' => 'permiso:cajas.asignar-cajero']);
+        $routes->post('cajas/(:num)/estado', 'Admin\Cajas::cambiarEstado/$1', ['filter' => 'permiso:cajas.cambiar-estado']);
+        $routes->get('fondos', 'Admin\Fondos::index', ['as' => 'fondos.movimientos', 'filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos', 'Admin\Fondos::registrar', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/corregir', 'Admin\Fondos::corregir/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/confirmar', 'Admin\Fondos::confirmar/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        $routes->post('fondos/(:num)/anular', 'Admin\Fondos::anular/$1', ['filter' => 'permiso:fondos.registrar-movimiento']);
+        // CU-82 Calendario operativo (RN-49)
+        $routes->get('calendario', 'Admin\Calendario::index', ['as' => 'calendario.actualizar', 'filter' => 'permiso:calendario.actualizar']);
+        $routes->post('calendario', 'Admin\Calendario::agregar', ['filter' => 'permiso:calendario.actualizar']);
+        $routes->post('calendario/baja', 'Admin\Calendario::baja', ['filter' => 'permiso:calendario.actualizar']);
+        // CU-100 y CU-101: catálogo de documentación y categorías del monotributo (D-25, D-26)
+        $routes->get('documentacion', 'Admin\Documentacion::index', ['as' => 'documentacion.configurar', 'filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/tipos', 'Admin\Documentacion::registrarTipo', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/tipos/(:num)', 'Admin\Documentacion::modificarTipo/$1', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->post('documentacion/sugeridos', 'Admin\Documentacion::guardarSugeridos', ['filter' => 'permiso:documentacion.configurar']);
+        $routes->get('monotributo', 'Admin\Monotributo::index', ['as' => 'monotributo.actualizar', 'filter' => 'permiso:monotributo.actualizar']);
+        $routes->post('monotributo', 'Admin\Monotributo::registrar', ['filter' => 'permiso:monotributo.actualizar']);
+        // CU-26 y CU-27: bandejas del Gerente y del Cajero
+        $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
+        $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
+        $routes->get('liquidaciones/(:num)', 'Admin\Liquidaciones::ver/$1', ['filter' => 'permiso:creditos.liquidar']);
+        $routes->post('liquidaciones/(:num)', 'Admin\Liquidaciones::liquidar/$1', ['filter' => 'permiso:creditos.liquidar']);
+        $routes->get('liquidaciones/(:num)/constancia', 'Admin\Liquidaciones::constancia/$1', ['filter' => 'permiso:creditos.liquidar']);
+        $routes->group('solicitudes', static function (RouteCollection $routes): void {
+            $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
+            $routes->get('nueva', 'Admin\Solicitudes::nueva', ['as' => 'solicitudes.registrar', 'filter' => 'permiso:solicitudes.registrar']);
+            $routes->get('nueva/(:num)', 'Admin\Solicitudes::confirmar/$1', ['filter' => 'permiso:solicitudes.registrar']);
+            $routes->post('', 'Admin\Solicitudes::registrar', ['filter' => 'permiso:solicitudes.registrar']);
+            $routes->get('(:num)', 'Admin\Solicitudes::ver/$1', ['as' => 'solicitudes.consultar', 'filter' => 'permiso:solicitudes.consultar']);
+            $routes->get('(:num)/verificar', 'Admin\Solicitudes::verificacion/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->post('(:num)/verificar', 'Admin\Solicitudes::verificar/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->post('(:num)/documentos', 'Admin\Solicitudes::incorporarDocumentos/$1', ['filter' => 'permiso:solicitudes.verificar-legajo']);
+            $routes->get('(:num)/corregir', 'Admin\Solicitudes::correccion/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
+            $routes->post('(:num)/corregir', 'Admin\Solicitudes::corregir/$1', ['filter' => 'permiso:solicitudes.registrar-correccion']);
+            // CU-24 y CU-25: evaluación crediticia (la automática, CU-86, la ejecuta el proceso evaluacion:ejecutar)
+            $routes->get('(:num)/evaluacion', 'Admin\Evaluaciones::ver/$1', ['filter' => 'permiso:evaluaciones.consultar']);
+            $routes->get('(:num)/contingencia', 'Admin\Evaluaciones::contingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
+            $routes->post('(:num)/contingencia', 'Admin\Evaluaciones::registrarContingencia/$1', ['filter' => 'permiso:evaluaciones.registrar-contingencia']);
+            // CU-64, CU-79 y CU-87 (regeneración): alternativas de financiación
+            $routes->get('(:num)/alternativas', 'Admin\Alternativas::index/$1', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->post('(:num)/alternativas/regenerar', 'Admin\Alternativas::regenerar/$1', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->get('(:num)/alternativas/(:num)', 'Admin\Alternativas::ver/$1/$2', ['filter' => 'permiso:alternativas.consultar']);
+            $routes->post('(:num)/alternativas/(:num)/confirmar', 'Admin\Alternativas::confirmar/$1/$2', ['filter' => 'permiso:alternativas.confirmar']);
+            // CU-26 y CU-28
+            $routes->get('(:num)/resolver', 'Admin\Resoluciones::ver/$1', ['filter' => 'permiso:solicitudes.resolver']);
+            $routes->post('(:num)/resolver', 'Admin\Resoluciones::resolver/$1', ['filter' => 'permiso:solicitudes.resolver']);
+            $routes->get('(:num)/cancelar', 'Admin\Resoluciones::cancelacion/$1', ['filter' => 'permiso:solicitudes.cancelar']);
+            $routes->post('(:num)/cancelar', 'Admin\Resoluciones::cancelar/$1', ['filter' => 'permiso:solicitudes.cancelar']);
         });
 
         // SS-10 Alertas (CU-83)
@@ -88,6 +158,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->group('parametros', static function (RouteCollection $routes): void {
             $routes->get('evaluacion', 'Admin\Parametros::evaluacion', ['as' => 'parametros.evaluacion', 'filter' => 'permiso:parametros.evaluacion']);
             $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
+            $routes->get('estructuracion', 'Admin\Parametros::estructuracion', ['as' => 'parametros.estructuracion', 'filter' => 'permiso:parametros.estructuracion']);
+            $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
         });
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:

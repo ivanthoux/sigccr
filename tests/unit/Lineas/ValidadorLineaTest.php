@@ -42,7 +42,18 @@ final class ValidadorLineaTest extends TestCase
     public function testElMinimoNoPuedeSuperarAlMaximo(): void
     {
         $e = V::validar(V::normalizar($this->motos(['monto_minimo' => '2.000.000'])), self::CODIGOS, '2026-10-27');
-        $this->assertSame('El importe máximo no puede ser menor que el mínimo (RN-14).', $e['monto_maximo']);
+        $this->assertSame('El importe máximo debe ser mayor que el mínimo (RN-14, D-23).', $e['monto_maximo']);
+    }
+
+    /** D-23: el mínimo y el máximo de importes, cuotas y edades no pueden ser iguales. */
+    public function testMinimoYMaximoIgualesSeRechazan(): void
+    {
+        $e = V::validar(V::normalizar($this->motos([
+            'monto_minimo' => '1.500.000', 'cuotas_minimas' => '24', 'edad_minima' => '40', 'edad_maxima' => '40',
+        ])), self::CODIGOS, '2026-10-27');
+        $this->assertSame('El importe máximo debe ser mayor que el mínimo (RN-14, D-23).', $e['monto_maximo']);
+        $this->assertSame('La cantidad máxima de cuotas debe ser mayor que la mínima (RN-14, D-23).', $e['cuotas_maximas']);
+        $this->assertSame('La edad máxima debe ser mayor que la mínima (RN-14, D-23).', $e['edad_maxima']);
     }
 
     public function testImportesObligatoriosYPositivos(): void
@@ -100,5 +111,23 @@ final class ValidadorLineaTest extends TestCase
     {
         $this->assertSame('Vencida', V::estadoEfectivo('Activa', '2026-10-26', '2026-10-27'));
         $this->assertSame('Suspendida', V::estadoEfectivo('Suspendida', '2027-01-01', '2026-10-27'));
+    }
+
+    /** D-28: gasto administrativo como porcentaje del capital en cada cuota. */
+    public function testGastoAdministrativoPorcentual(): void
+    {
+        $d = V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => '0,5', 'gasto_administrativo_cuota' => '']));
+        $this->assertSame('Porcentual', $d['tipo_gasto_administrativo']);
+        $this->assertSame('0.005000', $d['gasto_administrativo_pct']);
+        $this->assertSame('0.00', $d['gasto_administrativo_cuota']);
+        $this->assertArrayNotHasKey('gasto_administrativo_cuota', V::validar($d, self::CODIGOS, '2026-10-27'));
+        $this->assertArrayNotHasKey('gasto_administrativo_pct', V::validar($d, self::CODIGOS, '2026-10-27'));
+        $e = V::validar(V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => '15'])), self::CODIGOS, '2026-10-27');
+        $this->assertStringContainsString('10 %', $e['gasto_administrativo_pct']);
+        $e = V::validar(V::normalizar($this->motos(['tipo_gasto_administrativo' => 'Porcentual', 'gasto_administrativo_pct' => ''])), self::CODIGOS, '2026-10-27');
+        $this->assertArrayHasKey('gasto_administrativo_pct', $e);
+        $fijo = V::normalizar($this->motos());
+        $this->assertSame('Fijo', $fijo['tipo_gasto_administrativo']);
+        $this->assertNull($fijo['gasto_administrativo_pct']);
     }
 }

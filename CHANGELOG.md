@@ -4,6 +4,37 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.3.0] - 2026-11-06
+
+Control 2 (previsto para el 13/11/2026): iteración 2 completa (SS-04 y SS-05: simulación, solicitud, evaluación, alternativas, resolución, liquidación, cajas, fondos, parámetros y calendario) con las observaciones de la presentación del 02/11/2026. Prueba funcional aprobada el 06/11/2026 (97 de 97).
+
+### Cambiado (observaciones de la presentación del 02/11/2026, D-23 a D-29)
+- Líneas: el máximo debe ser mayor que el mínimo en importes, cuotas y edades (RN-14); gasto administrativo fijo o porcentual del capital en cada cuota (`GastoAdministrativo`, RN-68, D-28).
+- Simulación y comparación: datos del cliente (edad, situación laboral, empleador, ingresos, obligaciones y capacidad de pago); plan de cuotas paginado de a 12.
+- Resolución del Gerente: documentación del legajo con su verificación, abierta en el navegador.
+- Confirmación al registrar una nueva versión de condiciones o de parámetros con solicitudes en trámite (D-24).
+- Desembolso solo por transferencia a un CBU del cliente; sin efectivo ni CVU (Ley 25.345, D-27).
+
+### Agregado (D-25 y D-26)
+- CU-100 Configurar Catálogo de Documentación: tipos de documento nuevos y documentación base por categoría de ingresos.
+- CU-101 Actualizar Categorías del Monotributo: escala de ARCA versionada y categoría obligatoria del cliente monotributista, consistente con sus ingresos.
+- Migración 15 (`documentacion_sugerida`, `categorias_monotributo`, gasto porcentual y rangos estrictos); el modelo pasa a 77 tablas.
+
+### Agregado (iteración 2 · D01: simulación, solicitud, verificación y correcciones)
+- CU-21 Simular Crédito: líneas admitidas para el cliente según estado, vigencia, tipo, categoría, edad o antigüedad (`Elegibilidad`, RN-13, RN-75), validación del importe y las cuotas (RN-14, RN-76) y plan preliminar con TEA, CFTEA, gastos e IVA (`Simulador`, RN-50 a RN-52, RN-63, RN-68), vigente por 7 días (RN-48).
+- CU-22 Registrar Solicitud desde una simulación vigente: cliente activo con CUIT/CUIL, línea no suspendida (RN-16), una sola solicitud en trámite por cliente y línea (RN-18) y la documentación que exige la versión de condiciones (RN-11, D-14).
+- CU-23 Verificar Legajo: resultado por documento con su motivo y resultado de la revisión (`RevisionLegajo`, RN-19); incorporación de documentación durante la verificación (A4).
+- CU-84 Registrar Corrección: reemplazo de los documentos observados (RN-44), aclaraciones y etapa siguiente según 4.2.3, incluida la devolución gerencial (`EstadosSolicitud`); corrección parcial (A1).
+- RN-61: un documento clave nuevo devuelve a verificación las solicitudes evaluadas, invalida su evaluación y alerta al Analista.
+- Localización y consulta de solicitudes (base de CU-29 y CU-30) con historial de estados y revisiones documentales.
+- `LegajoService`: legajo compartido por clientes y solicitudes.
+
+### Agregado
+- Especificación del modelo de datos en el repositorio (`docs/modelo-datos/`) con sus generadores y `verificar.py`, que la integración continua ejecuta para comprobar que las migraciones producen el mismo esquema.
+
+### Corregido
+- Migración 12: `alertas_vistas.usuario_id` sin clave foránea hacia SS-01 (las tablas de SS-10 no dependen de otros subsistemas) e índices de las claves foráneas de la migración 10 (`movimientos_caja.cobro_id`, `simulaciones_comparativas.usuario_id` y `version_parametros_id`).
+
 ## [0.2.0] - 2026-10-29
 
 Control 1 (previsto para el 03/11/2026): iteración 1 completa (SS-01, SS-02, SS-03 y SS-10) y motor financiero aprobado por sus casos de prueba (2.2.2 del documento).
@@ -84,6 +115,7 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...develop
+[0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ivanthoux/sigccr/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ivanthoux/sigccr/releases/tag/v0.1.0

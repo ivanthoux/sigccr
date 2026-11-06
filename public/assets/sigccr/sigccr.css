@@ -192,3 +192,28 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .funciones-portal .bi { color: var(--tinta-2); font-size: 1.25rem; }
 .funciones-portal h3 { font-size: 1rem; margin: .5rem 0 .25rem; }
 .funciones-portal p { color: var(--texto-2); font-size: .875rem; margin: 0; }
+
+/* ── Simulación y solicitudes (D01) ──────────────────────────────────────── */
+.resumen-plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
+.resumen-plan > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
+.resumen-plan dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); text-transform: none; }
+.resumen-plan dd { margin: 0; font-size: 1.0625rem; font-weight: 600; }
+.verificacion-documento { border: 1px solid var(--linea); border-radius: .375rem; padding: .85rem 1rem; margin-bottom: .75rem; }
+.verificacion-documento.con-error { border-color: var(--rojo); }
+.verificacion-documento legend { float: none; width: auto; }
+.opcion-resultado { white-space: normal; height: 100%; }
+.historial-estados li { position: relative; padding: 0 0 .9rem 1.1rem; border-left: 2px solid var(--linea); margin-left: .35rem; }
+.historial-estados li::before { content: ""; position: absolute; left: -.4rem; top: .3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--tinta); }
+.historial-estados li:last-child { border-left-color: transparent; }
+.list-group { --bs-list-group-active-bg: var(--tinta); --bs-list-group-active-border-color: var(--tinta); }
+.resumen-plan .importe { text-align: left; }
+
+/* ── Evaluación crediticia (D02) ─────────────────────────────────────────── */
+.dimensiones-evaluacion { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
+.dimensiones-evaluacion > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
+.dimensiones-evaluacion dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); }
+.dimensiones-evaluacion dd { margin: 0; font-weight: 600; }
+.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: #fff; background: var(--texto-2); }
+.categoria-a, .categoria-b { background: var(--verde); }
+.categoria-c { background: var(--ambar); }
+.categoria-d, .categoria-e { background: var(--rojo); }

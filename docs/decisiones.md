@@ -1,6 +1,6 @@
 # Registro de decisiones
 
-Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
+Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores y se aplican; quedan pendientes de ratificación por el director y, si las objeta, se reemplazan por decisiones nuevas; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
 | ID | Fecha | Estado |
 |---|---|---|
@@ -18,8 +18,21 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-12 | 27/10/2026 | Validada (29/10/2026) |
 | D-13 | 27/10/2026 | Validada (29/10/2026) |
 | D-14 | 28/10/2026 | Validada (29/10/2026) |
-| D-15 | 29/10/2026 | Propuesta (diseño de la iteración 1) |
-| D-16 | 29/10/2026 | Propuesta (prueba funcional de la iteración 1) |
+| D-15 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-16 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-17 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-18 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-19 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-20 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-21 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-22 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-23 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-24 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-25 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-26 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-27 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-28 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -131,5 +144,243 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Decisión.** Al confirmar el correo desde el enlace (CU-11 paso 8), si la cuenta del cliente está Pendiente de activación, o Desactivada con el cliente activo en el padrón, el sistema emite en ese momento la autorización de activación o de rehabilitación y lleva al cliente directamente a definir su contraseña (CU-04 paso 7). La autorización no se envía por correo, porque el cliente acaba de demostrar que lo controla con otra autorización de un solo uso (RN-03); se aplican las mismas reglas del paso 4 (RN-10, RN-62) y queda auditada. Si la cuenta ya está habilitada (cambio de correo, CU-12), la verificación termina en el inicio de sesión. La activación desde «Activar o rehabilitar acceso» con documento y correo se mantiene para quien no tenga el enlace. El correo de verificación de los clientes tiene su propia plantilla, que anticipa este paso.
 
-**Consecuencias.** Sin cambios de esquema. `AutorizacionService::emitirSinComunicacion()`, `ActivacionService::continuarTrasVerificacion()` y la plantilla `verificacion_correo_cliente`. Cambian CU-04 (flujo alternativo desde la verificación del correo) y CU-11 (paso 8 y postcondición) en la próxima versión del documento.
+**Consecuencias.** Sin cambios de esquema. `AutorizacionService::emitirSinComunicacion()`, `ActivacionService::continuarTrasVerificacion()` y la plantilla `verificacion_correo_cliente`. Cambian CU-04 (A6, activación desde la verificación del correo), CU-11 (paso 8) y la tabla de realizaciones de 4.5.1 en la v11.
 
+## D-17 · Evaluación automática en dos transacciones y registro de la contingencia (CU-86, CU-25)
+
+**Contexto.** Al construir la evaluación crediticia (D02) aparecieron tres situaciones que la v11 no detalla. La consulta a la Central de Deudores puede demorar hasta 30 segundos (10 s por petición y dos reintentos, RNF-08): si la evaluación completa se hiciera en una sola transacción, la solicitud quedaría bloqueada durante la espera. CU-86 A7 indica que ante un error interno la solicitud queda Pendiente de evaluación, pero el diagrama de estados de 4.2.3 no tiene la transición de En evaluación a Pendiente de evaluación, ni el de 4.2.4 prevé un intento que quede En proceso porque el proceso se interrumpió. Por último, el esquema exige que la contingencia tenga resultado nulo o «Requiere análisis gerencial», pero CU-25 no dice cuál de los dos registra, ni dónde se guardan los antecedentes verificables que describe el Analista.
+
+**Decisión.**
+1. CU-86 se ejecuta en dos transacciones por solicitud: la primera registra el intento En proceso con la versión de parámetros vigente y pasa la solicitud a En evaluación; la consulta externa se hace fuera de toda transacción; la segunda calcula los indicadores y aplica el resultado solo si la solicitud sigue En evaluación (si no, el resultado queda Finalizado con vigencia Invalidada como antecedente, A4 y A5). Para no producir bloqueos mutuos, se bloquea siempre primero la solicitud y después la evaluación.
+2. Un error interno posterior al inicio, o un intento En proceso con más de 15 minutos (ejecución interrumpida), deja el intento No completado con su motivo y devuelve la solicitud a Pendiente de evaluación, sin alerta, para la próxima ejecución. Se agrega la transición En evaluación → Pendiente de evaluación (A7). La falta de respuesta del servicio externo sigue llevando a Pendiente de evaluación de contingencia, sin reintento automático (A3, RN-21).
+3. El inicio inmediato al verificar un legajo (CU-86 paso 1) toma el mismo bloqueo de aplicación que el proceso programado; si el proceso está en curso, no hace nada y la solicitud se evalúa en la ejecución siguiente (cada 5 minutos).
+4. La evaluación de contingencia se registra Finalizada, Vigente por la vigencia configurada y con resultado «Requiere análisis gerencial»: la recomendación del Analista (Favorable o Desfavorable) y su justificación se guardan aparte y no aprueban la solicitud (RN-21). Los tipos de antecedentes verificables utilizados y su descripción se guardan con los antecedentes internos del cliente en `indicadores`; las deudas que el Analista transcribe de una consulta manual a la Central de Deudores se guardan en `antecedentes_externos` con fuente «Manual».
+5. Indicadores internos de RN-69: el comportamiento de pago es el máximo atraso de las cuotas vencidas en los últimos 12 meses (las pagadas, hasta la fecha efectiva del pago; las impagas, hasta hoy) y no hay antecedentes si no hay cuotas vencidas en ese período; las obligaciones son la próxima cuota impaga de cada crédito Activo o En mora más la primera cuota de las demás solicitudes en trámite del cliente (RN-18). De la Central de Deudores se toman los períodos desde doce meses antes del mes en curso; la situación vigente es la peor del último período informado.
+
+**Consecuencias.** Sin cambios de esquema. `EvaluacionService`, comando `evaluacion:ejecutar` (cada 5 minutos en el planificador), `AntecedentesBcra`, `DimensionesEvaluacion`, `Contingencia` y el adaptador `BcraInformacionCrediticia` (API pública de la Central de Deudores, `sigccr.adaptadorInformacionCrediticia = real`). Cambian el diagrama de estados de la solicitud de 4.2.3 (nueva transición), el de la evaluación de 4.2.4 (EnProceso → NoCompletada por error interno o interrupción), CU-86 (A7) y CU-25 (paso 7, resultado registrado).
+
+## D-18 · Domicilio del cliente con provincia y localidad (CU-11, CU-12)
+
+**Contexto.** En la prueba de la iteración 2 se observó que el domicilio del cliente era un único texto libre. Una sucursal atiende clientes de varias localidades cercanas, a veces de otra provincia: por ejemplo, desde Apóstoles (Misiones) se atiende a Azara y San José, en Misiones, y a Colonia Liebig, en Corrientes. Con un texto libre no se puede saber con certeza de qué localidad es cada cliente, ni agruparlos para reportes o campañas.
+
+**Decisión.** El domicilio se compone de provincia, localidad, código postal (opcional) y calle y número. La provincia y la localidad se eligen de un catálogo y son obligatorias en el alta (CU-11) y en cada modificación (CU-12). Los clientes registrados antes del cambio conservan su domicilio y completan la localidad en su próxima modificación. El catálogo usa los códigos oficiales: las provincias, con su código INDEC, y las localidades, del catálogo de localidades censales del Servicio de Normalización de Datos Geográficos (georef, datos.gob.ar). La instalación carga las 24 jurisdicciones y una lista base de localidades (las capitales, la zona de Apóstoles y el Gran Resistencia). El comando `php spark geografia:importar` incorpora el catálogo completo, descargado o desde un archivo; puede repetirse y no elimina localidades que ya estén en uso. El código postal admite los cuatro dígitos o el CPA de ocho caracteres.
+
+**Consecuencias.** Migración 13: tablas `provincias` y `localidades` en SS-10 y columnas `clientes.localidad_id` y `clientes.codigo_postal`; `domicilio` conserva la calle y el número. Queda en 75 tablas. `CatalogoGeografico` (con 6 pruebas), `GeografiaService`, `GeografiaSeeder` y el comando `geografia:importar`. El formulario del cliente carga las localidades al elegir la provincia. Cambian CU-11 (paso 3), CU-12, el modelo de dominio (`Cliente` con `Localidad`), 4.3 (tablas de SS-10 y SS-02, totales) y el glosario.
+
+## D-19 · Alternativas de financiación, aprobación automática y reserva de fondos (CU-87, CU-64, CU-79)
+
+**Contexto.** Al construir las alternativas (D03) quedaron cuatro definiciones sin precisar en la v11. CU-87 combina el monto máximo y sus escalones con *todas* las cantidades de cuotas admitidas: una línea de 3 a 24 cuotas daría 66 combinaciones, demasiadas para presentarlas al cliente. Tampoco se dice si la combinación que el cliente pidió en la solicitud debe figurar entre las alternativas. CU-79 exige verificar «las condiciones de aprobación automática según los parámetros vigentes», pero CU-58 y CU-59 no definen ningún parámetro de ese tipo. Por último, RN-41 pide reservar fondos sin indicar el importe.
+
+**Decisión.**
+1. **Plazos sugeridos.** Las alternativas se generan sobre los plazos sugeridos de la línea: el mínimo, el máximo y los plazos habituales intermedios (3, 6, 9, 12, 18, 24, 30, 36, 48 y 60 cuotas). Se agrega el plazo de la solicitud si no está entre ellos. Con los escalones iniciales (100 %, 75 % y 50 % del monto máximo), una línea de 3 a 24 cuotas da hasta 18 combinaciones.
+2. **Combinación pedida.** La combinación pedida en la solicitud se presenta primero cuando no supera el monto máximo financiable. Las combinaciones cuya primera cuota con IVA supera la capacidad se conservan descartadas, con su motivo y su costo (RF-15). Una nueva generación descarta las alternativas vigentes de la anterior.
+3. **Aprobación automática (RN-23).** Se aprueba automáticamente cuando:
+   - la evaluación sigue vigente;
+   - la alternativa está vigente;
+   - su primera cuota entra en la capacidad de pago recalculada con las obligaciones actuales del cliente (RN-18);
+   - la línea está activa (RN-16);
+   - el disponible libre alcanza para el desembolso (RN-71).
+
+   No hay otros parámetros de aprobación automática. Si la línea no está activa o faltan fondos, la confirmación queda registrada y la solicitud pasa a Pendiente de resolución con la causa y una alerta al Gerente (A1, A4). Si la evaluación perdió vigencia, la solicitud vuelve a Pendiente de evaluación (A5).
+4. **Reserva de fondos (RN-41).** La reserva es por el importe neto a desembolsar (capital menos gasto de otorgamiento y su IVA), que es lo que sale de los fondos al liquidar. El disponible libre de RN-71 se calcula como:
+   - movimientos de fondos realizados (ingresos menos egresos);
+   - más los importes imputados por cobros confirmados y aplicaciones de saldo;
+   - menos desembolsos, devoluciones completadas, reservas y compromisos vigentes;
+   - menos la reserva mínima de los parámetros de campañas.
+
+   La reserva se constituye con un bloqueo de aplicación, para que dos aprobaciones simultáneas no usen los mismos fondos.
+5. **Vencimiento de la aprobación.** Son 72 horas hábiles con el calendario operativo (RN-49), que se conservan en la resolución automática.
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `Estructurador`, con 6 pruebas.
+- `EstructuracionService` (generar, regenerar, consultar y confirmar).
+- `FondosService` (disponibilidad y reserva).
+- `ComparativaService` (CU-99, con `ComparadorLineas`).
+
+CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay viables, deriva a resolución (A6). Hasta construir CU-85 (D05), los fondos de la entidad se registran como movimientos de fondos. Cambian CU-87 (paso 5), CU-79 (pasos 7 a 9) y RN-41 (importe de la reserva).
+
+## D-20 · Plan de la aprobación gerencial, conformidad al liquidar e identidad del destinatario (CU-26, CU-27, CU-28)
+
+**Contexto.** Al construir la resolución, la liquidación y la cancelación (D04) quedaron cinco puntos sin precisar en la v11:
+- **Plan definido por el Gerente.** CU-26 A8 permite que el Gerente defina el importe y las cuotas cuando no hay una alternativa confirmada, pero `resoluciones` solo referencia alternativas.
+- **Conformidad.** CU-27 exige registrar la conformidad del cliente con ese plan, sin decir dónde se guarda.
+- **Identidad.** Pide verificar la identidad del destinatario sin indicar cómo.
+- **Datos de la transferencia.** Pide registrar el CUIT del titular, la evidencia de titularidad y el comprobante, pero `liquidaciones` solo tiene la cuenta y un comprobante de texto.
+- **Tipo de rechazo.** Tampoco se dice qué tipo de rechazo corresponde a la decisión del Gerente.
+
+**Decisión.**
+1. **Plan aprobado.** Toda aprobación referencia una alternativa:
+   - la confirmada por el cliente;
+   - una alternativa vigente que elige el Gerente;
+   - o la combinación que define el Gerente.
+
+   En el último caso se valida contra los límites de la línea (RN-76) y la capacidad de pago actual. Después se genera una estructuración nueva con la capacidad de ese momento y la combinación se agrega como alternativa vigente.
+2. **Conformidad al liquidar (RN-22).** Si la alternativa aprobada no está confirmada, el Cajero marca la conformidad del cliente al liquidar. La alternativa queda Confirmada con la fecha de la liquidación y el medio «Presencial, al liquidar».
+3. **Identidad del destinatario.** El Cajero reingresa el número del documento que presenta la persona. Debe coincidir con el del cliente o, si es una persona jurídica, con el de su representante registrado (RN-25).
+4. **Transferencia.** La cuenta debe ser un CBU o CVU con dígitos verificadores válidos y el CUIT/CUIL del titular debe ser el del cliente. El importe transferido debe ser el neto a desembolsar. Se guardan:
+   - el número de operación y la fecha, en `comprobante`;
+   - la evidencia de titularidad, en la auditoría.
+5. **Rechazo gerencial.** Se registra como rechazo crediticio. La aprobación, el rechazo y la devolución liberan las afectaciones previas. La aprobación constituye la reserva por el neto (D-19). Si los fondos no alcanzan, la aprobación no se registra y el Gerente debe rechazar o devolver (A4).
+6. **Liquidación (RN-26, RN-52).** En una sola transacción se registran:
+   - el crédito, con su plan definitivo de cuotas (primer vencimiento a los 30 días);
+   - la liquidación;
+   - el egreso de caja, si es en efectivo, con la caja abierta del Cajero (RN-28);
+   - el consumo de la reserva.
+
+   La solicitud pasa a Liquidada. El régimen de morosidad (tolerancia) se toma de los parámetros vigentes al liquidar (RN-35).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `ResolucionGerencial` y `Desembolso`, con 6 pruebas.
+- `ResolucionService` (CU-26 y CU-28) y `LiquidacionService` (CU-27).
+- `EstructuracionService::alternativaParaAprobar`.
+- `FondosService::liberarDeSolicitud` y `consumir`.
+
+El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye en D05; hasta entonces se puede liquidar por transferencia. Cambian CU-26 (A8), CU-27 (pasos 4 y 6, A7) y RN-22.
+
+## D-21 · Vigencia de las asignaciones de caja y corrección de movimientos de fondos (CU-72, CU-80, CU-85)
+
+**Contexto.** Al construir cajas y fondos (D05) se encontraron cuatro diferencias entre los casos de uso y el esquema:
+- **Vigencia de la asignación.** El esquema consideraba vigente una asignación «mientras su fin es nulo», pero CU-72 permite cargar una fecha de fin. Además, una asignación finalizada el mismo día en que comenzó seguiría vigente ese día.
+- **Observaciones de la caja.** CU-80 pide observaciones, y la tabla `cajas` no tiene esa columna.
+- **Correcciones de fondos.** CU-85 corrige un movimiento con un «movimiento inverso vinculado» y exige motivo para corregir o anular, pero `movimientos_fondos` no tiene vínculo ni motivo.
+- **Jornada de días anteriores.** RN-28 exige cerrar la jornada de un día anterior antes de operar, sin decir qué operaciones lo verifican.
+
+**Decisión.**
+1. **Vigencia de la asignación.** Una asignación está vigente desde su fecha de inicio hasta su fecha de fin inclusive, o sin fin. Finalizarla (CU-72 A5, o al inhabilitar la caja en CU-81) fija el fin en el día anterior. Si todavía no había comenzado, queda con un período vacío (fin = inicio − 1), que el CHECK ahora admite. Una caja y un Cajero no pueden tener otra asignación vigente o futura.
+2. **Observaciones de la caja.** `cajas.observaciones` guarda las observaciones del alta.
+3. **Correcciones de fondos.** `movimientos_fondos.movimiento_corregido_id` (única) y `motivo` registran la corrección:
+   - el movimiento inverso tiene el mismo tipo e importe y el carácter opuesto, y se fecha hoy;
+   - un movimiento se corrige una sola vez y una corrección no se corrige;
+   - un movimiento programado no se corrige: se confirma cuando llega su fecha o se anula con motivo.
+
+   Un egreso realizado, una corrección que resulta en egreso y la confirmación de un egreso programado no pueden superar el disponible libre (A1). Se usa el mismo bloqueo de aplicación que las reservas.
+4. **Jornada de días anteriores.** Un Cajero solo puede registrar operaciones (desembolsos en efectivo y, en la iteración 3, cobros) en una jornada abierta hoy, con la misma asignación con que la abrió y todavía vigente. La jornada de un día anterior se puede cerrar, pero no operar. El fondo inicial, si es mayor que cero, queda como movimiento de la jornada.
+
+**Consecuencias.** Migración 14 (`cajas.observaciones`, `movimientos_fondos.movimiento_corregido_id` y `motivo`, y el CHECK de `asignaciones_caja`). Componentes nuevos:
+- `ReglasCaja`, con 5 pruebas.
+- `CajaService` (CU-31, CU-36, CU-72, CU-80, CU-81).
+- `FondosService` (CU-85).
+- Pantallas Mi caja, Cajas y Fondos.
+
+`LiquidacionService` usa `CajaService::jornadaOperable`. Cambian CU-72 (A5), CU-80 (paso 2), CU-85 (A2, A3), RN-28 y el modelo de datos (4.3).
+
+## D-22 · Parámetros de estructuración, vencimientos automáticos y calendario operativo (CU-59, CU-89, CU-82)
+
+**Contexto.** Al construir D06 quedaron sin precisar en la v11:
+- **CU-59.** Enumera categorías de parámetros («tratamiento de obligaciones», «criterios de exclusión de ingresos», «combinaciones permitidas») sin definir sus valores. El motor solo usa el porcentaje de afectación, la alícuota de IVA, el redondeo, los escalones y la vigencia de las alternativas.
+- **CU-89.** No define qué solicitudes «dependen» de una evaluación vencida, ni el orden entre el vencimiento de la evaluación y el de la aprobación.
+- **CU-82.** No dice si se puede dar de baja el día de hoy.
+
+**Decisión.**
+1. **Parámetros de estructuración (CU-59).** Son seis:
+   - porcentaje máximo de afectación (1 % a 100 %);
+   - alícuota de IVA (0 % a 100 %);
+   - vigencia de las alternativas (1 a 30 días corridos);
+   - múltiplo de redondeo del monto máximo;
+   - escalones de importe (hasta 6, el primero 100 % y decrecientes);
+   - tope global por cliente (opcional).
+
+   El tope limita el monto máximo financiable de todas las líneas en las alternativas (CU-87), en la comparación de líneas (CU-99) y en el plan que define el Gerente (CU-26). Los demás criterios de CU-59 quedan fijos en esta versión: se consideran los ingresos declarados y las cuotas vigentes y comprometidas de RN-18. Cada cambio es una versión con fecha de vigencia no retroactiva y las operaciones ya generadas conservan la suya (RN-15).
+2. **Vencimientos (CU-89).** Cada 15 minutos, cada elemento en su propia transacción y releído con bloqueo (A1):
+   - Las simulaciones y alternativas vencidas pasan a Vencida.
+   - Las autorizaciones de acceso vencidas pasan a Vencida.
+   - Primero se procesan las aprobaciones vencidas: la solicitud pasa a Vencida y se libera la reserva. Si el vencimiento de la aprobación coincide con el de la evaluación, prevalece la aprobación (RN-49).
+   - Después, las evaluaciones vencidas. Si la solicitud está en Pendiente de selección de plan, Pendiente de resolución o Aprobada pendiente de liquidación, vuelve a Pendiente de evaluación: la aprobación queda sin efecto, se libera la reserva y vencen sus alternativas. La evaluación automática la vuelve a evaluar en su próxima ejecución.
+   - Por último, las solicitudes en Pendiente de documentación o Devuelta para revisión sin movimientos durante 30 días corridos pasan a Vencida (RN-72).
+
+   Cada cambio genera una alerta de vencimiento al Analista que registró la solicitud. Las propuestas de refinanciación, las órdenes de pago y las devoluciones se incorporan en la iteración 3.
+3. **Calendario operativo (CU-82).** Se pueden agregar fechas desde hoy en adelante, de a una o con la carga anual. La carga anual tiene una línea por fecha («dd/mm/aaaa; descripción; tipo»); cada fecha se valida por separado y se informan las rechazadas. Se pueden dar de baja días de hoy en adelante. Los vencimientos ya calculados no cambian.
+4. **Localización y consulta (CU-29, CU-30).**
+   - **Criterios de búsqueda:** documento o CUIT/CUIL, línea y rango de fechas de registro, con la validación del rango (A2).
+   - **Cajero (A3):** sin permiso de consulta, el número de la solicitud lo lleva a la liquidación cuando corresponde.
+   - **Consulta:** suma las alternativas, las afectaciones de fondos y las alertas de la solicitud, y marca como «No registrada» lo que todavía no existe (A4).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos:
+- `ValidadorParametrosEstructuracion` y `CalendarioOperativo`, con 4 pruebas, más 1 prueba del tope en `EstructuracionTest`.
+- `CalendarioService` y `VencimientoService`.
+- Comando `vencimientos:controlar`, habilitado en el planificador.
+- Pantallas de parámetros de estructuración y del calendario operativo.
+
+Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
+
+## D-23 · Ajustes de validación y de presentación observados en la presentación del 02/11/2026 (CU-16, CU-17, CU-21, CU-26, CU-99)
+
+**Contexto.** En la presentación del avance se observó que:
+- una línea admite el mismo importe mínimo y máximo, la misma cantidad mínima y máxima de cuotas y la misma edad mínima y máxima;
+- el simulador no muestra los datos del cliente que sustentan la operación;
+- un plan de muchas cuotas obliga a desplazarse mucho para recorrerlo;
+- el Gerente no puede abrir la documentación del legajo desde la pantalla de resolución.
+
+**Decisión.**
+1. **Rangos de la línea (RN-14).** El máximo debe ser estrictamente mayor que el mínimo en el importe prestable, en la cantidad de cuotas y en las edades admitidas. La restricción se aplica en la validación y en las restricciones CHECK de `versiones_condiciones`; las versiones ya registradas no se modifican.
+2. **Datos del cliente en la simulación y la comparación (CU-21, CU-99).** Se muestran el documento o CUIT, la edad (o la antigüedad de la empresa), la situación laboral (categoría de ingresos), el empleador o la actividad, los ingresos declarados, las cuotas vigentes y comprometidas y la capacidad de pago con los parámetros vigentes. Es información interna: no consulta la Central de Deudores (RN-17).
+3. **Plan de cuotas paginado.** Con más de 12 cuotas, el plan se presenta de a 12 por página, con la opción de ver 24, 60 o todas; al imprimir se muestran todas.
+4. **Documentación en la resolución (CU-26).** La pantalla de resolución lista los documentos vigentes del legajo con su resultado en la última verificación y los abre en otra pestaña, sin descargarlos.
+
+**Consecuencias.** Cambian `ValidadorLinea`, `SimulacionService::perfil`, la vista parcial del plan, la de resolución y la descarga de documentos (`?ver=1` los muestra en el navegador). Cambian RN-14 y CU-16, CU-17, CU-21, CU-26 y CU-99.
+
+## D-24 · Confirmación de cambios con solicitudes en trámite (CU-17, CU-58, CU-59)
+
+**Contexto.** Una nueva versión de condiciones de una línea o de los parámetros de evaluación o estructuración no altera las operaciones ya generadas (RN-15), pero quien la registra no sabe cuántas solicitudes en trámite quedan con la versión anterior.
+
+**Decisión.** Si hay solicitudes en trámite (estados no finales) con la versión vigente de la línea, o cualquier solicitud en trámite al cambiar los parámetros de evaluación o de estructuración, el sistema informa cuántas son, explica que conservan su versión y exige marcar una confirmación antes de registrar el cambio. Sin solicitudes en trámite, el cambio se registra directamente.
+
+**Consecuencias.** `LineaService::modificar` recibe la confirmación; el controlador de parámetros cuenta las solicitudes en trámite (`ParametroService::solicitudesEnTramite`). Se agrega un paso alternativo a CU-17, CU-58 y CU-59.
+
+## D-25 · Catálogo de documentación configurable (CU-100; CU-11, CU-16, CU-17)
+
+**Contexto.** La exigencia de documentación por línea y categoría ya se configura en cada versión de condiciones (D-14), pero el catálogo de tipos de documento y la documentación base que se propone para cada categoría estaban fijos en el código. En la presentación se pidió poder agregar documentos que no figuran, por ejemplo uno más para relación de dependencia.
+
+**Decisión.**
+1. **Tipos de documento.** El Gerente registra tipos nuevos (nombre, a qué tipo de cliente corresponde y si es documento clave, RN-61); el código se genera a partir del nombre. Los tipos no se eliminan: se desactivan, porque los legajos y las versiones de condiciones los referencian. La identificación del alta (D-14) no se puede desactivar, y a quién corresponde un tipo no cambia si ya hay documentos de ese tipo en legajos.
+2. **Documentación base por categoría.** Se guarda en la tabla `documentacion_sugerida` y la propone el formulario de líneas; debe incluir la identificación del cliente de cada categoría. Cambiarla no altera las versiones de condiciones registradas.
+3. **Nuevo caso de uso.** CU-100 Configurar Catálogo de Documentación, del Gerente.
+
+**Consecuencias.** Tabla `documentacion_sugerida` (migración 15), `DocumentacionService`, pantalla «Documentación exigible» y `RequisitosDocumentales::validarSugeridos`. La lista inicial pasa a `RequisitosDocumentales::SUGERIDOS_INICIALES` y la carga la instalación. Cambian RN-11, la matriz de participación (3.6.2) y el modelo de datos (4.3).
+
+## D-26 · Categorías del monotributo (CU-101; CU-11, CU-12)
+
+**Contexto.** Para un cliente monotributista el sistema no registra su categoría del Régimen Simplificado, que acota sus ingresos.
+
+**Decisión.**
+1. **Escala versionada.** Las categorías A a K se guardan con su tope de ingresos brutos anuales y la fecha desde la que rige (`categorias_monotributo`), porque ARCA las actualiza cada semestre. La instalación carga la escala vigente desde el 01/08/2026. El Gerente registra cada nueva escala con fecha de hoy en adelante (CU-101 Actualizar Categorías del Monotributo); cada tope debe ser mayor que el de la categoría anterior.
+2. **Cliente monotributista.** Al registrarlo o modificarlo se informa su categoría, obligatoria desde esta decisión. Doce veces los ingresos mensuales declarados no pueden superar el tope de la categoría vigente: los ingresos que se declaran son netos y el tope es de ingresos brutos, así que superarlo indica una inconsistencia.
+
+**Consecuencias.** Tabla `categorias_monotributo` y columna `clientes.categoria_monotributo` (migración 15), `CategoriasMonotributo`, `MonotributoService` y la pantalla «Categorías del monotributo». Cambian CU-11 y CU-12 (validación), la matriz de participación y el modelo de datos.
+
+## D-27 · Desembolso solo por transferencia a una cuenta bancaria del cliente (CU-27; cobros de la iteración 3)
+
+**Contexto.** El artículo 1 de la Ley 25.345 (prevención de la evasión fiscal) dispone que los pagos de sumas superiores a $ 1.000 que no se realicen mediante depósitos en entidades financieras, giros o transferencias bancarias, cheques, tarjetas u otros medios que indique el Poder Ejecutivo no surten efectos entre las partes ni frente a terceros. El monto no se actualizó desde 2001, por lo que alcanza a prácticamente cualquier desembolso o cuota. Además, el director pidió que las transferencias se hagan solo a cuentas bancarias, no a CVU de billeteras virtuales.
+
+**Decisión.**
+1. **Desembolso (CU-27).** Se realiza solo por transferencia a una cuenta bancaria del cliente, identificada con un CBU válido de 22 dígitos cuyo titular es el cliente. Se rechazan las claves que comienzan con 000 (CVU de proveedores de servicios de pago). Se elimina el desembolso en efectivo por caja.
+2. **Cobros (iteración 3).** Las cuotas se cobran por transferencia o depósito bancario con comprobante, sin efectivo. La caja deja de manejar efectivo y se rediseña en la iteración 3 como registro y conciliación de los movimientos bancarios; hasta entonces sus pantallas no participan del desembolso.
+
+**Consecuencias.** Cambian `Desembolso` (un solo medio, `esCvu`), `LiquidacionService` (sin egreso de caja) y la pantalla de liquidación. Las liquidaciones en efectivo ya registradas se conservan. Cambian CU-27 (pasos 5 y A4), RN-28 y el alcance de CU-31, CU-32, CU-33 y CU-36, que se revisan en la iteración 3.
+
+## D-28 · Gasto administrativo fijo o porcentual (CU-16, CU-17; CU-21, CU-87, CU-99, CU-27)
+
+**Contexto.** RN-68 define el gasto administrativo como un importe fijo por cuota. En la presentación se pidió que la línea pueda definirlo también como porcentaje.
+
+**Decisión.**
+1. **Dos modalidades.** Cada versión de condiciones define el gasto administrativo como importe fijo por cuota o como porcentaje del capital otorgado que se cobra en cada cuota, hasta el 10 % (por ejemplo, 0,5 % de $ 800.000 son $ 4.000 más IVA en cada cuota). En los dos casos el gasto es igual en todas las cuotas y la cuota del sistema francés se mantiene constante. Lleva IVA (RN-68) e integra el CFTEA (RN-63).
+2. **Capital máximo (CU-87, CU-99).** Con gasto porcentual, el capital máximo para n cuotas es C ≤ (K − g_fijo · (1 + IVA)) / (1 / a(n, i) + IVA · i + p · (1 + IVA)), donde p es el porcentaje; el resultado se verifica con el plan real, como en D-01.
+3. **Versiones anteriores.** Las versiones registradas antes de esta decisión son de importe fijo.
+
+**Consecuencias.** Columnas `versiones_condiciones.tipo_gasto_administrativo` y `gasto_administrativo_pct` con su restricción de consistencia (migración 15). Componente `GastoAdministrativo`, usado por `Simulador`, `CapacidadPago`, `ComparadorLineas`, `Estructurador` y `LiquidacionService`, con 4 pruebas nuevas. Cambian RN-68, CU-16 y CU-17 (paso de condiciones), el modelo de datos y los casos de prueba del motor financiero.
+
+## D-29 · Requerimientos nuevos diferidos a la iteración 3
+
+**Contexto.** En la presentación del 02/11/2026 se pidieron, además de los ajustes de D-23 a D-28:
+- que el cliente pueda registrarse por su cuenta;
+- que los datos personales se completen a partir del CUIL;
+- que el sistema emita un documento de consentimiento del préstamo para firmar, que se escanea y se incorpora al legajo;
+- un estudio de los requisitos legales del BCRA y de la legislación argentina.
+
+**Decisión.**
+1. **Pre-registro en el portal.** El cliente carga sus datos y su documentación; queda «Pendiente de validación» hasta que el Analista verifica su identidad y lo da de alta (CU-11). No puede solicitar crédito hasta entonces.
+2. **Datos a partir del CUIL.** Se define un adaptador de padrón (como el de la Central de Deudores, RNF-05), con un simulador para desarrollo y pruebas y la conexión al padrón de ARCA (servicio `ws_sr_padron_a13`, que requiere certificado y CUIT de la entidad) como implementación real. Los datos obtenidos se proponen en el formulario y el Analista los confirma.
+3. **Constancia de consentimiento.** Al aprobarse la solicitud se genera el contrato o la solicitud de préstamo para firmar, con los datos que exige la normativa (estudio legal). El Cajero incorpora la copia firmada y escaneada al legajo, y sin ella no se puede liquidar.
+4. **Estudio legal.** Se elabora como documento del proyecto y alimenta las reglas de negocio y el contenido del contrato.
+
+**Consecuencias.** Se agregan casos de uso al SS-02 (pre-registro), al SS-04 (constancia firmada) y un adaptador al SS-11. Se replanifica la iteración 3.

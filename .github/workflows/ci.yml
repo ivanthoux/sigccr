@@ -33,6 +33,9 @@ jobs:
       - name: Pruebas unitarias (finanzas, seguridad y validación de campos)
         run: vendor/bin/phpunit -c phpunit.xml.dist --testsuite Unitarias --no-coverage
 
+      - name: Autorización de cada ruta con cada rol (C10, RNF-01)
+        run: vendor/bin/phpunit -c phpunit.xml.dist --testsuite Rutas --no-coverage
+
       - name: Pruebas del motor financiero con cobertura (RNF-15, mínimo 90 %)
         run: |
           vendor/bin/phpunit -c phpunit.xml.dist --testsuite Finanzas --coverage-text --coverage-clover build/clover.xml
@@ -42,6 +45,12 @@ jobs:
         run: |
           python3 tests/referencia/casos_referencia.py > /tmp/ref.json
           python3 -c "import json,sys; a=json.load(open('/tmp/ref.json')); b=json.load(open('tests/referencia/resultados_referencia.json')); sys.exit(0 if a==b else 'Los resultados de referencia cambiaron')"
+
+      - name: Modelo de datos alineado con las migraciones (4.3)
+        run: |
+          cd docs/modelo-datos
+          python3 gen.py
+          python3 verificar.py
 
       - name: PSR-12
         run: vendor/bin/phpcs

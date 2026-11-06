@@ -20,12 +20,16 @@ class Menu extends BaseConfig
         ['titulo' => 'Crédito', 'icono' => 'bi-cash-coin', 'opciones' => [
             ['texto' => 'Clientes', 'ruta' => 'clientes.localizar', 'permiso' => 'clientes.localizar'],
             ['texto' => 'Solicitudes', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
+            ['texto' => 'Contingencias', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
+            ['texto' => 'Resolver solicitudes', 'ruta' => 'solicitudes.resolver', 'permiso' => 'solicitudes.resolver'],
             ['texto' => 'Simulador', 'ruta' => 'solicitudes.simular', 'permiso' => 'solicitudes.simular'],
+            ['texto' => 'Comparar líneas', 'ruta' => 'simulaciones.comparar', 'permiso' => 'solicitudes.simular-comparativa'],
             ['texto' => 'Líneas de crédito', 'ruta' => 'lineas.localizar', 'permiso' => 'lineas.localizar'],
         ]],
         ['titulo' => 'Caja y cobranzas', 'icono' => 'bi-safe', 'opciones' => [
             ['texto' => 'Mi caja', 'ruta' => 'cajas.abrir', 'permiso' => 'cajas.abrir'],
             ['texto' => 'Cobro en ventanilla', 'ruta' => 'cobros.registrar', 'permiso' => 'cobros.registrar'],
+            ['texto' => 'Liquidar créditos', 'ruta' => 'creditos.liquidar', 'permiso' => 'creditos.liquidar'],
             ['texto' => 'Informe de caja diaria', 'ruta' => 'cajas.informe-diario', 'permiso' => 'cajas.informe-diario'],
             ['texto' => 'Cajas', 'ruta' => 'cajas.registrar', 'permiso' => 'cajas.registrar'],
         ]],
@@ -36,7 +40,12 @@ class Menu extends BaseConfig
         ['titulo' => 'Gestión', 'icono' => 'bi-graph-up', 'opciones' => [
             ['texto' => 'Tablero gerencial', 'ruta' => 'tablero.consultar', 'permiso' => 'tablero.consultar'],
             ['texto' => 'Reportes', 'ruta' => 'reportes.cartera', 'permiso' => 'reportes.cartera'],
-            ['texto' => 'Parámetros', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
+            ['texto' => 'Fondos', 'ruta' => 'fondos.movimientos', 'permiso' => 'fondos.registrar-movimiento'],
+            ['texto' => 'Parámetros de evaluación', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
+            ['texto' => 'Parámetros de estructuración', 'ruta' => 'parametros.estructuracion', 'permiso' => 'parametros.estructuracion'],
+            ['texto' => 'Calendario operativo', 'ruta' => 'calendario.actualizar', 'permiso' => 'calendario.actualizar'],
+            ['texto' => 'Documentación exigible', 'ruta' => 'documentacion.configurar', 'permiso' => 'documentacion.configurar'],
+            ['texto' => 'Categorías del monotributo', 'ruta' => 'monotributo.actualizar', 'permiso' => 'monotributo.actualizar'],
         ]],
         ['titulo' => 'Administración', 'icono' => 'bi-gear', 'opciones' => [
             ['texto' => 'Usuarios', 'ruta' => 'usuarios.localizar', 'permiso' => 'usuarios.localizar'],
