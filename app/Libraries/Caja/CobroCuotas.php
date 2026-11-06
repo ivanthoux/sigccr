@@ -157,4 +157,37 @@ final class CobroCuotas
 
         return ['columnas' => $columnas, 'pagada' => $pagada];
     }
+
+    /**
+     * CU-37 paso 8: columnas de la cuota después de anular un cobro que le imputó importes (RN-33). Cada concepto
+     * recupera lo imputado; el IVA vuelve primero al de los conceptos ordinarios, hasta su importe nominal, y el resto
+     * al de los punitorios. La cuota vuelve a Pendiente o Vencida según su vencimiento.
+     *
+     * @param array<string, mixed> $c fila de cuotas
+     * @param list<array{concepto: string, importe: string}> $imputaciones del cobro anulado a esta cuota
+     * @return array{columnas: array<string, string>, estado: string}
+     */
+    public static function restaurar(array $c, array $imputaciones, string $hoy): array
+    {
+        $por = [];
+        foreach ($imputaciones as $i) {
+            $por[$i['concepto']] = ($por[$i['concepto']] ?? Decimal::zero())->add($i['importe']);
+        }
+        $mas = static fn (string $col, string $concepto) => Decimal::of((string) $c[$col])->add($por[$concepto] ?? Decimal::zero());
+        $iva = Decimal::of((string) $c['iva_pendiente']);
+        $hueco = Decimal::of((string) $c['iva'])->sub($iva);
+        $ivaDevuelto = $por['IVA'] ?? Decimal::zero();
+        $alOrdinario = Decimal::min($ivaDevuelto, $hueco->isNegative() ? Decimal::zero() : $hueco);
+        $columnas = [
+            'interes_pendiente' => $mas('interes_pendiente', 'InteresOrdinario')->toFixed(2),
+            'gastos_pendiente' => $mas('gastos_pendiente', 'GastosCargos')->toFixed(2),
+            'no_capitalizable_pendiente' => $mas('no_capitalizable_pendiente', 'NoCapitalizable')->toFixed(2),
+            'capital_pendiente' => $mas('capital_pendiente', 'Capital')->toFixed(2),
+            'punitorio_pendiente' => $mas('punitorio_pendiente', 'Punitorio')->toFixed(4),
+            'iva_pendiente' => $iva->add($alOrdinario)->toFixed(2),
+            'iva_punitorio_pendiente' => Decimal::of((string) $c['iva_punitorio_pendiente'])->add($ivaDevuelto->sub($alOrdinario))->toFixed(4),
+        ];
+
+        return ['columnas' => $columnas, 'estado' => substr((string) $c['vencimiento'], 0, 10) < $hoy ? 'Vencida' : 'Pendiente'];
+    }
 }

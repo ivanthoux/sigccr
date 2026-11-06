@@ -13,7 +13,7 @@ use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
-/** CU-33 Registrar Cobro en Ventanilla y CU-35 Emitir Comprobante de Pago. */
+/** CU-33 Registrar Cobro en Ventanilla, CU-35 Emitir Comprobante de Pago y CU-37 Anular Cobro. */
 class Cobros extends BaseController
 {
     private CobroService $servicio;
@@ -77,9 +77,10 @@ class Cobros extends BaseController
         return redirect()->to(site_url("admin/cobros/{$r['cobro_id']}/comprobante"))->with('exito', $mensaje);
     }
 
-    /** CU-35 pasos 1 a 3 (A2). */
+    /** CU-35 pasos 1 a 3 (A2) y CU-37 pasos 1 y 2. */
     public function comprobantes(): string
     {
+        $anular = url_is('admin/cobros/anulaciones*');
         $f = [
             'numero' => preg_replace('/\D/', '', (string) $this->request->getGet('numero')),
             'texto' => trim((string) $this->request->getGet('texto')),
@@ -87,7 +88,10 @@ class Cobros extends BaseController
         ];
         $buscado = $f['numero'] !== '' || $f['texto'] !== '' || $f['fecha'] !== null;
 
-        return view('cobros/comprobantes', ['titulo' => 'Comprobantes de pago', 'f' => $f + ['fecha_texto' => (string) $this->request->getGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null]);
+        return view('cobros/comprobantes', [
+            'titulo' => $anular ? 'Anular cobro' : 'Comprobantes de pago', 'anular' => $anular,
+            'f' => $f + ['fecha_texto' => (string) $this->request->getGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null,
+        ]);
     }
 
     /** CU-35 pasos 4 a 7 (A1). */
@@ -109,5 +113,30 @@ class Cobros extends BaseController
         $this->servicio->registrarEmision($id, true);
 
         return redirect()->to(site_url("admin/cobros/{$id}/comprobante?imprimir=1"));
+    }
+
+    /** CU-37 pasos 3 a 6 (A1, A2). */
+    public function anulacion(int $id): string|RedirectResponse
+    {
+        try {
+            $c = $this->servicio->comprobante($id);
+        } catch (ReglaNegocioException $e) {
+            return redirect()->route('cobros.anular')->with('error', $e->getMessage());
+        }
+
+        return view('cobros/anular', ['titulo' => 'Anular cobro N.º ' . $c['numero'], 'c' => $c, 'dependientes' => $c['estado'] === 'Anulado' ? [] : $this->servicio->dependientes($id)]);
+    }
+
+    /** CU-37 pasos 7 a 10 (A4). */
+    public function anular(int $id): RedirectResponse
+    {
+        try {
+            $r = $this->servicio->anular($id, (string) $this->request->getPost('motivo'), $this->request->getPost('continuar') === '1', (int) session('cuenta')['id']);
+        } catch (ReglaNegocioException $e) {
+            return $this->volverConError($e);
+        }
+
+        return redirect()->to(site_url("admin/cobros/{$id}/anular"))->with('exito', 'Cobro anulado: ' . $r['cuotas'] . ' cuota(s) recuperaron su saldo y el importe de ' . formato_importe($r['saldo_a_favor'])
+            . ' quedó como saldo a favor del cliente (RN-57).' . ($r['dependientes'] > 0 ? " Quedaron identificados {$r['dependientes']} cobro(s) posteriores para su revisión." : ''));
     }
 }
