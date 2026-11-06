@@ -10,13 +10,14 @@ use App\Libraries\Caja\CobroCuotas;
 use App\Libraries\Caja\MediosCobro;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Finanzas\Imputador;
+use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
 
 /**
- * Cobros en ventanilla (SS-05): CU-33 Registrar Cobro en Ventanilla y CU-35 Emitir Comprobante de Pago.
- * RN-29, RN-31, RN-65, RN-77, D-11, D-12, D-30.
+ * Cobros en ventanilla (SS-05): CU-33 Registrar Cobro en Ventanilla, CU-35 Emitir Comprobante de Pago y CU-37 Anular
+ * Cobro. RN-29, RN-31, RN-33, RN-57, RN-65, RN-77, D-11, D-12, D-30.
  *
  * El cobro bloquea el crédito y sus cuotas impagas, imputa el importe en el orden de RN-29, actualiza los saldos por
  * concepto, el estado de las cuotas y del crédito, registra un movimiento de caja por medio y emite el comprobante,
@@ -184,7 +185,7 @@ class CobroService extends BaseService
     public function comprobante(int $cobroId): array
     {
         $c = $this->db->query(
-            'SELECT b.*, p.numero AS comprobante, p.fecha_emision, p.cantidad_reemisiones, cl.denominacion, cl.cuit_cuil, u.nombre + ' ' + u.apellido AS cajero, '
+            "SELECT b.*, p.numero AS comprobante, p.fecha_emision, p.cantidad_reemisiones, cl.denominacion, cl.cuit_cuil, u.apellido + ', ' + u.nombre AS cajero, "
             . 'a.fecha AS fecha_anulacion, a.motivo AS motivo_anulacion FROM dbo.cobros b JOIN dbo.comprobantes_pago p ON p.cobro_id = b.id '
             . 'JOIN dbo.clientes cl ON cl.id = b.cliente_id LEFT JOIN dbo.usuarios_internos u ON u.id = b.usuario_id '
             . 'LEFT JOIN dbo.anulaciones_cobro a ON a.cobro_id = b.id WHERE b.id = ?',
@@ -244,6 +245,104 @@ class CobroService extends BaseService
         }
 
         return $b->orderBy('b.fecha_hora', 'DESC')->limit(200)->get()->getResultArray();
+    }
+
+    /**
+     * CU-37 paso 4 (A2): cobros confirmados posteriores que alcanzaron las mismas cuotas. Su imputación partió de los
+     * saldos que dejó este cobro, por lo que deben revisarse (RN-33).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function dependientes(int $cobroId): array
+    {
+        return $this->db->query(
+            'SELECT DISTINCT b.id, b.numero, b.fecha_hora, b.importe FROM dbo.cobros b JOIN dbo.imputaciones i ON i.cobro_id = b.id '
+            . "WHERE b.estado = 'Confirmado' AND b.id <> ? AND b.fecha_hora > (SELECT fecha_hora FROM dbo.cobros WHERE id = ?) "
+            . 'AND i.cuota_id IN (SELECT cuota_id FROM dbo.imputaciones WHERE cobro_id = ?) ORDER BY b.fecha_hora',
+            [$cobroId, $cobroId, $cobroId],
+        )->getResultArray();
+    }
+
+    /**
+     * CU-37 pasos 6 a 10 (A1, A2, A4): anulación del cobro, restitución de las cuotas alcanzadas, estado del crédito y
+     * saldo a favor por el importe recibido (RN-33, RN-57). El cobro original y sus movimientos de caja se conservan.
+     *
+     * @return array{saldo_a_favor: string, cuotas: int, dependientes: int}
+     */
+    public function anular(int $cobroId, string $motivoTexto, bool $continuarConDependientes, int $usuarioId): array
+    {
+        $motivo = Campos::texto($motivoTexto);
+        $error = Campos::motivo($motivo) ?? (mb_strlen($motivo) > 500 ? 'El motivo admite hasta 500 caracteres.' : null);
+        if ($error !== null) {
+            throw new ValidacionException(['motivo' => $error], 'RN-33');
+        }
+
+        return $this->transaccion(function () use ($cobroId, $motivo, $continuarConDependientes, $usuarioId): array {
+            $b = $this->bloquear('cobros', [$cobroId])[0] ?? null;
+            if ($b === null) {
+                throw new ReglaNegocioException('El cobro no existe.');
+            }
+            if ($b['estado'] === 'Anulado') {
+                throw new ReglaNegocioException('El cobro N.º ' . $b['numero'] . ' ya fue anulado: no se generan nuevos ajustes (A1).', 'RN-33');
+            }
+            $dependientes = $this->dependientes($cobroId);
+            if ($dependientes !== [] && !$continuarConDependientes) {
+                throw new ValidacionException(['dependientes' => 'Hay ' . count($dependientes) . ' cobro(s) posteriores sobre las mismas cuotas. Revíselos o confirme que continúa dejándolos identificados para su revisión (RN-33).'], 'RN-33');
+            }
+            $hoy = $this->hoyNegocio();
+            $imputaciones = $this->db->table('imputaciones')->select('cuota_id, concepto, importe')->where('cobro_id', $cobroId)->get()->getResultArray();
+            $porCuota = [];
+            foreach ($imputaciones as $i) {
+                $porCuota[(int) $i['cuota_id']][] = ['concepto' => (string) $i['concepto'], 'importe' => (string) $i['importe']];
+            }
+            $cuotas = $this->bloquear('cuotas', array_keys($porCuota));
+            $creditoIds = array_values(array_unique(array_map(static fn ($q) => (int) $q['credito_id'], $cuotas)));
+            $creditos = $this->bloquear('creditos', $creditoIds);
+            foreach ($cuotas as $q) {
+                $r = CobroCuotas::restaurar($q, $porCuota[(int) $q['id']], $hoy);
+                $this->actualizarConVersion('cuotas', (int) $q['id'], (int) $q['version_fila'], $r['columnas'] + ['estado' => $r['estado']]);
+            }
+            foreach ($creditos as $c) {
+                $this->restaurarEstadoCredito($c, $hoy);
+            }
+
+            // Paso 9: el importe recibido queda como saldo a favor del cliente (RN-33, RN-57)
+            $this->db->table('saldos_a_favor')->insert([
+                'cliente_id' => (int) $b['cliente_id'], 'fecha' => $this->ahoraUtc(), 'importe_original' => (string) $b['importe'],
+                'importe_disponible' => (string) $b['importe'], 'importe_reservado' => '0.00',
+            ]);
+            $saldoId = (int) $this->db->insertID();
+            $this->db->table('anulaciones_cobro')->insert([
+                'cobro_id' => $cobroId, 'fecha' => $this->ahoraUtc(), 'motivo' => $motivo, 'usuario_id' => $usuarioId, 'saldo_a_favor_id' => $saldoId,
+            ]);
+            $this->db->table('cobros')->where('id', $cobroId)->update(['estado' => 'Anulado']);
+            (new AuditoriaService($this->db))->registrar('cobros.anular', 'cobros', $cobroId, 'Exitoso', $motivo, [
+                'numero' => (int) $b['numero'], 'importe' => (string) $b['importe'], 'cuotas' => array_keys($porCuota), 'saldo_a_favor' => $saldoId,
+                'dependientes' => array_map(static fn ($d) => (int) $d['numero'], $dependientes),
+            ]);
+
+            return ['saldo_a_favor' => (string) $b['importe'], 'cuotas' => count($cuotas), 'dependientes' => count($dependientes)];
+        });
+    }
+
+    /**
+     * Estado del crédito después de anular un cobro (4.2.7): En mora si tiene cuotas vencidas impagas; si no, Activo.
+     *
+     * @param array<string, mixed> $c fila de creditos bloqueada
+     */
+    private function restaurarEstadoCredito(array $c, string $hoy): void
+    {
+        if (!in_array($c['estado'], ['Activo', 'EnMora', 'Cancelado'], true)) {
+            return;
+        }
+        $r = $this->db->query(
+            'SELECT COUNT(*) AS impagas, SUM(CASE WHEN vencimiento < CAST(? AS date) THEN 1 ELSE 0 END) AS vencidas FROM dbo.cuotas WHERE credito_id = ? AND estado IN (?, ?)',
+            [$hoy, (int) $c['id'], ...self::IMPAGAS],
+        )->getRowArray();
+        $destino = (int) $r['impagas'] === 0 ? 'Cancelado' : ((int) $r['vencidas'] > 0 ? 'EnMora' : 'Activo');
+        if ($destino !== $c['estado']) {
+            $this->actualizarConVersion('creditos', (int) $c['id'], (int) $c['version_fila'], ['estado' => $destino]);
+        }
     }
 
     /**

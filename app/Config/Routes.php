@@ -87,6 +87,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        $routes->get('cobros/anulaciones', 'Admin\Cobros::comprobantes', ['as' => 'cobros.anular', 'filter' => 'permiso:cobros.anular']);
+        $routes->get('cobros/(:num)/anular', 'Admin\Cobros::anulacion/$1', ['filter' => 'permiso:cobros.anular']);
+        $routes->post('cobros/(:num)/anular', 'Admin\Cobros::anular/$1', ['filter' => 'permiso:cobros.anular']);
         $routes->get('cajas/movimientos', 'Admin\Cajas::movimientos', ['as' => 'cajas.consultar-movimientos', 'filter' => 'permiso:cajas.consultar-movimientos']);
         $routes->get('cajas/jornadas/(:num)', 'Admin\Cajas::jornada/$1', ['filter' => 'permiso:cajas.consultar-movimientos']);
         $routes->get('cajas', 'Admin\Cajas::index', ['as' => 'cajas.registrar', 'filter' => 'permiso:cajas.registrar']);

@@ -107,4 +107,21 @@ final class CobroCuotasTest extends TestCase
         $this->assertSame('4610.00', $s['columnas']['iva_pendiente']);
         $this->assertSame('259.2592', $s['columnas']['iva_punitorio_pendiente']);
     }
+
+    /** CU-37: anular el cobro devuelve a la cuota lo imputado, concepto por concepto, y su estado según el vencimiento. */
+    public function testAnulacionRestauraLaCuota(): void
+    {
+        $c = $this->cuota(['iva' => '8610.00']);
+        $r = Imputador::imputar(CobroCuotas::total($c), [['id' => 10, 'conceptos' => CobroCuotas::conceptos($c)]]);
+        $pagada = array_replace($c, CobroCuotas::saldosDespues($c, $r['imputaciones'])['columnas']);
+        $imputaciones = array_map(static fn ($i) => ['concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2)], $r['imputaciones']);
+        $x = CobroCuotas::restaurar($pagada, $imputaciones, '2026-11-06');
+        $this->assertSame('Vencida', $x['estado']);
+        $this->assertSame('60000.00', $x['columnas']['capital_pendiente']);
+        $this->assertSame('8610.00', $x['columnas']['iva_pendiente']);
+        $this->assertSame('259.2600', $x['columnas']['iva_punitorio_pendiente']);
+        $this->assertSame('1234.5700', $x['columnas']['punitorio_pendiente']);
+        $this->assertSame('Pendiente', CobroCuotas::restaurar($pagada, $imputaciones, '2026-10-01')['estado']);
+    }
 }
+

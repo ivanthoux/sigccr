@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E02)
+- CU-37 Anular Cobro: el Gerente anula con motivo un cobro confirmado; se conserva como antecedente, las cuotas recuperan lo imputado por concepto y vuelven a Pendiente o Vencida, el crédito recupera su estado y el importe recibido queda como saldo a favor del cliente (RN-33, RN-57). Los cobros posteriores sobre las mismas cuotas se presentan y quedan identificados para su revisión (A2).
+
+### Corregido
+- Consulta del comprobante de pago (CU-35): error de sintaxis en la consulta del Cajero responsable. La integración continua verifica ahora la sintaxis de todo el código PHP.
+
 ### Agregado (E01, D-32)
 - CU-33 Registrar Cobro en Ventanilla: deuda del cliente por crédito y cuota con sus conceptos y días de atraso, advertencia de morosidad avanzada (RN-65), selección consecutiva desde la cuota más antigua, pago total o parcial (D-12) con uno o más medios bancarios, imputación por prelación (RN-29) y actualización del estado de las cuotas y del crédito.
 - CU-35 Emitir Comprobante de Pago: búsqueda por comprobante, cliente o fecha; impresión y reemisión auditadas sin generar un nuevo cobro (RN-31).
