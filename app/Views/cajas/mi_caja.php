@@ -14,8 +14,11 @@ $this->section('contenido');
         <h1>Mi caja</h1>
         <p><?= $jornada ? 'Jornada abierta en ' . esc($jornada['codigo'] . ' · ' . $jornada['denominacion']) : ($asignacion ? 'Caja asignada: ' . esc($asignacion['codigo'] . ' · ' . $asignacion['denominacion']) : 'Sin caja asignada') ?></p>
     </div>
-    <?php if ($jornada && tiene_permiso('cajas.cerrar')): ?>
-        <a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-primary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a>
+    <?php if ($jornada): ?>
+        <div class="d-flex gap-2">
+            <?php if (!$jornada['anterior'] && tiene_permiso('cobros.registrar')): ?><a href="<?= url_to('cobros.registrar') ?>" class="btn btn-outline-primary"><i class="bi bi-cash me-1" aria-hidden="true"></i>Registrar cobro</a><?php endif ?>
+            <?php if (tiene_permiso('cajas.cerrar')): ?><a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-primary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a><?php endif ?>
+        </div>
     <?php endif ?>
 </div>
 <?php if ($jornada): ?>

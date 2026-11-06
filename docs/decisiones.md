@@ -35,6 +35,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 | D-30 | 06/11/2026 | Propuesta |
 | D-31 | 06/11/2026 | Propuesta |
+| D-32 | 07/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -412,4 +413,17 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Tope global (RN-83) y confirmación de cambios (RN-82)** quedan como reglas propias, ya implementadas en D-22 y D-24.
 
 **Consecuencias.** Nuevos RF-19, RNF-17, GLO-75 a GLO-84, clases ContratoPrestamo, Revocacion y SituacionDeudor, y tablas en las iteraciones 3 y 4. Fuentes de los diagramas de estados en `docs/diseno/estados` y de secuencia de la iteración 2 en `docs/diseno/iteracion-2`.
+
+## D-32 · Cobro de cuotas en ventanilla (CU-33, CU-35, CU-32)
+
+**Contexto.** CU-33 indica el orden de imputación dentro de una cuota (RN-29), pero no entre cuotas de distintos créditos, ni cómo se exigen los punitorios que CU-88 devenga con cuatro decimales, ni cuándo cambia el estado del crédito.
+
+**Decisión.**
+1. **Orden entre créditos.** Por cada crédito la selección comienza por la cuota impaga más antigua y es consecutiva (A8). Entre créditos, el importe se imputa por fecha de vencimiento y, a igual fecha, por crédito y número de cuota.
+2. **Punitorios.** Se exigen los que CU-88 dejó en la cuota, redondeados a dos decimales; su IVA integra el concepto IVA. Dentro del IVA se cancela primero el de los conceptos ordinarios. Un concepto cancelado queda en cero aunque tuviera fracciones de centavo.
+3. **Estados.** La cuota cancelada pasa a Pagada; la alcanzada parcialmente conserva su saldo y su estado (D-12). El crédito pasa a Cancelado sin cuotas impagas, y de En mora a Activo cuando no le quedan cuotas vencidas impagas.
+4. **Comprobante.** Se emite en la misma transacción. Cada consulta y cada reemisión se audita, y la reemisión incrementa su contador (RN-31).
+5. **Pendiente.** La advertencia de cuotas incluidas en una orden de pago electrónico (A6) se incorpora con los pagos electrónicos (E03).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos: `CobroCuotas` (con 8 pruebas) y `CobroService`; controlador `Admin\Cobros` y consulta de jornadas en `Admin\Cajas`.
 
