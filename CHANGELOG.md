@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Cambiado (D-30)
+- Caja sin efectivo: la jornada se abre sin fondo inicial y se cierra conciliando, por medio de pago, los cobros registrados con lo acreditado según el extracto o el resumen del procesador; cada diferencia exige una explicación (CU-31, CU-36, RN-28, RN-32).
+- Cobro en ventanilla solo con transferencia o depósito y tarjeta de débito o de crédito, con número de operación y sin cambio (`MediosCobro`, RN-29, RN-77).
+- Migración 16: tabla `conciliaciones_jornada` y restricciones que impiden registrar efectivo, cambio, fondo inicial o desembolsos por caja; los registros anteriores se conservan.
+
 ## [0.3.0] - 2026-11-06
 
 Control 2 (previsto para el 13/11/2026): iteración 2 completa (SS-04 y SS-05: simulación, solicitud, evaluación, alternativas, resolución, liquidación, cajas, fondos, parámetros y calendario) con las observaciones de la presentación del 02/11/2026. Prueba funcional aprobada el 06/11/2026 (97 de 97).

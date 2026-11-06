@@ -7,7 +7,7 @@ namespace Tests\Unit\Caja;
 use App\Libraries\Caja\ReglasCaja;
 use PHPUnit\Framework\TestCase;
 
-/** D05: cajas (CU-80, CU-72), jornadas (CU-31, CU-36, RN-28, RN-32) y movimientos de fondos (CU-85). */
+/** D05 y D-30: cajas (CU-80, CU-72), jornadas sin efectivo (CU-31, CU-36, RN-28, RN-32) y movimientos de fondos (CU-85). */
 final class CajasFondosTest extends TestCase
 {
     private const HOY = '2026-11-04';
@@ -36,31 +36,46 @@ final class CajasFondosTest extends TestCase
         $this->assertFalse(ReglasCaja::asignacionVigente('2026-11-05', null, self::HOY));
     }
 
-    public function testArqueoSoloConElEfectivo(): void
+    /** RN-32, D-30: total registrado por medio; los movimientos anteriores a D-30 (fondo, efectivo) no se concilian. */
+    public function testTotalesPorMedio(): void
     {
-        $r = ReglasCaja::arqueo('50000.00', [
+        $r = ReglasCaja::totalesPorMedio([
             ['tipo' => 'FondoInicial', 'medio' => 'Efectivo', 'importe' => '50000.00'],
-            ['tipo' => 'Cobro', 'medio' => 'Efectivo', 'importe' => '30000.00'],
             ['tipo' => 'Cobro', 'medio' => 'Transferencia', 'importe' => '12000.50'],
-            ['tipo' => 'Desembolso', 'medio' => 'Efectivo', 'importe' => '45000.00'],
+            ['tipo' => 'Cobro', 'medio' => 'Transferencia', 'importe' => '8000.00'],
+            ['tipo' => 'Cobro', 'medio' => 'TarjetaDebito', 'importe' => '21263.79'],
+            ['tipo' => 'Cobro', 'medio' => 'Efectivo', 'importe' => '3000.00'],
         ]);
-        $this->assertSame('35000.00', $r['esperado']);
-        $this->assertSame('30000.00', $r['cobros_efectivo']);
-        $this->assertSame(['Efectivo' => '30000.00', 'Transferencia' => '12000.50'], $r['cobros_por_medio']);
+        $this->assertSame(['Transferencia' => '20000.50', 'TarjetaDebito' => '21263.79', 'TarjetaCredito' => '0.00'], $r['por_medio']);
         $this->assertSame(3, $r['cantidad']);
-        $this->assertSame('50000.00', ReglasCaja::arqueo('50000.00', [])['esperado']);
+        $this->assertSame('41264.29', $r['total']);
+        $this->assertSame('0.00', ReglasCaja::totalesPorMedio([])['total']);
     }
 
-    public function testCierreConDiferenciaExigeExplicacion(): void
+    /** CU-36 (A2, A3): conciliación de cada medio; una diferencia exige explicación. */
+    public function testConciliacionDelCierre(): void
     {
-        $ok = ReglasCaja::validarCierre('35.000,00', '', '35000.00');
+        $registrado = ['Transferencia' => '20000.50', 'TarjetaDebito' => '21263.79', 'TarjetaCredito' => '0.00'];
+        $ok = ReglasCaja::validarConciliacion($registrado, ['Transferencia' => '20.000,50', 'TarjetaDebito' => '21.263,79', 'TarjetaCredito' => ''], []);
         $this->assertSame([], $ok['errores']);
-        $this->assertSame('0.00', $ok['diferencia']);
-        $r = ReglasCaja::validarCierre('34.900,00', '', '35000.00');
-        $this->assertSame('-100.00', $r['diferencia']);
-        $this->assertArrayHasKey('explicacion', $r['errores']);
-        $this->assertSame([], ReglasCaja::validarCierre('34.900,00', 'Faltante por un error de vuelto.', '35000.00')['errores']);
-        $this->assertArrayHasKey('efectivo_declarado', ReglasCaja::validarCierre('-5', '', '35000.00')['errores']);
+        $this->assertCount(2, $ok['conciliaciones']);
+        $this->assertSame('0.00', $ok['conciliaciones'][0]['diferencia']);
+
+        $dif = ReglasCaja::validarConciliacion($registrado, ['Transferencia' => '19.000,50', 'TarjetaDebito' => '21.263,79'], []);
+        $this->assertSame(['explicacion_Transferencia'], array_keys($dif['errores']));
+        $this->assertSame([], $dif['conciliaciones']);
+        $con = ReglasCaja::validarConciliacion($registrado, ['Transferencia' => '19.000,50', 'TarjetaDebito' => '21.263,79'], ['Transferencia' => 'Transferencia T-55 acreditada el lunes.']);
+        $this->assertSame([], $con['errores']);
+        $this->assertSame('-1000.00', $con['conciliaciones'][0]['diferencia']);
+
+        // A3: el acreditado es obligatorio si hubo cobros con el medio
+        $falta = ReglasCaja::validarConciliacion($registrado, ['Transferencia' => '', 'TarjetaDebito' => '-1'], []);
+        $this->assertSame(['acreditado_Transferencia', 'acreditado_TarjetaDebito'], array_keys($falta['errores']));
+
+        // Un medio sin cobros con un acreditado informado también se concilia
+        $extra = ReglasCaja::validarConciliacion(['Transferencia' => '0.00'], ['TarjetaCredito' => '500'], ['TarjetaCredito' => 'Contracargo de un cobro anterior.']);
+        $this->assertSame([], $extra['errores']);
+        $this->assertSame([['medio' => 'TarjetaCredito', 'total_registrado' => '0.00', 'total_acreditado' => '500.00', 'diferencia' => '500.00', 'explicacion' => 'Contracargo de un cobro anterior.']], $extra['conciliaciones']);
     }
 
     public function testMovimientoDeFondosRealizadoOProgramado(): void

@@ -693,7 +693,8 @@ add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola 
     FK('movimiento_caja_id', 'movimientos_caja', null=True, big=True, uq=True, d='Egreso de la jornada en el desembolso en efectivo.'),
     FK('usuario_id', 'usuarios_internos'),
 ], ck=[('CK_liquidaciones_neto', 'importe_neto = capital - gasto_otorgamiento - iva_gastos AND importe_neto > 0'),
-       ('CK_liquidaciones_medio', "(medio_desembolso = 'Transferencia' AND cuenta_destino IS NOT NULL AND movimiento_caja_id IS NULL) OR (medio_desembolso = 'Efectivo' AND movimiento_caja_id IS NOT NULL AND cuenta_destino IS NULL)")])
+       ('CK_liquidaciones_medio', "(medio_desembolso = 'Transferencia' AND cuenta_destino IS NOT NULL AND movimiento_caja_id IS NULL) OR (medio_desembolso = 'Efectivo' AND movimiento_caja_id IS NOT NULL AND cuenta_destino IS NULL)"),
+       ('CK_liquidaciones_transferencia', "medio_desembolso = 'Transferencia'")])
 
 # ============================================================== SS-05
 add('cajas', 'SS-05', 'Caja', 'Unidades operativas de cobro (CU-80, CU-81).', [
@@ -721,19 +722,33 @@ add('jornadas_caja', 'SS-05', 'JornadaCaja', 'Operaciones entre la apertura y el
     C('usuario_id', 'INT', d='Copia controlada de la asignación.'),
     C('apertura', TS, default='SYSDATETIMEOFFSET()'),
     C('cierre', TS, null=True),
-    C('fondo_inicial', M2),
-    C('efectivo_esperado', M2, null=True, d='Fondo inicial + cobros en efectivo − desembolsos en efectivo (RN-32).'),
-    C('efectivo_declarado', M2, null=True),
-    C('diferencia', M2, null=True),
+    C('fondo_inicial', M2, default='0', d='Siempre 0 desde D-30; conserva el fondo de las jornadas anteriores.'),
+    C('efectivo_esperado', M2, null=True, d='Arqueo de las jornadas anteriores a D-30.'),
+    C('efectivo_declarado', M2, null=True, d='Arqueo de las jornadas anteriores a D-30.'),
+    C('diferencia', M2, null=True, d='Arqueo de las jornadas anteriores a D-30; la conciliación por medio está en conciliaciones_jornada.'),
     C('explicacion', 'NVARCHAR(500)', null=True),
     EN('estado', 'EstadoJornada', default="'Abierta'"),
     VF(),
 ], uq=[('UQ_jornadas_caja_abierta', ['caja_id'], "estado = 'Abierta'"),
        ('UQ_jornadas_cajero_abierta', ['usuario_id'], "estado = 'Abierta'")],
    fkx=[('FK_jornadas_caja_asignacion', ['asignacion_caja_id', 'caja_id', 'usuario_id'], 'asignaciones_caja', ['id', 'caja_id', 'usuario_id'])],
-   ck=[('CK_jornadas_caja_cierre', "(estado = 'Abierta' AND cierre IS NULL) OR (estado = 'Cerrada' AND cierre IS NOT NULL AND efectivo_declarado IS NOT NULL AND diferencia IS NOT NULL)"),
+   ck=[('CK_jornadas_caja_cierre', "(estado = 'Abierta' AND cierre IS NULL) OR (estado = 'Cerrada' AND cierre IS NOT NULL)"),
        ('CK_jornadas_caja_diferencia', 'diferencia IS NULL OR diferencia = 0 OR explicacion IS NOT NULL'),
-       ('CK_jornadas_caja_fondo', 'fondo_inicial >= 0')])
+       ('CK_jornadas_caja_fondo', 'fondo_inicial >= 0'),
+       ('CK_jornadas_caja_sin_efectivo', 'fondo_inicial = 0 AND efectivo_declarado IS NULL')])
+
+add('conciliaciones_jornada', 'SS-05', 'ConciliacionMedio', 'Conciliación del cierre de una jornada para cada medio de pago: total de cobros registrados, total acreditado en las cuentas de la entidad según el extracto o el resumen del procesador, y la diferencia con su explicación (RN-32, D-30).', [
+    ID(),
+    FK('jornada_caja_id', 'jornadas_caja'),
+    C('medio', 'VARCHAR(20)', d='Medio de pago conciliado; no incluye el efectivo (RN-77).'),
+    C('total_registrado', M2, d='Suma de lo aplicado con el medio en los cobros confirmados de la jornada.'),
+    C('total_acreditado', M2, d='Total que informa el Cajero según el extracto o el resumen del procesador.'),
+    C('diferencia', M2, d='Acreditado menos registrado.'),
+    C('explicacion', 'NVARCHAR(500)', null=True),
+], uq=[('UQ_conciliaciones_jornada_medio', ['jornada_caja_id', 'medio'], None)],
+   ck=[('CK_conciliaciones_jornada_medio', "medio IN ('TarjetaDebito', 'TarjetaCredito', 'Transferencia', 'PagoElectronico')"),
+       ('CK_conciliaciones_jornada_totales', 'total_registrado >= 0 AND total_acreditado >= 0 AND diferencia = total_acreditado - total_registrado'),
+       ('CK_conciliaciones_jornada_explicacion', 'diferencia = 0 OR explicacion IS NOT NULL')])
 
 add('cobros', 'SS-05', 'Cobro', 'Pagos confirmados de una o más cuotas, en ventanilla o electrónicos (RN-29, RN-30).', [
     ID(True),
@@ -748,15 +763,16 @@ add('cobros', 'SS-05', 'Cobro', 'Pagos confirmados de una o más cuotas, en vent
     EN('canal', 'CanalCobro'),
     EN('estado', 'EstadoCobro', default="'Confirmado'"),
     FK('usuario_id', 'usuarios_internos', null=True, d='Cajero; nulo en cobros electrónicos.'),
-    C('cambio', M2, default='0', d='Vuelto entregado en efectivo (D-11).'),
+    C('cambio', M2, default='0', d='Vuelto en efectivo de los cobros anteriores a D-30; siempre 0 desde entonces.'),
 ], uq=[('UQ_cobros_transaccion', ['transaccion_pasarela_id'], 'transaccion_pasarela_id IS NOT NULL')],
    ck=[('CK_cobros_canal_datos', "(canal = 'Ventanilla' AND jornada_caja_id IS NOT NULL AND usuario_id IS NOT NULL) OR (canal = 'Electronico' AND transaccion_pasarela_id IS NOT NULL AND cambio = 0)"),
        ('CK_cobros_importe', 'importe > 0'),
-       ('CK_cobros_cambio', 'cambio >= 0')],
+       ('CK_cobros_cambio', 'cambio >= 0'),
+       ('CK_cobros_sin_cambio', 'cambio = 0')],
    idx=[('IX_cobros_cliente', ['cliente_id', 'fecha_hora'], None, None),
         ('IX_cobros_jornada', ['jornada_caja_id'], ['importe', 'cambio', 'estado'], None)])
 
-add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobro y el importe aplicado con cada uno. El efectivo se informa en una sola fila por cobro y conserva lo recibido (el cambio es la diferencia); los demás medios llevan su número de operación y no generan cambio (RN-29, D-11). El cobro electrónico tiene una sola fila PagoElectronico.', [
+add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobro y el importe aplicado con cada uno. Cada medio lleva su número de operación (RN-29, RN-77, D-11); las filas en efectivo y el cambio corresponden a cobros anteriores a D-30. El cobro electrónico tiene una sola fila PagoElectronico.', [
     ID(True),
     FK('cobro_id', 'cobros', big=True),
     EN('medio', 'MedioPago'),
@@ -767,7 +783,8 @@ add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobr
        ('UQ_cobros_medios_operacion', ['cobro_id', 'medio', 'numero_operacion'], 'numero_operacion IS NOT NULL')],
    ck=[('CK_cobros_medios_importe', 'importe > 0 AND importe_recibido >= importe'),
        ('CK_cobros_medios_cambio', "medio = 'Efectivo' OR importe_recibido = importe"),
-       ('CK_cobros_medios_operacion', "medio IN ('Efectivo', 'PagoElectronico') OR numero_operacion IS NOT NULL")],
+       ('CK_cobros_medios_operacion', "medio IN ('Efectivo', 'PagoElectronico') OR numero_operacion IS NOT NULL"),
+       ('CK_cobros_medios_sin_efectivo', "medio <> 'Efectivo'")],
    idx=[('IX_cobros_medios_cobro', ['cobro_id'], ['medio', 'importe'], None)])
 
 add('movimientos_caja', 'SS-05', 'MovimientoCaja', 'Ingresos y egresos de una jornada (RN-28, RN-32).', [
@@ -782,7 +799,8 @@ add('movimientos_caja', 'SS-05', 'MovimientoCaja', 'Ingresos y egresos de una jo
     FK('cobro_medio_id', 'cobros_medios', null=True, big=True, uq=True, d='Medio del cobro que originó el ingreso: cada medio genera su movimiento (D-11).'),
 ], ck=[('CK_movimientos_caja_importe', 'importe > 0'),
        ('CK_movimientos_caja_cobro', "(tipo = 'Cobro' AND cobro_id IS NOT NULL AND cobro_medio_id IS NOT NULL) OR (tipo <> 'Cobro' AND cobro_id IS NULL AND cobro_medio_id IS NULL)"),
-       ('CK_movimientos_caja_desembolso', "tipo <> 'Desembolso' OR medio = 'Efectivo'")],
+       ('CK_movimientos_caja_desembolso', "tipo <> 'Desembolso' OR medio = 'Efectivo'"),
+       ('CK_movimientos_caja_solo_cobros', "tipo = 'Cobro'")],
    idx=[('IX_movimientos_caja_jornada', ['jornada_caja_id', 'tipo'], ['medio', 'importe'], None)])
 
 add('imputaciones', 'SS-05', 'Imputacion', 'Distribución del importe de un cobro o de una aplicación de saldo entre cuotas y conceptos, según la prelación de RN-29.', [
