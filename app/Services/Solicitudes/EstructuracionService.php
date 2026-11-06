@@ -292,6 +292,7 @@ class EstructuracionService extends BaseService
                 'vence_aprobacion' => $vence, 'vigente' => 1,
             ]);
             $solicitudes->cambiarEstado($s, 'AprobadaPendienteLiquidacion', $usuarioId, 'Aprobación automática de la alternativa confirmada por el cliente (RN-23).', null);
+            (new ContratoService($this->db))->generar($solicitudId);
             (new AlertaService($this->db))->resolver('solicitudes_credito', $solicitudId, (string) (session('cuenta')['nombre'] ?? 'Analista'));
             $auditoria->registrar('alternativas.confirmar', 'solicitudes_credito', $solicitudId, 'Exitoso', 'Aprobación automática.', $detalle + ['vence_aprobacion' => $vence, 'reserva' => $calculo['neto']->toFixed(2)]);
 

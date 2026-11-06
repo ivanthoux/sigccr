@@ -115,6 +115,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('monotributo', 'Admin\Monotributo::registrar', ['filter' => 'permiso:monotributo.actualizar']);
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
+        $routes->get('contratos', 'Admin\Contratos::index', ['as' => 'contratos.registrar-firmado', 'filter' => 'permiso:contratos.registrar-firmado']);
+        $routes->get('contratos/(:num)', 'Admin\Contratos::ver/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
+        $routes->post('contratos/(:num)', 'Admin\Contratos::registrar/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
         $routes->get('liquidaciones/(:num)', 'Admin\Liquidaciones::ver/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->post('liquidaciones/(:num)', 'Admin\Liquidaciones::liquidar/$1', ['filter' => 'permiso:creditos.liquidar']);
