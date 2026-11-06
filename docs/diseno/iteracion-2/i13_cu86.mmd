@@ -1,0 +1,34 @@
+sequenceDiagram
+autonumber
+participant T as Temporizador
+participant K as evaluacion:ejecutar
+participant E as EvaluacionService
+participant B as InformacionCrediticia (BCRA)
+participant ME as ModeloEvaluacion
+participant ES as EstructuracionService
+participant DB as SQL Server
+T->>K: cada 5 minutos, con bloqueo de aplicación
+K->>E: recuperarInterrumpidas(): intentos EnProceso de más de 15 min a NoCompletada (D-17)
+K->>E: pendientes() y evaluar(id) por solicitud
+E->>DB: transacción 1: bloquea la solicitud PendienteEvaluacion
+E->>DB: evaluación EnProceso con la versión de parámetros, solicitud EnEvaluacion, COMMIT
+E->>B: consultar(CUIT), fuera de transacción (10 s, 2 reintentos, RNF-08)
+alt servicio no disponible
+E->>DB: transacción 2: NoCompletada, solicitud PendienteContingencia y alerta (A3, RN-21)
+else respuesta
+E->>DB: transacción 2: bloquea solicitud y luego evaluación
+E->>E: antecedentes internos (RN-18, RN-69)
+E->>ME: evaluar(BCRA, atraso, obligaciones, ingresos, antigüedad, parámetros)
+alt la solicitud cambió durante la consulta
+E->>DB: Finalizada e Invalidada, sin aplicarse (A4, A5)
+else
+E->>DB: Finalizada, Vigente por 30 días, sustituye la anterior
+opt favorable
+E->>ES: generar(solicitud): capacidad, monto máximo y alternativas (CU-87)
+end
+E->>DB: PendienteSeleccionPlan, PendienteResolucion o Rechazada, alerta y auditoría, COMMIT
+end
+end
+opt error interno
+E->>DB: NoCompletada y solicitud PendienteEvaluacion (A7, D-17)
+end

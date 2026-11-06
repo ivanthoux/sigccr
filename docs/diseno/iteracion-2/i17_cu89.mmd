@@ -1,0 +1,28 @@
+sequenceDiagram
+autonumber
+participant T as Temporizador
+participant K as vencimientos:controlar
+participant VS as VencimientoService
+participant F as FondosService
+participant AL as AlertaService
+participant DB as SQL Server
+T->>K: cada 15 minutos
+K->>VS: vencerSimulacionesYAlternativas() y vencerAutorizaciones()
+loop cada aprobación vencida (primero, RN-49)
+K->>VS: vencerAprobacion(id): bloquea y relee
+VS->>DB: resolución sin vigencia, solicitud Vencida
+VS->>F: liberarDeSolicitud
+VS->>AL: alerta de vencimiento al Analista
+end
+loop cada evaluación vencida
+K->>VS: vencerEvaluacion(id)
+VS->>DB: evaluación Vencida
+opt solicitud en selección de plan, resolución o aprobada
+VS->>F: libera la reserva y vencen sus alternativas
+VS->>DB: solicitud PendienteEvaluacion (D-22)
+end
+end
+loop cada solicitud sin movimiento por 30 días
+K->>VS: vencerPorInactividad(id): Vencida (RN-72)
+end
+Note over K,DB: cada elemento en su propia transacción, y un error no detiene a los demás (RNF-10)

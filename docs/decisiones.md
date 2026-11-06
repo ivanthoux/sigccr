@@ -33,6 +33,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-27 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 | D-28 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 | D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-30 | 06/11/2026 | Propuesta |
+| D-31 | 06/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -384,3 +386,30 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 4. **Estudio legal.** Se elabora como documento del proyecto y alimenta las reglas de negocio y el contenido del contrato.
 
 **Consecuencias.** Se agregan casos de uso al SS-02 (pre-registro), al SS-04 (constancia firmada) y un adaptador al SS-11. Se replanifica la iteración 3.
+
+## D-30 · Caja y cobros sin efectivo (CU-31 a CU-37, CU-56, CU-97; RN-28, RN-29, RN-32)
+
+**Contexto.** D-27 eliminó el efectivo del desembolso y difirió a la iteración 3 el rediseño de la caja. El art. 1 de la Ley 25.345 impide recibir pagos de más de $ 1.000 en efectivo, y la presentación pidió que todo pago se haga por medios bancarios.
+
+**Decisión.**
+1. **Sin efectivo.** Los cobros se reciben por transferencia o depósito en una cuenta de la entidad, tarjeta de débito o de crédito, o la pasarela, siempre con número de operación (RN-77). No hay cambio.
+2. **Apertura sin fondo inicial (CU-31).** La jornada se abre con la asignación vigente, sin importe (RN-28).
+3. **Cierre como conciliación (CU-36).** Para cada medio, el Cajero informa el total acreditado según el extracto o el resumen del procesador; el sistema calcula la diferencia con lo registrado y exige su explicación (RN-32). CU-32 y CU-56 informan la conciliación en lugar del arqueo.
+4. **Registros anteriores.** Las columnas del efectivo, el cambio y el fondo inicial se conservan para los registros anteriores; la migración de la iteración 3 impide nuevos valores.
+
+**Consecuencias.** Cambian `CajaService`, `MediosCobro`, `ReglasCaja`, las pantallas de caja y el esquema de `jornadas_caja`, `cobros`, `cobros_medios` y `movimientos_caja`. Cambian CU-31 a CU-33, CU-35, CU-36, CU-56, CU-67, CU-77, CU-97, RN-28, RN-29 y RN-32 (documento v12).
+
+## D-31 · Contrato, revocación, identificación del cliente y régimen informativo (CU-102 a CU-105; RN-77 a RN-84)
+
+**Contexto.** El estudio normativo (sección 1.8 del documento v12) identificó obligaciones que la v11 no cubría: el contrato de la Ley 24.240 (art. 36), la revocación del préstamo, la identificación del cliente de la Resolución UIF 200/2024 y el régimen informativo de la Central de Deudores.
+
+**Decisión.**
+1. **Contrato (CU-103, RN-78).** Se genera al aprobarse la solicitud. El Analista lo entrega para la firma e incorpora la constancia escaneada con la fecha de recepción; el Cajero no liquida sin ella (RN-25). Precisa el punto 3 de D-29.
+2. **Revocación (CU-102, RN-79).** Dentro de los 10 días hábiles desde la recepción del contrato o el desembolso, lo último. El cliente restituye el capital y el interés devengado, sin gastos; confirmada la restitución, el crédito pasa a Revocado (nuevo estado de 4.2.7).
+3. **Identificación (RN-80).** CU-11 agrega nacionalidad, actividad principal obligatoria y la declaración sobre persona expuesta políticamente, que alerta al Gerente. La consulta del padrón de ARCA es opcional (A9, ACT-10).
+4. **Pre-registro (CU-104).** Precisa el punto 1 de D-29.
+5. **Régimen informativo (CU-105, RN-84).** Clasificación mensual de los deudores en situaciones 1 a 5 y archivo para la Central de Deudores; la presentación ante el BCRA la hace la entidad.
+6. **Tope global (RN-83) y confirmación de cambios (RN-82)** quedan como reglas propias, ya implementadas en D-22 y D-24.
+
+**Consecuencias.** Nuevos RF-19, RNF-17, GLO-75 a GLO-84, clases ContratoPrestamo, Revocacion y SituacionDeudor, y tablas en las iteraciones 3 y 4. Fuentes de los diagramas de estados en `docs/diseno/estados` y de secuencia de la iteración 2 en `docs/diseno/iteracion-2`.
+
