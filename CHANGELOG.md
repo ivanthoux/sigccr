@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E04, D-33)
+- CU-60 Configurar Parámetros de Morosidad: tasa punitoria diaria y su tope sobre la TNA (hasta 50 %, art. 769 del Código Civil y Comercial), tolerancia, umbral de morosidad avanzada, máximo condonable y rango de refinanciación, en versiones no retroactivas.
+- CU-88 Calcular Intereses Punitorios (`php spark cartera:punitorios`, todos los días a las 00:05): marca cuotas vencidas y créditos en mora, registra un tramo por cuota y día con la tasa vigente ese día sobre el capital vencido pendiente, y los vuelve exigibles al superar la tolerancia del crédito; recupera días omitidos sin duplicar tramos.
+- El cobro en ventanilla calcula los punitorios hasta el día del pago antes de mostrar y cobrar la deuda (RN-53).
+
 ### Agregado (E09, D-31)
 - Contrato de préstamo (RN-78): se genera con cada aprobación, automática o del Gerente, e informa partes, importe y neto, TNA, TEA, el CFTEA destacado al doble del tamaño, total de intereses, plan francés con sus cuotas, gastos con IVA, tasa punitoria y tolerancia, cancelación anticipada sin comisión, pagos sin efectivo, jurisdicción del domicilio del cliente y, antes de las firmas, el derecho de revocación en caracteres destacados.
 - CU-103 Registrar Contrato Firmado (Analista): impresión del contrato y copia escaneada de la constancia firmada al legajo, con la fecha de recepción; puede reemplazarse antes de liquidar y la anterior se conserva.

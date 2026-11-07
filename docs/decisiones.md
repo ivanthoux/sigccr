@@ -36,6 +36,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-30 | 06/11/2026 | Propuesta |
 | D-31 | 06/11/2026 | Propuesta |
 | D-32 | 07/11/2026 | Propuesta |
+| D-33 | 07/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -427,4 +428,18 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Pendiente.** La advertencia de cuotas incluidas en una orden de pago electrónico (A6) y la reversión por la pasarela (CU-37 A3) se incorporan con los pagos electrónicos (E03).
 
 **Consecuencias.** Sin cambios de esquema. Componentes nuevos: `CobroCuotas` (con 9 pruebas) y `CobroService`; controlador `Admin\Cobros` y consulta de jornadas en `Admin\Cajas`.
+
+## D-33 · Cálculo de los intereses punitorios (CU-60, CU-88, CU-33)
+
+**Contexto.** RN-34, RN-35 y RN-53 definen la base, la tasa, el tope y la tolerancia, pero no cómo se combina el proceso nocturno con un pago realizado durante el día, ni qué tasa rige el día en que se cambia el parámetro.
+
+**Decisión.**
+1. **Día procesado.** CU-88 corre a las 00:05 y procesa el día anterior: marca Vencidas las cuotas con vencimiento hasta ese día y En mora sus créditos, y registra un tramo por cada día de atraso sin calcular, desde el día siguiente al vencimiento. Si el proceso no corrió algunos días, cada cuota completa sus días faltantes en la siguiente ejecución (A1); la clave única (cuota, fecha) evita duplicar (A2).
+2. **Tasa de cada día.** Rige la versión de parámetros vigente al cierre del día (23:59 hora local), limitada por el tope sobre la TNA del crédito. Un cambio registrado hoy se aplica desde el día de hoy y no modifica los tramos ya calculados (RN-35).
+3. **Base.** El capital pendiente de la cuota en el momento del cálculo. El día de un pago parcial se calcula sobre el capital anterior al pago, porque el tramo del día se registra antes de imputarlo; los días siguientes usan el capital reducido (RN-34).
+4. **Tolerancia.** Los tramos se registran como condicionales. Cuando el atraso supera la tolerancia asignada al crédito al liquidarlo, todos pasan a exigibles y su suma se agrega a los punitorios pendientes de la cuota (RN-53). Una cuota cancelada dentro de la tolerancia no paga punitorios.
+5. **Cobro.** Antes de mostrar la deuda y de registrar un cobro (CU-33), se calculan los tramos hasta el día del pago, de modo que un pago al cuarto día de atraso incluye los cuatro días (RN-53).
+6. **Morosidad avanzada (RN-65).** Se determina al consultar, a partir de los días de atraso de las cuotas exigibles y del umbral vigente; no se guarda una clasificación aparte.
+
+**Consecuencias.** Sin cambios de esquema (usa `tramos_punitorios`, `cuotas.punitorio_pendiente` y `creditos.tolerancia_dias`). Componentes nuevos: `ValidadorParametrosMorosidad`, `PunitorioService`, el comando `cartera:punitorios` y la línea habilitada del crontab.
 

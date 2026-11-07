@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorParametrosEstructuracion as E;
+use App\Libraries\Validacion\ValidadorParametrosMorosidad as M;
 use App\Libraries\Validacion\ValidadorParametrosEvaluacion as V;
 use App\Services\Comunes\ParametroService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -106,5 +107,47 @@ class Parametros extends BaseController
         }
 
         return redirect()->route('parametros.estructuracion')->with('exito', "Se registró la versión {$r['numero']} de los parámetros de estructuración, vigente desde el " . formato_fecha_hora($r['vigente_desde']) . '. Las simulaciones y alternativas vigentes conservan sus condiciones (RN-15).');
+    }
+
+    /** CU-60 pasos 1 y 2. */
+    public function morosidad(): string
+    {
+        $servicio = new ParametroService();
+        $vigente = $servicio->vigente('Morosidad');
+        $sugeridos = $this->request->getGet('sugeridos') !== null;
+
+        return view('parametros/morosidad', [
+            'titulo' => 'Parámetros de morosidad',
+            'vigente' => $vigente,
+            'f' => M::aFormulario($sugeridos ? M::SUGERIDOS : $vigente['valores']),
+            'sugeridos' => $sugeridos,
+            'historial' => $servicio->historial('Morosidad'),
+        ]);
+    }
+
+    /** CU-60 pasos 3 a 8 (A1 a A3). */
+    public function guardarMorosidad(): RedirectResponse
+    {
+        $p = M::normalizar((array) $this->request->getPost());
+        $errores = M::validar($p);
+        $fecha = Campos::fecha($this->request->getPost('fecha_vigencia'));
+        if ($fecha === null) {
+            $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
+        }
+        $motivo = Campos::texto($this->request->getPost('motivo'));
+        if (($m = Campos::motivo($motivo)) !== null) {
+            $errores['motivo'] = $m;
+        }
+        try {
+            if ($errores !== []) {
+                throw new ValidacionException($errores, 'RN-35');
+            }
+            $r = (new ParametroService())->registrarVersion('Morosidad', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
+        } catch (ReglaNegocioException $e) {
+            return $this->volverConError($e);
+        }
+
+        return redirect()->route('parametros.morosidad')->with('exito', "Se registró la versión {$r['numero']} de los parámetros de morosidad, vigente desde el " . formato_fecha_hora($r['vigente_desde'])
+            . '. La nueva tasa punitoria rige para todos los créditos desde esa fecha, sin modificar los días ya calculados; la tolerancia nueva se asigna solo a los créditos que se liquiden desde entonces (RN-35).');
     }
 }

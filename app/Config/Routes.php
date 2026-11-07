@@ -173,6 +173,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
             $routes->get('estructuracion', 'Admin\Parametros::estructuracion', ['as' => 'parametros.estructuracion', 'filter' => 'permiso:parametros.estructuracion']);
             $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
+            $routes->get('morosidad', 'Admin\Parametros::morosidad', ['as' => 'parametros.morosidad', 'filter' => 'permiso:parametros.morosidad']);
+            $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
         });
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:

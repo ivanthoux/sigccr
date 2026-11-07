@@ -12,6 +12,7 @@ use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Finanzas\Imputador;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
+use App\Services\Cartera\PunitorioService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
 
@@ -37,6 +38,8 @@ class CobroService extends BaseService
     public function obligaciones(int $clienteId): array
     {
         $hoy = $this->hoyNegocio();
+        // RN-53: los punitorios se calculan hasta la fecha del pago; CU-88 completa los días que falten
+        $this->transaccion(fn () => (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId), $hoy));
         $filas = $this->db->query(
             'SELECT q.*, c.numero AS credito_numero, c.estado AS credito_estado, l.nombre AS linea FROM dbo.cuotas q '
             . 'JOIN dbo.creditos c ON c.id = q.credito_id JOIN dbo.versiones_condiciones v ON v.id = c.version_condiciones_id '
@@ -90,6 +93,9 @@ class CobroService extends BaseService
                 if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], self::ESTADOS_CREDITO, true)) {
                     $creditos[(int) $c['id']] = $c;
                 }
+            }
+            if ($creditos !== []) {
+                (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId, array_keys($creditos)), $this->hoyNegocio());
             }
             $cuotas = $creditos === [] ? [] : $this->db->query(
                 'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE credito_id IN (' . implode(', ', array_fill(0, count($creditos), '?')) . ') AND estado IN (?, ?) ORDER BY credito_id, numero',
@@ -343,6 +349,23 @@ class CobroService extends BaseService
         if ($destino !== $c['estado']) {
             $this->actualizarConVersion('creditos', (int) $c['id'], (int) $c['version_fila'], ['estado' => $destino]);
         }
+    }
+
+    /**
+     * Cuotas impagas de los créditos activos o en mora del cliente (o de los créditos indicados).
+     *
+     * @param list<int>|null $creditoIds
+     * @return list<int>
+     */
+    private function cuotasImpagas(int $clienteId, ?array $creditoIds = null): array
+    {
+        $b = $this->db->table('cuotas q')->select('q.id')->join('creditos c', 'c.id = q.credito_id')
+            ->where('c.cliente_id', $clienteId)->whereIn('c.estado', self::ESTADOS_CREDITO)->whereIn('q.estado', self::IMPAGAS);
+        if ($creditoIds !== null) {
+            $b->whereIn('c.id', $creditoIds === [] ? [0] : $creditoIds);
+        }
+
+        return array_map('intval', array_column($b->orderBy('q.id')->get()->getResultArray(), 'id'));
     }
 
     /**
