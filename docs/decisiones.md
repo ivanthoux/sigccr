@@ -37,6 +37,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-31 | 06/11/2026 | Propuesta |
 | D-32 | 07/11/2026 | Propuesta |
 | D-33 | 07/11/2026 | Propuesta |
+| D-34 | 07/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -442,4 +443,17 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Morosidad avanzada (RN-65).** Se determina al consultar, a partir de los días de atraso de las cuotas exigibles y del umbral vigente; no se guarda una clasificación aparte.
 
 **Consecuencias.** Sin cambios de esquema (usa `tramos_punitorios`, `cuotas.punitorio_pendiente` y `creditos.tolerancia_dias`). Componentes nuevos: `ValidadorParametrosMorosidad`, `PunitorioService`, el comando `cartera:punitorios` y la línea habilitada del crontab.
+
+## D-34 · Importe y registro de la revocación (CU-102, RN-79)
+
+**Contexto.** El art. 1112 del Código Civil y Comercial obliga a restituir lo recibido; RN-79 agrega el interés compensatorio devengado y excluye gastos y comisiones. Faltaba precisar sobre qué capital se calcula, hasta qué día y cómo entra el dinero.
+
+**Decisión.**
+1. **Capital.** El neto desembolsado, que es lo que el cliente recibió; el gasto de otorgamiento retenido no se restituye ni se cobra.
+2. **Interés.** Interés simple a la TNA del crédito por los días corridos desde el desembolso hasta la comunicación de la revocación, más su IVA, que es un impuesto y no un gasto. Se descuenta lo que el cliente haya pagado por sus cuotas; si pagó más, el exceso queda como saldo a favor (RN-57).
+3. **Plazo.** Diez días hábiles, según el calendario operativo, desde el día de la recepción del contrato o del desembolso, lo que ocurra último. Sin constancia de recepción (CU-103) no se puede computar el plazo.
+4. **Dos momentos.** La comunicación registra la revocación y fija el importe; el crédito conserva su plan y sigue sujeto a CU-88 hasta que se confirma la transferencia recibida. Entonces el crédito pasa a Revocado y sus cuotas no pagadas, a SinEfecto. Si lo pagado cubre el importe, se confirma en el acto.
+5. **Ingreso.** La transferencia se registra como un cobro de tipo Revocacion, sin imputaciones a cuotas, con su movimiento de caja: integra la conciliación de la jornada (RN-32) y vuelve a los fondos disponibles. No puede anularse con CU-37.
+
+**Consecuencias.** Migración 19 y componentes `Revocacion` (con 3 pruebas), `RevocacionService` y `Admin\Revocaciones`; permiso 102 del Cajero. Se agrega el estado Revocado al diagrama de 4.2.7, ya incluido en la v12.
 

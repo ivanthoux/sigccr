@@ -32,11 +32,13 @@ class FondosService extends BaseService
         $movimientos = $q("SELECT COALESCE(SUM(CASE WHEN caracter = 'Ingreso' THEN importe ELSE -importe END), 0) AS t FROM dbo.movimientos_fondos WHERE estado = 'Realizado'");
         $imputado = $q('SELECT COALESCE(SUM(i.importe), 0) AS t FROM dbo.imputaciones i LEFT JOIN dbo.cobros c ON c.id = i.cobro_id '
             . "WHERE i.aplicacion_saldo_id IS NOT NULL OR c.estado = 'Confirmado'");
+        // La restitución de una revocación (RN-79) no se imputa a cuotas
+        $restituciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.cobros WHERE tipo = 'Revocacion' AND estado = 'Confirmado'");
         $desembolsos = $q('SELECT COALESCE(SUM(importe_neto), 0) AS t FROM dbo.liquidaciones');
         $devoluciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.autorizaciones_devolucion WHERE estado = 'Completada'");
         $afectaciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.afectaciones_fondos WHERE estado = 'Vigente'");
         $minima = Decimal::of((string) ((new ParametroService($this->db))->vigente('Campanas')['valores']['reserva_minima'] ?? '0'));
-        $fondos = $movimientos->add($imputado)->sub($desembolsos)->sub($devoluciones);
+        $fondos = $movimientos->add($imputado)->add($restituciones)->sub($desembolsos)->sub($devoluciones);
 
         return [
             'fondos' => $fondos->toFixed(2),
