@@ -47,6 +47,7 @@ class Menu extends BaseConfig
             ['texto' => 'Fondos', 'ruta' => 'fondos.movimientos', 'permiso' => 'fondos.registrar-movimiento'],
             ['texto' => 'Parámetros de evaluación', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
             ['texto' => 'Parámetros de estructuración', 'ruta' => 'parametros.estructuracion', 'permiso' => 'parametros.estructuracion'],
+            ['texto' => 'Parámetros de morosidad', 'ruta' => 'parametros.morosidad', 'permiso' => 'parametros.morosidad'],
             ['texto' => 'Calendario operativo', 'ruta' => 'calendario.actualizar', 'permiso' => 'calendario.actualizar'],
             ['texto' => 'Documentación exigible', 'ruta' => 'documentacion.configurar', 'permiso' => 'documentacion.configurar'],
             ['texto' => 'Categorías del monotributo', 'ruta' => 'monotributo.actualizar', 'permiso' => 'monotributo.actualizar'],
