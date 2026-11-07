@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E10, D-34)
+- CU-102 Registrar Revocación del Préstamo (Cajero): plazo de 10 días hábiles desde la recepción del contrato o el desembolso, lo último, con el calendario operativo; importe a restituir (neto desembolsado, interés compensatorio de los días transcurridos y su IVA, menos lo pagado; sin gastos ni comisiones); confirmación de la transferencia recibida, que integra la conciliación de la caja; el crédito pasa a Revocado y sus cuotas no pagadas a SinEfecto. Si lo pagado supera el importe, el exceso queda como saldo a favor.
+- Migración 19: estados `Revocado` del crédito y `SinEfecto` de la cuota, cobro de tipo `Revocacion` y tabla `revocaciones`.
+
 ### Agregado (E04, D-33)
 - CU-60 Configurar Parámetros de Morosidad: tasa punitoria diaria y su tope sobre la TNA (hasta 50 %, art. 769 del Código Civil y Comercial), tolerancia, umbral de morosidad avanzada, máximo condonable y rango de refinanciación, en versiones no retroactivas.
 - CU-88 Calcular Intereses Punitorios (`php spark cartera:punitorios`, todos los días a las 00:05): marca cuotas vencidas y créditos en mora, registra un tramo por cuota y día con la tasa vigente ese día sobre el capital vencido pendiente, y los vuelve exigibles al superar la tolerancia del crédito; recupera días omitidos sin duplicar tramos.

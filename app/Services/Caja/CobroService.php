@@ -288,6 +288,9 @@ class CobroService extends BaseService
             if ($b === null) {
                 throw new ReglaNegocioException('El cobro no existe.');
             }
+            if ($b['tipo'] === 'Revocacion') {
+                throw new ReglaNegocioException('La restitución de una revocación no se anula: el crédito ya quedó sin efecto (RN-79).');
+            }
             if ($b['estado'] === 'Anulado') {
                 throw new ReglaNegocioException('El cobro N.º ' . $b['numero'] . ' ya fue anulado: no se generan nuevos ajustes (A1).', 'RN-33');
             }

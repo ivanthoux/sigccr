@@ -17,6 +17,7 @@ $this->section('contenido');
         <p><?= match ($destino) {
             'solicitudes.simular' => 'Plan preliminar con las condiciones vigentes de una línea. No genera solicitud ni deuda (RN-17).',
             'simulaciones.comparar' => 'Compara todas las líneas para un cliente que no sabe qué crédito le conviene. No genera solicitud ni deuda (RN-17).',
+            'creditos.revocar' => 'Revocación de un préstamo dentro de los 10 días hábiles desde la recepción del contrato o el desembolso (RN-79).',
             'cobros.registrar' => 'Cobro de cuotas por transferencia, depósito o tarjeta, con su número de operación (RN-29, RN-77).',
             default => 'Formalice una simulación vigente del cliente.',
         } ?></p>
