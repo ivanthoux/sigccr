@@ -29,6 +29,7 @@ $this->section('contenido');
 <section class="hoja p-4 mb-3" aria-labelledby="titulo-detalle">
     <h2 class="h5" id="titulo-detalle">Detalle (RN-67)</h2>
     <table class="table table-sm mb-0" style="max-width: 44rem">
+        <thead><tr><th scope="col">Concepto</th><th scope="col" class="text-end">Importe</th></tr></thead>
         <tbody>
             <tr><td>Cuotas vencidas, con su total actualizado y los punitorios exigibles</td><td class="importe"><?= esc(formato_importe($k['vencidas'], false)) ?></td></tr>
             <tr><td>Capital de las cuotas no vencidas</td><td class="importe"><?= esc(formato_importe($k['capital_no_vencido'], false)) ?></td></tr>

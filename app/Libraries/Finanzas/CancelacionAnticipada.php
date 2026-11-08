@@ -111,14 +111,16 @@ final class CancelacionAnticipada
                 if ($importe->isPositive()) {
                     $imputaciones[] = ['cuota' => $c['id'], 'concepto' => $concepto, 'importe' => $importe, 'parcial' => false];
                 }
-                if (!$vencida) {
-                    $resto = $pendiente->sub($importe);
-                    match ($concepto) {
-                        'InteresOrdinario' => $interes = $interes->add($resto),
-                        'GastosCargos' => $gastos = $gastos->add($resto),
-                        'IVA' => $iva = $iva->add($resto),
-                        default => null,
-                    };
+                if ($vencida) {
+                    continue;
+                }
+                $resto = $pendiente->sub($importe);
+                if ($concepto === 'InteresOrdinario') {
+                    $interes = $interes->add($resto);
+                } elseif ($concepto === 'GastosCargos') {
+                    $gastos = $gastos->add($resto);
+                } elseif ($concepto === 'IVA') {
+                    $iva = $iva->add($resto);
                 }
             }
         }
