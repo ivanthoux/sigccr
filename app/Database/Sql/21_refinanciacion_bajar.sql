@@ -1,0 +1,22 @@
+/* Revierte 21_refinanciacion_subir.sql. */
+ALTER TABLE dbo.condonaciones_cuotas DROP CONSTRAINT CK_condonaciones_cuotas_iva, DF_condonaciones_cuotas_iva;
+ALTER TABLE dbo.condonaciones_cuotas DROP COLUMN iva;
+DROP INDEX IX_condonaciones_cliente_id ON dbo.condonaciones;
+ALTER TABLE dbo.condonaciones DROP CONSTRAINT FK_condonaciones_cliente_id;
+ALTER TABLE dbo.condonaciones DROP COLUMN cliente_id;
+GO
+ALTER TABLE dbo.aceptaciones_refinanciacion DROP CONSTRAINT DF_aceptaciones_refinanciacion_punitorios_incorporados;
+ALTER TABLE dbo.aceptaciones_refinanciacion DROP COLUMN punitorios_incorporados, fecha_constancia;
+GO
+DROP INDEX IX_propuestas_refinanciacion_usuario_cancelacion_id ON dbo.propuestas_refinanciacion;
+ALTER TABLE dbo.propuestas_refinanciacion DROP CONSTRAINT FK_propuestas_refinanciacion_usuario_cancelacion_id, CK_propuestas_datos_cancelacion, CK_propuestas_refinanciacion_tipo_cancelacion;
+ALTER TABLE dbo.propuestas_refinanciacion DROP COLUMN medio_desistimiento, fecha_desistimiento, usuario_cancelacion_id, fecha_cancelacion, tipo_cancelacion;
+GO
+ALTER TABLE dbo.propuestas_cuotas DROP CONSTRAINT DF_propuestas_cuotas_punitorio;
+ALTER TABLE dbo.propuestas_cuotas DROP COLUMN punitorio;
+GO
+DROP TABLE dbo.simulaciones_refinanciacion_cuotas;
+DROP INDEX IX_simulaciones_refinanciacion_version_parametros_id ON dbo.simulaciones_refinanciacion;
+ALTER TABLE dbo.simulaciones_refinanciacion DROP CONSTRAINT FK_simulaciones_refinanciacion_version_parametros_id;
+ALTER TABLE dbo.simulaciones_refinanciacion DROP COLUMN version_parametros_id, no_capitalizable, capital, fecha_corte;
+GO

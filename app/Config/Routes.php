@@ -87,6 +87,23 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        // SS-06 Refinanciaciones (CU-39 a CU-43, CU-74, CU-96) y condonación de punitorios (CU-44)
+        $routes->get('refinanciaciones', 'Admin\Refinanciaciones::index', ['as' => 'refinanciaciones.localizar', 'filter' => 'permiso:refinanciaciones.localizar']);
+        $routes->get('refinanciaciones/simular', 'Admin\Refinanciaciones::simular', ['as' => 'refinanciaciones.simular', 'filter' => 'permiso:refinanciaciones.simular']);
+        $routes->post('refinanciaciones/simular', 'Admin\Refinanciaciones::crearSimulacion', ['filter' => 'permiso:refinanciaciones.simular']);
+        $routes->get('refinanciaciones/simulaciones/(:num)', 'Admin\Refinanciaciones::simulacion/$1', ['filter' => 'permiso:refinanciaciones.simular']);
+        $routes->get('refinanciaciones/nueva', 'Admin\Refinanciaciones::nueva', ['as' => 'refinanciaciones.registrar-propuesta', 'filter' => 'permiso:refinanciaciones.registrar-propuesta']);
+        $routes->post('refinanciaciones/simulaciones/(:num)/propuesta', 'Admin\Refinanciaciones::registrarPropuesta/$1', ['filter' => 'permiso:refinanciaciones.registrar-propuesta']);
+        $routes->get('refinanciaciones/(:num)', 'Admin\Refinanciaciones::ver/$1', ['filter' => 'permiso:refinanciaciones.consultar']);
+        $routes->get('refinanciaciones/(:num)/resolver', 'Admin\Refinanciaciones::resolucion/$1', ['filter' => 'permiso:refinanciaciones.resolver']);
+        $routes->post('refinanciaciones/(:num)/resolver', 'Admin\Refinanciaciones::resolver/$1', ['filter' => 'permiso:refinanciaciones.resolver']);
+        $routes->get('refinanciaciones/(:num)/aplicar', 'Admin\Refinanciaciones::aceptacion/$1', ['filter' => 'permiso:refinanciaciones.aplicar']);
+        $routes->post('refinanciaciones/(:num)/aplicar', 'Admin\Refinanciaciones::aplicar/$1', ['filter' => 'permiso:refinanciaciones.aplicar']);
+        $routes->get('refinanciaciones/(:num)/cancelar', 'Admin\Refinanciaciones::cancelacion/$1', ['filter' => 'permiso:refinanciaciones.cancelar-propuesta']);
+        $routes->post('refinanciaciones/(:num)/cancelar', 'Admin\Refinanciaciones::cancelar/$1', ['filter' => 'permiso:refinanciaciones.cancelar-propuesta']);
+        $routes->get('punitorios/condonar', 'Admin\Condonaciones::index', ['as' => 'punitorios.condonar', 'filter' => 'permiso:punitorios.condonar']);
+        $routes->post('punitorios/condonar', 'Admin\Condonaciones::condonar', ['filter' => 'permiso:punitorios.condonar']);
+
         // SS-05 Pagos electrónicos (CU-34, CU-38)
         $routes->get('pagos-electronicos/nueva', 'Admin\PagosElectronicos::nueva', ['as' => 'pagos-electronicos.generar-orden', 'filter' => 'permiso:pagos-electronicos.generar-orden']);
         $routes->post('pagos-electronicos/nueva', 'Admin\PagosElectronicos::generar', ['filter' => 'permiso:pagos-electronicos.generar-orden']);

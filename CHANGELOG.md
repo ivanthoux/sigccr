@@ -4,6 +4,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E05, D-36)
+- CU-39 Simular Plan de Refinanciación (Analista): créditos En mora con todas sus cuotas no pagadas, capital refinanciable y concepto no capitalizable al día, tasa y cuotas dentro de los límites de CU-60 y plan francés preliminar, vigente 7 días.
+- CU-40 Registrar Propuesta: a partir de una simulación vigente cuya deuda no cambió; fija la deuda a la fecha de registro, vence a los 7 días y alerta al Gerente. Impide dos propuestas vigentes sobre el mismo crédito y registra la corrección de una observada como nueva versión.
+- CU-41 Resolver Propuesta (Gerente): aprobar, rechazar u observar con fundamento, previa revalidación de la vigencia y la deuda.
+- CU-42 y CU-43 Localizar y Consultar Propuesta: búsqueda por número, cliente, documento, estado y fechas; detalle con cuotas, plan, resoluciones, versiones, alertas y aceptación.
+- CU-74 Registrar Aceptación y Aplicar: constancia del cliente, punitorios posteriores al corte incorporados al concepto no capitalizable, nuevo crédito con origen Refinanciación y primer vencimiento a 30 días, cuotas originales Sustituidas y créditos Refinanciados, sin desembolso.
+- CU-96 Cancelar Propuesta: desistimiento del cliente (Analista) o causa administrativa (Gerente).
+- CU-44 Condonar Intereses Punitorios (Gerente): hasta el máximo configurado, desde la cuota más antigua y con su IVA proporcional, con fundamento.
+- Cobros, anulaciones y condonaciones sobre cuotas comprendidas dejan Observada la propuesta vigente (RN-36); CU-89 vence las propuestas.
+- Migración 21.
+
 ### Agregado (E03, D-35)
 - CU-34 Generar Orden de Pago Electrónico (Cajero): cuotas completas y consecutivas por su total con punitorios al día, enlace de pago de la pasarela y vencimiento a las 00:00; impide incluir una cuota en dos órdenes vigentes.
 - CU-38 Consultar Estado de Pago Electrónico: órdenes por número, cliente o estado, con sus cuotas, transacciones, incidencias, cobro y saldo a favor, y consulta a la pasarela a pedido.

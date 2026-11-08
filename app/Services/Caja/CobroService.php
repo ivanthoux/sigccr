@@ -13,6 +13,7 @@ use App\Libraries\Finanzas\Imputador;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 use App\Services\Cartera\PunitorioService;
+use App\Services\Cartera\RefinanciacionService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
 
@@ -216,6 +217,8 @@ class CobroService extends BaseService
         foreach ($creditos as $c) {
             $this->actualizarEstadoCredito($c);
         }
+        // RN-36: un pago sobre cuotas comprendidas en una propuesta vigente la deja Observada
+        (new RefinanciacionService($this->db))->observarPorCuotas(array_map('intval', array_keys($porCuota)), "Cobro registrado sobre cuotas comprendidas (cobro {$cobroId}).");
 
         return ['parcial' => $parcial];
     }
@@ -351,6 +354,7 @@ class CobroService extends BaseService
             foreach ($creditos as $c) {
                 $this->restaurarEstadoCredito($c, $hoy);
             }
+            (new RefinanciacionService($this->db))->observarPorCuotas(array_keys($porCuota), 'Anulación del cobro N.º ' . $b['numero'] . ' sobre cuotas comprendidas (CU-37).');
 
             // Paso 9: el importe recibido queda como saldo a favor del cliente (RN-33, RN-57)
             $this->db->table('saldos_a_favor')->insert([
