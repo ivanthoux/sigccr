@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E06, D-37)
+- CU-76 Aplicar Saldo a Favor a Obligaciones (Cajero): saldos con su origen, cuotas consecutivas desde la más antigua, constancia de conformidad del cliente, prelación de RN-29 e imputación parcial excepcional si el saldo no alcanza.
+- CU-77 Autorizar Devolución de Saldo a Favor (Gerente): importe, motivo, constancia de la solicitud y destino (medio de pago original para pagos electrónicos o transferencia a un CBU del cliente con titularidad verificada); reserva el importe por 72 horas y alerta a los Cajeros. Anulación de autorizaciones no ejecutadas.
+- CU-78 Ejecutar Devolución (Cajero): por la pasarela con identificador único o registrando el comprobante de la transferencia; resultado confirmado, fallido (libera la reserva) o incierto (en conciliación), y constancia de devolución.
+- `pagos:conciliar` concilia las devoluciones inciertas y CU-89 vence las autorizaciones sin ejecución. Simulador de devoluciones en `simulador/devoluciones`.
+- Migración 22.
+
+### Corregido (E06)
+- La disponibilidad de fondos descontaba las devoluciones de saldos a favor, que no integran los fondos (RN-57).
+
 ### Agregado (E05, D-36)
 - CU-39 Simular Plan de Refinanciación (Analista): créditos En mora con todas sus cuotas no pagadas, capital refinanciable y concepto no capitalizable al día, tasa y cuotas dentro de los límites de CU-60 y plan francés preliminar, vigente 7 días.
 - CU-40 Registrar Propuesta: a partir de una simulación vigente cuya deuda no cambió; fija la deuda a la fecha de registro, vence a los 7 días y alerta al Gerente. Impide dos propuestas vigentes sobre el mismo crédito y registra la corrección de una observada como nueva versión.

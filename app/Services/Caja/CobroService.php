@@ -186,20 +186,21 @@ class CobroService extends BaseService
 
     /**
      * RN-29: registra las imputaciones de un cobro, actualiza los saldos y el estado de las cuotas alcanzadas y el de
-     * sus créditos. Lo usan el cobro en ventanilla (CU-33) y el electrónico (CU-90). Las cuotas y los créditos deben
-     * estar bloqueados.
+     * sus créditos. Lo usan el cobro en ventanilla (CU-33), el electrónico (CU-90) y la aplicación de un saldo a favor
+     * (CU-76, con $origen 'aplicacion_saldo_id'). Las cuotas y los créditos deben estar bloqueados.
      *
      * @param list<array<string, mixed>> $cuotas filas de cuotas leídas en la transacción
      * @param list<array{cuota: int|string, concepto: string, importe: Decimal, parcial: bool}> $imputaciones de Imputador::imputar()
      * @param list<array<string, mixed>> $creditos filas de creditos bloqueadas
      * @return array{parcial: ?int}
      */
-    public function imputar(int $cobroId, array $cuotas, array $imputaciones, array $creditos): array
+    public function imputar(int $cobroId, array $cuotas, array $imputaciones, array $creditos, string $origen = 'cobro_id'): array
     {
+        $origen = $origen === 'aplicacion_saldo_id' ? $origen : 'cobro_id';
         $porCuota = [];
         foreach ($imputaciones as $i) {
             $this->db->table('imputaciones')->insert([
-                'cobro_id' => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
+                $origen => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
             ]);
             $porCuota[$i['cuota']][] = $i;
         }
@@ -218,7 +219,7 @@ class CobroService extends BaseService
             $this->actualizarEstadoCredito($c);
         }
         // RN-36: un pago sobre cuotas comprendidas en una propuesta vigente la deja Observada
-        (new RefinanciacionService($this->db))->observarPorCuotas(array_map('intval', array_keys($porCuota)), "Cobro registrado sobre cuotas comprendidas (cobro {$cobroId}).");
+        (new RefinanciacionService($this->db))->observarPorCuotas(array_map('intval', array_keys($porCuota)), $origen === 'cobro_id' ? "Cobro registrado sobre cuotas comprendidas (cobro {$cobroId})." : "Saldo a favor aplicado a cuotas comprendidas (aplicación {$cobroId}).");
 
         return ['parcial' => $parcial];
     }
