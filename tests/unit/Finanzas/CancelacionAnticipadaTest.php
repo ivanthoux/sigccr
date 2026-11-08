@@ -49,4 +49,26 @@ final class CancelacionAnticipadaTest extends TestCase
         $r = CancelacionAnticipada::calcular($cuotas, new DateTimeImmutable('2026-02-09'), $base, Decimal::of('0.21'));
         $this->assertSame('5000.00', $r['interes_en_curso']->toFixed(2));
     }
+
+    public function testDistribucionYReduccion(): void
+    {
+        $base = new DateTimeImmutable('2026-01-10');
+        $plan = AmortizacionFrancesa::plan(Decimal::of('100000'), Decimal::of('0.60'), 6, $base, Decimal::of('500'), Decimal::of('0.21'));
+        $cuotas = [];
+        foreach (array_slice($plan->cuotas, 1) as $c) {
+            $cuotas[] = ['id' => $c->numero, 'numero' => $c->numero, 'vencimiento' => $c->vencimiento,
+                'conceptos' => ['InteresOrdinario' => $c->interes, 'GastosCargos' => $c->gastos, 'IVA' => $c->iva, 'Capital' => $c->capital, 'NoCapitalizable' => Decimal::of('100')]];
+        }
+        $pago = new DateTimeImmutable('2026-03-20');
+        $r = CancelacionAnticipada::calcular($cuotas, $pago, $base, Decimal::of('0.21'));
+        // El no capitalizable de las cuotas no vencidas (3 a 6) también se cobra
+        $this->assertSame('400.00', $r['no_capitalizable_no_vencido']->toFixed(2));
+        $d = CancelacionAnticipada::distribuir($cuotas, $pago, $r);
+        $imputado = Decimal::sum(array_map(static fn ($i) => $i['importe'], $d['imputaciones']));
+        $this->assertSame($r['total']->toFixed(2), $imputado->toFixed(2));
+        // Lo pendiente total = imputado + reducción
+        $pendiente = Decimal::sum(array_map(static fn ($c) => Decimal::sum(array_values($c['conceptos'])), $cuotas));
+        $this->assertSame($pendiente->toFixed(2), $imputado->add($d['interes_no_devengado'])->add($d['gastos_no_devengados'])->add($d['iva_no_devengado'])->toFixed(2));
+        $this->assertSame('2000.00', $d['gastos_no_devengados']->toFixed(2));
+    }
 }

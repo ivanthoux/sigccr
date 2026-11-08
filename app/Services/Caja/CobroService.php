@@ -121,29 +121,10 @@ class CobroService extends BaseService
             $r = Imputador::imputar($importe, array_map(static fn ($q) => ['id' => (int) $q['id'], 'conceptos' => CobroCuotas::conceptos($q)], $elegidas));
 
             // Paso 9: cobro, medios, movimientos de caja e imputaciones
-            $ahora = $this->ahoraUtc();
-            $this->db->table('cobros')->insert([
-                'cliente_id' => $clienteId, 'jornada_caja_id' => (int) $jornada['id'], 'fecha_hora' => $ahora, 'fecha_efectiva_pago' => $ahora,
-                'importe' => $importe->toFixed(2), 'tipo' => 'Ordinario', 'canal' => 'Ventanilla', 'estado' => 'Confirmado', 'usuario_id' => $usuarioId, 'cambio' => '0.00',
-            ]);
-            $cobroId = (int) $this->db->insertID();
-            $numero = (int) $this->db->table('cobros')->select('numero')->where('id', $cobroId)->get()->getRow()->numero;
-            foreach ($m['medios'] as $medio) {
-                $this->db->table('cobros_medios')->insert([
-                    'cobro_id' => $cobroId, 'medio' => $medio['medio'], 'importe' => $medio['importe']->toFixed(2),
-                    'importe_recibido' => $medio['recibido']->toFixed(2), 'numero_operacion' => $medio['numero_operacion'],
-                ]);
-                $medioId = (int) $this->db->insertID();
-                $this->db->table('movimientos_caja')->insert([
-                    'jornada_caja_id' => (int) $jornada['id'], 'fecha_hora' => $ahora, 'tipo' => 'Cobro', 'importe' => $medio['importe']->toFixed(2),
-                    'medio' => $medio['medio'], 'concepto' => "Cobro N.º {$numero} · operación {$medio['numero_operacion']}", 'cobro_id' => $cobroId, 'cobro_medio_id' => $medioId,
-                ]);
-            }
+            ['cobro_id' => $cobroId, 'numero' => $numero] = $this->asentarVentanilla($jornada, $usuarioId, $clienteId, $importe, $m['medios'], 'Ordinario');
             $aplicado = $this->imputar($cobroId, $elegidas, $r['imputaciones'], array_values($creditos));
             $parcial = $aplicado['parcial'];
 
-            // Paso 11: comprobante (CU-35)
-            $this->db->table('comprobantes_pago')->insert(['cobro_id' => $cobroId, 'fecha_emision' => $ahora, 'cantidad_reemisiones' => 0]);
             (new AuditoriaService($this->db))->registrar('cobros.registrar', 'cobros', $cobroId, 'Exitoso', null, [
                 'numero' => $numero, 'cliente' => $clienteId, 'importe' => $importe->toFixed(2), 'total_seleccionado' => $total->toFixed(2),
                 'cuotas' => array_map(static fn ($q) => (int) $q['id'], $elegidas), 'canceladas' => $r['canceladas'],
@@ -152,6 +133,39 @@ class CobroService extends BaseService
 
             return ['cobro_id' => $cobroId, 'numero' => $numero, 'importe' => $importe->toFixed(2), 'canceladas' => count($r['canceladas']), 'parcial' => $parcial];
         });
+    }
+
+    /**
+     * Cobro confirmado en ventanilla con sus medios, un movimiento de caja por medio y su comprobante (CU-33 pasos 9 y
+     * 11, CU-97 paso 6). Las imputaciones las registra quien llama.
+     *
+     * @param array<string, mixed> $jornada jornada operable del Cajero
+     * @param list<array{medio: string, importe: Decimal, recibido: Decimal, numero_operacion: ?string}> $medios de MediosCobro::componer()
+     * @return array{cobro_id: int, numero: int}
+     */
+    public function asentarVentanilla(array $jornada, int $usuarioId, int $clienteId, Decimal $importe, array $medios, string $tipo): array
+    {
+        $ahora = $this->ahoraUtc();
+        $this->db->table('cobros')->insert([
+            'cliente_id' => $clienteId, 'jornada_caja_id' => (int) $jornada['id'], 'fecha_hora' => $ahora, 'fecha_efectiva_pago' => $ahora,
+            'importe' => $importe->toFixed(2), 'tipo' => $tipo, 'canal' => 'Ventanilla', 'estado' => 'Confirmado', 'usuario_id' => $usuarioId, 'cambio' => '0.00',
+        ]);
+        $cobroId = (int) $this->db->insertID();
+        $numero = (int) $this->db->table('cobros')->select('numero')->where('id', $cobroId)->get()->getRow()->numero;
+        foreach ($medios as $medio) {
+            $this->db->table('cobros_medios')->insert([
+                'cobro_id' => $cobroId, 'medio' => $medio['medio'], 'importe' => $medio['importe']->toFixed(2),
+                'importe_recibido' => $medio['recibido']->toFixed(2), 'numero_operacion' => $medio['numero_operacion'],
+            ]);
+            $medioId = (int) $this->db->insertID();
+            $this->db->table('movimientos_caja')->insert([
+                'jornada_caja_id' => (int) $jornada['id'], 'fecha_hora' => $ahora, 'tipo' => 'Cobro', 'importe' => $medio['importe']->toFixed(2),
+                'medio' => $medio['medio'], 'concepto' => "Cobro N.º {$numero} · operación {$medio['numero_operacion']}", 'cobro_id' => $cobroId, 'cobro_medio_id' => $medioId,
+            ]);
+        }
+        $this->db->table('comprobantes_pago')->insert(['cobro_id' => $cobroId, 'fecha_emision' => $ahora, 'cantidad_reemisiones' => 0]);
+
+        return ['cobro_id' => $cobroId, 'numero' => $numero];
     }
 
     /**
@@ -255,6 +269,7 @@ class CobroService extends BaseService
             throw new ReglaNegocioException('El cobro no existe o no tiene comprobante.');
         }
         $c['medios'] = $this->db->table('cobros_medios')->where('cobro_id', $cobroId)->orderBy('id')->get()->getResultArray();
+        $c['cancelacion'] = $c['tipo'] === 'CancelacionAnticipada' ? (new CancelacionAnticipadaService($this->db))->delCobro($cobroId) : null;
         $imputaciones = $this->db->query(
             'SELECT i.concepto, i.importe, q.id AS cuota_id, q.numero AS cuota, q.vencimiento, q.estado AS estado_cuota, c.numero AS credito '
             . 'FROM dbo.imputaciones i JOIN dbo.cuotas q ON q.id = i.cuota_id JOIN dbo.creditos c ON c.id = q.credito_id WHERE i.cobro_id = ? ORDER BY q.vencimiento, c.numero, q.numero, i.id',
@@ -344,6 +359,9 @@ class CobroService extends BaseService
             }
             if ($b['tipo'] === 'Revocacion') {
                 throw new ReglaNegocioException('La restitución de una revocación no se anula: el crédito ya quedó sin efecto (RN-79).');
+            }
+            if ($b['tipo'] === 'CancelacionAnticipada') {
+                throw new ReglaNegocioException('El cobro de una cancelación anticipada no se anula: incluye la reducción de intereses no devengados del crédito cancelado (RN-67, D-38).');
             }
             if ($b['estado'] === 'Anulado') {
                 throw new ReglaNegocioException('El cobro N.º ' . $b['numero'] . ' ya fue anulado: no se generan nuevos ajustes (A1).', 'RN-33');

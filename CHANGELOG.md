@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E07, D-38)
+- CU-97 Registrar Cancelación Anticipada de Crédito (Cajero): importe a hoy según RN-67 (cuotas vencidas actualizadas, capital y no capitalizable de las no vencidas, interés proporcional de la cuota en curso y su IVA), cobro por un medio bancario por el total, todas las cuotas pagadas y el crédito cancelado, comprobante con la reducción de lo no devengado.
+- CU-92 Proyectar Disponibilidad de Fondos (`php spark fondos:proyectar`, todos los días a las 06:00): ingresos esperados por cobrabilidad, egresos comprometidos y reserva mínima; alerta si es negativa. La última proyección se muestra en Fondos.
+- CU-89 completo: vence las órdenes de pago electrónico sin confirmación.
+- CU-81 pide confirmación antes de inhabilitar o rehabilitar una caja.
+- Migración 23.
+
 ### Agregado (E06, D-37)
 - CU-76 Aplicar Saldo a Favor a Obligaciones (Cajero): saldos con su origen, cuotas consecutivas desde la más antigua, constancia de conformidad del cliente, prelación de RN-29 e imputación parcial excepcional si el saldo no alcanza.
 - CU-77 Autorizar Devolución de Saldo a Favor (Gerente): importe, motivo, constancia de la solicitud y destino (medio de pago original para pagos electrónicos o transferencia a un CBU del cliente con titularidad verificada); reserva el importe por 72 horas y alerta a los Cajeros. Anulación de autorizaciones no ejecutadas.

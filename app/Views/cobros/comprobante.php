@@ -44,6 +44,19 @@ $this->section('contenido');
         </tbody>
     </table>
 </section>
+<?php if (($c['cancelacion'] ?? null) !== null): $k = $c['cancelacion']; ?>
+    <section class="hoja p-4 mb-3" aria-labelledby="titulo-cancelacion">
+        <h2 class="h5" id="titulo-cancelacion">Cancelación anticipada total del crédito N.º <?= (int) $k['credito'] ?></h2>
+        <dl class="resumen-plan mb-2">
+            <div><dt>Cuotas vencidas (total actualizado)</dt><dd class="importe"><?= esc(formato_importe((string) $k['vencidas'])) ?></dd></div>
+            <div><dt>Capital de las cuotas no vencidas</dt><dd class="importe"><?= esc(formato_importe((string) $k['capital_no_vencido'])) ?></dd></div>
+            <?php if ((float) $k['no_capitalizable_no_vencido'] > 0): ?><div><dt>Concepto no capitalizable no vencido</dt><dd class="importe"><?= esc(formato_importe((string) $k['no_capitalizable_no_vencido'])) ?></dd></div><?php endif ?>
+            <div><dt>Interés de la cuota en curso<?= $k['cuota_en_curso'] !== null ? ' (cuota ' . (int) $k['cuota_en_curso'] . ', ' . (int) $k['dias_en_curso'] . ' días)' : '' ?></dt><dd class="importe"><?= esc(formato_importe((string) $k['interes_en_curso'])) ?> + IVA <?= esc(formato_importe((string) $k['iva_interes_en_curso'])) ?></dd></div>
+            <div><dt>Reducción por intereses y gastos no devengados</dt><dd class="importe fw-semibold"><?= esc(formato_importe(bcadd(bcadd((string) $k['interes_no_devengado'], (string) $k['gastos_no_devengados'], 2), (string) $k['iva_no_devengado'], 2))) ?></dd></div>
+        </dl>
+        <p class="small text-body-secondary mb-0">Interés no devengado <?= esc(formato_importe((string) $k['interes_no_devengado'])) ?>, gastos <?= esc(formato_importe((string) $k['gastos_no_devengados'])) ?> e IVA <?= esc(formato_importe((string) $k['iva_no_devengado'])) ?> no se cobran. Sin comisión por cancelación anticipada (RN-67, art. 36 de la Ley 24.240).</p>
+    </section>
+<?php endif ?>
 <section class="hoja p-4" aria-labelledby="titulo-cuotas">
     <h2 class="h5" id="titulo-cuotas">Cuotas alcanzadas</h2>
     <div class="table-responsive">

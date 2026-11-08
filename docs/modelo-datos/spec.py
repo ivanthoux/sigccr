@@ -1083,6 +1083,24 @@ add('tramos_punitorios', 'SS-06', 'TramoPunitorio', 'Interés punitorio de un d�
 ], uq=[('UQ_tramos_punitorios_dia', ['cuota_id', 'fecha'], None)],
    ck=[('CK_tramos_importes', 'capital_base > 0 AND importe >= 0 AND iva >= 0 AND tasa_diaria >= 0')])
 
+add('cancelaciones_anticipadas', 'SS-06', 'CancelacionAnticipada', 'Cancelación anticipada total de un crédito: componentes del importe cobrado y reducción de los intereses y gastos no devengados, para el comprobante (RN-67, CU-97, D-38).', [
+    ID(),
+    FK('credito_id', 'creditos', uq=True),
+    FK('cobro_id', 'cobros', big=True, uq=True),
+    C('fecha_pago', D, d='Día local de la cancelación.'),
+    C('vencidas', M2, d='Total actualizado de las cuotas vencidas, con punitorios exigibles.'),
+    C('capital_no_vencido', M2),
+    C('no_capitalizable_no_vencido', M2, default='0', d='Concepto no capitalizable de las cuotas no vencidas (créditos refinanciados).'),
+    C('interes_en_curso', M2, d='Interés proporcional de la cuota en curso.'),
+    C('iva_interes_en_curso', M2),
+    C('dias_en_curso', 'SMALLINT'),
+    C('cuota_en_curso', 'SMALLINT', null=True),
+    C('interes_no_devengado', M2, d='Interés de las cuotas no vencidas que no se cobra.'),
+    C('gastos_no_devengados', M2),
+    C('iva_no_devengado', M2),
+    C('total', M2),
+], ck=[('CK_cancelaciones_importes', 'total > 0 AND vencidas >= 0 AND capital_no_vencido >= 0 AND no_capitalizable_no_vencido >= 0 AND interes_en_curso >= 0 AND iva_interes_en_curso >= 0 AND dias_en_curso >= 0 AND interes_no_devengado >= 0 AND gastos_no_devengados >= 0 AND iva_no_devengado >= 0')])
+
 add('condonaciones', 'SS-06', 'Condonacion', 'Reducciones autorizadas de punitorios pendientes (RN-38).', [
     ID(),
     C('fecha', TS, default='SYSDATETIMEOFFSET()'),

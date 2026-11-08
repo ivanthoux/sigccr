@@ -33,6 +33,7 @@ class Menu extends BaseConfig
             ['texto' => 'Comprobantes de pago', 'ruta' => 'cobros.emitir-comprobante', 'permiso' => 'cobros.emitir-comprobante'],
             ['texto' => 'Anular cobros', 'ruta' => 'cobros.anular', 'permiso' => 'cobros.anular'],
             ['texto' => 'Pagos electrónicos', 'ruta' => 'pagos-electronicos.consultar-estado', 'permiso' => 'pagos-electronicos.consultar-estado'],
+            ['texto' => 'Cancelación anticipada', 'ruta' => 'creditos.cancelar-anticipadamente', 'permiso' => 'creditos.cancelar-anticipadamente'],
             ['texto' => 'Aplicar saldo a favor', 'ruta' => 'saldos-favor.aplicar', 'permiso' => 'saldos-favor.aplicar'],
             ['texto' => 'Devoluciones', 'ruta' => 'saldos-favor.ejecutar-devolucion', 'permiso' => 'saldos-favor.ejecutar-devolucion'],
             ['texto' => 'Autorizar devoluciones', 'ruta' => 'saldos-favor.autorizar-devolucion', 'permiso' => 'saldos-favor.autorizar-devolucion'],

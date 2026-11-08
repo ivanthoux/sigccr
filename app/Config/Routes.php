@@ -104,6 +104,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('punitorios/condonar', 'Admin\Condonaciones::index', ['as' => 'punitorios.condonar', 'filter' => 'permiso:punitorios.condonar']);
         $routes->post('punitorios/condonar', 'Admin\Condonaciones::condonar', ['filter' => 'permiso:punitorios.condonar']);
 
+        // SS-06 Cancelación anticipada (CU-97)
+        $routes->get('creditos/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::index', ['as' => 'creditos.cancelar-anticipadamente', 'filter' => 'permiso:creditos.cancelar-anticipadamente']);
+        $routes->get('creditos/(:num)/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::credito/$1', ['filter' => 'permiso:creditos.cancelar-anticipadamente']);
+        $routes->post('creditos/(:num)/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::registrar/$1', ['filter' => 'permiso:creditos.cancelar-anticipadamente']);
+
         // SS-05 Saldos a favor y devoluciones (CU-76 a CU-78)
         $routes->get('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicacion', ['as' => 'saldos-favor.aplicar', 'filter' => 'permiso:saldos-favor.aplicar']);
         $routes->post('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicar', ['filter' => 'permiso:saldos-favor.aplicar']);
