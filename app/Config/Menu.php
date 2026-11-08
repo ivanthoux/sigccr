@@ -32,6 +32,7 @@ class Menu extends BaseConfig
             ['texto' => 'Cobro en ventanilla', 'ruta' => 'cobros.registrar', 'permiso' => 'cobros.registrar'],
             ['texto' => 'Comprobantes de pago', 'ruta' => 'cobros.emitir-comprobante', 'permiso' => 'cobros.emitir-comprobante'],
             ['texto' => 'Anular cobros', 'ruta' => 'cobros.anular', 'permiso' => 'cobros.anular'],
+            ['texto' => 'Pagos electrónicos', 'ruta' => 'pagos-electronicos.consultar-estado', 'permiso' => 'pagos-electronicos.consultar-estado'],
             ['texto' => 'Revocación del préstamo', 'ruta' => 'creditos.revocar', 'permiso' => 'creditos.revocar'],
             ['texto' => 'Movimientos de caja', 'ruta' => 'cajas.consultar-movimientos', 'permiso' => 'cajas.consultar-movimientos'],
             ['texto' => 'Liquidar créditos', 'ruta' => 'creditos.liquidar', 'permiso' => 'creditos.liquidar'],

@@ -4,6 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado (E03, D-35)
+- CU-34 Generar Orden de Pago Electrónico (Cajero): cuotas completas y consecutivas por su total con punitorios al día, enlace de pago de la pasarela y vencimiento a las 00:00; impide incluir una cuota en dos órdenes vigentes.
+- CU-38 Consultar Estado de Pago Electrónico: órdenes por número, cliente o estado, con sus cuotas, transacciones, incidencias, cobro y saldo a favor, y consulta a la pasarela a pedido.
+- CU-90 Procesar Notificación de Pago Electrónico (`php spark pagos:notificaciones`, cada minuto) y webhook `POST api/webhooks/pasarela` con validación de firma: confirma el cobro una sola vez con la fecha efectiva, revierte los punitorios posteriores al pago y registra las incidencias de importe, plazo, cuotas ya pagadas o estado no definitivo; el excedente queda como saldo a favor.
+- CU-91 Conciliar Órdenes de Pago Pendientes (`php spark pagos:conciliar`, cada 30 minutos): consulta las órdenes sin confirmar, vence las que no se pagaron y alerta al Gerente las que llevan más de 48 horas en conciliación.
+- Simulador de la pasarela fuera de producción (`simulador/pagar/{referencia}`).
+- CU-33 advierte las cuotas incluidas en una orden de pago electrónico pendiente (A6).
+- Migración 20: `ordenes_pago_electronico.url_pago`.
+
 ### Agregado (E10, D-34)
 - CU-102 Registrar Revocación del Préstamo (Cajero): plazo de 10 días hábiles desde la recepción del contrato o el desembolso, lo último, con el calendario operativo; importe a restituir (neto desembolsado, interés compensatorio de los días transcurridos y su IVA, menos lo pagado; sin gastos ni comisiones); confirmación de la transferencia recibida, que integra la conciliación de la caja; el crédito pasa a Revocado y sus cuotas no pagadas a SinEfecto. Si lo pagado supera el importe, el exceso queda como saldo a favor.
 - Migración 19: estados `Revocado` del crédito y `SinEfecto` de la cuota, cobro de tipo `Revocacion` y tabla `revocaciones`.

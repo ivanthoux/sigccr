@@ -11,6 +11,7 @@
  * @var int $max_atraso
  * @var bool $morosidad_avanzada
  * @var int $umbral
+ * @var list<int> $ordenes_pendientes
  */
 use App\Libraries\Caja\MediosCobro;
 
@@ -39,6 +40,12 @@ $this->section('contenido');
             Puede cobrar informándolo al cliente o derivarlo al Analista de Crédito para evaluar una refinanciación (CU-39).
         </div>
     <?php endif ?>
+    <?php if ($ordenes_pendientes !== []): ?>
+        <div class="alert alert-warning">
+            <strong>Pago electrónico pendiente:</strong> hay cuotas incluidas en la orden N.º <?= esc(implode(', N.º ', $ordenes_pendientes)) ?>, aún vigente.
+            Si el cliente la paga además de este cobro, el importe duplicado quedará como saldo a favor (CU-33 A6, RN-57).
+        </div>
+    <?php endif ?>
     <form method="post" action="<?= url_to('cobros.registrar') ?>" class="formulario-cobro" novalidate data-confirmar="¿Confirma el cobro con los medios informados?">
         <?= csrf_field() ?>
         <input type="hidden" name="cliente_id" value="<?= (int) $cliente['id'] ?>">
@@ -55,7 +62,7 @@ $this->section('contenido');
                         <?php foreach ($cr['cuotas'] as $q): $idc = 'q-' . (int) $q['id']; ?>
                             <tr<?= $q['dias_atraso'] > 0 ? ' class="table-warning"' : '' ?>>
                                 <td><input class="form-check-input" type="checkbox" id="<?= $idc ?>" name="cuotas[<?= (int) $cr['id'] ?>][]" value="<?= (int) $q['numero'] ?>" data-cobro-cuota data-total="<?= esc($q['total']->toFixed(2), 'attr') ?>"<?= in_array((string) $q['numero'], array_map('strval', (array) ($sel[$cr['id']] ?? [])), true) ? ' checked' : '' ?>></td>
-                                <td><label for="<?= $idc ?>"><?= (int) $q['numero'] ?></label></td>
+                                <td><label for="<?= $idc ?>"><?= (int) $q['numero'] ?></label><?php if ($q['orden_pendiente'] !== null): ?> <span class="badge text-bg-warning">Orden N.º <?= (int) $q['orden_pendiente'] ?></span><?php endif ?></td>
                                 <td><?= esc(formato_fecha($q['vencimiento'])) ?></td>
                                 <td class="text-end"><?= $q['dias_atraso'] > 0 ? (int) $q['dias_atraso'] . ' días' : '—' ?></td>
                                 <?php foreach (array_keys($etiquetas) as $k): ?><td class="importe"><?= esc(formato_importe($q['conceptos'][$k], false)) ?></td><?php endforeach ?>

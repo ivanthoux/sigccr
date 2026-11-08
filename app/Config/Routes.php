@@ -87,6 +87,12 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        // SS-05 Pagos electrónicos (CU-34, CU-38)
+        $routes->get('pagos-electronicos/nueva', 'Admin\PagosElectronicos::nueva', ['as' => 'pagos-electronicos.generar-orden', 'filter' => 'permiso:pagos-electronicos.generar-orden']);
+        $routes->post('pagos-electronicos/nueva', 'Admin\PagosElectronicos::generar', ['filter' => 'permiso:pagos-electronicos.generar-orden']);
+        $routes->get('pagos-electronicos', 'Admin\PagosElectronicos::index', ['as' => 'pagos-electronicos.consultar-estado', 'filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->get('pagos-electronicos/(:num)', 'Admin\PagosElectronicos::ver/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->post('pagos-electronicos/(:num)/consultar', 'Admin\PagosElectronicos::consultar/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
         $routes->get('cobros/anulaciones', 'Admin\Cobros::comprobantes', ['as' => 'cobros.anular', 'filter' => 'permiso:cobros.anular']);
         $routes->get('cobros/(:num)/anular', 'Admin\Cobros::anulacion/$1', ['filter' => 'permiso:cobros.anular']);
         $routes->post('cobros/(:num)/anular', 'Admin\Cobros::anular/$1', ['filter' => 'permiso:cobros.anular']);
@@ -216,5 +222,11 @@ $routes->group('portal', static function (RouteCollection $routes): void {
 
 // Notificaciones de servicios externos (sin sesión ni CSRF; se validan por firma, RNF-08)
 $routes->group('api', static function (RouteCollection $routes): void {
-    // $routes->post('webhooks/pasarela', 'Api\Webhooks\Pasarela::recibir');
+    $routes->post('webhooks/pasarela', 'Api\Webhooks\Pasarela::recibir', ['as' => 'webhooks.pasarela']);
 });
+
+// Simulador de la pasarela de pagos: solo en desarrollo y pruebas
+if (ENVIRONMENT !== 'production') {
+    $routes->get('simulador/pagar/(:segment)', 'Simulador\Pasarela::pagar/$1');
+    $routes->post('simulador/pagar/(:segment)', 'Simulador\Pasarela::registrar/$1');
+}

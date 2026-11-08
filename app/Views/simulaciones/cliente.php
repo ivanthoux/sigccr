@@ -19,6 +19,7 @@ $this->section('contenido');
             'simulaciones.comparar' => 'Compara todas las líneas para un cliente que no sabe qué crédito le conviene. No genera solicitud ni deuda (RN-17).',
             'creditos.revocar' => 'Revocación de un préstamo dentro de los 10 días hábiles desde la recepción del contrato o el desembolso (RN-79).',
             'cobros.registrar' => 'Cobro de cuotas por transferencia, depósito o tarjeta, con su número de operación (RN-29, RN-77).',
+            'pagos-electronicos.generar-orden' => 'Orden de pago de importe fijo para que el cliente pague sus cuotas con la pasarela (RN-54).',
             default => 'Formalice una simulación vigente del cliente.',
         } ?></p>
     </div>
