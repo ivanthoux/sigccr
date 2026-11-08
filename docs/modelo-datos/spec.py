@@ -78,6 +78,7 @@ ENUMS = {
     'CaracterMovimiento': ['Ingreso', 'Egreso'],
     'OrigenCredito': ['Liquidacion', 'Refinanciacion'],
     'DecisionPropuesta': ['Aprobada', 'Rechazada', 'Observada'],
+    'TipoCancelacionPropuesta': ['Desistimiento', 'Administrativa'],
     'CausaCierre': ['Vigencia', 'Cupo', 'Disponibilidad'],
     'CriterioComparacion': ['Monto', 'Costo'],
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
@@ -1075,13 +1076,15 @@ add('condonaciones', 'SS-06', 'Condonacion', 'Reducciones autorizadas de punitor
     C('importe', M2),
     C('fundamento', 'NVARCHAR(1000)'),
     FK('usuario_id', 'usuarios_internos', d='Gerente que condonó.'),
+    FK('cliente_id', 'clientes', d='Cliente titular de las cuotas alcanzadas (D-36).'),
 ], ck=[('CK_condonaciones_importe', 'importe > 0')])
 
 add('condonaciones_cuotas', 'SS-06', '(asociación Condonación–Cuota)', 'Distribución del importe condonado entre las cuotas alcanzadas.', [
     FK('condonacion_id', 'condonaciones'),
     FK('cuota_id', 'cuotas', big=True),
-    C('importe', M4),
-], pk=['condonacion_id', 'cuota_id'], ck=[('CK_condonaciones_cuotas_importe', 'importe > 0')])
+    C('importe', M4, d='Punitorio condonado de la cuota, sin IVA.'),
+    C('iva', M4, default='0', d='IVA del punitorio condonado, proporcional a la parte condonada (D-36).'),
+], pk=['condonacion_id', 'cuota_id'], ck=[('CK_condonaciones_cuotas_importe', 'importe > 0'), ('CK_condonaciones_cuotas_iva', 'iva >= 0')])
 
 add('simulaciones_refinanciacion', 'SS-06', 'SimulacionRefinanciacion', 'Cálculos preliminares de un nuevo plan; no modifican la deuda (RN-36).', [
     ID(),
@@ -1091,7 +1094,19 @@ add('simulaciones_refinanciacion', 'SS-06', 'SimulacionRefinanciacion', 'Cálcul
     C('tasa', TASA), C('valor_cuota', M2),
     C('vence', TS),
     FK('usuario_id', 'usuarios_internos'),
+    C('fecha_corte', D, d='Día al que se compuso la deuda (D-36).'),
+    C('capital', M2, d='Capital pendiente de las cuotas comprendidas (RN-70).'),
+    C('no_capitalizable', M2, d='Concepto no capitalizable a la fecha de corte (RN-70).'),
+    FK('version_parametros_id', 'versiones_parametros', d='Límites de refinanciación aplicados (CU-60).'),
 ])
+
+add('simulaciones_refinanciacion_cuotas', 'SS-06', '(asociación Simulación–Cuota)', 'Cuotas comprendidas en una simulación y su composición, para verificar al registrar la propuesta que la deuda no varió (CU-40 A2, D-36).', [
+    FK('simulacion_id', 'simulaciones_refinanciacion'),
+    FK('cuota_id', 'cuotas', big=True),
+    C('capital_pendiente', M2),
+    C('no_capitalizable', M2, d='Intereses vencidos, gastos, IVA, concepto no capitalizable anterior y punitorios exigibles a la fecha de corte.'),
+    C('punitorio', M2, d='Punitorios exigibles con su IVA incluidos en no_capitalizable.'),
+], pk=['simulacion_id', 'cuota_id'])
 
 add('propuestas_refinanciacion', 'SS-06', 'PropuestaRefinanciacion', 'Planes presentados para resolución gerencial y aceptación del cliente. Cada corrección es una nueva versión vinculada con la anterior (RN-36).', [
     ID(),
@@ -1112,9 +1127,15 @@ add('propuestas_refinanciacion', 'SS-06', 'PropuestaRefinanciacion', 'Planes pre
     C('motivo_cancelacion', 'NVARCHAR(500)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Analista que la registró.'),
     VF(),
+    EN('tipo_cancelacion', 'TipoCancelacionPropuesta', null=True, d='Desistimiento del cliente (Analista) o causa administrativa (Gerente), CU-96.'),
+    C('fecha_cancelacion', TS, null=True),
+    FK('usuario_cancelacion_id', 'usuarios_internos', null=True),
+    C('fecha_desistimiento', D, null=True, d='Fecha de la constancia de desistimiento del cliente.'),
+    C('medio_desistimiento', 'NVARCHAR(100)', null=True, d='Medio por el que el cliente desistió.'),
 ], uq=[('UQ_propuestas_numero_version', ['numero', 'version'], None)],
    ck=[('CK_propuestas_valores', 'capital_refinanciado > 0 AND concepto_no_capitalizable >= 0 AND cantidad_cuotas > 0 AND tasa >= 0'),
-       ('CK_propuestas_cancelacion', "estado <> 'Cancelada' OR motivo_cancelacion IS NOT NULL")],
+       ('CK_propuestas_cancelacion', "estado <> 'Cancelada' OR motivo_cancelacion IS NOT NULL"),
+       ('CK_propuestas_datos_cancelacion', "estado <> 'Cancelada' OR (tipo_cancelacion IS NOT NULL AND fecha_cancelacion IS NOT NULL AND usuario_cancelacion_id IS NOT NULL AND (tipo_cancelacion = 'Administrativa' OR (fecha_desistimiento IS NOT NULL AND medio_desistimiento IS NOT NULL)))")],
    idx=[('IX_propuestas_cliente', ['cliente_id', 'estado'], None, None),
         ('IX_propuestas_vence', ['vence'], None, "estado IN ('PendienteResolucion', 'AprobadaPendienteAceptacion')")])
 
@@ -1123,6 +1144,7 @@ add('propuestas_cuotas', 'SS-06', '(asociación Propuesta–Cuota)', 'Cuotas com
     FK('cuota_id', 'cuotas', big=True),
     C('capital_pendiente', M2),
     C('no_capitalizable', M2, d='Intereses vencidos, gastos, IVA y punitorios exigibles a la fecha de corte.'),
+    C('punitorio', M2, default='0', d='Punitorios exigibles con su IVA incluidos en no_capitalizable; los posteriores se incorporan al aplicar (RN-70, D-36).'),
 ], pk=['propuesta_id', 'cuota_id'])
 
 add('resoluciones_propuesta', 'SS-06', 'ResolucionPropuesta', 'Decisiones gerenciales sobre una propuesta (CU-41).', [
@@ -1141,6 +1163,8 @@ add('aceptaciones_refinanciacion', 'SS-06', 'AceptacionRefinanciacion', 'Constan
     C('medio', 'NVARCHAR(100)'),
     C('observaciones', 'NVARCHAR(500)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Analista o Cajero autorizado.'),
+    C('fecha_constancia', D, d='Fecha en que el cliente manifestó su aceptación.'),
+    C('punitorios_incorporados', M2, default='0', d='Punitorios devengados desde la fecha de corte incorporados al concepto no capitalizable (RN-70).'),
 ])
 
 # ============================================================== SS-08

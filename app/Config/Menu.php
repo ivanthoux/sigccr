@@ -41,6 +41,8 @@ class Menu extends BaseConfig
         ]],
         ['titulo' => 'Cartera', 'icono' => 'bi-briefcase', 'opciones' => [
             ['texto' => 'Refinanciaciones', 'ruta' => 'refinanciaciones.localizar', 'permiso' => 'refinanciaciones.localizar'],
+            ['texto' => 'Simular refinanciación', 'ruta' => 'refinanciaciones.simular', 'permiso' => 'refinanciaciones.simular'],
+            ['texto' => 'Condonar punitorios', 'ruta' => 'punitorios.condonar', 'permiso' => 'punitorios.condonar'],
             ['texto' => 'Campañas', 'ruta' => 'campanas.consultar', 'permiso' => 'campanas.consultar'],
         ]],
         ['titulo' => 'Gestión', 'icono' => 'bi-graph-up', 'opciones' => [
