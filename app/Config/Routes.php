@@ -104,6 +104,17 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('punitorios/condonar', 'Admin\Condonaciones::index', ['as' => 'punitorios.condonar', 'filter' => 'permiso:punitorios.condonar']);
         $routes->post('punitorios/condonar', 'Admin\Condonaciones::condonar', ['filter' => 'permiso:punitorios.condonar']);
 
+        // SS-05 Saldos a favor y devoluciones (CU-76 a CU-78)
+        $routes->get('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicacion', ['as' => 'saldos-favor.aplicar', 'filter' => 'permiso:saldos-favor.aplicar']);
+        $routes->post('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicar', ['filter' => 'permiso:saldos-favor.aplicar']);
+        $routes->get('saldos-favor/devoluciones', 'Admin\SaldosFavor::autorizacion', ['as' => 'saldos-favor.autorizar-devolucion', 'filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->post('saldos-favor/(:num)/devolucion', 'Admin\SaldosFavor::autorizar/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->get('saldos-favor/autorizaciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->post('saldos-favor/autorizaciones/(:num)/anular', 'Admin\SaldosFavor::anular/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->get('devoluciones', 'Admin\SaldosFavor::devoluciones', ['as' => 'saldos-favor.ejecutar-devolucion', 'filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+        $routes->get('devoluciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+        $routes->post('devoluciones/(:num)/ejecutar', 'Admin\SaldosFavor::ejecutar/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+
         // SS-05 Pagos electrónicos (CU-34, CU-38)
         $routes->get('pagos-electronicos/nueva', 'Admin\PagosElectronicos::nueva', ['as' => 'pagos-electronicos.generar-orden', 'filter' => 'permiso:pagos-electronicos.generar-orden']);
         $routes->post('pagos-electronicos/nueva', 'Admin\PagosElectronicos::generar', ['filter' => 'permiso:pagos-electronicos.generar-orden']);
@@ -246,4 +257,6 @@ $routes->group('api', static function (RouteCollection $routes): void {
 if (ENVIRONMENT !== 'production') {
     $routes->get('simulador/pagar/(:segment)', 'Simulador\Pasarela::pagar/$1');
     $routes->post('simulador/pagar/(:segment)', 'Simulador\Pasarela::registrar/$1');
+    $routes->get('simulador/devoluciones', 'Simulador\Pasarela::devoluciones');
+    $routes->post('simulador/devoluciones', 'Simulador\Pasarela::configurarDevoluciones');
 }

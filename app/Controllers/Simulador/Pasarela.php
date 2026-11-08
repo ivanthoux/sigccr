@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Simulador;
 
 use App\Controllers\BaseController;
+use App\Adapters\Pasarela\SimuladorPasarela;
 use App\Services\Caja\PagoElectronicoService;
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -52,6 +53,31 @@ class Pasarela extends BaseController
         }
 
         return redirect()->to(site_url('simulador/pagar/' . $referencia))->with('exito', $mensaje);
+    }
+
+    /** Devoluciones (CU-78): modo de respuesta de la pasarela y resolución de las que quedaron sin resultado. */
+    public function devoluciones(): string
+    {
+        return view('simulador/devoluciones', ['datos' => SimuladorPasarela::leerDevoluciones()]);
+    }
+
+    public function configurarDevoluciones(): RedirectResponse
+    {
+        $datos = SimuladorPasarela::leerDevoluciones();
+        $modo = (string) $this->request->getPost('modo');
+        if (in_array($modo, ['approved', 'rejected', 'in_process', 'timeout'], true)) {
+            $datos['modo'] = $modo;
+        }
+        $operacion = (string) $this->request->getPost('operacion');
+        $estado = (string) $this->request->getPost('estado');
+        if ($operacion !== '' && isset($datos['devoluciones'][$operacion]) && in_array($estado, ['approved', 'rejected'], true)) {
+            $datos['devoluciones'][$operacion]['estado'] = $estado;
+            $datos['devoluciones'][$operacion]['id_devolucion'] = $estado === 'approved' ? 'SIMREF-' . bin2hex(random_bytes(4)) : null;
+            $datos['devoluciones'][$operacion]['detalle'] = $estado === 'rejected' ? 'Rechazada por el emisor (simulado)' : null;
+        }
+        SimuladorPasarela::guardarDevoluciones($datos);
+
+        return redirect()->to(site_url('simulador/devoluciones'))->with('exito', 'Simulador actualizado. Las devoluciones resueltas se registran con pagos:conciliar (CU-91).');
     }
 
     /** @return array<string, mixed> */

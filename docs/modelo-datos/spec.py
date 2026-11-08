@@ -942,8 +942,17 @@ add('autorizaciones_devolucion', 'SS-05', 'AutorizacionDevolucion', 'Autorizacio
     EN('estado', 'EstadoDevolucion', default="'PendienteEjecucion'"),
     FK('usuario_id', 'usuarios_internos', d='Gerente que autorizó.'),
     VF(),
+    C('fecha_solicitud', D, d='Fecha de la constancia de la solicitud del cliente.'),
+    C('medio_solicitud', 'NVARCHAR(100)', d='Medio por el que el cliente solicitó la devolución.'),
+    C('entidad_bancaria', 'NVARCHAR(100)', null=True, d='Entidad de la cuenta destino de la transferencia.'),
+    C('evidencia_titularidad', 'NVARCHAR(300)', null=True, d='Constancia de la verificación de titularidad de la cuenta (RN-73, RN-77).'),
+    C('motivo_anulacion', 'NVARCHAR(500)', null=True),
+    C('fecha_anulacion', TS, null=True),
+    FK('usuario_anulacion_id', 'usuarios_internos', null=True, d='Gerente que anuló la autorización (CU-77 A5).'),
 ], ck=[('CK_autorizaciones_devolucion_cuenta', "destino = 'MedioOriginal' OR (cbu_cvu IS NOT NULL AND cuit_titular IS NOT NULL)"),
-       ('CK_autorizaciones_devolucion_importe', 'importe > 0')],
+       ('CK_autorizaciones_devolucion_importe', 'importe > 0'),
+       ('CK_autorizaciones_devolucion_titularidad', "destino = 'MedioOriginal' OR (entidad_bancaria IS NOT NULL AND evidencia_titularidad IS NOT NULL)"),
+       ('CK_autorizaciones_devolucion_anulacion', "estado <> 'Anulada' OR (motivo_anulacion IS NOT NULL AND fecha_anulacion IS NOT NULL AND usuario_anulacion_id IS NOT NULL)")],
    idx=[('IX_autorizaciones_devolucion_vence', ['vence'], None, "estado = 'PendienteEjecucion'")])
 
 add('ejecuciones_devolucion', 'SS-05', 'EjecucionDevolucion', 'Ejecución de una devolución por la pasarela o por transferencia (CU-78).', [
@@ -955,6 +964,10 @@ add('ejecuciones_devolucion', 'SS-05', 'EjecucionDevolucion', 'Ejecución de una
     C('fecha_confirmacion', TS, null=True),
     C('comprobante', 'VARCHAR(100)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Cajero que ejecutó.'),
+    C('importe', M2, d='Importe devuelto; igual al autorizado.'),
+    C('cbu_destino', 'CHAR(22)', null=True, d='Cuenta a la que se transfirió (CU-78 A1).'),
+    C('fecha_transferencia', D, null=True, d='Fecha del comprobante de la transferencia.'),
+    C('detalle', 'NVARCHAR(500)', null=True, d='Respuesta de la pasarela o motivo del fallo.'),
 ], uq=[('UQ_ejecuciones_devolucion_operacion', ['identificador_operacion'], 'identificador_operacion IS NOT NULL')])
 
 add('movimientos_fondos', 'SS-05', 'MovimientoFondos', 'Ingresos y egresos de fondos no originados en operaciones de crédito (CU-85).', [

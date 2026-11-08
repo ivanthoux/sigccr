@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Commands;
 
+use App\Services\Caja\DevolucionService;
 use App\Services\Caja\PagoElectronicoService;
 
 /**
  * CU-91 Conciliar Órdenes de Pago Pendientes. El Temporizador lo ejecuta cada 30 minutos (docker/scheduler/crontab):
  * consulta a la pasarela las órdenes pendientes de más de 10 minutos, las que están en conciliación y las vencidas el
  * día anterior, y aplica el mismo tratamiento que CU-90; las órdenes vencidas sin pago pasan a Vencida y las que
- * superan 48 horas en conciliación generan una alerta para el Gerente (A2).
+ * superan 48 horas en conciliación generan una alerta para el Gerente (A2). También concilia las devoluciones de saldos a
+ * favor en ejecución o en conciliación (CU-78 A4, RN-73).
  *
  *   php spark pagos:conciliar
  */
@@ -26,6 +28,12 @@ class ConciliarPagos extends BaseProcesoCommand
         foreach ($s->ordenesAConciliar() as $id) {
             $this->procesarConTransaccionesPropias("orden {$id}", static function () use ($s, $id): void {
                 $s->procesarOrden($id);
+            });
+        }
+        $d = new DevolucionService($this->db);
+        foreach ($d->aConciliar() as $id) {
+            $this->procesarConTransaccionesPropias("devolución {$id}", static function () use ($d, $id): void {
+                $d->conciliar($id);
             });
         }
     }

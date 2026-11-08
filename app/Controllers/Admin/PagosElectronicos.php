@@ -8,8 +8,6 @@ use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Caja\CobroService;
 use App\Services\Caja\PagoElectronicoService;
-use App\Services\Clientes\ClienteService;
-use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 use Throwable;
 
@@ -19,24 +17,12 @@ class PagosElectronicos extends BaseController
     /** CU-34 pasos 1 a 3 (A2): cliente y cuotas pendientes. */
     public function nueva(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
-        if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Orden de pago electrónico',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-                'destino' => 'pagos-electronicos.generar-orden',
-            ]);
-        }
-        try {
-            $cliente = (new SimulacionService())->cliente($clienteId);
-        } catch (ReglaNegocioException $e) {
-            return redirect()->route('pagos-electronicos.generar-orden')->with('error', $e->getMessage());
+        $cliente = $this->clienteSeleccionado('pagos-electronicos.generar-orden', 'Orden de pago electrónico');
+        if (!is_array($cliente)) {
+            return $cliente;
         }
 
-        return view('pagos/nueva', ['titulo' => 'Orden de pago para ' . $cliente['denominacion'], 'cliente' => $cliente] + (new CobroService())->obligaciones($clienteId));
+        return view('pagos/nueva', ['titulo' => 'Orden de pago para ' . $cliente['denominacion'], 'cliente' => $cliente] + (new CobroService())->obligaciones((int) $cliente['id']));
     }
 
     /** CU-34 pasos 4 a 11. */

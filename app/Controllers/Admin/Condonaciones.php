@@ -7,8 +7,6 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Cartera\CondonacionService;
-use App\Services\Clientes\ClienteService;
-use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /** CU-44 Condonar Intereses Punitorios (Gerente). */
@@ -17,22 +15,12 @@ class Condonaciones extends BaseController
     /** CU-44 pasos 1 a 5 (A3). */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
-        if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Condonar punitorios', 'texto' => $texto, 'destino' => 'punitorios.condonar',
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
-        }
-        try {
-            $cliente = (new SimulacionService())->cliente($clienteId);
-        } catch (ReglaNegocioException $e) {
-            return redirect()->route('punitorios.condonar')->with('error', $e->getMessage());
+        $cliente = $this->clienteSeleccionado('punitorios.condonar', 'Condonar punitorios');
+        if (!is_array($cliente)) {
+            return $cliente;
         }
 
-        return view('condonaciones/nueva', ['titulo' => 'Condonar punitorios', 'cliente' => $cliente] + (new CondonacionService())->obligaciones($clienteId));
+        return view('condonaciones/nueva', ['titulo' => 'Condonar punitorios', 'cliente' => $cliente] + (new CondonacionService())->obligaciones((int) $cliente['id']));
     }
 
     /** CU-44 pasos 6 a 10 (A1, A2). */

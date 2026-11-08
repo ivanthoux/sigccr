@@ -107,37 +107,7 @@ class CobroService extends BaseService
             if ($jornada === null) {
                 throw new ReglaNegocioException('No tiene una caja abierta hoy: ábrala antes de registrar cobros (CU-31, RN-28).');
             }
-            $creditoIds = array_map('intval', array_keys($seleccion));
-            $creditos = [];
-            foreach ($this->bloquear('creditos', $creditoIds) as $c) {
-                if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], self::ESTADOS_CREDITO, true)) {
-                    $creditos[(int) $c['id']] = $c;
-                }
-            }
-            if ($creditos !== []) {
-                (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId, array_keys($creditos)), $this->hoyNegocio());
-            }
-            $cuotas = $creditos === [] ? [] : $this->db->query(
-                'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE credito_id IN (' . implode(', ', array_fill(0, count($creditos), '?')) . ') AND estado IN (?, ?) ORDER BY credito_id, numero',
-                [...array_keys($creditos), ...self::IMPAGAS],
-            )->getResultArray();
-            $pendientes = [];
-            $porNumero = [];
-            foreach ($cuotas as $q) {
-                $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
-                $porNumero[(int) $q['credito_id']][(int) $q['numero']] = $q;
-            }
-            $errores = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
-            if ($errores !== []) {
-                throw new ValidacionException(['seleccion' => implode(' ', $errores)], 'RN-29');
-            }
-            $elegidas = [];
-            foreach ($seleccion as $credito => $numeros) {
-                foreach ($numeros as $n) {
-                    $elegidas[] = $porNumero[(int) $credito][$n];
-                }
-            }
-            $elegidas = CobroCuotas::ordenar($elegidas);
+            ['creditos' => $creditos, 'cuotas' => $elegidas] = $this->seleccionar($clienteId, $seleccion);
             $total = Decimal::sum(array_map(static fn ($q) => CobroCuotas::total($q), $elegidas));
             $imp = CobroCuotas::importeACobrar($importeTexto, $total);
             if ($imp['error'] !== null) {
@@ -185,21 +155,65 @@ class CobroService extends BaseService
     }
 
     /**
+     * Cuotas elegidas por el actor, bloqueadas y con los punitorios al día: consecutivas desde la más antigua de cada
+     * crédito activo o en mora del cliente (RN-29, RN-53). La usan el cobro en ventanilla (CU-33), la orden de pago
+     * electrónico (CU-34) y la aplicación de un saldo a favor (CU-76). Debe llamarse dentro de una transacción.
+     *
+     * @param array<int|string, list<int>> $seleccion crédito => números de cuota
+     * @return array{creditos: array<int, array<string, mixed>>, cuotas: list<array<string, mixed>>} cuotas ordenadas por prelación
+     */
+    public function seleccionar(int $clienteId, array $seleccion): array
+    {
+        $creditos = [];
+        foreach ($this->bloquear('creditos', array_map('intval', array_keys($seleccion))) as $c) {
+            if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], self::ESTADOS_CREDITO, true)) {
+                $creditos[(int) $c['id']] = $c;
+            }
+        }
+        if ($creditos !== []) {
+            (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId, array_keys($creditos)), $this->hoyNegocio());
+        }
+        $cuotas = $creditos === [] ? [] : $this->db->query(
+            'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE credito_id IN (' . implode(', ', array_fill(0, count($creditos), '?')) . ') AND estado IN (?, ?) ORDER BY credito_id, numero',
+            [...array_keys($creditos), ...self::IMPAGAS],
+        )->getResultArray();
+        $pendientes = [];
+        $porNumero = [];
+        foreach ($cuotas as $q) {
+            $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
+            $porNumero[(int) $q['credito_id']][(int) $q['numero']] = $q;
+        }
+        $errores = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
+        if ($errores !== []) {
+            throw new ValidacionException(['seleccion' => implode(' ', $errores)], 'RN-29');
+        }
+        $elegidas = [];
+        foreach ($seleccion as $credito => $numeros) {
+            foreach ($numeros as $n) {
+                $elegidas[] = $porNumero[(int) $credito][$n];
+            }
+        }
+
+        return ['creditos' => $creditos, 'cuotas' => CobroCuotas::ordenar($elegidas)];
+    }
+
+    /**
      * RN-29: registra las imputaciones de un cobro, actualiza los saldos y el estado de las cuotas alcanzadas y el de
-     * sus créditos. Lo usan el cobro en ventanilla (CU-33) y el electrónico (CU-90). Las cuotas y los créditos deben
-     * estar bloqueados.
+     * sus créditos. Lo usan el cobro en ventanilla (CU-33), el electrónico (CU-90) y la aplicación de un saldo a favor
+     * (CU-76, con $origen 'aplicacion_saldo_id'). Las cuotas y los créditos deben estar bloqueados.
      *
      * @param list<array<string, mixed>> $cuotas filas de cuotas leídas en la transacción
      * @param list<array{cuota: int|string, concepto: string, importe: Decimal, parcial: bool}> $imputaciones de Imputador::imputar()
      * @param list<array<string, mixed>> $creditos filas de creditos bloqueadas
      * @return array{parcial: ?int}
      */
-    public function imputar(int $cobroId, array $cuotas, array $imputaciones, array $creditos): array
+    public function imputar(int $cobroId, array $cuotas, array $imputaciones, array $creditos, string $origen = 'cobro_id'): array
     {
+        $origen = $origen === 'aplicacion_saldo_id' ? $origen : 'cobro_id';
         $porCuota = [];
         foreach ($imputaciones as $i) {
             $this->db->table('imputaciones')->insert([
-                'cobro_id' => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
+                $origen => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
             ]);
             $porCuota[$i['cuota']][] = $i;
         }
@@ -218,7 +232,7 @@ class CobroService extends BaseService
             $this->actualizarEstadoCredito($c);
         }
         // RN-36: un pago sobre cuotas comprendidas en una propuesta vigente la deja Observada
-        (new RefinanciacionService($this->db))->observarPorCuotas(array_map('intval', array_keys($porCuota)), "Cobro registrado sobre cuotas comprendidas (cobro {$cobroId}).");
+        (new RefinanciacionService($this->db))->observarPorCuotas(array_map('intval', array_keys($porCuota)), $origen === 'cobro_id' ? "Cobro registrado sobre cuotas comprendidas (cobro {$cobroId})." : "Saldo a favor aplicado a cuotas comprendidas (aplicación {$cobroId}).");
 
         return ['parcial' => $parcial];
     }

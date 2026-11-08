@@ -17,7 +17,8 @@ use App\Services\Comunes\ParametroService;
  * Disponibilidad de fondos de la entidad (SS-05, RN-41, RN-71).
  *
  *   fondos = movimientos de fondos realizados (ingresos − egresos, CU-85) + importes imputados a obligaciones
- *            (cobros confirmados y aplicaciones de saldo) − desembolsos (liquidaciones) − devoluciones completadas
+ *            (cobros confirmados y aplicaciones de saldo) − desembolsos (liquidaciones)
+ *   Los saldos a favor no integran los fondos hasta aplicarse (RN-57); por eso su devolución no los reduce (D-37).
  *   disponible libre = fondos − reservas y compromisos vigentes − reserva mínima (parámetros de campañas, CU-51)
  *
  * Las reservas se constituyen con un bloqueo de aplicación para que dos aprobaciones simultáneas no usen los mismos
@@ -35,10 +36,9 @@ class FondosService extends BaseService
         // La restitución de una revocación (RN-79) no se imputa a cuotas
         $restituciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.cobros WHERE tipo = 'Revocacion' AND estado = 'Confirmado'");
         $desembolsos = $q('SELECT COALESCE(SUM(importe_neto), 0) AS t FROM dbo.liquidaciones');
-        $devoluciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.autorizaciones_devolucion WHERE estado = 'Completada'");
         $afectaciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.afectaciones_fondos WHERE estado = 'Vigente'");
         $minima = Decimal::of((string) ((new ParametroService($this->db))->vigente('Campanas')['valores']['reserva_minima'] ?? '0'));
-        $fondos = $movimientos->add($imputado)->add($restituciones)->sub($desembolsos)->sub($devoluciones);
+        $fondos = $movimientos->add($imputado)->add($restituciones)->sub($desembolsos);
 
         return [
             'fondos' => $fondos->toFixed(2),
