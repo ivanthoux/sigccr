@@ -103,7 +103,7 @@ $this->section('contenido');
             <?php if (tiene_permiso('cajas.cambiar-estado')): ?>
                 <details<?= $abierto === "estado-{$id}" ? ' open' : '' ?>>
                     <summary class="btn btn-sm <?= $habilitada ? 'btn-outline-danger' : 'btn-outline-secondary' ?>"><?= $habilitada ? 'Inhabilitar' : 'Rehabilitar' ?></summary>
-                    <form method="post" action="<?= site_url("admin/cajas/{$id}/estado") ?>" class="mt-2" style="max-width: 32rem" novalidate>
+                    <form method="post" action="<?= site_url("admin/cajas/{$id}/estado") ?>" class="mt-2" style="max-width: 32rem" novalidate data-confirmar="<?= $habilitada ? '¿Inhabilita la caja? Se finalizará su asignación vigente.' : '¿Rehabilita la caja?' ?>">
                         <?= csrf_field() ?>
                         <input type="hidden" name="accion" value="<?= $habilitada ? 'inhabilitar' : 'rehabilitar' ?>">
                         <label class="form-label small" for="motivo-estado-<?= $id ?>">Motivo</label>

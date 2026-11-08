@@ -22,6 +22,7 @@ $this->section('contenido');
             'refinanciaciones.simular' => 'Plan preliminar para refinanciar los créditos en mora del cliente. No modifica la deuda ni genera una propuesta (RN-36, RN-70).',
             'refinanciaciones.registrar-propuesta' => 'Propuesta formal a partir de una simulación vigente, para la resolución del Gerente (RN-36).',
             'punitorios.condonar' => 'Reducción autorizada de los intereses punitorios pendientes, con fundamento y hasta el máximo configurado (RN-38).',
+            'creditos.cancelar-anticipadamente' => 'Cancelación anticipada total de un crédito, sin intereses ni gastos no devengados y sin comisión (RN-67).',
             'saldos-favor.aplicar' => 'Aplicación del saldo a favor del cliente a sus cuotas pendientes, con su conformidad (RN-57).',
             'saldos-favor.autorizar-devolucion' => 'Devolución del saldo a favor por el medio de pago original o a una cuenta verificada del cliente (RN-73).',
             'pagos-electronicos.generar-orden' => 'Orden de pago de importe fijo para que el cliente pague sus cuotas con la pasarela (RN-54).',

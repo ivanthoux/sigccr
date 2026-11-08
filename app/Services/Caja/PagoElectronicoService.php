@@ -225,6 +225,30 @@ class PagoElectronicoService extends BaseService
     }
 
     /**
+     * CU-89 paso 7: órdenes pendientes de confirmación cuyo límite se alcanzó. Las órdenes en conciliación no vencen; las
+     * vencidas se siguen consultando con la pasarela por CU-91 y un pago efectivo anterior al límite todavía se confirma.
+     *
+     * @return list<int>
+     */
+    public function ordenesVencidas(): array
+    {
+        return array_map('intval', array_column($this->db->query(
+            "SELECT id FROM dbo.ordenes_pago_electronico WHERE estado = 'PendienteConfirmacion' AND vence <= SYSDATETIMEOFFSET() ORDER BY vence",
+        )->getResultArray(), 'id'));
+    }
+
+    /** CU-89 para una orden (dentro de la transacción del elemento; A1: si cambió, no se vence). */
+    public function vencerOrden(int $id): void
+    {
+        $o = $this->bloquear('ordenes_pago_electronico', [$id])[0] ?? null;
+        if ($o === null || $o['estado'] !== 'PendienteConfirmacion' || (new DateTimeImmutable((string) $o['vence']))->getTimestamp() > time()) {
+            return;
+        }
+        $this->actualizarConVersion('ordenes_pago_electronico', $id, (int) $o['version_fila'], ['estado' => 'Vencida']);
+        (new AuditoriaService($this->db))->registrar('pagos.vencer-orden', 'ordenes_pago_electronico', $id, 'Exitoso', 'Límite de la orden alcanzado sin confirmación (RN-54).', ['numero' => (int) $o['numero']], 'vencimientos:controlar');
+    }
+
+    /**
      * CU-91 paso 2: órdenes a consultar (pendientes de más de 10 minutos, en conciliación y vencidas el día anterior).
      *
      * @return list<int>
