@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ArchivoLegajo;
+use App\Services\Clientes\ClienteService;
+use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\Files\UploadedFile;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -56,6 +58,30 @@ abstract class BaseController extends Controller
      * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
      * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
      */
+    /**
+     * Búsqueda y selección del cliente (CU-54) para las operaciones que parten de él: sin ?cliente= presenta la
+     * búsqueda; con él, devuelve los datos del cliente o vuelve a la búsqueda si no existe.
+     *
+     * @return array<string, mixed>|string|RedirectResponse
+     */
+    protected function clienteSeleccionado(string $destino, string $titulo): array|string|RedirectResponse
+    {
+        $clienteId = (int) $this->request->getGet('cliente');
+        if ($clienteId === 0) {
+            $texto = trim((string) $this->request->getGet('texto'));
+
+            return view('simulaciones/cliente', [
+                'titulo' => $titulo, 'texto' => $texto, 'destino' => $destino,
+                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
+            ]);
+        }
+        try {
+            return (new SimulacionService())->cliente($clienteId);
+        } catch (ReglaNegocioException $e) {
+            return redirect()->route($destino)->with('error', $e->getMessage());
+        }
+    }
+
     protected function volverConError(ReglaNegocioException $e): RedirectResponse
     {
         return redirect()->back()->withInput()

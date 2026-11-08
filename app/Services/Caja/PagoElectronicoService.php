@@ -53,32 +53,7 @@ class PagoElectronicoService extends BaseService
     {
         $seleccion = array_map(static fn ($n) => array_values(array_map('intval', (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
         $orden = $this->transaccion(function () use ($clienteId, $seleccion, $presentado): array {
-            $creditos = [];
-            foreach ($this->bloquear('creditos', array_map('intval', array_keys($seleccion))) as $c) {
-                if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], ['Activo', 'EnMora'], true)) {
-                    $creditos[(int) $c['id']] = $c;
-                }
-            }
-            $hoy = $this->hoyNegocio();
-            $ids = $creditos === [] ? [] : array_map('intval', array_column($this->db->table('cuotas')->select('id')->whereIn('credito_id', array_keys($creditos))->whereIn('estado', self::IMPAGAS)->get()->getResultArray(), 'id'));
-            (new PunitorioService($this->db))->devengarCuotas($ids, $hoy);
-            $cuotas = $ids === [] ? [] : $this->db->table('cuotas')->whereIn('id', $ids)->orderBy('credito_id')->orderBy('numero')->get()->getResultArray();
-            $pendientes = [];
-            $porNumero = [];
-            foreach ($cuotas as $q) {
-                $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
-                $porNumero[(int) $q['credito_id']][(int) $q['numero']] = $q;
-            }
-            $errores = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
-            if ($errores !== []) {
-                throw new ValidacionException(['seleccion' => implode(' ', $errores)], 'RN-29');
-            }
-            $elegidas = [];
-            foreach ($seleccion as $credito => $numeros) {
-                foreach ($numeros as $n) {
-                    $elegidas[] = $porNumero[(int) $credito][$n];
-                }
-            }
+            $elegidas = (new CobroService($this->db))->seleccionar($clienteId, $seleccion)['cuotas'];
             // A7: una cuota no integra dos órdenes abiertas y vigentes
             $existente = $this->db->query(
                 'SELECT TOP 1 o.id, o.numero FROM dbo.ordenes_pago_electronico o JOIN dbo.ordenes_pago_cuotas oc ON oc.orden_pago_id = o.id '

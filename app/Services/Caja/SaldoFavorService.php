@@ -12,7 +12,6 @@ use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Finanzas\Imputador;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
-use App\Services\Cartera\PunitorioService;
 use App\Services\Comunes\AuditoriaService;
 
 /**
@@ -21,7 +20,6 @@ use App\Services\Comunes\AuditoriaService;
  */
 class SaldoFavorService extends BaseService
 {
-    private const IMPAGAS = ['Pendiente', 'Vencida'];
     public const ACTIVAS = ['PendienteEjecucion', 'EnEjecucion', 'EnConciliacion'];
 
     /**
@@ -105,37 +103,15 @@ class SaldoFavorService extends BaseService
                     ? 'El saldo a favor del cliente está reservado para una devolución autorizada: no puede aplicarse hasta que se resuelva (A2, RN-73).'
                     : 'El cliente no tiene saldo a favor disponible (A1).', 'RN-57');
             }
-            $creditos = [];
-            foreach ($this->bloquear('creditos', array_map('intval', array_keys($seleccion))) as $c) {
-                if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], ['Activo', 'EnMora'], true)) {
-                    $creditos[(int) $c['id']] = $c;
-                }
-            }
-            $hoy = $this->hoyNegocio();
-            $ids = $creditos === [] ? [] : array_map('intval', array_column($this->db->table('cuotas')->select('id')->whereIn('credito_id', array_keys($creditos))->whereIn('estado', self::IMPAGAS)->get()->getResultArray(), 'id'));
-            (new PunitorioService($this->db))->devengarCuotas($ids, $hoy);
-            $pendientes = [];
-            $porNumero = [];
-            foreach ($ids === [] ? [] : $this->db->table('cuotas')->whereIn('id', $ids)->orderBy('credito_id')->orderBy('numero')->get()->getResultArray() as $q) {
-                $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
-                $porNumero[(int) $q['credito_id']][(int) $q['numero']] = (int) $q['id'];
-            }
-            $e = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
-            if ($e !== []) {
-                throw new ValidacionException(['seleccion' => implode(' ', $e)], 'RN-29');
-            }
-            $elegidas = [];
-            foreach ($seleccion as $credito => $numeros) {
-                foreach ($numeros as $n) {
-                    $elegidas[] = $porNumero[(int) $credito][$n];
-                }
-            }
+            $cobros = new CobroService($this->db);
+            $sel = $cobros->seleccionar($clienteId, $seleccion);
+            $creditos = $sel['creditos'];
+            $elegidas = array_map(static fn ($q) => (int) $q['id'], $sel['cuotas']);
             $leer = fn (): array => CobroCuotas::ordenar($this->db->query(
                 'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE id IN (' . implode(', ', $elegidas) . ") AND estado IN ('Pendiente', 'Vencida')",
             )->getResultArray());
             $total = Decimal::sum(array_map(static fn ($q) => CobroCuotas::total($q), $leer()));
             $importe = Decimal::min($disponible, $total);
-            $cobros = new CobroService($this->db);
             $aplicaciones = [];
             $canceladas = 0;
             $parcial = null;

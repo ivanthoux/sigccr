@@ -8,8 +8,6 @@ use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Services\Cartera\RefinanciacionService;
-use App\Services\Clientes\ClienteService;
-use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -46,7 +44,7 @@ class Refinanciaciones extends BaseController
     /** CU-39 pasos 1 a 6 (A1). */
     public function simular(): string|RedirectResponse
     {
-        $cliente = $this->cliente('refinanciaciones.simular', 'Simular refinanciación');
+        $cliente = $this->clienteSeleccionado('refinanciaciones.simular', 'Simular refinanciación');
         if (!is_array($cliente) || !isset($cliente['id'])) {
             return $cliente;
         }
@@ -89,7 +87,7 @@ class Refinanciaciones extends BaseController
     /** CU-40 pasos 1 a 3. */
     public function nueva(): string|RedirectResponse
     {
-        $cliente = $this->cliente('refinanciaciones.registrar-propuesta', 'Registrar propuesta de refinanciación');
+        $cliente = $this->clienteSeleccionado('refinanciaciones.registrar-propuesta', 'Registrar propuesta de refinanciación');
         if (!is_array($cliente) || !isset($cliente['id'])) {
             return $cliente;
         }
@@ -211,28 +209,5 @@ class Refinanciaciones extends BaseController
         }
 
         return view($vista, ['titulo' => $titulo, 'p' => $p, 'definitivo' => $d]);
-    }
-
-    /**
-     * Búsqueda del cliente (CU-54) para las operaciones que parten de él.
-     *
-     * @return array<string, mixed>|string|RedirectResponse
-     */
-    private function cliente(string $destino, string $titulo): array|string|RedirectResponse
-    {
-        $clienteId = (int) $this->request->getGet('cliente');
-        if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => $titulo, 'texto' => $texto, 'destino' => $destino,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
-        }
-        try {
-            return (new SimulacionService())->cliente($clienteId);
-        } catch (ReglaNegocioException $e) {
-            return redirect()->route($destino)->with('error', $e->getMessage());
-        }
     }
 }

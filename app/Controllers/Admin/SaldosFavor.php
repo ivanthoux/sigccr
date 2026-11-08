@@ -9,8 +9,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Services\Caja\CobroService;
 use App\Services\Caja\DevolucionService;
 use App\Services\Caja\SaldoFavorService;
-use App\Services\Clientes\ClienteService;
-use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -22,7 +20,7 @@ class SaldosFavor extends BaseController
     /** CU-76 pasos 1 a 4 (A1, A2). */
     public function aplicacion(): string|RedirectResponse
     {
-        $cliente = $this->cliente('saldos-favor.aplicar', 'Aplicar saldo a favor');
+        $cliente = $this->clienteSeleccionado('saldos-favor.aplicar', 'Aplicar saldo a favor');
         if (!is_array($cliente)) {
             return $cliente;
         }
@@ -58,7 +56,7 @@ class SaldosFavor extends BaseController
     /** CU-77 pasos 1 a 5 (A4, A5). */
     public function autorizacion(): string|RedirectResponse
     {
-        $cliente = $this->cliente('saldos-favor.autorizar-devolucion', 'Autorizar devolución de saldo a favor');
+        $cliente = $this->clienteSeleccionado('saldos-favor.autorizar-devolucion', 'Autorizar devolución de saldo a favor');
         if (!is_array($cliente)) {
             return $cliente;
         }
@@ -135,28 +133,5 @@ class SaldosFavor extends BaseController
         }
 
         return redirect()->to(site_url("admin/devoluciones/{$id}"))->with($r['ok'] ? 'exito' : 'error', $r['mensaje']);
-    }
-
-    /**
-     * Búsqueda del cliente (CU-54).
-     *
-     * @return array<string, mixed>|string|RedirectResponse
-     */
-    private function cliente(string $destino, string $titulo): array|string|RedirectResponse
-    {
-        $clienteId = (int) $this->request->getGet('cliente');
-        if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => $titulo, 'texto' => $texto, 'destino' => $destino,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
-        }
-        try {
-            return (new SimulacionService())->cliente($clienteId);
-        } catch (ReglaNegocioException $e) {
-            return redirect()->route($destino)->with('error', $e->getMessage());
-        }
     }
 }

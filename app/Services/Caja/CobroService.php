@@ -107,37 +107,7 @@ class CobroService extends BaseService
             if ($jornada === null) {
                 throw new ReglaNegocioException('No tiene una caja abierta hoy: ábrala antes de registrar cobros (CU-31, RN-28).');
             }
-            $creditoIds = array_map('intval', array_keys($seleccion));
-            $creditos = [];
-            foreach ($this->bloquear('creditos', $creditoIds) as $c) {
-                if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], self::ESTADOS_CREDITO, true)) {
-                    $creditos[(int) $c['id']] = $c;
-                }
-            }
-            if ($creditos !== []) {
-                (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId, array_keys($creditos)), $this->hoyNegocio());
-            }
-            $cuotas = $creditos === [] ? [] : $this->db->query(
-                'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE credito_id IN (' . implode(', ', array_fill(0, count($creditos), '?')) . ') AND estado IN (?, ?) ORDER BY credito_id, numero',
-                [...array_keys($creditos), ...self::IMPAGAS],
-            )->getResultArray();
-            $pendientes = [];
-            $porNumero = [];
-            foreach ($cuotas as $q) {
-                $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
-                $porNumero[(int) $q['credito_id']][(int) $q['numero']] = $q;
-            }
-            $errores = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
-            if ($errores !== []) {
-                throw new ValidacionException(['seleccion' => implode(' ', $errores)], 'RN-29');
-            }
-            $elegidas = [];
-            foreach ($seleccion as $credito => $numeros) {
-                foreach ($numeros as $n) {
-                    $elegidas[] = $porNumero[(int) $credito][$n];
-                }
-            }
-            $elegidas = CobroCuotas::ordenar($elegidas);
+            ['creditos' => $creditos, 'cuotas' => $elegidas] = $this->seleccionar($clienteId, $seleccion);
             $total = Decimal::sum(array_map(static fn ($q) => CobroCuotas::total($q), $elegidas));
             $imp = CobroCuotas::importeACobrar($importeTexto, $total);
             if ($imp['error'] !== null) {
@@ -182,6 +152,49 @@ class CobroService extends BaseService
 
             return ['cobro_id' => $cobroId, 'numero' => $numero, 'importe' => $importe->toFixed(2), 'canceladas' => count($r['canceladas']), 'parcial' => $parcial];
         });
+    }
+
+    /**
+     * Cuotas elegidas por el actor, bloqueadas y con los punitorios al día: consecutivas desde la más antigua de cada
+     * crédito activo o en mora del cliente (RN-29, RN-53). La usan el cobro en ventanilla (CU-33), la orden de pago
+     * electrónico (CU-34) y la aplicación de un saldo a favor (CU-76). Debe llamarse dentro de una transacción.
+     *
+     * @param array<int|string, list<int>> $seleccion crédito => números de cuota
+     * @return array{creditos: array<int, array<string, mixed>>, cuotas: list<array<string, mixed>>} cuotas ordenadas por prelación
+     */
+    public function seleccionar(int $clienteId, array $seleccion): array
+    {
+        $creditos = [];
+        foreach ($this->bloquear('creditos', array_map('intval', array_keys($seleccion))) as $c) {
+            if ((int) $c['cliente_id'] === $clienteId && in_array($c['estado'], self::ESTADOS_CREDITO, true)) {
+                $creditos[(int) $c['id']] = $c;
+            }
+        }
+        if ($creditos !== []) {
+            (new PunitorioService($this->db))->devengarCuotas($this->cuotasImpagas($clienteId, array_keys($creditos)), $this->hoyNegocio());
+        }
+        $cuotas = $creditos === [] ? [] : $this->db->query(
+            'SELECT * FROM dbo.cuotas WITH (UPDLOCK, ROWLOCK) WHERE credito_id IN (' . implode(', ', array_fill(0, count($creditos), '?')) . ') AND estado IN (?, ?) ORDER BY credito_id, numero',
+            [...array_keys($creditos), ...self::IMPAGAS],
+        )->getResultArray();
+        $pendientes = [];
+        $porNumero = [];
+        foreach ($cuotas as $q) {
+            $pendientes[(int) $q['credito_id']][] = (int) $q['numero'];
+            $porNumero[(int) $q['credito_id']][(int) $q['numero']] = $q;
+        }
+        $errores = CobroCuotas::validarSeleccion($pendientes, $seleccion, array_map(static fn ($c) => (string) $c['numero'], $creditos));
+        if ($errores !== []) {
+            throw new ValidacionException(['seleccion' => implode(' ', $errores)], 'RN-29');
+        }
+        $elegidas = [];
+        foreach ($seleccion as $credito => $numeros) {
+            foreach ($numeros as $n) {
+                $elegidas[] = $porNumero[(int) $credito][$n];
+            }
+        }
+
+        return ['creditos' => $creditos, 'cuotas' => CobroCuotas::ordenar($elegidas)];
     }
 
     /**
