@@ -63,10 +63,29 @@ class CobroService extends BaseService
             $creditos[$id]['cuotas'][] = $q;
         }
         $umbral = (int) ((new ParametroService($this->db))->vigente('Morosidad')['valores']['umbral_morosidad_avanzada_dias'] ?? 60);
+        // CU-33 A6: cuotas incluidas en una orden de pago electrónico pendiente y vigente
+        $enOrden = [];
+        if ($filas !== []) {
+            $filasOrden = $this->db->query(
+                'SELECT oc.cuota_id, o.numero FROM dbo.ordenes_pago_cuotas oc JOIN dbo.ordenes_pago_electronico o ON o.id = oc.orden_pago_id '
+                . "WHERE o.cliente_id = ? AND o.estado IN ('PendienteConfirmacion', 'EnConciliacion') AND o.vence > SYSDATETIMEOFFSET()",
+                [$clienteId],
+            )->getResultArray();
+            foreach ($filasOrden as $r) {
+                $enOrden[(int) $r['cuota_id']] = (int) $r['numero'];
+            }
+            foreach ($creditos as &$cr) {
+                foreach ($cr['cuotas'] as &$q) {
+                    $q['orden_pendiente'] = $enOrden[(int) $q['id']] ?? null;
+                }
+                unset($q);
+            }
+            unset($cr);
+        }
 
         return [
             'creditos' => array_values($creditos), 'total_vencido' => $vencido->toFixed(2), 'max_atraso' => $maxAtraso,
-            'morosidad_avanzada' => $maxAtraso >= $umbral, 'umbral' => $umbral,
+            'morosidad_avanzada' => $maxAtraso >= $umbral, 'umbral' => $umbral, 'ordenes_pendientes' => array_values(array_unique($enOrden)),
         ];
     }
 
@@ -149,27 +168,8 @@ class CobroService extends BaseService
                     'medio' => $medio['medio'], 'concepto' => "Cobro N.º {$numero} · operación {$medio['numero_operacion']}", 'cobro_id' => $cobroId, 'cobro_medio_id' => $medioId,
                 ]);
             }
-            $porCuota = [];
-            foreach ($r['imputaciones'] as $i) {
-                $this->db->table('imputaciones')->insert([
-                    'cobro_id' => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
-                ]);
-                $porCuota[$i['cuota']][] = $i;
-            }
-            $parcial = null;
-            foreach ($elegidas as $q) {
-                if (!isset($porCuota[(int) $q['id']])) {
-                    continue;
-                }
-                $s = CobroCuotas::saldosDespues($q, $porCuota[(int) $q['id']]);
-                $this->actualizarConVersion('cuotas', (int) $q['id'], (int) $q['version_fila'], $s['columnas'] + ($s['pagada'] ? ['estado' => 'Pagada'] : []));
-                if (!$s['pagada']) {
-                    $parcial = (int) $q['numero'];
-                }
-            }
-            foreach ($creditos as $c) {
-                $this->actualizarEstadoCredito($c);
-            }
+            $aplicado = $this->imputar($cobroId, $elegidas, $r['imputaciones'], array_values($creditos));
+            $parcial = $aplicado['parcial'];
 
             // Paso 11: comprobante (CU-35)
             $this->db->table('comprobantes_pago')->insert(['cobro_id' => $cobroId, 'fecha_emision' => $ahora, 'cantidad_reemisiones' => 0]);
@@ -181,6 +181,43 @@ class CobroService extends BaseService
 
             return ['cobro_id' => $cobroId, 'numero' => $numero, 'importe' => $importe->toFixed(2), 'canceladas' => count($r['canceladas']), 'parcial' => $parcial];
         });
+    }
+
+    /**
+     * RN-29: registra las imputaciones de un cobro, actualiza los saldos y el estado de las cuotas alcanzadas y el de
+     * sus créditos. Lo usan el cobro en ventanilla (CU-33) y el electrónico (CU-90). Las cuotas y los créditos deben
+     * estar bloqueados.
+     *
+     * @param list<array<string, mixed>> $cuotas filas de cuotas leídas en la transacción
+     * @param list<array{cuota: int|string, concepto: string, importe: Decimal, parcial: bool}> $imputaciones de Imputador::imputar()
+     * @param list<array<string, mixed>> $creditos filas de creditos bloqueadas
+     * @return array{parcial: ?int}
+     */
+    public function imputar(int $cobroId, array $cuotas, array $imputaciones, array $creditos): array
+    {
+        $porCuota = [];
+        foreach ($imputaciones as $i) {
+            $this->db->table('imputaciones')->insert([
+                'cobro_id' => $cobroId, 'cuota_id' => $i['cuota'], 'concepto' => $i['concepto'], 'importe' => $i['importe']->toFixed(2), 'parcial' => $i['parcial'] ? 1 : 0,
+            ]);
+            $porCuota[$i['cuota']][] = $i;
+        }
+        $parcial = null;
+        foreach ($cuotas as $q) {
+            if (!isset($porCuota[(int) $q['id']])) {
+                continue;
+            }
+            $s = CobroCuotas::saldosDespues($q, $porCuota[(int) $q['id']]);
+            $this->actualizarConVersion('cuotas', (int) $q['id'], (int) $q['version_fila'], $s['columnas'] + ($s['pagada'] ? ['estado' => 'Pagada'] : []));
+            if (!$s['pagada']) {
+                $parcial = (int) $q['numero'];
+            }
+        }
+        foreach ($creditos as $c) {
+            $this->actualizarEstadoCredito($c);
+        }
+
+        return ['parcial' => $parcial];
     }
 
     /**

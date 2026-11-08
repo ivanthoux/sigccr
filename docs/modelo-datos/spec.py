@@ -858,6 +858,7 @@ add('ordenes_pago_electronico', 'SS-05', 'OrdenPagoElectronico', 'Solicitudes de
     C('vence', TS, d='00:00 local del día siguiente a la emisión, límite exclusivo (3.5.1).'),
     C('referencia_externa', 'VARCHAR(100)', null=True, d='Identificador de la orden en la pasarela.'),
     C('medio_presentado', 'VARCHAR(30)', null=True, d='Portal o Ventanilla.'),
+    C('url_pago', 'NVARCHAR(500)', null=True, d='Enlace o código QR de pago que devolvió la pasarela (CU-34 A7).'),
     EN('estado', 'EstadoOrden', default="'PendienteConfirmacion'"),
     VF(),
 ], uq=[('UQ_ordenes_referencia', ['referencia_externa'], 'referencia_externa IS NOT NULL')],
