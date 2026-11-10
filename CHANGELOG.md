@@ -6,6 +6,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ### Corregido
 - Migración 19: `revocaciones.cobro_id` era INT y `cobros.id` es BIGINT, por lo que la clave foránea fallaba después de crear la tabla y la migración quedaba a medias («There is already an object named 'revocaciones'» al reintentar). Ahora es BIGINT y, si la tabla quedó vacía de un intento anterior, se recrea.
+- Migración 19 con la base vacía: la condición que recreaba la tabla consultaba `dbo.revocaciones` aunque no existiera («Invalid object name 'dbo.revocaciones'»), porque SQL Server no garantiza el cortocircuito de `AND`. La consulta pasa a SQL dinámico. Lo detectó la primera ejecución de las pruebas de punta a punta.
 - `verificar.py` controla que cada clave foránea tenga el tipo de la clave primaria que referencia, en la especificación y en las migraciones.
 
 ### Agregado (E07, D-38)

@@ -17,8 +17,10 @@ ALTER TABLE dbo.cobros DROP CONSTRAINT CK_cobros_tipo;
 ALTER TABLE dbo.cobros ADD CONSTRAINT CK_cobros_tipo CHECK (tipo IN ('Ordinario', 'CancelacionAnticipada', 'Revocacion'));
 GO
 
-IF OBJECT_ID('dbo.revocaciones', 'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.revocaciones)
-    DROP TABLE dbo.revocaciones;
+-- SQL Server no garantiza el cortocircuito de AND: la consulta va en SQL dinámico para que con la base vacía no se
+-- resuelva el nombre de una tabla que todavía no existe (error 208).
+IF OBJECT_ID('dbo.revocaciones', 'U') IS NOT NULL
+    EXEC ('IF NOT EXISTS (SELECT 1 FROM dbo.revocaciones) DROP TABLE dbo.revocaciones;');
 GO
 
 CREATE TABLE dbo.revocaciones (
