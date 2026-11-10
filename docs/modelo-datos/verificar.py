@@ -43,6 +43,19 @@ for m in re.finditer(r"sp_rename 'dbo\.(\w+)\.(\w+)', '(\w+)', 'COLUMN'", repo):
     cols[m.group(1)][cols[m.group(1)].index(m.group(2))] = m.group(3)
 
 errores = [f'falta en las migraciones: {o}' for o in sorted(esperado - real)]
+# Cada clave foránea debe tener el mismo tipo que la clave primaria que referencia (SQL Server rechaza la FK)
+sys.path.insert(0, AQUI)
+import spec  # noqa: E402
+tipo_pk = {t.name: next((c.typ for c in t.cols if c.pk), None) for t in spec.TABLES}
+for t in spec.TABLES:
+    for c in t.cols:
+        if c.fk and tipo_pk.get(c.fk) and c.typ != tipo_pk[c.fk]:
+            errores.append(f'{t.name}.{c.name}: es {c.typ} y {c.fk}.id es {tipo_pk[c.fk]}')
+for m in re.finditer(r'ALTER TABLE dbo\.(\w+) ADD CONSTRAINT \w+ FOREIGN KEY \((\w+)\) REFERENCES dbo\.(\w+) \(id\)', repo):
+    tabla, col, ref = m.groups()
+    tipo = re.search(rf'CREATE TABLE dbo\.{tabla} \(.*?\n    {col} (\w+)', repo, re.S) or re.search(rf'ALTER TABLE dbo\.{tabla} ADD {col} (\w+)', repo)
+    if tipo and tipo_pk.get(ref) and tipo.group(1) != tipo_pk[ref]:
+        errores.append(f'migraciones: {tabla}.{col} es {tipo.group(1)} y {ref}.id es {tipo_pk[ref]}')
 errores += [f'no está en la especificación: {o}' for o in sorted(real - esperado)]
 for t, c in tablas(generado).items():
     if set(c) != set(cols.get(t, [])):

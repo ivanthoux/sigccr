@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Corregido
+- Migración 19: `revocaciones.cobro_id` era INT y `cobros.id` es BIGINT, por lo que la clave foránea fallaba después de crear la tabla y la migración quedaba a medias («There is already an object named 'revocaciones'» al reintentar). Ahora es BIGINT y, si la tabla quedó vacía de un intento anterior, se recrea.
+- `verificar.py` controla que cada clave foránea tenga el tipo de la clave primaria que referencia, en la especificación y en las migraciones.
+
 ### Agregado (E07, D-38)
 - CU-97 Registrar Cancelación Anticipada de Crédito (Cajero): importe a hoy según RN-67 (cuotas vencidas actualizadas, capital y no capitalizable de las no vencidas, interés proporcional de la cuota en curso y su IVA), cobro por un medio bancario por el total, todas las cuotas pagadas y el crédito cancelado, comprobante con la reducción de lo no devengado.
 - CU-92 Proyectar Disponibilidad de Fondos (`php spark fondos:proyectar`, todos los días a las 06:00): ingresos esperados por cobrabilidad, egresos comprometidos y reserva mínima; alerta si es negativa. La última proyección se muestra en Fondos.

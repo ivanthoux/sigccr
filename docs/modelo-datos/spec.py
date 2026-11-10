@@ -1043,7 +1043,7 @@ add('revocaciones', 'SS-06', 'Revocacion', 'Ejercicio del derecho de revocación
     EN('estado', 'EstadoRevocacion', default="'PendienteRestitucion'"),
     C('fecha_registro', TS),
     FK('usuario_id', 'usuarios_internos'),
-    FK('cobro_id', 'cobros', null=True, d='Cobro de tipo Revocacion con la transferencia de restitución.'),
+    FK('cobro_id', 'cobros', null=True, big=True, d='Cobro de tipo Revocacion con la transferencia de restitución.'),
     C('fecha_confirmacion', TS, null=True),
     FK('usuario_confirmacion_id', 'usuarios_internos', null=True),
 ], ck=[('CK_revocaciones_plazo', 'fecha_comunicacion <= fecha_limite'),

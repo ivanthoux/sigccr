@@ -4,6 +4,9 @@
    - cobros.tipo admite Revocacion: la restitución del cliente entra como un cobro por transferencia, sin
      imputaciones a cuotas, para que integre la conciliación de la jornada (RN-32).
    - revocaciones: comunicación, importe a restituir y confirmación.
+   Corrección: revocaciones.cobro_id es BIGINT, como cobros.id. La primera versión lo declaraba INT y la clave
+   foránea fallaba después de crear la tabla, de modo que la migración quedaba a medias. Si la tabla quedó creada por
+   ese intento (sin filas, porque la migración nunca se registró), se elimina antes de crearla de nuevo.
    ========================================================================== */
 
 ALTER TABLE dbo.creditos DROP CONSTRAINT CK_creditos_estado;
@@ -12,6 +15,10 @@ ALTER TABLE dbo.cuotas DROP CONSTRAINT CK_cuotas_estado;
 ALTER TABLE dbo.cuotas ADD CONSTRAINT CK_cuotas_estado CHECK (estado IN ('Pendiente', 'Vencida', 'Pagada', 'Sustituida', 'SinEfecto'));
 ALTER TABLE dbo.cobros DROP CONSTRAINT CK_cobros_tipo;
 ALTER TABLE dbo.cobros ADD CONSTRAINT CK_cobros_tipo CHECK (tipo IN ('Ordinario', 'CancelacionAnticipada', 'Revocacion'));
+GO
+
+IF OBJECT_ID('dbo.revocaciones', 'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.revocaciones)
+    DROP TABLE dbo.revocaciones;
 GO
 
 CREATE TABLE dbo.revocaciones (
@@ -30,7 +37,7 @@ CREATE TABLE dbo.revocaciones (
     estado VARCHAR(25) NOT NULL CONSTRAINT DF_revocaciones_estado DEFAULT ('PendienteRestitucion'),
     fecha_registro DATETIMEOFFSET(3) NOT NULL,
     usuario_id INT NOT NULL,
-    cobro_id INT NULL,
+    cobro_id BIGINT NULL,
     fecha_confirmacion DATETIMEOFFSET(3) NULL,
     usuario_confirmacion_id INT NULL,
     CONSTRAINT PK_revocaciones PRIMARY KEY (id),
