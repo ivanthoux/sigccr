@@ -12,7 +12,8 @@ dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml 
 
 [[ -f .env ]] || cp env.sigccr.example .env
 [[ -f .env.docker ]] || cp .env.docker.example .env.docker
-[[ -f docker/nginx/certs/sigccr.crt ]] || sh docker/nginx/generar-certificado.sh
+mkdir -p docker/nginx/certs
+[[ -f docker/nginx/certs/sigccr.crt ]] || sh docker/nginx/generar-certificado.sh || exit 1
 
 echo "== Pila de pruebas desde cero"
 dc --profile pruebas down -v --remove-orphans >/dev/null 2>&1 || true
