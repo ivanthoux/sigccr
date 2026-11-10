@@ -7,8 +7,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ### Cambiado (D-40)
 - CU-04: «Activar o rehabilitar acceso» acepta el correo registrado aunque no esté verificado; usar el enlace lo verifica. Antes, un cliente que no abrió el enlace del alta, o que lo perdió al ser desactivado y reactivado, no podía activar el portal.
 
-### Agregado (D-39)
-- Registro de la decisión sobre las pruebas de punta a punta automatizadas.
+### Agregado (pruebas de punta a punta, D-39)
+- Batería de pruebas de punta a punta con Playwright (`tests/e2e/`): pila aislada con SQL Server vacío, migraciones y semillas desde cero, ejecución con un comando (`bash tests/e2e/ejecutar.sh`) e informe HTML con capturas. Cada prueba lleva el identificador del caso de la prueba funcional integral; esta entrega cubre R-001 a R-014 (acceso y usuarios internos).
+- Flujo de integración continua `E2E`, que ejecuta la batería en cada *pull request* y publica el informe.
+- `AdministradorInicialSeeder` acepta los datos por las variables `SIGCCR_ADMIN_*` para una instalación sin consola.
 
 ### Corregido
 - El cierre de sesión (panel y portal) y el fin de la sesión por inactividad o por cambio de credenciales no mostraban su mensaje («La sesión se cerró correctamente.», «La sesión finalizó por inactividad.»): se agregaba a una sesión ya destruida. `finalizar_sesion()` borra los datos y cambia el identificador sin perder el mensaje.

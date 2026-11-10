@@ -12,6 +12,8 @@ use CodeIgniter\I18n\Time;
  * Crea el primer Administrador (RN-05) durante la instalación. Solicita los datos por consola; la contraseña debe
  * tener entre 15 y 128 caracteres (RN-62) y se guarda con Argon2id.
  *   php spark db:seed AdministradorInicialSeeder -g migraciones
+ * Sin consola (instalación automatizada y pruebas de punta a punta), toma los datos de las variables de entorno
+ * SIGCCR_ADMIN_CORREO, SIGCCR_ADMIN_NOMBRE, SIGCCR_ADMIN_APELLIDO, SIGCCR_ADMIN_DNI y SIGCCR_ADMIN_CLAVE.
  */
 class AdministradorInicialSeeder extends Seeder
 {
@@ -19,6 +21,12 @@ class AdministradorInicialSeeder extends Seeder
     {
         if ($this->db->table('usuarios_internos u')->join('roles r', 'r.id = u.rol_id')->where('r.codigo', 'Administrador')->countAllResults() > 0) {
             CLI::write('Ya existe un Administrador; no se crea otro.', 'yellow');
+
+            return;
+        }
+        $desatendido = $this->datosDeEntorno();
+        if ($desatendido !== null) {
+            $this->crear(...$desatendido);
 
             return;
         }
@@ -40,7 +48,31 @@ class AdministradorInicialSeeder extends Seeder
             }
             break;
         }
+        $this->crear($correo, $nombre, $apellido, $documento, $clave);
+    }
 
+    /**
+     * Datos de las variables de entorno, validados igual que por consola; null si no se definió el correo.
+     *
+     * @return array{0: string, 1: string, 2: string, 3: string, 4: string}|null
+     */
+    private function datosDeEntorno(): ?array
+    {
+        $correo = (string) getenv('SIGCCR_ADMIN_CORREO');
+        if ($correo === '') {
+            return null;
+        }
+        $datos = [$correo, (string) getenv('SIGCCR_ADMIN_NOMBRE'), (string) getenv('SIGCCR_ADMIN_APELLIDO'), (string) getenv('SIGCCR_ADMIN_DNI'), (string) getenv('SIGCCR_ADMIN_CLAVE')];
+        $largo = mb_strlen($datos[4]);
+        if (filter_var($correo, FILTER_VALIDATE_EMAIL) === false || $datos[1] === '' || $datos[2] === '' || !ctype_digit($datos[3]) || $largo < 15 || $largo > 128) {
+            throw new \RuntimeException('Datos del Administrador incompletos o inválidos en las variables SIGCCR_ADMIN_* (contraseña de 15 a 128 caracteres, RN-62).');
+        }
+
+        return $datos;
+    }
+
+    private function crear(string $correo, string $nombre, string $apellido, string $documento, string $clave): void
+    {
         $ahora = Time::now('UTC')->format('Y-m-d H:i:s.vP');
         $rolId = (int) $this->db->table('roles')->select('id')->where('codigo', 'Administrador')->get()->getRowArray()['id'];
         $this->db->transException(true)->transStart();
