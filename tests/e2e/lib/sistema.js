@@ -18,6 +18,14 @@ function spark(...args) {
   return enApp('php', 'spark', ...args);
 }
 
+/** Decodifica las entidades HTML con que esc(…, 'attr') escribe el enlace (&#x3A; por «:», &amp; por «&»). */
+function decodificar(texto) {
+  return texto
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
 /**
  * Último correo simulado enviado a un destinatario. Antes procesa la cola (CU-95), como haría el Temporizador.
  * @returns {{ asunto: string, html: string, enlace: string|null }|null}
@@ -29,7 +37,7 @@ function ultimoCorreo(destino, { enviar = true } = {}) {
   const html = enApp('cat', archivo);
   const asunto = (html.match(/Asunto: (.*?) -->/) || [])[1] || '';
   const enlace = (html.match(/<a href="([^"]+)"/) || [])[1] || null;
-  return { asunto, html, enlace: enlace && enlace.replace(/&amp;/g, '&') };
+  return { asunto, html, enlace: enlace && decodificar(enlace) };
 }
 
 /** Cantidad de correos simulados enviados a un destinatario. */
