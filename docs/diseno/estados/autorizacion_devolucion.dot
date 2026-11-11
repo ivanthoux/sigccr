@@ -1,0 +1,17 @@
+digraph autorizacion { rankdir=TB; graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+f1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f3 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f4 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+ini -> PendienteEjecucion [label="autorización (CU-77)\n/ reserva el importe"];
+PendienteEjecucion -> EnEjecucion [label="inicio de la ejecución por\nla pasarela (CU-78)"];
+PendienteEjecucion -> Completada [label="transferencia registrada con su\ncomprobante (CU-78 A1)\n/ consume la reserva"];
+PendienteEjecucion -> Vencida [label="72 horas sin iniciar\n(CU-89) / libera la reserva"];
+PendienteEjecucion -> Anulada [label="anulación (CU-77)\n/ libera la reserva"];
+EnEjecucion -> Completada [label="confirmación verificable\n(CU-78) / consume la reserva"];
+EnEjecucion -> EnConciliacion [label="sin respuesta o estado\nno definitivo (CU-78)"];
+EnEjecucion -> Fallida [label="rechazo confirmado (CU-78)\n/ libera la reserva y alerta"];
+EnConciliacion -> Completada [label="conciliación confirma\nla devolución (CU-91)"];
+EnConciliacion -> Fallida [label="conciliación confirma\nel fallo (CU-91)"];
+Completada -> f1; Fallida -> f2; Vencida -> f3; Anulada -> f4;
+}
