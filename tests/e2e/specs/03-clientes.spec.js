@@ -111,7 +111,7 @@ test('R-023 Localizar clientes', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const filas = page.locator('main table tbody tr');
   await page.goto('/admin/clientes');
-  await expect(page.locator('main table')).toHaveCount(0);
+  await expect(page.locator('main')).toContainText('Clientes registrados más recientemente.');
   await page.goto('/admin/clientes?texto=Góm');
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText('Gómez');

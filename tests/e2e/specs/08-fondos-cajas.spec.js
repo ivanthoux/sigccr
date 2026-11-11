@@ -1,4 +1,5 @@
 // Parte 2, sección 8. Fondos y cajas (CU-85, CU-80, CU-72, CU-31 y CU-81): R-046 a R-052.
+// Las cajas las registra, asigna e inhabilita el Gerente (matriz de permisos 3.6.2).
 const { test, expect } = require('../lib/fixtures');
 const { usuarios, fecha, ddmmaaaa } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
@@ -73,7 +74,7 @@ test('R-048 Corrección de un movimiento', async ({ comoUsuario }) => {
 });
 
 test('R-049 Registrar cajas', async ({ comoUsuario }) => {
-  const page = await comoUsuario('admin');
+  const page = await comoUsuario('gerente');
   const registrar = async (codigo, denominacion, ubicacion) => {
     await page.goto('/admin/cajas');
     await page.locator('#codigo').fill(codigo);
@@ -101,7 +102,7 @@ async function asignar(page, caja, cajero) {
 }
 
 test('R-050 Asignar las cajas', async ({ comoUsuario }) => {
-  const page = await comoUsuario('admin');
+  const page = await comoUsuario('gerente');
   await asignar(page, 'CAJA-01', usuarios.cajero);
   await expect(exito(page)).toContainText('Caja asignada');
   // Con la asignación vigente, CAJA-01 ya no ofrece asignarla a otro Cajero (A1: finalizar la vigente primero)
@@ -120,7 +121,7 @@ test('R-051 Apertura sin efectivo (D-30)', async ({ comoUsuario }) => {
 });
 
 test('R-052 Inhabilitar y rehabilitar cajas', async ({ comoUsuario }) => {
-  const page = await comoUsuario('admin');
+  const page = await comoUsuario('gerente');
   page.on('dialog', (d) => d.accept());
   const cambiarEstado = async (caja, motivo) => {
     const id = await idCaja(caja);
