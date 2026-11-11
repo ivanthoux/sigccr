@@ -198,7 +198,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 | R-073 | Aprobación automática | Confirmar la alternativa pedida con la fecha de hoy y «Presencial, con firma del cliente». | «Alternativa confirmada y solicitud aprobada automáticamente. La aprobación vence el …»; el vencimiento salta feriados y fines de semana (RN-49); Fondos muestra la reserva. | |
 | R-074 | Confirmación simultánea | En otra solicitud, abrir la misma alternativa en dos pestañas y confirmar en ambas. | La segunda informa que la solicitud cambió; hay una sola reserva. | |
 | R-075 | Bandeja del Gerente | Como Gerente, abrir Resolver solicitudes. | Las de Federico, Inés y Lucía, con evaluación, capacidad de pago y fondos disponibles. | |
-| R-076 | Validaciones de la resolución | Enviar sin decisión; «Devolver» sin etapa; «Aprobar» sin plan. | Cada error junto a su campo. | |
+| R-076 | Validaciones de la resolución | Enviar sin decisión; «Devolver» sin etapa; «Aprobar» borrando el importe y las cuotas propuestos. | Cada error junto a su campo. | |
 | R-077 | Aprobar con plan del Gerente | Aprobar a Federico con el plan de A.9 y fundamento. | «Solicitud aprobada: …», con la reserva del neto. | |
 | R-078 | Tope global | Fijar el tope global de A.6, aprobar a Inés con un plan de $ 600.000; luego quitar el tope y aprobarla con $ 400.000. | «El importe supera el tope global por cliente…»; sin tope se aprueba. | |
 | R-079 | Devolver y rechazar | Devolver la de Lucía a «Verificación» con el fundamento de A.9; como Analista, corregirla con una aclaración y verificarla; cuando vuelva a la bandeja, rechazarla con fundamento. | «Solicitud devuelta para revisión…»; con la corrección vuelve a Pendiente de verificación; al final, «Solicitud rechazada…». | |
@@ -213,7 +213,7 @@ En esta sección se liquidan los cinco créditos de la iteración 3. Para cada c
 | R-081 | Liquidar sin constancia | Como Paula, en Liquidar créditos, intentar liquidar la de Ana. | «Falta la constancia firmada del contrato de préstamo en el legajo…» | |
 | R-082 | Incorporar la constancia | Como Analista, adjuntar `contrato_firmado_prueba.pdf` con la fecha de recepción de hoy. | «Constancia firmada incorporada al legajo: la solicitud ya puede liquidarse (CU-27)…» | |
 | R-083 | Validaciones del desembolso | Liquidar la de Ana con el DNI de Bruno, el CBU inválido, el CVU, sin evidencia, sin número de operación, con fecha futura y con otro importe. | Cada error junto a su campo («El documento no coincide…», «Ingrese un CBU válido de 22 dígitos.», «Es un CVU de una billetera virtual…», «El importe transferido debe ser el neto a desembolsar.»). | |
-| R-084 | Liquidar | Liquidar con los datos de A.10 (CBU de Ana). | «Crédito liquidado: se desembolsaron …»; constancia imprimible; la reserva se consume. Repetir la liquidación: «La solicitud ya fue liquidada el …» | |
+| R-084 | Liquidar | Liquidar con los datos de A.10 (CBU de Ana). | «Crédito liquidado: se desembolsaron …»; constancia imprimible; la reserva se consume. Al volver a abrir la liquidación se muestra la constancia, sin opción de liquidar otra vez | |
 | R-085 | Plan del Gerente | Liquidar la de Federico sin marcar la conformidad y luego marcándola. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).»; luego liquida. | |
 | R-086 | Créditos de la iteración 3 | Liquidar los de Bruno, Carla, Diego y Julián con A.10 (cada uno con su contrato). | Quedan los créditos A (Ana), B (Bruno), C (Carla), D (Diego) y E (Julián). Anotar sus números en A.10. | |
 | R-087 | Cancelar una solicitud | Confirmar la alternativa de Elena (queda aprobada) y cancelarla con el motivo de A.9 (pide confirmación adicional); intentar cancelar la de Ana. | Se cancela y libera la reserva; la de Ana: «La solicitud ya finalizó: no se puede cancelar.» | |
@@ -483,7 +483,7 @@ CBU inválido: `2850590909400904181357`. CVU: `0000003110000123456781`.
 
 | Caso | Medio | N.º de operación | Importe |
 |---|---|---|---|
-| R-094 (repetido) | Transferencia y tarjeta | `TRF-1001` en los dos | — |
+| R-094 (repetido) | Dos transferencias | `TRF-1001` en las dos | — |
 | R-095 | Transferencia | `TRF-1001` | total de la cuota 1 |
 | R-096 | Tarjeta de débito + transferencia | `DEB-2001` y `TRF-1002` | 12.000 + 8.000 |
 | R-100 | Tarjeta de crédito | `CRE-3001` | total de la cuota 1 |

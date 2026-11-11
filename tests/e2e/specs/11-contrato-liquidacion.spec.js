@@ -61,8 +61,10 @@ test('R-084 Liquidar el crédito A', async ({ comoUsuario }) => {
   await f.liquidar(page, id, ana, desembolsos.C01);
   await expect(exito(page)).toContainText('Crédito liquidado: se desembolsaron');
   expect(await f.estadoSolicitud(id)).toBe('Liquidada');
+  // Volver a abrir la liquidación muestra la constancia: no se puede liquidar dos veces
   await page.goto(`/admin/liquidaciones/${id}`);
-  await expect(page.locator('body')).toContainText('ya fue liquidada');
+  await expect(page.locator('main')).toContainText('Constancia de desembolso');
+  await expect(page.getByRole('button', { name: 'Registrar el desembolso' })).toHaveCount(0);
 });
 
 test('R-085 Plan del Gerente sin la conformidad del cliente (RN-22)', async ({ comoUsuario }) => {

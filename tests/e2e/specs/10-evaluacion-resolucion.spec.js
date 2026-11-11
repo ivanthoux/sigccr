@@ -179,8 +179,9 @@ test('R-076 Validaciones de la resolución', async ({ comoUsuario }) => {
   await expect(page.locator('#error-decision')).toBeVisible();
   await resolver(page, id, { decision: 'DevueltaRevision' });
   await expect(page.locator('#error-etapa_retorno')).toBeVisible();
-  await resolver(page, id, { decision: 'Aprobada' });
-  await expect(page.locator('#error-plan, #error-alternativa_id').first()).toBeVisible();
+  // La pantalla propone el importe y las cuotas pedidos: «sin plan» es borrarlos
+  await resolver(page, id, { decision: 'Aprobada', plan: 'definida', importe: '', cuotas: '' });
+  await expect(page.locator('#error-importe, #error-cantidad_cuotas, #error-plan').first()).toBeVisible();
   expect(await f.estadoSolicitud(id)).toBe('PendienteResolucion');
 });
 

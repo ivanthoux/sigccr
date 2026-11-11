@@ -37,7 +37,7 @@ test('R-094 Selección y medios inválidos (RN-29, RN-77)', async ({ comoUsuario
     [[1], { importe: '99999999', medios: [{ medio: 'Transferencia', importe: '99999999', operacion: 'TRF-1001' }] }, 'no puede superar'],
     [[1], { importe: '0', medios: [{ medio: 'Transferencia', importe: '0', operacion: 'TRF-1001' }] }, 'mayor que cero'],
     [[1], { importe: '1000', medios: [{ medio: 'Transferencia', importe: '1000', operacion: '' }] }, 'número de operación'],
-    [[1], { importe: '1000', medios: [{ medio: 'Transferencia', importe: '500', operacion: 'TRF-1001' }, { medio: 'TarjetaDebito', importe: '500', operacion: 'TRF-1001' }] }, 'TRF-1001'],
+    [[1], { importe: '1000', medios: [{ medio: 'Transferencia', importe: '500', operacion: 'TRF-1001' }, { medio: 'Transferencia', importe: '500', operacion: 'TRF-1001' }] }, 'repetido'],
     [[1], { importe: '1000', medios: [{ medio: 'Transferencia', importe: '600', operacion: 'TRF-1001' }] }, 'importe'],
   ];
   for (const [cuotas, datos, texto] of casos) {
