@@ -48,8 +48,9 @@ test.afterAll(cerrarBase);
 test('R-064 Evaluación favorable', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   await page.goto(`/admin/solicitudes/${await solicitudDe(ana)}/evaluacion`);
-  await expect(page.locator('main')).toContainText('Favorable');
-  await expect(page.locator('main')).toContainText('30');
+  await expect(page.locator('main')).toContainText('ResultadoFavorable');
+  await expect(page.locator('main')).toContainText('VigenciaVigente');
+  await expect(page.locator('main')).toContainText('puntos de 100');
 });
 
 test('R-065 Situación 1 en la Central de Deudores', async ({ comoUsuario }) => {

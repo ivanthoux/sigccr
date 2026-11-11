@@ -109,8 +109,8 @@ test('R-062 Verificar y evaluar', async ({ comoUsuario }) => {
 test('R-063 Rechazo documental (RN-19)', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const id = await f.registrarSolicitud(page, await f.simular(page, gabriela, 'MOTOS', 500000, 12));
-  await f.verificar(page, id, { resultado: 'Rechazada', documentos: { Recibos: { resultado: 'Rechazado' } } });
+  await f.verificar(page, id, { resultado: 'Rechazada', documentos: { Recibos: { resultado: 'Rechazado', motivo: 'NoCorresponde' } } });
   await expect(page.locator('#error-motivo_rechazo')).toBeVisible();
-  await f.verificar(page, id, { resultado: 'Rechazada', documentos: { Recibos: { resultado: 'Rechazado' } }, motivoRechazo: 'La documentación presentada no corresponde al titular de la solicitud' });
+  await f.verificar(page, id, { resultado: 'Rechazada', documentos: { Recibos: { resultado: 'Rechazado', motivo: 'NoCorresponde' } }, motivoRechazo: 'La documentación presentada no corresponde al titular de la solicitud' });
   expect(await f.estadoSolicitud(id)).toBe('Rechazada');
 });
