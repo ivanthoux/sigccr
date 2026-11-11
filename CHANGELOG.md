@@ -4,6 +4,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Cambiado (D-40)
+- CU-04: «Activar o rehabilitar acceso» acepta el correo registrado aunque no esté verificado; usar el enlace lo verifica. Antes, un cliente que no abrió el enlace del alta, o que lo perdió al ser desactivado y reactivado, no podía activar el portal.
+
+### Agregado (D-39)
+- Registro de la decisión sobre las pruebas de punta a punta automatizadas.
+
 ### Corregido
 - El cierre de sesión (panel y portal) y el fin de la sesión por inactividad o por cambio de credenciales no mostraban su mensaje («La sesión se cerró correctamente.», «La sesión finalizó por inactividad.»): se agregaba a una sesión ya destruida. `finalizar_sesion()` borra los datos y cambia el identificador sin perder el mensaje.
 - Migración 24: el rol de la aplicación no tenía permiso DELETE en `documentacion_sugerida` (CU-100 fallaba al guardar la documentación propuesta), `ordenes_pago_cuotas`, `ordenes_pago_electronico` (CU-34 sin respuesta de la pasarela) y `tramos_punitorios` (CU-90 con fecha efectiva anterior). `verificar.py` controla ahora que cada tabla que el código borra tenga el permiso.

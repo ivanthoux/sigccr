@@ -27,7 +27,14 @@ final class ReglasActivacionTest extends TestCase
         $this->assertSame(R::RESULTADO_NO_VERIFICADO, R::evaluar(null, 'ana@correo.com')['resultado']);
         $this->assertSame(R::RESULTADO_NO_VERIFICADO, R::evaluar($this->cliente(['estado_cliente' => 'Desactivado', 'estado_cuenta' => 'Desactivada']), 'ana@correo.com')['resultado']);
         $this->assertSame(R::RESULTADO_NO_VERIFICADO, R::evaluar($this->cliente(), 'otra@correo.com')['resultado']);
-        $this->assertSame(R::RESULTADO_NO_VERIFICADO, R::evaluar($this->cliente(['correo_verificado' => false]), 'ana@correo.com')['resultado']);
+    }
+
+    public function testD40ElCorreoNoNecesitaEstarVerificado(): void
+    {
+        // El enlace va al correo registrado; usarlo lo verifica (D-40)
+        $this->assertSame('Activacion', R::evaluar($this->cliente(['correo_verificado' => false]), 'ana@correo.com')['proposito']);
+        $this->assertSame('Rehabilitacion', R::evaluar($this->cliente(['correo_verificado' => false, 'estado_cuenta' => 'Desactivada']), 'ana@correo.com')['proposito']);
+        $this->assertSame(R::RESULTADO_NO_VERIFICADO, R::evaluar($this->cliente(['correo_verificado' => false]), 'otra@correo.com')['resultado']);
     }
 
     public function testA2CuentaHabilitadaOBloqueadaNoRecibeElEnlace(): void
