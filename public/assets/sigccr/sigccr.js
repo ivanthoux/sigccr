@@ -81,7 +81,14 @@
                 aria: { orderable: 'Ordenar por esta columna', orderableReverse: 'Invertir el orden' },
             },
         });
-        document.querySelectorAll('table[data-tabla]').forEach((t) => new window.DataTable(t));
+        document.querySelectorAll('table[data-tabla]').forEach((t) => {
+            new window.DataTable(t);
+            // En pantallas angostas la tabla se desplaza dentro de su recuadro, sin ensanchar la página (360 px)
+            const marco = document.createElement('div');
+            marco.className = 'table-responsive';
+            t.parentNode.insertBefore(marco, t);
+            marco.appendChild(t);
+        });
 
         // Plan de cuotas (D-23): de a 12 cuotas por página, sin búsqueda ni orden; al imprimir se muestran todas
         document.querySelectorAll('table[data-plan-cuotas]').forEach((t) => {
