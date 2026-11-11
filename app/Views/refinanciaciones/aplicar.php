@@ -39,7 +39,7 @@ echo view('refinanciaciones/_resumen', ['p' => $p, 'accion' => 'Aplicar']);
         <div class="row g-3">
             <div class="col-md-3">
                 <label for="fecha_constancia" class="form-label">Fecha</label>
-                <input type="date" class="form-control<?= campo_invalido('fecha_constancia') ?>" id="fecha_constancia" name="fecha_constancia" value="<?= esc((string) (old('fecha_constancia') ?? date('Y-m-d')), 'attr') ?>">
+                <input type="date" class="form-control<?= campo_invalido('fecha_constancia') ?>" id="fecha_constancia" name="fecha_constancia" value="<?= esc((string) (old('fecha_constancia') ?? hoy_negocio()), 'attr') ?>">
                 <?= error_campo('fecha_constancia') ?>
             </div>
             <div class="col-md-4">

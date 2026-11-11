@@ -53,7 +53,7 @@ class Revocaciones extends BaseController
         }
 
         return view('revocaciones/credito', [
-            'titulo' => 'Revocación del crédito N.º ' . $c['numero'], 'c' => $c, 'hoy' => date('Y-m-d'),
+            'titulo' => 'Revocación del crédito N.º ' . $c['numero'], 'c' => $c, 'hoy' => hoy_negocio(),
             'jornada' => (new CajaService())->jornadaOperable((int) session('cuenta')['id']),
         ]);
     }

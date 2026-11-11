@@ -10,7 +10,7 @@
  */
 use App\Libraries\Caja\ReglasCaja;
 
-$hoy = date('Y-m-d');
+$hoy = hoy_negocio();
 $sel = (int) session('movimiento');
 $this->extend('layouts/panel');
 $this->section('contenido');

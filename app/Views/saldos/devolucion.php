@@ -57,7 +57,7 @@ $this->section('contenido');
             <p>Realice la transferencia desde el canal bancario de la entidad y registre su comprobante (A1).</p>
             <div class="row g-3">
                 <div class="col-md-3"><label class="form-label" for="numero_operacion">N.º de operación</label><input type="text" maxlength="100" class="form-control<?= campo_invalido('numero_operacion') ?>" id="numero_operacion" name="numero_operacion" value="<?= esc((string) old('numero_operacion'), 'attr') ?>"><?= error_campo('numero_operacion') ?></div>
-                <div class="col-md-3"><label class="form-label" for="fecha">Fecha</label><input type="date" class="form-control<?= campo_invalido('fecha') ?>" id="fecha" name="fecha" value="<?= esc((string) (old('fecha') ?? date('Y-m-d')), 'attr') ?>"><?= error_campo('fecha') ?></div>
+                <div class="col-md-3"><label class="form-label" for="fecha">Fecha</label><input type="date" class="form-control<?= campo_invalido('fecha') ?>" id="fecha" name="fecha" value="<?= esc((string) (old('fecha') ?? hoy_negocio()), 'attr') ?>"><?= error_campo('fecha') ?></div>
                 <div class="col-md-2"><label class="form-label" for="importe">Importe</label><input type="text" inputmode="decimal" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" value="<?= esc((string) old('importe'), 'attr') ?>"><?= error_campo('importe') ?></div>
                 <div class="col-md-4"><label class="form-label" for="cbu">CBU destino</label><input type="text" inputmode="numeric" maxlength="22" class="form-control<?= campo_invalido('cbu') ?>" id="cbu" name="cbu" value="<?= esc((string) old('cbu'), 'attr') ?>"><?= error_campo('cbu') ?></div>
             </div>

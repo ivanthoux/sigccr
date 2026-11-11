@@ -8,7 +8,7 @@
  */
 use App\Libraries\Clientes\CategoriasMonotributo;
 
-$hoy = date('Y-m-d');
+$hoy = hoy_negocio();
 $importe = static fn (string $v): string => str_replace('$ ', '', formato_importe($v));
 $this->extend('layouts/panel');
 $this->section('contenido');

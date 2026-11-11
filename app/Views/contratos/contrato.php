@@ -47,7 +47,7 @@ $this->section('contenido');
             </div>
             <div class="col-md-3">
                 <label for="fecha_recepcion" class="form-label">Recepción del contrato</label>
-                <input type="date" class="form-control<?= campo_invalido('fecha_recepcion') ?>" id="fecha_recepcion" name="fecha_recepcion" value="<?= esc((string) (old('fecha_recepcion') ?? date('Y-m-d')), 'attr') ?>" required>
+                <input type="date" class="form-control<?= campo_invalido('fecha_recepcion') ?>" id="fecha_recepcion" name="fecha_recepcion" value="<?= esc((string) (old('fecha_recepcion') ?? hoy_negocio()), 'attr') ?>" required>
                 <?= error_campo('fecha_recepcion') ?>
             </div>
             <div class="col-md-3 text-end"><button type="submit" class="btn btn-primary"><?= $k['documento_legajo_id'] !== null ? 'Reemplazar la constancia' : 'Incorporar al legajo' ?></button></div>

@@ -184,7 +184,7 @@ $this->section('contenido');
         <fieldset class="hoja p-4 mb-3">
             <legend class="h5">Nueva versión</legend>
             <div class="row g-3">
-                <?= $campo('fecha_vigencia', 'Rige desde', '<input type="date" class="form-control' . campo_invalido('fecha_vigencia') . '" id="fecha_vigencia" name="fecha_vigencia" min="' . date('Y-m-d') . '" value="' . esc((string) old('fecha_vigencia', date('Y-m-d')), 'attr') . '" required>', 'Hoy o una fecha futura: no se admite retroactividad.', 'col-md-4') ?>
+                <?= $campo('fecha_vigencia', 'Rige desde', '<input type="date" class="form-control' . campo_invalido('fecha_vigencia') . '" id="fecha_vigencia" name="fecha_vigencia" min="' . hoy_negocio() . '" value="' . esc((string) old('fecha_vigencia', hoy_negocio()), 'attr') . '" required>', 'Hoy o una fecha futura: no se admite retroactividad.', 'col-md-4') ?>
                 <div class="col-md-8">
                     <label for="motivo" class="form-label">Motivo del cambio</label>
                     <textarea class="form-control<?= campo_invalido('motivo') ?>" id="motivo" name="motivo" rows="2" required minlength="5" maxlength="1000"><?= esc((string) old('motivo')) ?></textarea>
