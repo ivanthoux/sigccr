@@ -150,7 +150,9 @@ class CancelacionAnticipadaService extends BaseService
         if ($cuotas === []) {
             throw new ReglaNegocioException('El crédito no tiene cuotas pendientes (A2).');
         }
-        $entrada = array_map(static fn ($q) => ['id' => (int) $q['id'], 'numero' => (int) $q['numero'], 'vencimiento' => new DateTimeImmutable((string) $q['vencimiento']), 'conceptos' => CobroCuotas::conceptos($q)], $cuotas);
+        $entrada = array_map(static fn ($q) => [
+            'id' => (int) $q['id'], 'numero' => (int) $q['numero'], 'vencimiento' => new DateTimeImmutable((string) $q['vencimiento']), 'conceptos' => CobroCuotas::conceptos($q),
+            'nominal' => ['InteresOrdinario' => Decimal::of((string) $q['interes']), 'IVA' => Decimal::of((string) $q['iva'])]], $cuotas);
         $fechaBase = new DateTimeImmutable(Time::parse((string) $c['fecha_liquidacion'])->setTimezone(config('Sigccr')->zonaNegocio)->format('Y-m-d'));
         $iva = Decimal::of((string) (new ParametroService($this->db))->vigente('Estructuracion')['valores']['alicuota_iva']);
         $pago = new DateTimeImmutable($hoy);

@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Corregido (revisión previa al Control 3)
+- CU-97: la cancelación anticipada cobraba de más cuando la cuota en curso tenía un pago parcial previo (D-12), porque el interés proporcional se calculaba sobre el interés pendiente y no sobre el original menos lo ya pagado. Con un interés de $ 10.000, $ 6.000 ya pagados y 15 días transcurridos cobraba $ 2.000 más IVA; ahora no cobra interés, porque lo devengado ($ 5.000) ya está cubierto. El IVA del interés devengado descuenta el IVA ya pagado de la cuota (RN-67, D-38).
+- Registro de decisiones: la tabla de estados no listaba D-35 a D-38.
+
 ### Corregido (prueba integral)
 - Listados con DataTables (clientes, solicitudes, usuarios, líneas, alertas, resoluciones y contingencias): en una pantalla de 360 px la tabla ensanchaba la página; ahora se desplaza dentro de su recuadro (R-145).
 - Alternativas de financiación: la pantalla las ordenaba solo por importe, así que la combinación pedida no aparecía primero como establece D-19 (R-071).
