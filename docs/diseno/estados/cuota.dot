@@ -1,0 +1,27 @@
+digraph cuota { rankdir=TB; compound=true; graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+dec [shape=diamond, style=filled, fillcolor=white, color=black, width=0.35, height=0.35, fixedsize=true, label=""];
+f1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+subgraph cluster_v { label="Vencida"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ iv [shape=circle, style=filled, fillcolor=black, color=black, width=0.18, height=0.18, fixedsize=true, label=""];
+ EnTolerancia; ConPunitorios;
+ iv -> EnTolerancia;
+ EnTolerancia -> ConPunitorios [label="días de atraso superan\nla tolerancia (RN-53)"];
+}
+ini -> Pendiente [label="crédito liquidado (CU-27) o\nrefinanciación aplicada (CU-74)"];
+Pendiente -> Pendiente [label="pago parcial: conserva\nsu saldo (RN-29)"];
+Pendiente -> EnTolerancia [lhead=cluster_v, label="00:00 del día siguiente al\nvencimiento con importe pendiente (CU-88)"];
+ConPunitorios -> ConPunitorios [label="pago parcial: conserva su\nsaldo y su mora (RN-29)"];
+Pendiente -> Pagada [label="cobro del saldo de la cuota\n(CU-33, CU-76, CU-90, CU-97)"];
+ConPunitorios -> Pagada [ltail=cluster_v, label="cobro del total actualizado\n(CU-33, CU-76, CU-90, CU-97)"];
+Pagada -> dec [label="anulación del\ncobro (CU-37)"];
+dec -> Pendiente [label="[vencimiento no\nalcanzado]"];
+dec -> EnTolerancia [lhead=cluster_v, label="[vencimiento\nsuperado]"];
+Pendiente -> Sustituida [label="refinanciación\naplicada (CU-74)"];
+ConPunitorios -> Sustituida [ltail=cluster_v, label="refinanciación\naplicada (CU-74)"];
+Pendiente -> SinEfecto [label="revocación\nconfirmada (CU-102)"];
+ConPunitorios -> SinEfecto [ltail=cluster_v, label="revocación\nconfirmada (CU-102)"];
+Sustituida -> f1; SinEfecto -> f2;
+}
