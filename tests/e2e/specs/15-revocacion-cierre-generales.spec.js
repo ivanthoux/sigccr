@@ -6,7 +6,7 @@ const { consulta, valor, spark, cerrarBase } = require('../lib/sistema');
 const k = require('../lib/cartera');
 
 const { C04: diego, C06: federico, C10: julian } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const aImporte = (texto) => Number(texto.replace(/[^\d,-]/g, '').replace(',', '.'));
 const formato = (n) => n.toFixed(2).replace('.', ',');
 

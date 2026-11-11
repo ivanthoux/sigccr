@@ -6,7 +6,7 @@ const { consulta, valor, cerrarBase } = require('../lib/sistema');
 const f = require('../lib/flujo');
 
 const { C01: ana, C02: bruno, C05: elena, C06: federico, C08: hernan, C09: ines, C11: lucia } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const solicitudDe = (cliente) => valor(
   'SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c ORDER BY s.id DESC',
   { c: cliente.cuil },
@@ -157,7 +157,7 @@ test('R-074 Confirmación simultánea', async ({ comoUsuario }) => {
   await page.getByRole('button', { name: 'Confirmar alternativa' }).click();
   await expect(exito(page)).toContainText('aprobada automáticamente');
   await otra.getByRole('button', { name: 'Confirmar alternativa' }).click();
-  await expect(otra.locator('.alert-success')).toHaveCount(0);
+  await expect(otra.locator('.alert-success[role="status"]')).toHaveCount(0);
   const [r] = await consulta(
     "SELECT COUNT(*) AS n FROM dbo.alternativas_financiacion a JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id WHERE e.solicitud_id = @id AND a.estado = 'Confirmada'",
     { id },
@@ -208,14 +208,14 @@ test('R-079 Devolver, corregir y rechazar', async ({ comoUsuario }) => {
   const analista = await comoUsuario('analista');
   const id = await solicitudDe(lucia);
   await resolver(gerente, id, { decision: 'DevueltaRevision', etapa: 'Verificacion', fundamento: 'Revisar la verificación del legajo' });
-  await expect(gerente.locator('.alert-success')).toContainText('Solicitud devuelta para revisión');
+  await expect(gerente.locator('.alert-success[role="status"]')).toContainText('Solicitud devuelta para revisión');
   await analista.goto(`/admin/solicitudes/${id}/corregir`);
   await analista.locator('#aclaracion').fill('Se verificó nuevamente el recibo de sueldo con el empleador');
   await analista.getByRole('button', { name: 'Registrar corrección' }).click();
-  await expect(analista.locator('.alert-success')).toContainText('pendiente de verificación');
+  await expect(analista.locator('.alert-success[role="status"]')).toContainText('pendiente de verificación');
   await f.verificar(analista, id);
   f.evaluar();
   expect(await f.estadoSolicitud(id)).toBe('PendienteResolucion');
   await resolver(gerente, id, { decision: 'Rechazada', fundamento: 'Ingresos insuficientes para la cuota mínima' });
-  await expect(gerente.locator('.alert-success')).toContainText('Solicitud rechazada.');
+  await expect(gerente.locator('.alert-success[role="status"]')).toContainText('Solicitud rechazada.');
 });

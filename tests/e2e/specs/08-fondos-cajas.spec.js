@@ -4,7 +4,7 @@ const { test, expect } = require('../lib/fixtures');
 const { usuarios, fecha, ddmmaaaa } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
 
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const libre = (page) => page.locator('dt', { hasText: 'Disponible libre' }).locator('xpath=following-sibling::dd[1]');
 const aNumero = (texto) => Number(texto.replace(/[^\d,-]/g, '').replace(',', '.'));
 const idCaja = (codigo) => valor('SELECT id FROM dbo.cajas WHERE codigo = @c', { c: codigo });

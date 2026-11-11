@@ -6,7 +6,7 @@ const { consulta, valor, spark, cerrarBase } = require('../lib/sistema');
 const k = require('../lib/cartera');
 
 const { C01: ana, C02: bruno, C03: carla } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const estadoOrden = (id) => valor('SELECT estado FROM dbo.ordenes_pago_electronico WHERE id = @id', { id });
 const saldoDisponible = (cliente) => valor(
   'SELECT ISNULL(SUM(s.importe_disponible), 0) FROM dbo.saldos_a_favor s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c',

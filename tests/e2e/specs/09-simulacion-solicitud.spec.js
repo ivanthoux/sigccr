@@ -7,7 +7,7 @@ const { valor, cerrarBase } = require('../lib/sistema');
 const f = require('../lib/flujo');
 
 const { C01: ana, C02: bruno, C07: gabriela } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const estado = (page) => page.locator('main');
 const solicitudDe = (cliente) => valor(
   "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado NOT IN ('Cancelada', 'Rechazada') ORDER BY s.id DESC",

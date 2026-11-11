@@ -5,7 +5,7 @@ const { consulta, valor, spark, cerrarBase } = require('../lib/sistema');
 const k = require('../lib/cartera');
 
 const { C01: ana, C02: bruno } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const estadoPropuesta = (id) => valor('SELECT estado FROM dbo.propuestas_refinanciacion WHERE id = @id', { id });
 let creditoB;
 let propuesta;
@@ -94,13 +94,13 @@ test('R-123 Observar y nueva versión', async ({ comoUsuario }) => {
   const analista = await comoUsuario('analista');
   const sim = await simular(analista, bruno, [creditoB.id], 60, 12);
   propuesta = await registrarPropuesta(analista, sim);
-  await expect(analista.locator('.alert-success')).toContainText('(versión 2) registrada');
+  await expect(analista.locator('.alert-success[role="status"]')).toContainText('(versión 2) registrada');
 });
 
 test('R-124 Aprobar y plan definitivo con los punitorios posteriores', async ({ comoUsuario }) => {
   const gerente = await comoUsuario('gerente');
   await resolver(gerente, propuesta, 'Aprobada', 'Plan acorde a la capacidad de pago actual');
-  await expect(gerente.locator('.alert-success')).toContainText('Propuesta aprobada');
+  await expect(gerente.locator('.alert-success[role="status"]')).toContainText('Propuesta aprobada');
   spark('cartera:punitorios');
   const analista = await comoUsuario('analista');
   await analista.goto(`/admin/refinanciaciones/${propuesta}/aplicar`);
@@ -147,12 +147,12 @@ test('R-127 Rechazar, cancelar y vencer propuestas', async ({ comoUsuario }) => 
   await cancelar(analista, desistida, { motivo: 'El cliente decidió pagar la deuda con fondos propios' });
   expect(await estadoPropuesta(desistida)).not.toBe('Cancelada');
   await cancelar(analista, desistida, { motivo: 'El cliente decidió pagar la deuda con fondos propios', dia: fecha(), medio: 'Nota firmada' });
-  await expect(analista.locator('.alert-success')).toContainText('desistimiento');
+  await expect(analista.locator('.alert-success[role="status"]')).toContainText('desistimiento');
   expect(await estadoPropuesta(desistida)).toBe('Cancelada');
 
   const administrativa = await nueva();
   await cancelar(gerente, administrativa, { motivo: 'Propuesta registrada por error' });
-  await expect(gerente.locator('.alert-success')).toContainText('administrativa');
+  await expect(gerente.locator('.alert-success[role="status"]')).toContainText('administrativa');
 
   const vencida = await nueva();
   await consulta('UPDATE dbo.propuestas_refinanciacion SET vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) WHERE id = @id', { id: vencida });

@@ -6,7 +6,7 @@ const { ultimoCorreo, consulta, valor, cerrarBase } = require('../lib/sistema');
 const { C01: ana, C02: bruno } = clientes;
 const pyme = empresas.P01;
 const correoNuevoAna = 'ana.gomez2@prueba.local';
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 
 /** Define la contraseña del portal desde el enlace (CU-04). */
 async function definirContrasena(page, clave) {

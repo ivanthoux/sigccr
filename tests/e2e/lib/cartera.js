@@ -58,7 +58,7 @@ async function cobrarTotal(page, cliente, creditoId, cuotas, medio, operacion) {
 }
 
 async function esperarExito(page, texto) {
-  await expect(page.locator('.alert-success')).toContainText(texto);
+  await expect(page.locator('.alert-success[role="status"]')).toContainText(texto);
 }
 
 module.exports = { idCliente, credito, cuota, atrasar, cobrar, cobrarTotal, totalSeleccionado, esperarExito };

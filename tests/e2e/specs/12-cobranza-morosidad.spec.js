@@ -6,7 +6,7 @@ const { valor, spark, cerrarBase } = require('../lib/sistema');
 const k = require('../lib/cartera');
 
 const { C01: ana, C02: bruno } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const motivoAnulacion = 'El cliente informó que la transferencia fue rechazada por su banco';
 let creditoA;
 let cobroR095;

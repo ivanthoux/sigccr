@@ -3,7 +3,7 @@ const { test, expect } = require('../lib/fixtures');
 const { lineas, fecha } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
 
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const error = (page, campo) => page.locator(`#error-${campo}`);
 const idLinea = (codigo) => valor('SELECT id FROM dbo.lineas_credito WHERE codigo = @c', { c: codigo });
 

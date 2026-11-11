@@ -6,7 +6,7 @@ const { valor, cerrarBase } = require('../lib/sistema');
 const f = require('../lib/flujo');
 
 const { C01: ana, C02: bruno, C05: elena, C06: federico, C12: marcos } = clientes;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const solicitudDe = (cliente) => valor(
   "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado NOT IN ('Rechazada', 'Cancelada') ORDER BY s.id DESC",
   { c: cliente.cuil },
@@ -73,7 +73,7 @@ test('R-085 Plan del Gerente sin la conformidad del cliente (RN-22)', async ({ c
   await f.liquidar(cajero, id, federico, desembolsos.C06, { conformidad: false });
   await expect(cajero.locator('main')).toContainText('registre la conformidad del cliente antes de liquidar (RN-22)');
   await f.liquidar(cajero, id, federico, desembolsos.C06);
-  await expect(cajero.locator('.alert-success')).toContainText('Crédito liquidado');
+  await expect(cajero.locator('.alert-success[role="status"]')).toContainText('Crédito liquidado');
 });
 
 test('R-086 Créditos B a E de la iteración 3', async ({ comoUsuario }) => {
@@ -87,7 +87,7 @@ test('R-086 Créditos B a E de la iteración 3', async ({ comoUsuario }) => {
     }
     await f.incorporarContrato(analista, id);
     await f.liquidar(cajero, id, cliente, desembolsos[codigo]);
-    await expect(cajero.locator('.alert-success'), `liquidación de ${cliente.apellido}`).toContainText('Crédito liquidado');
+    await expect(cajero.locator('.alert-success[role="status"]'), `liquidación de ${cliente.apellido}`).toContainText('Crédito liquidado');
   }
   expect(await valor("SELECT COUNT(*) FROM dbo.creditos WHERE estado = 'Activo'")).toBe(6);
 });
@@ -105,7 +105,7 @@ test('R-087 Cancelar una solicitud aprobada (CU-28)', async ({ comoUsuario }) =>
     await analista.getByRole('button', { name: 'Cancelar la solicitud' }).click();
   };
   await cancelar(id);
-  await expect(analista.locator('.alert-success')).toContainText('Solicitud cancelada.');
+  await expect(analista.locator('.alert-success[role="status"]')).toContainText('Solicitud cancelada.');
   await cancelar(await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado = 'Liquidada'", { c: ana.cuil }));
   await expect(analista.locator('body')).toContainText('La solicitud ya finalizó: no se puede cancelar.');
 });
@@ -149,6 +149,6 @@ test('R-091 Confirmación de cambios con solicitudes en trámite (D-24)', async 
   await expect(gerente.locator('main')).toContainText('en trámite');
   await gerente.locator('#confirmar_cambio').check();
   await gerente.getByRole('button', { name: 'Registrar nueva versión' }).click();
-  await expect(gerente.locator('.alert-success')).toBeVisible();
+  await expect(gerente.locator('.alert-success[role="status"]')).toBeVisible();
   expect(await version()).toBe(antes);
 });
