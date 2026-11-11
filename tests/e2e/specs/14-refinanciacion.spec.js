@@ -140,6 +140,8 @@ test('R-127 Rechazar, cancelar y vencer propuestas', async ({ comoUsuario }) => 
   const analista = await comoUsuario('analista');
   const gerente = await comoUsuario('gerente');
   const nueva = async () => registrarPropuesta(analista, await simular(analista, ana, [creditoA.id], 60, 12));
+  // El cobro de R-126 dejó el crédito al día: vuelve a mora con la cuota 4
+  await k.atrasar(creditoA.id, 30);
 
   const rechazada = await nueva();
   await resolver(gerente, rechazada, 'Rechazada', 'La propuesta no se ajusta a la política de la entidad');

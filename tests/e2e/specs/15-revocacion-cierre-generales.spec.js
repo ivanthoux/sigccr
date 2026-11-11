@@ -218,7 +218,11 @@ test('R-145 Pantalla angosta (360 px)', async ({ comoUsuario }) => {
   for (const ruta of ['/admin/clientes', '/admin/simulaciones', '/admin/refinanciaciones']) {
     await page.goto(ruta);
     const ancho = await page.evaluate(() => document.documentElement.scrollWidth);
-    expect(ancho, ruta).toBeLessThanOrEqual(362);
+    // Ante una falla, los elementos que sobresalen de la pantalla
+    const anchos = await page.evaluate(() => [...document.querySelectorAll('main *')]
+      .filter((e) => e.getBoundingClientRect().right > 365).slice(0, 6)
+      .map((e) => `${e.tagName}.${[...e.classList].join('.')} ${Math.round(e.getBoundingClientRect().right)}`));
+    expect(ancho, `${ruta}: ${anchos.join(' | ')}`).toBeLessThanOrEqual(362);
   }
 });
 
