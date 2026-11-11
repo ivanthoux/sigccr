@@ -5,6 +5,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ## [Sin publicar]
 
 ### Corregido
+- El cierre de sesión (panel y portal) y el fin de la sesión por inactividad o por cambio de credenciales no mostraban su mensaje («La sesión se cerró correctamente.», «La sesión finalizó por inactividad.»): se agregaba a una sesión ya destruida. `finalizar_sesion()` borra los datos y cambia el identificador sin perder el mensaje.
+- Migración 24: el rol de la aplicación no tenía permiso DELETE en `documentacion_sugerida` (CU-100 fallaba al guardar la documentación propuesta), `ordenes_pago_cuotas`, `ordenes_pago_electronico` (CU-34 sin respuesta de la pasarela) y `tramos_punitorios` (CU-90 con fecha efectiva anterior). `verificar.py` controla ahora que cada tabla que el código borra tenga el permiso.
+- Prueba funcional integral: R-049 y R-052 los realiza el Gerente (no el Administrador); R-023 aclara que sin criterios se listan los clientes más recientes.
 - Migración 19: `revocaciones.cobro_id` era INT y `cobros.id` es BIGINT, por lo que la clave foránea fallaba después de crear la tabla y la migración quedaba a medias («There is already an object named 'revocaciones'» al reintentar). Ahora es BIGINT y, si la tabla quedó vacía de un intento anterior, se recrea.
 - Migración 19 con la base vacía: la condición que recreaba la tabla consultaba `dbo.revocaciones` aunque no existiera («Invalid object name 'dbo.revocaciones'»), porque SQL Server no garantiza el cortocircuito de `AND`. La consulta pasa a SQL dinámico. Lo detectó la primera ejecución de las pruebas de punta a punta.
 - `verificar.py` controla que cada clave foránea tenga el tipo de la clave primaria que referencia, en la especificación y en las migraciones.

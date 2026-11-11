@@ -184,3 +184,17 @@ if (!function_exists('etiqueta_estado_solicitud')) {
         return '<span class="badge rounded-pill ' . $clase . '">' . esc($texto) . '</span>';
     }
 }
+
+if (!function_exists('finalizar_sesion')) {
+    /**
+     * Cierra la sesión actual sin perder el mensaje para la pantalla siguiente (RNF-11): borra todos sus datos y
+     * cambia el identificador eliminando la sesión anterior. Con session()->destroy() el mensaje que se agrega con
+     * with() se escribía en una sesión ya destruida y no llegaba a mostrarse.
+     */
+    function finalizar_sesion(): void
+    {
+        $sesion = session();
+        $sesion->remove(array_keys($_SESSION ?? []));
+        $sesion->regenerate(true);
+    }
+}

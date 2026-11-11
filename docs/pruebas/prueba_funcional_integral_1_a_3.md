@@ -88,7 +88,7 @@ Como Analista. Los datos están en A.2 y A.3, y los archivos en la carpeta `Dato
 | R-020 | Monotributista | Registrar a Marcos Paredes (C-12) primero sin categoría, luego con la A y por último con la B. | «Seleccione la categoría del monotributo.»; con A: «Doce meses de los ingresos declarados… superan el tope de la categoría A…»; con B se registra. | |
 | R-021 | Persona jurídica | Registrar Yerbatera del Sur S.A. (P-01 de A.3) con sus cuatro documentos y el DNI del representante. | Perfil de persona jurídica con los documentos en el legajo. | |
 | R-022 | Legajo | En el perfil de Ana, subir `otro_documento_prueba.pdf` y descargarlo. | Aparece en el legajo y se descarga con su nombre original. | |
-| R-023 | Localizar | Buscar «Góm», el DNI de Bruno, el CUIT de la pyme, por tipo y por estado. | La lista aparece solo después de buscar y respeta los filtros. | |
+| R-023 | Localizar | Buscar «Góm», el DNI de Bruno, el CUIT de la pyme, por tipo y por estado. | Sin criterios muestra los clientes registrados más recientemente; cada búsqueda respeta sus filtros. | |
 | R-024 | Modificar y cambiar el correo | Cambiar el domicilio de Ana (A.2, columna «Modificación»); cambiar su correo sin evidencia y luego con la evidencia de A.2. | «Datos actualizados.»; sin evidencia se rechaza (RN-58); con evidencia sigue vigente el anterior hasta verificar el nuevo. | |
 | R-025 | Historial y comunicaciones | Abrir el historial de Ana; desmarcar «acepta comunicaciones comerciales». | «…no tiene antecedentes crediticios en la entidad»; el perfil muestra que no acepta, con la fecha. | |
 | R-026 | Desactivar y reactivar | Desactivar a la pyme con motivo y reactivarla. | «Cliente reactivado. Para volver a usar el portal debe activar o rehabilitar su acceso (CU-04).» | |
@@ -147,10 +147,10 @@ Como Gerente, con los datos de A.6 y A.7.
 | R-046 | Ingreso de fondos | Como Gerente, en Gestión → Fondos, registrar el ingreso de A.8. | «Movimiento registrado…»; el disponible libre sube en $ 20.000.000. | |
 | R-047 | Validaciones y movimiento programado | Probar: importe 0; realizado con fecha futura; programado con fecha pasada. Registrar el egreso programado de A.8 y anularlo. | Cada error junto a su campo; el programado figura y la anulación lo quita. | |
 | R-048 | Corrección | Registrar el egreso de A.8 de $ 10.000 y corregirlo con motivo. | Movimiento inverso vinculado; el disponible vuelve al valor anterior; corregir la corrección se rechaza. | |
-| R-049 | Cajas | Como Administrador, registrar `CAJA-01` y `CAJA-02` (A.8); probar el código `caja 01!` y repetir `CAJA-01`. | Registradas y habilitadas; el código inválido y el repetido se rechazan. | |
+| R-049 | Cajas | Como Gerente, registrar `CAJA-01` y `CAJA-02` (A.8); probar el código `caja 01!` y repetir `CAJA-01`. | Registradas y habilitadas; el código inválido y el repetido se rechazan. | |
 | R-050 | Asignar | Asignar `CAJA-01` a Paula Romero desde hoy; intentar asignarla también a Tomás; asignar `CAJA-02` a Tomás. | La segunda asignación de `CAJA-01` se rechaza («…finalice la asignación vigente…»). | |
 | R-051 | Apertura sin efectivo | Como Paula, en Mi caja, abrir la caja. | No pide un importe; «Caja abierta: ya puede registrar cobros por transferencia, depósito o tarjeta.»; una segunda apertura: «Ya tiene una caja abierta (CAJA-01)…». | |
-| R-052 | Inhabilitar | Como Administrador, intentar inhabilitar `CAJA-01` (jornada abierta); inhabilitar `CAJA-02` (pide confirmación) y rehabilitarla; volver a asignarla a Tomás. | La primera: «La caja tiene una jornada abierta…»; `CAJA-02`: «Caja inhabilitada…» y «Caja rehabilitada: ya se puede asignar.» | |
+| R-052 | Inhabilitar | Como Gerente, intentar inhabilitar `CAJA-01` (jornada abierta); inhabilitar `CAJA-02` (pide confirmación) y rehabilitarla; volver a asignarla a Tomás. | La primera: «La caja tiene una jornada abierta…»; `CAJA-02`: «Caja inhabilitada…» y «Caja rehabilitada: ya se puede asignar.» | |
 
 ### 9. Simulación y comparación (CU-21 y CU-99)
 

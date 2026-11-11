@@ -68,7 +68,7 @@ class Acceso extends BaseController
         $cuenta = session('cuenta');
         $servicio = new AccesoService();
         $servicio->registrarCierre((int) $cuenta['id'], (string) $cuenta['nombre'], $servicio->tieneJornadaAbierta((int) $cuenta['id']));
-        session()->destroy();
+        finalizar_sesion();
 
         return redirect()->route('acceso.login')->with('exito', 'La sesión se cerró correctamente.');
     }

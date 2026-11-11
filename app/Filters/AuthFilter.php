@@ -34,14 +34,14 @@ class AuthFilter implements FilterInterface
         }
         $limite = $ambito === 'portal' ? $cfg->inactividadPortal : $cfg->inactividadPanel;
         if ($ahora - (int) $cuenta['ultima_actividad'] > $limite || $ahora - (int) $cuenta['inicio'] > $cfg->duracionMaximaSesion) {
-            $sesion->destroy();
+            finalizar_sesion();
 
             return $this->rechazar($request, $ambito, 'La sesión finalizó por inactividad.');
         }
         $actual = Database::connect()->table('cuentas_acceso')->select('estado, version_seguridad')
             ->where('id', (int) $cuenta['id'])->get()->getRowArray();
         if ($actual === null || $actual['estado'] !== 'Habilitada' || (int) $actual['version_seguridad'] !== (int) $cuenta['version_seguridad']) {
-            $sesion->destroy();
+            finalizar_sesion();
 
             return $this->rechazar($request, $ambito, 'La sesión ya no es válida. Ingrese nuevamente.');
         }
