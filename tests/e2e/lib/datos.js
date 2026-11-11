@@ -79,3 +79,19 @@ const parametros = {
 
 module.exports.ddmmaaaa = ddmmaaaa;
 module.exports.parametros = parametros;
+
+// A.10 Créditos de la iteración 3 (Motos, 12 cuotas) y desembolsos
+const desembolsos = {
+  C01: { importe: 500000, cbu: '0170099240000000123457', evidencia: 'Constancia de CBU del Banco Francés presentada por la titular', operacion: 'DES-0001' },
+  C02: { importe: 600000, cbu: '0110599520000000678908', evidencia: 'Constancia de CBU del Banco Nación', operacion: 'DES-0002' },
+  C03: { importe: 400000, cbu: '0720123988000000456784', evidencia: 'Constancia de CBU del Banco Santander', operacion: 'DES-0003' },
+  C04: { importe: 300000, cbu: '1500001531000000987653', evidencia: 'Constancia de CBU del HSBC', operacion: 'DES-0004' },
+  C10: { importe: 450000, cbu: '0140321155000000112233', evidencia: 'Constancia de CBU del Banco Provincia', operacion: 'DES-0005' },
+  C06: { importe: 450000, cbu: '0340007466000000334455', evidencia: 'Constancia de CBU del Banco Patagonia', operacion: 'DES-0006' },
+};
+const cbuInvalido = '2850590909400904181357';
+const cvu = '0000003110000123456781';
+
+module.exports.desembolsos = desembolsos;
+module.exports.cbuInvalido = cbuInvalido;
+module.exports.cvu = cvu;
