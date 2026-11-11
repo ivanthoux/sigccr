@@ -21,6 +21,9 @@ async function movimiento(page, { tipo = 'AporteCapital', caracter = 'Ingreso', 
   await page.getByRole('button', { name: 'Registrar movimiento' }).click();
 }
 
+/** Despliega el <details> que contiene el campo (las acciones de cada caja están plegadas). */
+const desplegar = (campo) => campo.evaluate((el) => { const d = el.closest('details'); if (d) d.open = true; });
+
 const filaMovimiento = (page, concepto) => page.locator('main table tbody tr', { hasText: concepto }).first();
 
 test.describe.configure({ mode: 'serial' });
@@ -77,6 +80,7 @@ test('R-049 Registrar cajas', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
   const registrar = async (codigo, denominacion, ubicacion) => {
     await page.goto('/admin/cajas');
+    await desplegar(page.locator('#codigo'));
     await page.locator('#codigo').fill(codigo);
     await page.locator('#denominacion').fill(denominacion);
     await page.locator('#ubicacion').fill(ubicacion);
@@ -96,6 +100,7 @@ test('R-049 Registrar cajas', async ({ comoUsuario }) => {
 async function asignar(page, caja, cajero) {
   const id = await idCaja(caja);
   await page.goto('/admin/cajas');
+  await desplegar(page.locator(`#cajero-${id}`));
   await page.locator(`#cajero-${id}`).selectOption(String(await idCuenta(cajero)));
   await page.locator(`#desde-${id}`).fill(ddmmaaaa(fecha()));
   await page.locator(`#cajero-${id}`).locator('xpath=ancestor::form').getByRole('button', { name: 'Confirmar asignación' }).click();
@@ -126,6 +131,7 @@ test('R-052 Inhabilitar y rehabilitar cajas', async ({ comoUsuario }) => {
   const cambiarEstado = async (caja, motivo) => {
     const id = await idCaja(caja);
     await page.goto('/admin/cajas');
+    await desplegar(page.locator(`#motivo-estado-${id}`));
     await page.locator(`#motivo-estado-${id}`).fill(motivo);
     await page.locator(`#motivo-estado-${id}`).locator('xpath=ancestor::form').locator('button[type="submit"]').click();
   };

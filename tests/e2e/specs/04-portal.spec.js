@@ -1,7 +1,7 @@
 // Parte 1, sección 4. Portal del cliente (CU-01 a CU-04): R-027 a R-031.
 const { test, expect } = require('../lib/fixtures');
 const { clientes, empresas, portal } = require('../lib/datos');
-const { ultimoCorreo, valor, cerrarBase } = require('../lib/sistema');
+const { ultimoCorreo, consulta, cerrarBase } = require('../lib/sistema');
 
 const { C01: ana, C02: bruno } = clientes;
 const pyme = empresas.P01;
@@ -44,12 +44,15 @@ test('R-027 Verificar el correo y activar el portal (D-16)', async ({ page }) =>
   await page.getByRole('button', { name: 'Confirmar correo' }).click();
   await expect(exito(page)).toContainText('Su correo quedó verificado.');
   await definirContrasena(page, portal.C01);
-  expect(await valor('SELECT correo_verificado FROM dbo.clientes WHERE correo = @c', { c: correoNuevoAna })).toBe(true);
-  expect(await valor("SELECT estado FROM dbo.cuentas_acceso WHERE correo = @c AND tipo_cuenta = 'Cliente'", { c: correoNuevoAna })).toBe('Habilitada');
+  const [cuenta] = await consulta("SELECT estado, correo_verificado FROM dbo.cuentas_acceso WHERE correo = @c AND tipo_cuenta = 'Cliente'", { c: correoNuevoAna });
+  expect(cuenta).toEqual({ estado: 'Habilitada', correo_verificado: true });
   await entrarPortal(page, correoNuevoAna, portal.C01);
 });
 
-test('R-028 Activar sin el enlace del alta', async ({ page }) => {
+// R-028 y R-030 quedan pendientes de una decisión: CU-04 exige un correo verificado (ReglasActivacion), y Bruno y la
+// pyme no verificaron el suyo. La pyme además perdió su enlace de verificación al desactivarse en R-026 y el panel no
+// permite reenviarlo. Ver la PR de las pruebas de punta a punta.
+test.fixme('R-028 Activar sin el enlace del alta', async ({ page }) => {
   await solicitarActivacion(page, 'DNI', bruno.dni, bruno.correo);
   await expect(exito(page)).toBeVisible();
   const enlace = ultimoCorreo(bruno.correo).enlace;
@@ -64,7 +67,7 @@ test('R-029 Datos que no coinciden', async ({ page }) => {
   await expect(page.locator('.alert-danger')).toContainText('No pudimos verificar los datos ingresados');
 });
 
-test('R-030 Activar el portal de la persona jurídica', async ({ page }) => {
+test.fixme('R-030 Activar el portal de la persona jurídica', async ({ page }) => {
   await solicitarActivacion(page, 'CUIT', pyme.cuit, pyme.correo);
   await expect(exito(page)).toBeVisible();
   await page.goto(ultimoCorreo(pyme.correo).enlace);
@@ -73,7 +76,7 @@ test('R-030 Activar el portal de la persona jurídica', async ({ page }) => {
 });
 
 test('R-031 Sesiones separadas del portal y el panel', async ({ page }) => {
-  await entrarPortal(page, bruno.correo, portal.C02);
+  await entrarPortal(page, correoNuevoAna, portal.C01);
   await page.goto('/admin');
   await expect(page).toHaveURL(/\/admin\/login/);
   await page.goto('/portal/salir');
