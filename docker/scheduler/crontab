@@ -8,11 +8,11 @@ APP=/var/www/html
 0 * * * *    www-data cd $APP && php spark sigccr:verificar-entorno --silencioso >> $APP/writable/logs/cron.log 2>&1
 
 */5 * * * *  www-data cd $APP && php spark evaluacion:ejecutar        >> $APP/writable/logs/cron.log 2>&1   # CU-86, iteración 2
-# 5 0 * * *    www-data cd $APP && php spark cartera:punitorios        >> $APP/writable/logs/cron.log 2>&1   # CU-88, iteración 3
+5 0 * * *    www-data cd $APP && php spark cartera:punitorios        >> $APP/writable/logs/cron.log 2>&1   # CU-88, iteración 3
 */15 * * * * www-data cd $APP && php spark vencimientos:controlar    >> $APP/writable/logs/cron.log 2>&1   # CU-89, iteraciones 2 y 3
-# */30 * * * * www-data cd $APP && php spark pagos:conciliar           >> $APP/writable/logs/cron.log 2>&1   # CU-91, iteración 3
-# * * * * *    www-data cd $APP && php spark pagos:notificaciones      >> $APP/writable/logs/cron.log 2>&1   # CU-90, iteración 3
-# 0 6 * * *    www-data cd $APP && php spark fondos:proyectar          >> $APP/writable/logs/cron.log 2>&1   # CU-92, iteración 3
+*/30 * * * * www-data cd $APP && php spark pagos:conciliar           >> $APP/writable/logs/cron.log 2>&1   # CU-91, iteración 3
+* * * * *    www-data cd $APP && php spark pagos:notificaciones      >> $APP/writable/logs/cron.log 2>&1   # CU-90, iteración 3
+0 6 * * *    www-data cd $APP && php spark fondos:proyectar          >> $APP/writable/logs/cron.log 2>&1   # CU-92, iteración 3
 # */15 * * * * www-data cd $APP && php spark campanas:cerrar           >> $APP/writable/logs/cron.log 2>&1   # CU-94, iteración 4
 * * * * *    www-data cd $APP && php spark comunicaciones:enviar     >> $APP/writable/logs/cron.log 2>&1   # CU-95, iteración 1
 # 0 2 * * *    root     cd $APP && php spark copias:generar            >> $APP/writable/logs/cron.log 2>&1   # CU-61, iteración 4

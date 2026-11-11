@@ -1,0 +1,25 @@
+sequenceDiagram
+autonumber
+actor AN as Analista
+participant V as Vista solicitudes/verificar
+participant C as Admin Solicitudes
+participant S as SolicitudService
+participant RL as RevisionLegajo
+participant E as EvaluacionService
+participant DB as SQL Server
+AN->>V: abre cada documento y registra su resultado
+V->>C: POST solicitudes/{id}/verificar con version_fila
+C->>S: verificar(id, versión, resultado, verificaciones, observaciones, motivo)
+S->>DB: BEGIN y bloquea la solicitud: PendienteVerificacion (RN-24)
+S->>RL: validar(exigidos, presentados, verificaciones, resultado) (RN-19)
+S->>DB: verificaciones_documento y revisión Verificada, Observada o Rechazada
+S->>S: cambiarEstado: PendienteEvaluacion, PendienteDocumentacion o Rechazada
+S->>DB: auditoría y COMMIT
+C->>E: iniciarInmediata(id) si quedó PendienteEvaluacion
+E->>DB: sp_getapplock sin espera
+alt el proceso programado está en curso
+E-->>C: null, la evalúa la próxima ejecución (D-17)
+else lock obtenido
+E->>E: evaluar(id), ver CU-86
+end
+C-->>V: resultado de la verificación y de la evaluación, si terminó

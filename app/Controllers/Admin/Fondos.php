@@ -26,6 +26,7 @@ class Fondos extends BaseController
             'titulo' => 'Fondos de la entidad',
             'd' => $this->servicio->disponibilidad(),
             'saldos' => $this->servicio->saldosAFavor(),
+            'proyeccion' => $this->servicio->ultimaProyeccion(),
             'movimientos' => $this->servicio->movimientos(),
         ]);
     }

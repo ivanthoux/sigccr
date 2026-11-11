@@ -92,4 +92,23 @@ final class Punitorios
             'iva' => $exigible ? $totalIva->round(2) : Decimal::zero(),
         ];
     }
+
+    /**
+     * Días de atraso sin tramo registrado hasta una fecha inclusive (CU-88 paso 4, A1): desde el día siguiente al
+     * vencimiento, o al último tramo registrado, hasta la fecha. El proceso es idempotente: un día ya registrado no se
+     * vuelve a calcular (RN-53).
+     *
+     * @return list<string> fechas Y-m-d en orden cronológico
+     */
+    public static function diasSinTramo(string $vencimiento, ?string $ultimoTramo, string $hasta): array
+    {
+        $desde = new DateTimeImmutable(max(substr($vencimiento, 0, 10), substr((string) $ultimoTramo, 0, 10)));
+        $fin = new DateTimeImmutable($hasta);
+        $dias = [];
+        for ($d = $desde->modify('+1 day'); $d <= $fin; $d = $d->modify('+1 day')) {
+            $dias[] = $d->format('Y-m-d');
+        }
+
+        return $dias;
+    }
 }

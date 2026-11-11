@@ -11,8 +11,10 @@ use App\Libraries\Validacion\Campos;
  *
  * La activación corresponde a una cuenta Pendiente de activación; la rehabilitación, a una cuenta Desactivada de un
  * cliente reactivado en el padrón (CU-14). En ambos casos el cliente debe estar Activo y el correo ingresado debe
- * coincidir con su correo verificado. Una cuenta Habilitada o bloqueada temporalmente no recibe la autorización, pero
- * la respuesta es la misma que si se hubiera enviado (A2), para no revelar su estado.
+ * coincidir con el correo registrado de su cuenta. No hace falta que esté verificado (D-40): el enlace se envía a ese
+ * correo, y usarlo para definir la contraseña demuestra que el cliente lo controla y lo deja verificado. Una cuenta
+ * Habilitada o bloqueada temporalmente no recibe la autorización, pero la respuesta es la misma que si se hubiera
+ * enviado (A2), para no revelar su estado.
  */
 final class ReglasActivacion
 {
@@ -56,8 +58,8 @@ final class ReglasActivacion
         if ($cliente['estado_cliente'] !== 'Activo') {
             return $no('Cliente desactivado en el padrón (RN-10)');
         }
-        if (!$cliente['correo_verificado'] || Campos::correo($correoIngresado) !== Campos::correo($cliente['correo'])) {
-            return $no('El correo no coincide con un correo verificado');
+        if (Campos::correo($correoIngresado) !== Campos::correo($cliente['correo'])) {
+            return $no('El correo no coincide con el registrado');
         }
         if ($cliente['bloqueada'] || $cliente['estado_cuenta'] === 'BloqueadaTemporalmente') {
             return ['resultado' => self::RESULTADO_SIN_ENVIO, 'proposito' => null, 'motivo' => 'Cuenta bloqueada temporalmente (RN-62)'];

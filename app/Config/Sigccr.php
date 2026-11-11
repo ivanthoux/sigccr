@@ -15,6 +15,11 @@ class Sigccr extends BaseConfig
     /** Zona horaria de negocio (3.5.1). Los instantes se guardan en UTC. */
     public string $zonaNegocio = 'America/Argentina/Buenos_Aires';
 
+    /** Datos de la entidad que otorga los préstamos, para el contrato (RN-78). */
+    public string $entidadRazonSocial = 'Entidad de crédito (configurar sigccr.entidadRazonSocial)';
+    public string $entidadCuit = '';
+    public string $entidadDomicilio = '';
+
     /** Modo de mantenimiento del portal de clientes (RNF-13, plan correctivo de R7). */
     public bool $portalEnMantenimiento = false;
 

@@ -8,7 +8,7 @@
  */
 use App\Libraries\Solicitudes\CalendarioOperativo;
 
-$hoy = date('Y-m-d');
+$hoy = hoy_negocio();
 $tipo = (string) (old('tipo') ?? 'Feriado');
 $this->extend('layouts/panel');
 $this->section('contenido');

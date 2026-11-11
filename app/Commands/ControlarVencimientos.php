@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Commands;
 
+use App\Services\Caja\DevolucionService;
+use App\Services\Caja\PagoElectronicoService;
+use App\Services\Cartera\RefinanciacionService;
 use App\Services\Solicitudes\VencimientoService;
 
 /**
  * CU-89 Controlar Vencimientos. El Temporizador lo ejecuta cada 15 minutos (docker/scheduler/crontab). En la
  * iteración 2 vence simulaciones, alternativas, aprobaciones, evaluaciones, solicitudes inactivas y autorizaciones de
- * acceso; las propuestas de refinanciación, las órdenes de pago y las devoluciones se incorporan en la iteración 3.
+ * acceso. En la iteración 3 se agregan las propuestas de refinanciación (RN-36), las órdenes de pago electrónico sin
+ * confirmación (RN-54) y las autorizaciones de devolución sin ejecución iniciada (RN-73): el proceso queda completo.
  *
  *   php spark vencimientos:controlar
  */
 class ControlarVencimientos extends BaseProcesoCommand
 {
     protected $name = VencimientoService::PROCESO;
-    protected $description = 'Aplica los vencimientos de simulaciones, alternativas, evaluaciones, aprobaciones y solicitudes inactivas (CU-89).';
+    protected $description = 'Aplica los vencimientos de simulaciones, alternativas, evaluaciones, aprobaciones, solicitudes inactivas, propuestas de refinanciación, órdenes de pago y autorizaciones de devolución (CU-89).';
     protected $usage = 'vencimientos:controlar';
 
     protected function ejecutar(?string $fechaReferencia): void
@@ -37,6 +41,24 @@ class ControlarVencimientos extends BaseProcesoCommand
         foreach ($s->evaluacionesVencidas() as $id) {
             $this->procesarElemento("evaluación {$id}", static function () use ($s, $id): void {
                 $s->vencerEvaluacion($id);
+            });
+        }
+        $refinanciaciones = new RefinanciacionService($this->db);
+        foreach ($refinanciaciones->propuestasVencidas() as $id) {
+            $this->procesarElemento("propuesta de refinanciación {$id}", static function () use ($refinanciaciones, $id): void {
+                $refinanciaciones->vencerPropuesta($id);
+            });
+        }
+        $pagos = new PagoElectronicoService($this->db);
+        foreach ($pagos->ordenesVencidas() as $id) {
+            $this->procesarElemento("orden de pago {$id}", static function () use ($pagos, $id): void {
+                $pagos->vencerOrden($id);
+            });
+        }
+        $devoluciones = new DevolucionService($this->db);
+        foreach ($devoluciones->autorizacionesVencidas() as $id) {
+            $this->procesarElemento("autorización de devolución {$id}", static function () use ($devoluciones, $id): void {
+                $devoluciones->vencerAutorizacion($id);
             });
         }
         foreach ($s->solicitudesInactivas() as $id) {

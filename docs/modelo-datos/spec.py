@@ -20,8 +20,8 @@ ENUMS = {
                         'PendienteContingencia', 'PendienteSeleccionPlan', 'PendienteResolucion', 'DevueltaRevision',
                         'AprobadaPendienteLiquidacion', 'Liquidada', 'Rechazada', 'Cancelada', 'Vencida'],
     'EstadoRevision': ['PendienteRevision', 'Observada', 'Verificada', 'Rechazada'],
-    'EstadoCuota': ['Pendiente', 'Vencida', 'Pagada', 'Sustituida'],
-    'EstadoCredito': ['Activo', 'EnMora', 'Cancelado', 'Refinanciado'],
+    'EstadoCuota': ['Pendiente', 'Vencida', 'Pagada', 'Sustituida', 'SinEfecto'],
+    'EstadoCredito': ['Activo', 'EnMora', 'Cancelado', 'Refinanciado', 'Revocado'],
     'EstadoPropuesta': ['PendienteResolucion', 'AprobadaPendienteAceptacion', 'Observada', 'Rechazada', 'Aplicada',
                         'Vencida', 'Cancelada'],
     'EstadoOrden': ['PendienteConfirmacion', 'Confirmada', 'Rechazada', 'EnConciliacion', 'Vencida'],
@@ -45,7 +45,8 @@ ENUMS = {
     'MedioPago': ['Efectivo', 'TarjetaDebito', 'TarjetaCredito', 'Transferencia', 'PagoElectronico'],
     'MedioDesembolso': ['Efectivo', 'Transferencia'],
     'TipoMovimientoCaja': ['FondoInicial', 'Cobro', 'Desembolso'],
-    'TipoCobro': ['Ordinario', 'CancelacionAnticipada'],
+    'TipoCobro': ['Ordinario', 'CancelacionAnticipada', 'Revocacion'],
+    'EstadoRevocacion': ['PendienteRestitucion', 'Confirmada'],
     'TipoRechazo': ['Documental', 'Crediticio'],
     'ModalidadEvaluacion': ['Automatica', 'Contingencia'],
     'EstadoProcesamiento': ['Pendiente', 'EnProceso', 'Finalizada', 'NoCompletada'],
@@ -77,6 +78,7 @@ ENUMS = {
     'CaracterMovimiento': ['Ingreso', 'Egreso'],
     'OrigenCredito': ['Liquidacion', 'Refinanciacion'],
     'DecisionPropuesta': ['Aprobada', 'Rechazada', 'Observada'],
+    'TipoCancelacionPropuesta': ['Desistimiento', 'Administrativa'],
     'CausaCierre': ['Vigencia', 'Cupo', 'Disponibilidad'],
     'CriterioComparacion': ['Monto', 'Costo'],
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
@@ -336,7 +338,7 @@ add('cuentas_acceso', 'SS-01', 'CuentaAcceso', 'Superclase de las cuentas de acc
     C('version_seguridad', 'INT', default='1', d='Se incrementa al desactivar, cambiar el rol o restablecer credenciales; las sesiones con un valor anterior se invalidan (RNF-11).'),
     VF(),
     CREADO(), ACT(),
-], ck=[('CK_cuentas_acceso_contrasena', "estado = 'PendienteActivacion' OR hash_contrasena IS NOT NULL"),
+], ck=[('CK_cuentas_acceso_contrasena', "estado IN ('PendienteActivacion', 'Desactivada') OR hash_contrasena IS NOT NULL"),
        ('CK_cuentas_acceso_intentos', 'intentos_fallidos BETWEEN 0 AND 5')],
    uq=[('UQ_cuentas_acceso_correo', ['tipo_cuenta', 'correo'], None),
        ('UQ_cuentas_acceso_id_tipo', ['id', 'tipo_cuenta'], None)])
@@ -385,6 +387,8 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
     C('codigo_postal', 'VARCHAR(8)', null=True, d='Código postal: cuatro dígitos o CPA de ocho caracteres (por ejemplo, N3350ABC).'),
     EN('categoria_ingresos', 'CategoriaIngresos'),
     EN('categoria_monotributo', 'CategoriaMonotributo', null=True, d='Categoría del monotributo; obligatoria para los monotributistas desde D-26, nula en las demás categorías.'),
+    C('persona_expuesta', B, null=True, d='Declaración jurada de persona expuesta políticamente (RN-80); nula si el cliente registrado antes de D-31 todavía no la declaró.'),
+    C('fecha_declaracion_pep', TS, null=True, d='Fecha de la declaración.'),
     EN('estado', 'EstadoCliente', default="'Activo'"),
     FK('cuenta_cliente_id', 'cuentas_cliente', null=True, uq=True, d='Cuenta de acceso al portal; nula hasta que el cliente la solicita.'),
     C('fecha_alta', D, d='Fecha local de alta en el padrón, informada por la aplicación (antigüedad, RN-69).'),
@@ -396,7 +400,8 @@ add('clientes', 'SS-02', 'Cliente', 'Superclase del padrón de clientes (herenci
        ('CK_clientes_cuit_formato', "cuit_cuil IS NULL OR cuit_cuil NOT LIKE '%[^0-9]%'"),
        ('CK_clientes_categoria', "(tipo_cliente = 'PersonaJuridica' AND categoria_ingresos = 'Empresa') OR (tipo_cliente = 'PersonaHumana' AND categoria_ingresos <> 'Empresa')"),
        ('CK_clientes_ingresos', 'ingresos_declarados >= 0'),
-       ('CK_clientes_monotributo', "categoria_monotributo IS NULL OR categoria_ingresos = 'Monotributista'")],
+       ('CK_clientes_monotributo', "categoria_monotributo IS NULL OR categoria_ingresos = 'Monotributista'"),
+       ('CK_clientes_declaracion_pep', '(persona_expuesta IS NULL AND fecha_declaracion_pep IS NULL) OR (persona_expuesta IS NOT NULL AND fecha_declaracion_pep IS NOT NULL)')],
    idx=[('IX_clientes_denominacion', ['denominacion'], ['estado', 'tipo_cliente'], None)])
 
 add('personas_humanas', 'SS-02', 'PersonaHumana', 'Subclase de Cliente identificada por su documento.', [
@@ -408,7 +413,8 @@ add('personas_humanas', 'SS-02', 'PersonaHumana', 'Subclase de Cliente identific
     C('apellido', 'NVARCHAR(80)'),
     C('fecha_nacimiento', D, d='Utilizada para los límites de edad de la línea (RN-14).'),
     C('estado_civil', 'VARCHAR(20)', null=True),
-    C('ocupacion', 'NVARCHAR(100)', null=True),
+    C('ocupacion', 'NVARCHAR(100)', null=True, d='Actividad laboral o profesional principal; obligatoria desde D-31 (RN-80).'),
+    C('nacionalidad', 'NVARCHAR(60)', null=True, d='Obligatoria desde D-31 (RN-80); nula en clientes anteriores hasta su próxima modificación.'),
     C('empleador', 'NVARCHAR(150)', null=True),
 ], uq=[('UQ_personas_humanas_documento', ['tipo_documento', 'nro_documento'], None)],
    fkx=[('FK_personas_humanas_cliente', ['cliente_id', 'tipo_cliente'], 'clientes', ['id', 'tipo_cliente'])],
@@ -680,6 +686,17 @@ add('resoluciones', 'SS-04', 'Resolucion', 'Decisiones sobre una solicitud, auto
        ('CK_resoluciones_devolucion', "decision <> 'DevueltaRevision' OR etapa_retorno IS NOT NULL")],
    idx=[('IX_resoluciones_vencimiento', ['vence_aprobacion'], None, "decision = 'Aprobada' AND vigente = 1")])
 
+add('contratos_prestamo', 'SS-04', 'ContratoPrestamo', 'Contrato de préstamo generado para cada aprobación vigente, con la constancia firmada incorporada al legajo y la fecha en que el cliente recibió el contrato, que inicia el plazo de revocación (RN-78, RN-79, D-31).', [
+    ID(),
+    FK('solicitud_id', 'solicitudes_credito'),
+    FK('resolucion_id', 'resoluciones', uq=True, d='Aprobación cuyas condiciones instrumenta.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    FK('documento_legajo_id', 'documentos_legajo', null=True, d='Copia escaneada de la constancia firmada (tipo CONTRATO_FIRMADO).'),
+    C('fecha_recepcion', D, null=True, d='Día en que el cliente recibió su ejemplar firmado.'),
+    C('fecha_registro', TS, null=True),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Analista que incorporó la constancia.'),
+], ck=[('CK_contratos_prestamo_constancia', '(documento_legajo_id IS NULL AND fecha_recepcion IS NULL AND fecha_registro IS NULL AND usuario_id IS NULL) OR (documento_legajo_id IS NOT NULL AND fecha_recepcion IS NOT NULL AND fecha_registro IS NOT NULL AND usuario_id IS NOT NULL)')])
+
 add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola liquidación por solicitud (RNF-06, RN-25).', [
     ID(),
     FK('solicitud_id', 'solicitudes_credito', uq=True),
@@ -693,7 +710,8 @@ add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola 
     FK('movimiento_caja_id', 'movimientos_caja', null=True, big=True, uq=True, d='Egreso de la jornada en el desembolso en efectivo.'),
     FK('usuario_id', 'usuarios_internos'),
 ], ck=[('CK_liquidaciones_neto', 'importe_neto = capital - gasto_otorgamiento - iva_gastos AND importe_neto > 0'),
-       ('CK_liquidaciones_medio', "(medio_desembolso = 'Transferencia' AND cuenta_destino IS NOT NULL AND movimiento_caja_id IS NULL) OR (medio_desembolso = 'Efectivo' AND movimiento_caja_id IS NOT NULL AND cuenta_destino IS NULL)")])
+       ('CK_liquidaciones_medio', "(medio_desembolso = 'Transferencia' AND cuenta_destino IS NOT NULL AND movimiento_caja_id IS NULL) OR (medio_desembolso = 'Efectivo' AND movimiento_caja_id IS NOT NULL AND cuenta_destino IS NULL)"),
+       ('CK_liquidaciones_transferencia', "medio_desembolso = 'Transferencia'")])
 
 # ============================================================== SS-05
 add('cajas', 'SS-05', 'Caja', 'Unidades operativas de cobro (CU-80, CU-81).', [
@@ -721,19 +739,33 @@ add('jornadas_caja', 'SS-05', 'JornadaCaja', 'Operaciones entre la apertura y el
     C('usuario_id', 'INT', d='Copia controlada de la asignación.'),
     C('apertura', TS, default='SYSDATETIMEOFFSET()'),
     C('cierre', TS, null=True),
-    C('fondo_inicial', M2),
-    C('efectivo_esperado', M2, null=True, d='Fondo inicial + cobros en efectivo − desembolsos en efectivo (RN-32).'),
-    C('efectivo_declarado', M2, null=True),
-    C('diferencia', M2, null=True),
+    C('fondo_inicial', M2, default='0', d='Siempre 0 desde D-30; conserva el fondo de las jornadas anteriores.'),
+    C('efectivo_esperado', M2, null=True, d='Arqueo de las jornadas anteriores a D-30.'),
+    C('efectivo_declarado', M2, null=True, d='Arqueo de las jornadas anteriores a D-30.'),
+    C('diferencia', M2, null=True, d='Arqueo de las jornadas anteriores a D-30; la conciliación por medio está en conciliaciones_jornada.'),
     C('explicacion', 'NVARCHAR(500)', null=True),
     EN('estado', 'EstadoJornada', default="'Abierta'"),
     VF(),
 ], uq=[('UQ_jornadas_caja_abierta', ['caja_id'], "estado = 'Abierta'"),
        ('UQ_jornadas_cajero_abierta', ['usuario_id'], "estado = 'Abierta'")],
    fkx=[('FK_jornadas_caja_asignacion', ['asignacion_caja_id', 'caja_id', 'usuario_id'], 'asignaciones_caja', ['id', 'caja_id', 'usuario_id'])],
-   ck=[('CK_jornadas_caja_cierre', "(estado = 'Abierta' AND cierre IS NULL) OR (estado = 'Cerrada' AND cierre IS NOT NULL AND efectivo_declarado IS NOT NULL AND diferencia IS NOT NULL)"),
+   ck=[('CK_jornadas_caja_cierre', "(estado = 'Abierta' AND cierre IS NULL) OR (estado = 'Cerrada' AND cierre IS NOT NULL)"),
        ('CK_jornadas_caja_diferencia', 'diferencia IS NULL OR diferencia = 0 OR explicacion IS NOT NULL'),
-       ('CK_jornadas_caja_fondo', 'fondo_inicial >= 0')])
+       ('CK_jornadas_caja_fondo', 'fondo_inicial >= 0'),
+       ('CK_jornadas_caja_sin_efectivo', 'fondo_inicial = 0 AND efectivo_declarado IS NULL')])
+
+add('conciliaciones_jornada', 'SS-05', 'ConciliacionMedio', 'Conciliación del cierre de una jornada para cada medio de pago: total de cobros registrados, total acreditado en las cuentas de la entidad según el extracto o el resumen del procesador, y la diferencia con su explicación (RN-32, D-30).', [
+    ID(),
+    FK('jornada_caja_id', 'jornadas_caja'),
+    C('medio', 'VARCHAR(20)', d='Medio de pago conciliado; no incluye el efectivo (RN-77).'),
+    C('total_registrado', M2, d='Suma de lo aplicado con el medio en los cobros confirmados de la jornada.'),
+    C('total_acreditado', M2, d='Total que informa el Cajero según el extracto o el resumen del procesador.'),
+    C('diferencia', M2, d='Acreditado menos registrado.'),
+    C('explicacion', 'NVARCHAR(500)', null=True),
+], uq=[('UQ_conciliaciones_jornada_medio', ['jornada_caja_id', 'medio'], None)],
+   ck=[('CK_conciliaciones_jornada_medio', "medio IN ('TarjetaDebito', 'TarjetaCredito', 'Transferencia', 'PagoElectronico')"),
+       ('CK_conciliaciones_jornada_totales', 'total_registrado >= 0 AND total_acreditado >= 0 AND diferencia = total_acreditado - total_registrado'),
+       ('CK_conciliaciones_jornada_explicacion', 'diferencia = 0 OR explicacion IS NOT NULL')])
 
 add('cobros', 'SS-05', 'Cobro', 'Pagos confirmados de una o más cuotas, en ventanilla o electrónicos (RN-29, RN-30).', [
     ID(True),
@@ -748,15 +780,16 @@ add('cobros', 'SS-05', 'Cobro', 'Pagos confirmados de una o más cuotas, en vent
     EN('canal', 'CanalCobro'),
     EN('estado', 'EstadoCobro', default="'Confirmado'"),
     FK('usuario_id', 'usuarios_internos', null=True, d='Cajero; nulo en cobros electrónicos.'),
-    C('cambio', M2, default='0', d='Vuelto entregado en efectivo (D-11).'),
+    C('cambio', M2, default='0', d='Vuelto en efectivo de los cobros anteriores a D-30; siempre 0 desde entonces.'),
 ], uq=[('UQ_cobros_transaccion', ['transaccion_pasarela_id'], 'transaccion_pasarela_id IS NOT NULL')],
    ck=[('CK_cobros_canal_datos', "(canal = 'Ventanilla' AND jornada_caja_id IS NOT NULL AND usuario_id IS NOT NULL) OR (canal = 'Electronico' AND transaccion_pasarela_id IS NOT NULL AND cambio = 0)"),
        ('CK_cobros_importe', 'importe > 0'),
-       ('CK_cobros_cambio', 'cambio >= 0')],
+       ('CK_cobros_cambio', 'cambio >= 0'),
+       ('CK_cobros_sin_cambio', 'cambio = 0')],
    idx=[('IX_cobros_cliente', ['cliente_id', 'fecha_hora'], None, None),
         ('IX_cobros_jornada', ['jornada_caja_id'], ['importe', 'cambio', 'estado'], None)])
 
-add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobro y el importe aplicado con cada uno. El efectivo se informa en una sola fila por cobro y conserva lo recibido (el cambio es la diferencia); los demás medios llevan su número de operación y no generan cambio (RN-29, D-11). El cobro electrónico tiene una sola fila PagoElectronico.', [
+add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobro y el importe aplicado con cada uno. Cada medio lleva su número de operación (RN-29, RN-77, D-11); las filas en efectivo y el cambio corresponden a cobros anteriores a D-30. El cobro electrónico tiene una sola fila PagoElectronico.', [
     ID(True),
     FK('cobro_id', 'cobros', big=True),
     EN('medio', 'MedioPago'),
@@ -767,7 +800,8 @@ add('cobros_medios', 'SS-05', 'MedioCobro', 'Medios con los que se pagó un cobr
        ('UQ_cobros_medios_operacion', ['cobro_id', 'medio', 'numero_operacion'], 'numero_operacion IS NOT NULL')],
    ck=[('CK_cobros_medios_importe', 'importe > 0 AND importe_recibido >= importe'),
        ('CK_cobros_medios_cambio', "medio = 'Efectivo' OR importe_recibido = importe"),
-       ('CK_cobros_medios_operacion', "medio IN ('Efectivo', 'PagoElectronico') OR numero_operacion IS NOT NULL")],
+       ('CK_cobros_medios_operacion', "medio IN ('Efectivo', 'PagoElectronico') OR numero_operacion IS NOT NULL"),
+       ('CK_cobros_medios_sin_efectivo', "medio <> 'Efectivo'")],
    idx=[('IX_cobros_medios_cobro', ['cobro_id'], ['medio', 'importe'], None)])
 
 add('movimientos_caja', 'SS-05', 'MovimientoCaja', 'Ingresos y egresos de una jornada (RN-28, RN-32).', [
@@ -782,7 +816,8 @@ add('movimientos_caja', 'SS-05', 'MovimientoCaja', 'Ingresos y egresos de una jo
     FK('cobro_medio_id', 'cobros_medios', null=True, big=True, uq=True, d='Medio del cobro que originó el ingreso: cada medio genera su movimiento (D-11).'),
 ], ck=[('CK_movimientos_caja_importe', 'importe > 0'),
        ('CK_movimientos_caja_cobro', "(tipo = 'Cobro' AND cobro_id IS NOT NULL AND cobro_medio_id IS NOT NULL) OR (tipo <> 'Cobro' AND cobro_id IS NULL AND cobro_medio_id IS NULL)"),
-       ('CK_movimientos_caja_desembolso', "tipo <> 'Desembolso' OR medio = 'Efectivo'")],
+       ('CK_movimientos_caja_desembolso', "tipo <> 'Desembolso' OR medio = 'Efectivo'"),
+       ('CK_movimientos_caja_solo_cobros', "tipo = 'Cobro'")],
    idx=[('IX_movimientos_caja_jornada', ['jornada_caja_id', 'tipo'], ['medio', 'importe'], None)])
 
 add('imputaciones', 'SS-05', 'Imputacion', 'Distribución del importe de un cobro o de una aplicación de saldo entre cuotas y conceptos, según la prelación de RN-29.', [
@@ -824,6 +859,7 @@ add('ordenes_pago_electronico', 'SS-05', 'OrdenPagoElectronico', 'Solicitudes de
     C('vence', TS, d='00:00 local del día siguiente a la emisión, límite exclusivo (3.5.1).'),
     C('referencia_externa', 'VARCHAR(100)', null=True, d='Identificador de la orden en la pasarela.'),
     C('medio_presentado', 'VARCHAR(30)', null=True, d='Portal o Ventanilla.'),
+    C('url_pago', 'NVARCHAR(500)', null=True, d='Enlace o código QR de pago que devolvió la pasarela (CU-34 A7).'),
     EN('estado', 'EstadoOrden', default="'PendienteConfirmacion'"),
     VF(),
 ], uq=[('UQ_ordenes_referencia', ['referencia_externa'], 'referencia_externa IS NOT NULL')],
@@ -906,8 +942,17 @@ add('autorizaciones_devolucion', 'SS-05', 'AutorizacionDevolucion', 'Autorizacio
     EN('estado', 'EstadoDevolucion', default="'PendienteEjecucion'"),
     FK('usuario_id', 'usuarios_internos', d='Gerente que autorizó.'),
     VF(),
+    C('fecha_solicitud', D, d='Fecha de la constancia de la solicitud del cliente.'),
+    C('medio_solicitud', 'NVARCHAR(100)', d='Medio por el que el cliente solicitó la devolución.'),
+    C('entidad_bancaria', 'NVARCHAR(100)', null=True, d='Entidad de la cuenta destino de la transferencia.'),
+    C('evidencia_titularidad', 'NVARCHAR(300)', null=True, d='Constancia de la verificación de titularidad de la cuenta (RN-73, RN-77).'),
+    C('motivo_anulacion', 'NVARCHAR(500)', null=True),
+    C('fecha_anulacion', TS, null=True),
+    FK('usuario_anulacion_id', 'usuarios_internos', null=True, d='Gerente que anuló la autorización (CU-77 A5).'),
 ], ck=[('CK_autorizaciones_devolucion_cuenta', "destino = 'MedioOriginal' OR (cbu_cvu IS NOT NULL AND cuit_titular IS NOT NULL)"),
-       ('CK_autorizaciones_devolucion_importe', 'importe > 0')],
+       ('CK_autorizaciones_devolucion_importe', 'importe > 0'),
+       ('CK_autorizaciones_devolucion_titularidad', "destino = 'MedioOriginal' OR (entidad_bancaria IS NOT NULL AND evidencia_titularidad IS NOT NULL)"),
+       ('CK_autorizaciones_devolucion_anulacion', "estado <> 'Anulada' OR (motivo_anulacion IS NOT NULL AND fecha_anulacion IS NOT NULL AND usuario_anulacion_id IS NOT NULL)")],
    idx=[('IX_autorizaciones_devolucion_vence', ['vence'], None, "estado = 'PendienteEjecucion'")])
 
 add('ejecuciones_devolucion', 'SS-05', 'EjecucionDevolucion', 'Ejecución de una devolución por la pasarela o por transferencia (CU-78).', [
@@ -919,6 +964,10 @@ add('ejecuciones_devolucion', 'SS-05', 'EjecucionDevolucion', 'Ejecución de una
     C('fecha_confirmacion', TS, null=True),
     C('comprobante', 'VARCHAR(100)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Cajero que ejecutó.'),
+    C('importe', M2, d='Importe devuelto; igual al autorizado.'),
+    C('cbu_destino', 'CHAR(22)', null=True, d='Cuenta a la que se transfirió (CU-78 A1).'),
+    C('fecha_transferencia', D, null=True, d='Fecha del comprobante de la transferencia.'),
+    C('detalle', 'NVARCHAR(500)', null=True, d='Respuesta de la pasarela o motivo del fallo.'),
 ], uq=[('UQ_ejecuciones_devolucion_operacion', ['identificador_operacion'], 'identificador_operacion IS NOT NULL')])
 
 add('movimientos_fondos', 'SS-05', 'MovimientoFondos', 'Ingresos y egresos de fondos no originados en operaciones de crédito (CU-85).', [
@@ -978,6 +1027,29 @@ add('creditos', 'SS-06', 'Credito', 'Créditos activos, originados en una liquid
        ('CK_creditos_valores', 'capital > 0 AND tna >= 0 AND cantidad_cuotas > 0')],
    idx=[('IX_creditos_cliente', ['cliente_id', 'estado'], None, None)])
 
+add('revocaciones', 'SS-06', 'Revocacion', 'Ejercicio del derecho de revocación de un crédito dentro de los 10 días hábiles: comunicación, importe a restituir (neto desembolsado más el interés compensatorio devengado y su IVA, menos lo pagado) y confirmación de la restitución (RN-79, D-31).', [
+    ID(),
+    FK('credito_id', 'creditos', uq=True),
+    C('fecha_comunicacion', D, d='Día en que el cliente comunicó la revocación.'),
+    C('medio_comunicacion', 'NVARCHAR(60)'),
+    C('fecha_limite', D, d='Último día hábil del plazo, desde la recepción del contrato o el desembolso, lo último.'),
+    C('capital', M2, d='Importe neto desembolsado al cliente.'),
+    C('dias_transcurridos', 'INT', d='Días corridos desde el desembolso hasta la comunicación.'),
+    C('interes_devengado', M2),
+    C('iva_interes', M2),
+    C('pagado_previo', M2, d='Cobros confirmados del crédito antes de la revocación.'),
+    C('importe_restituir', M2),
+    C('saldo_a_favor', M2, default='0', d='Exceso de lo pagado sobre lo que correspondía restituir.'),
+    EN('estado', 'EstadoRevocacion', default="'PendienteRestitucion'"),
+    C('fecha_registro', TS),
+    FK('usuario_id', 'usuarios_internos'),
+    FK('cobro_id', 'cobros', null=True, big=True, d='Cobro de tipo Revocacion con la transferencia de restitución.'),
+    C('fecha_confirmacion', TS, null=True),
+    FK('usuario_confirmacion_id', 'usuarios_internos', null=True),
+], ck=[('CK_revocaciones_plazo', 'fecha_comunicacion <= fecha_limite'),
+       ('CK_revocaciones_importes', 'capital > 0 AND dias_transcurridos >= 0 AND interes_devengado >= 0 AND iva_interes >= 0 AND pagado_previo >= 0 AND importe_restituir >= 0 AND saldo_a_favor >= 0'),
+       ('CK_revocaciones_confirmacion', "(estado = 'PendienteRestitucion' AND fecha_confirmacion IS NULL AND cobro_id IS NULL) OR (estado = 'Confirmada' AND fecha_confirmacion IS NOT NULL AND usuario_confirmacion_id IS NOT NULL AND (cobro_id IS NOT NULL OR importe_restituir = 0))")])
+
 add('cuotas', 'SS-06', 'Cuota', 'Obligaciones del plan con sus conceptos discriminados (RN-50 a RN-52). Los saldos pendientes por concepto se actualizan en la misma transacción que las imputaciones y los punitorios.', [
     ID(True),
     FK('credito_id', 'creditos'),
@@ -1011,19 +1083,39 @@ add('tramos_punitorios', 'SS-06', 'TramoPunitorio', 'Interés punitorio de un d�
 ], uq=[('UQ_tramos_punitorios_dia', ['cuota_id', 'fecha'], None)],
    ck=[('CK_tramos_importes', 'capital_base > 0 AND importe >= 0 AND iva >= 0 AND tasa_diaria >= 0')])
 
+add('cancelaciones_anticipadas', 'SS-06', 'CancelacionAnticipada', 'Cancelación anticipada total de un crédito: componentes del importe cobrado y reducción de los intereses y gastos no devengados, para el comprobante (RN-67, CU-97, D-38).', [
+    ID(),
+    FK('credito_id', 'creditos', uq=True),
+    FK('cobro_id', 'cobros', big=True, uq=True),
+    C('fecha_pago', D, d='Día local de la cancelación.'),
+    C('vencidas', M2, d='Total actualizado de las cuotas vencidas, con punitorios exigibles.'),
+    C('capital_no_vencido', M2),
+    C('no_capitalizable_no_vencido', M2, default='0', d='Concepto no capitalizable de las cuotas no vencidas (créditos refinanciados).'),
+    C('interes_en_curso', M2, d='Interés proporcional de la cuota en curso.'),
+    C('iva_interes_en_curso', M2),
+    C('dias_en_curso', 'SMALLINT'),
+    C('cuota_en_curso', 'SMALLINT', null=True),
+    C('interes_no_devengado', M2, d='Interés de las cuotas no vencidas que no se cobra.'),
+    C('gastos_no_devengados', M2),
+    C('iva_no_devengado', M2),
+    C('total', M2),
+], ck=[('CK_cancelaciones_importes', 'total > 0 AND vencidas >= 0 AND capital_no_vencido >= 0 AND no_capitalizable_no_vencido >= 0 AND interes_en_curso >= 0 AND iva_interes_en_curso >= 0 AND dias_en_curso >= 0 AND interes_no_devengado >= 0 AND gastos_no_devengados >= 0 AND iva_no_devengado >= 0')])
+
 add('condonaciones', 'SS-06', 'Condonacion', 'Reducciones autorizadas de punitorios pendientes (RN-38).', [
     ID(),
     C('fecha', TS, default='SYSDATETIMEOFFSET()'),
     C('importe', M2),
     C('fundamento', 'NVARCHAR(1000)'),
     FK('usuario_id', 'usuarios_internos', d='Gerente que condonó.'),
+    FK('cliente_id', 'clientes', d='Cliente titular de las cuotas alcanzadas (D-36).'),
 ], ck=[('CK_condonaciones_importe', 'importe > 0')])
 
 add('condonaciones_cuotas', 'SS-06', '(asociación Condonación–Cuota)', 'Distribución del importe condonado entre las cuotas alcanzadas.', [
     FK('condonacion_id', 'condonaciones'),
     FK('cuota_id', 'cuotas', big=True),
-    C('importe', M4),
-], pk=['condonacion_id', 'cuota_id'], ck=[('CK_condonaciones_cuotas_importe', 'importe > 0')])
+    C('importe', M4, d='Punitorio condonado de la cuota, sin IVA.'),
+    C('iva', M4, default='0', d='IVA del punitorio condonado, proporcional a la parte condonada (D-36).'),
+], pk=['condonacion_id', 'cuota_id'], ck=[('CK_condonaciones_cuotas_importe', 'importe > 0'), ('CK_condonaciones_cuotas_iva', 'iva >= 0')])
 
 add('simulaciones_refinanciacion', 'SS-06', 'SimulacionRefinanciacion', 'Cálculos preliminares de un nuevo plan; no modifican la deuda (RN-36).', [
     ID(),
@@ -1033,7 +1125,19 @@ add('simulaciones_refinanciacion', 'SS-06', 'SimulacionRefinanciacion', 'Cálcul
     C('tasa', TASA), C('valor_cuota', M2),
     C('vence', TS),
     FK('usuario_id', 'usuarios_internos'),
+    C('fecha_corte', D, d='Día al que se compuso la deuda (D-36).'),
+    C('capital', M2, d='Capital pendiente de las cuotas comprendidas (RN-70).'),
+    C('no_capitalizable', M2, d='Concepto no capitalizable a la fecha de corte (RN-70).'),
+    FK('version_parametros_id', 'versiones_parametros', d='Límites de refinanciación aplicados (CU-60).'),
 ])
+
+add('simulaciones_refinanciacion_cuotas', 'SS-06', '(asociación Simulación–Cuota)', 'Cuotas comprendidas en una simulación y su composición, para verificar al registrar la propuesta que la deuda no varió (CU-40 A2, D-36).', [
+    FK('simulacion_id', 'simulaciones_refinanciacion'),
+    FK('cuota_id', 'cuotas', big=True),
+    C('capital_pendiente', M2),
+    C('no_capitalizable', M2, d='Intereses vencidos, gastos, IVA, concepto no capitalizable anterior y punitorios exigibles a la fecha de corte.'),
+    C('punitorio', M2, d='Punitorios exigibles con su IVA incluidos en no_capitalizable.'),
+], pk=['simulacion_id', 'cuota_id'])
 
 add('propuestas_refinanciacion', 'SS-06', 'PropuestaRefinanciacion', 'Planes presentados para resolución gerencial y aceptación del cliente. Cada corrección es una nueva versión vinculada con la anterior (RN-36).', [
     ID(),
@@ -1054,9 +1158,15 @@ add('propuestas_refinanciacion', 'SS-06', 'PropuestaRefinanciacion', 'Planes pre
     C('motivo_cancelacion', 'NVARCHAR(500)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Analista que la registró.'),
     VF(),
+    EN('tipo_cancelacion', 'TipoCancelacionPropuesta', null=True, d='Desistimiento del cliente (Analista) o causa administrativa (Gerente), CU-96.'),
+    C('fecha_cancelacion', TS, null=True),
+    FK('usuario_cancelacion_id', 'usuarios_internos', null=True),
+    C('fecha_desistimiento', D, null=True, d='Fecha de la constancia de desistimiento del cliente.'),
+    C('medio_desistimiento', 'NVARCHAR(100)', null=True, d='Medio por el que el cliente desistió.'),
 ], uq=[('UQ_propuestas_numero_version', ['numero', 'version'], None)],
    ck=[('CK_propuestas_valores', 'capital_refinanciado > 0 AND concepto_no_capitalizable >= 0 AND cantidad_cuotas > 0 AND tasa >= 0'),
-       ('CK_propuestas_cancelacion', "estado <> 'Cancelada' OR motivo_cancelacion IS NOT NULL")],
+       ('CK_propuestas_cancelacion', "estado <> 'Cancelada' OR motivo_cancelacion IS NOT NULL"),
+       ('CK_propuestas_datos_cancelacion', "estado <> 'Cancelada' OR (tipo_cancelacion IS NOT NULL AND fecha_cancelacion IS NOT NULL AND usuario_cancelacion_id IS NOT NULL AND (tipo_cancelacion = 'Administrativa' OR (fecha_desistimiento IS NOT NULL AND medio_desistimiento IS NOT NULL)))")],
    idx=[('IX_propuestas_cliente', ['cliente_id', 'estado'], None, None),
         ('IX_propuestas_vence', ['vence'], None, "estado IN ('PendienteResolucion', 'AprobadaPendienteAceptacion')")])
 
@@ -1065,6 +1175,7 @@ add('propuestas_cuotas', 'SS-06', '(asociación Propuesta–Cuota)', 'Cuotas com
     FK('cuota_id', 'cuotas', big=True),
     C('capital_pendiente', M2),
     C('no_capitalizable', M2, d='Intereses vencidos, gastos, IVA y punitorios exigibles a la fecha de corte.'),
+    C('punitorio', M2, default='0', d='Punitorios exigibles con su IVA incluidos en no_capitalizable; los posteriores se incorporan al aplicar (RN-70, D-36).'),
 ], pk=['propuesta_id', 'cuota_id'])
 
 add('resoluciones_propuesta', 'SS-06', 'ResolucionPropuesta', 'Decisiones gerenciales sobre una propuesta (CU-41).', [
@@ -1083,6 +1194,8 @@ add('aceptaciones_refinanciacion', 'SS-06', 'AceptacionRefinanciacion', 'Constan
     C('medio', 'NVARCHAR(100)'),
     C('observaciones', 'NVARCHAR(500)', null=True),
     FK('usuario_id', 'usuarios_internos', d='Analista o Cajero autorizado.'),
+    C('fecha_constancia', D, d='Fecha en que el cliente manifestó su aceptación.'),
+    C('punitorios_incorporados', M2, default='0', d='Punitorios devengados desde la fecha de corte incorporados al concepto no capitalizable (RN-70).'),
 ])
 
 # ============================================================== SS-08

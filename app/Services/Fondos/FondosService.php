@@ -10,14 +10,17 @@ use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
+use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
+use CodeIgniter\I18n\Time;
 
 /**
  * Disponibilidad de fondos de la entidad (SS-05, RN-41, RN-71).
  *
  *   fondos = movimientos de fondos realizados (ingresos − egresos, CU-85) + importes imputados a obligaciones
- *            (cobros confirmados y aplicaciones de saldo) − desembolsos (liquidaciones) − devoluciones completadas
+ *            (cobros confirmados y aplicaciones de saldo) − desembolsos (liquidaciones)
+ *   Los saldos a favor no integran los fondos hasta aplicarse (RN-57); por eso su devolución no los reduce (D-37).
  *   disponible libre = fondos − reservas y compromisos vigentes − reserva mínima (parámetros de campañas, CU-51)
  *
  * Las reservas se constituyen con un bloqueo de aplicación para que dos aprobaciones simultáneas no usen los mismos
@@ -32,11 +35,12 @@ class FondosService extends BaseService
         $movimientos = $q("SELECT COALESCE(SUM(CASE WHEN caracter = 'Ingreso' THEN importe ELSE -importe END), 0) AS t FROM dbo.movimientos_fondos WHERE estado = 'Realizado'");
         $imputado = $q('SELECT COALESCE(SUM(i.importe), 0) AS t FROM dbo.imputaciones i LEFT JOIN dbo.cobros c ON c.id = i.cobro_id '
             . "WHERE i.aplicacion_saldo_id IS NOT NULL OR c.estado = 'Confirmado'");
+        // La restitución de una revocación (RN-79) no se imputa a cuotas
+        $restituciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.cobros WHERE tipo = 'Revocacion' AND estado = 'Confirmado'");
         $desembolsos = $q('SELECT COALESCE(SUM(importe_neto), 0) AS t FROM dbo.liquidaciones');
-        $devoluciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.autorizaciones_devolucion WHERE estado = 'Completada'");
         $afectaciones = $q("SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.afectaciones_fondos WHERE estado = 'Vigente'");
         $minima = Decimal::of((string) ((new ParametroService($this->db))->vigente('Campanas')['valores']['reserva_minima'] ?? '0'));
-        $fondos = $movimientos->add($imputado)->sub($desembolsos)->sub($devoluciones);
+        $fondos = $movimientos->add($imputado)->add($restituciones)->sub($desembolsos);
 
         return [
             'fondos' => $fondos->toFixed(2),
@@ -90,6 +94,75 @@ class FondosService extends BaseService
     public function consumir(int $afectacionId): void
     {
         $this->db->query("UPDATE dbo.afectaciones_fondos SET estado = 'Consumida', version_fila = version_fila + 1 WHERE id = ? AND estado = 'Vigente'", [$afectacionId]);
+    }
+
+    // ── CU-92 Proyectar Disponibilidad de Fondos ──────────────────────────────
+
+    /**
+     * CU-92 pasos 2 a 8 (A2): disponibilidad proyectada al fin del período configurado (RN-39, D-38).
+     *
+     *   ingresos esperados = cuotas pendientes de créditos activos o en mora con vencimiento en el período, por su
+     *                        saldo pendiente, ajustadas por el factor de cobrabilidad
+     *   egresos comprometidos = reservas y compromisos vigentes + egresos programados hasta el fin del período (CU-85);
+ *                           los ingresos programados no se suponen
+     *   proyectada = fondos actuales + ingresos esperados − egresos comprometidos − reserva mínima
+     *
+     * La activación o el cierre de campañas (CU-93, CU-94) se incorporan en la iteración 4: aquí se registra si la
+     * condición se cumple.
+     *
+     * @return array<string, mixed>
+     */
+    public function proyectar(?string $proceso = null): array
+    {
+        $param = (new ParametroService($this->db))->vigente('Campanas');
+        $v = $param['valores'];
+        $periodo = (int) ($v['periodo_proyeccion_dias'] ?? 30);
+        $factor = Decimal::of((string) ($v['factor_cobrabilidad'] ?? '1'));
+        $umbral = Decimal::of((string) ($v['umbral_disponibilidad'] ?? '0'));
+        $hoy = $this->hoyNegocio();
+        $fin = Time::parse($hoy, config('Sigccr')->zonaNegocio)->addDays($periodo)->format('Y-m-d');
+        $q = fn (string $sql, array $b = []): Decimal => Decimal::of((string) ($this->db->query($sql, $b)->getRowArray()['t'] ?? '0'));
+        $d = $this->disponibilidad();
+        $aVencer = $q(
+            'SELECT COALESCE(SUM(q.capital_pendiente + q.interes_pendiente + q.gastos_pendiente + q.iva_pendiente + q.no_capitalizable_pendiente), 0) AS t '
+            . "FROM dbo.cuotas q JOIN dbo.creditos c ON c.id = q.credito_id WHERE c.estado IN ('Activo', 'EnMora') AND q.estado IN ('Pendiente', 'Vencida') "
+            . 'AND q.vencimiento >= CAST(? AS date) AND q.vencimiento <= CAST(? AS date)',
+            [$hoy, $fin],
+        );
+        $ingresos = $aVencer->mul($factor)->round(2);
+        $programados = $q(
+            "SELECT COALESCE(SUM(importe), 0) AS t FROM dbo.movimientos_fondos WHERE estado = 'Programado' AND caracter = 'Egreso' AND fecha <= CAST(? AS date)",
+            [$fin],
+        );
+        $egresos = Decimal::of($d['afectaciones'])->add($programados);
+        $minima = Decimal::of($d['reserva_minima']);
+        $proyectado = Decimal::of($d['fondos'])->add($ingresos)->sub($egresos)->sub($minima);
+        $this->db->table('proyecciones_fondos')->insert([
+            'fecha' => $this->ahoraUtc(), 'periodo_dias' => $periodo, 'disponible_actual' => Decimal::of($d['fondos'])->toFixed(2), 'ingresos_esperados' => $ingresos->toFixed(2),
+            'egresos_comprometidos' => $egresos->toFixed(2), 'reserva_minima' => $minima->toFixed(2), 'disponible_proyectado' => $proyectado->toFixed(2),
+            'version_parametros_id' => $param['id'],
+        ]);
+        $id = (int) $this->db->insertID();
+        $activa = $this->db->table('campanas')->where('estado', 'Activa')->countAllResults() > 0;
+        $condicion = $proyectado->compare($umbral) > 0;
+        if ($proyectado->isNegative()) {
+            (new AlertaService($this->db))->generar('Proceso', 'La disponibilidad proyectada a ' . $periodo . ' días es negativa: ' . formato_importe($proyectado->toFixed(2)) . '.', 'Revisar compromisos y fondos (CU-92 A2).', 'Gerente', null, 'proyecciones_fondos', $id);
+        }
+        $r = [
+            'id' => $id, 'periodo' => $periodo, 'hasta' => $fin, 'fondos' => $d['fondos'], 'cuotas_a_vencer' => $aVencer->toFixed(2), 'factor' => $factor->toFixed(4),
+            'ingresos' => $ingresos->toFixed(2), 'egresos' => $egresos->toFixed(2), 'reserva_minima' => $minima->toFixed(2), 'proyectado' => $proyectado->toFixed(2),
+            'umbral' => $umbral->toFixed(2), 'campana_activa' => $activa,
+            'campana' => $activa ? ($condicion ? 'continúa' : 'corresponde cerrar (CU-94)') : ($condicion ? 'corresponde activar (CU-93)' : 'sin cambios'),
+        ];
+        (new AuditoriaService($this->db))->registrar('fondos.proyectar', 'proyecciones_fondos', $id, 'Exitoso', null, $r, $proceso);
+
+        return $r;
+    }
+
+    /** @return array<string, mixed>|null última proyección registrada */
+    public function ultimaProyeccion(): ?array
+    {
+        return $this->db->query('SELECT TOP 1 * FROM dbo.proyecciones_fondos ORDER BY fecha DESC, id DESC')->getRowArray();
     }
 
     // ── CU-85 Registrar Movimiento de Fondos ───────────────────────────────────

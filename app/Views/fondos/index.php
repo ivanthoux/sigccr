@@ -5,11 +5,12 @@
  * @var CodeIgniter\View\View $this
  * @var array<string, string> $d
  * @var string $saldos
+ * @var array<string, mixed>|null $proyeccion
  * @var list<array<string, mixed>> $movimientos
  */
 use App\Libraries\Caja\ReglasCaja;
 
-$hoy = date('Y-m-d');
+$hoy = hoy_negocio();
 $sel = (int) session('movimiento');
 $this->extend('layouts/panel');
 $this->section('contenido');
@@ -28,8 +29,21 @@ $this->section('contenido');
         <div><dt>Reserva mínima</dt><dd class="importe"><?= esc(formato_importe($d['reserva_minima'])) ?></dd></div>
         <div><dt>Disponible libre</dt><dd class="importe fw-semibold"><?= esc(formato_importe($d['libre'])) ?></dd></div>
     </dl>
-    <p class="small text-body-secondary mb-0">Fondos = movimientos realizados + cobros imputados − desembolsos − devoluciones. Los saldos a favor de clientes (<?= esc(formato_importe($saldos)) ?>) no integran la disponibilidad.</p>
+    <p class="small text-body-secondary mb-0">Fondos = movimientos realizados + cobros y saldos imputados a cuotas − desembolsos. Los saldos a favor de clientes (<?= esc(formato_importe($saldos)) ?>) no integran la disponibilidad.</p>
 </section>
+
+<?php if ($proyeccion !== null): ?>
+    <section class="hoja p-4 mb-3" aria-labelledby="titulo-proyeccion">
+        <h2 class="h5" id="titulo-proyeccion">Última proyección a <?= (int) $proyeccion['periodo_dias'] ?> días</h2>
+        <dl class="resumen-plan mb-2">
+            <div><dt>Fondos al proyectar</dt><dd class="importe"><?= esc(formato_importe((string) $proyeccion['disponible_actual'])) ?></dd></div>
+            <div><dt>Ingresos esperados</dt><dd class="importe"><?= esc(formato_importe((string) $proyeccion['ingresos_esperados'])) ?></dd></div>
+            <div><dt>Egresos comprometidos</dt><dd class="importe"><?= esc(formato_importe((string) $proyeccion['egresos_comprometidos'])) ?></dd></div>
+            <div><dt>Disponible proyectado</dt><dd class="importe fw-semibold"><?= esc(formato_importe((string) $proyeccion['disponible_proyectado'])) ?></dd></div>
+        </dl>
+        <p class="small text-body-secondary mb-0">Calculada el <?= esc(formato_fecha_hora($proyeccion['fecha'])) ?> por el proceso diario de las 06:00: cuotas a vencer ajustadas por el factor de cobrabilidad, menos reservas, compromisos, egresos programados y la reserva mínima (CU-92, RN-39).</p>
+    </section>
+<?php endif ?>
 
 <form method="post" action="<?= url_to('fondos.movimientos') ?>" class="hoja p-4 mb-3" novalidate aria-labelledby="titulo-nuevo">
     <?= csrf_field() ?>

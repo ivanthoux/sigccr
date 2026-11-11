@@ -45,7 +45,7 @@ $this->section('contenido');
         <div class="row g-3">
             <div class="col-md-3">
                 <label for="fecha_vigencia" class="form-label">Rige desde</label>
-                <input type="date" class="form-control<?= campo_invalido('fecha_vigencia') ?>" id="fecha_vigencia" name="fecha_vigencia" min="<?= date('Y-m-d') ?>" value="<?= esc((string) old('fecha_vigencia', date('Y-m-d')), 'attr') ?>">
+                <input type="date" class="form-control<?= campo_invalido('fecha_vigencia') ?>" id="fecha_vigencia" name="fecha_vigencia" min="<?= hoy_negocio() ?>" value="<?= esc((string) old('fecha_vigencia', hoy_negocio()), 'attr') ?>">
                 <?= error_campo('fecha_vigencia') ?>
             </div>
             <div class="col-md-9">

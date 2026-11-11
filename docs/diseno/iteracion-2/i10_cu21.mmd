@@ -1,0 +1,31 @@
+sequenceDiagram
+autonumber
+actor AN as Analista
+participant V as Vista simulaciones
+participant C as Admin Simulaciones
+participant S as SimulacionService
+participant EL as Elegibilidad
+participant SI as Simulador
+participant A as AuditoriaService
+participant DB as SQL Server
+AN->>V: selecciona el cliente
+V->>C: GET simulaciones/nueva?cliente
+C->>S: cliente(id), perfil(c), lineasParaCliente(id)
+S->>DB: cliente, versiones vigentes de las líneas activas
+S->>EL: motivoNoAdmitida(versión, cliente, hoy) por línea (RN-75)
+C-->>V: perfil del cliente y líneas admitidas con sus condiciones
+AN->>V: línea, importe y cuotas
+V->>C: POST simulaciones
+C->>S: simular(cliente, línea, importe, cuotas, usuario)
+S->>DB: BEGIN y bloquea lineas_credito (A3, RN-16)
+S->>EL: la línea sigue admitida para el cliente
+S->>SI: validar(versión, importe, cuotas): límites de la línea (RN-14, RN-76)
+alt fuera de límites
+S-->>C: ValidacionException
+C-->>V: importe y cuotas admitidos (A2)
+end
+S->>SI: calcular(versión, importe, cuotas, IVA, hoy): plan francés, gastos fijos o porcentuales, TEA y CFTEA (RN-50 a RN-52, RN-63, RN-68)
+S->>DB: simulaciones Vigente, vence a los 7 días (RN-48)
+S->>A: auditoría solicitudes.simular
+S->>DB: COMMIT
+C-->>V: plan preliminar paginado con discriminación por concepto

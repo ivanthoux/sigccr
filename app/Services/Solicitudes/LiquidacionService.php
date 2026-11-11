@@ -76,6 +76,7 @@ class LiquidacionService extends BaseService
             $s['calculo'] = Simulador::calcular($s, Decimal::of((string) $s['importe_aprobado'])->toFixed(2), (int) $s['cuotas_aprobadas'], $iva, new DateTimeImmutable($this->hoyNegocio())) + ['alicuota_iva' => $iva];
         }
         $s['requiere_conformidad'] = $s['alternativa_id'] !== null && $s['estado_alternativa'] !== 'Confirmada';
+        $s['constancia'] = (new ContratoService($this->db))->constanciaRegistrada($solicitudId);
         $s['reserva'] = $this->db->query("SELECT TOP (1) importe FROM dbo.afectaciones_fondos WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'", [$solicitudId])->getRowArray()['importe'] ?? null;
 
         return $s;
@@ -130,6 +131,10 @@ class LiquidacionService extends BaseService
                 $auditoria->registrar('creditos.liquidar', 'solicitudes_credito', $solicitudId, 'Rechazado', 'Evaluación vencida (CU-27 A2).');
 
                 return ['estado' => 'PendienteEvaluacion', 'mensaje' => 'La evaluación crediticia ya no está vigente: la aprobación quedó sin efecto, se liberó la reserva y la solicitud volvió a evaluación (RN-49).', 'credito_id' => null];
+            }
+            // A4 (D-31): la constancia firmada del contrato debe estar en el legajo (RN-25, RN-78)
+            if (!$s['constancia']) {
+                throw new ReglaNegocioException('Falta la constancia firmada del contrato de préstamo en el legajo: el Analista debe incorporarla (CU-103) antes de liquidar (RN-25, RN-78).', 'RN-78');
             }
             $neto = $s['calculo']['neto']->toFixed(2);
             $v = Desembolso::validar($datos, $s, $neto, $this->hoyNegocio(), (bool) $s['requiere_conformidad']);

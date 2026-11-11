@@ -217,3 +217,24 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .categoria-a, .categoria-b { background: var(--verde); }
 .categoria-c { background: var(--ambar); }
 .categoria-d, .categoria-e { background: var(--rojo); }
+
+/* Contrato de préstamo (RN-78): el CFTEA se destaca al menos al doble del tamaño del texto */
+.contrato { font-size: 0.95rem; line-height: 1.55; }
+.contrato .cft-valor { font-size: 2.6em; line-height: 1.1; }
+@media print {
+    .contrato { border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+}
+
+/* Impresión de comprobantes, constancias y contratos: solo el contenido, a todo el ancho de la hoja y sin barras de
+   desplazamiento en las tablas (todas las columnas visibles). */
+@media print {
+    @page { margin: 12mm; }
+    .lateral, .barra-movil, .alert-dismissible .btn-close { display: none !important; }
+    .contenido { padding: 0 !important; max-width: none !important; }
+    .hoja { box-shadow: none !important; border: 0 !important; padding: 0 !important; margin-bottom: 1rem !important; }
+    .table-responsive { overflow: visible !important; }
+    .table { font-size: 8.5pt; width: 100% !important; }
+    .table th, .table td { padding: 0.15rem 0.25rem !important; }
+    .table th { white-space: normal; }
+}
+

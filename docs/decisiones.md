@@ -33,6 +33,17 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-27 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 | D-28 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
 | D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
+| D-30 | 06/11/2026 | Propuesta |
+| D-31 | 06/11/2026 | Propuesta |
+| D-32 | 07/11/2026 | Propuesta |
+| D-33 | 07/11/2026 | Propuesta |
+| D-34 | 07/11/2026 | Propuesta |
+| D-35 | 08/11/2026 | Propuesta |
+| D-36 | 08/11/2026 | Propuesta |
+| D-37 | 08/11/2026 | Propuesta |
+| D-38 | 08/11/2026 | Propuesta |
+| D-39 | 10/11/2026 | Propuesta |
+| D-40 | 10/11/2026 | Aceptada (10/11/2026) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -384,3 +395,150 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 4. **Estudio legal.** Se elabora como documento del proyecto y alimenta las reglas de negocio y el contenido del contrato.
 
 **Consecuencias.** Se agregan casos de uso al SS-02 (pre-registro), al SS-04 (constancia firmada) y un adaptador al SS-11. Se replanifica la iteración 3.
+
+## D-30 · Caja y cobros sin efectivo (CU-31 a CU-37, CU-56, CU-97; RN-28, RN-29, RN-32)
+
+**Contexto.** D-27 eliminó el efectivo del desembolso y difirió a la iteración 3 el rediseño de la caja. El art. 1 de la Ley 25.345 impide recibir pagos de más de $ 1.000 en efectivo, y la presentación pidió que todo pago se haga por medios bancarios.
+
+**Decisión.**
+1. **Sin efectivo.** Los cobros se reciben por transferencia o depósito en una cuenta de la entidad, tarjeta de débito o de crédito, o la pasarela, siempre con número de operación (RN-77). No hay cambio.
+2. **Apertura sin fondo inicial (CU-31).** La jornada se abre con la asignación vigente, sin importe (RN-28).
+3. **Cierre como conciliación (CU-36).** Para cada medio, el Cajero informa el total acreditado según el extracto o el resumen del procesador; el sistema calcula la diferencia con lo registrado y exige su explicación (RN-32). CU-32 y CU-56 informan la conciliación en lugar del arqueo.
+4. **Registros anteriores.** Las columnas del efectivo, el cambio y el fondo inicial se conservan para los registros anteriores; la migración de la iteración 3 impide nuevos valores.
+
+**Consecuencias.** Cambian `CajaService` (`abrir()` sin fondo, `cerrar()` con la conciliación), `MediosCobro` (sin efectivo ni cambio; la suma de los medios debe igualar el importe), `ReglasCaja` (`totalesPorMedio()` y `validarConciliacion()` en lugar del arqueo) y las pantallas de caja. La migración 16 agrega `conciliaciones_jornada` y restricciones WITH NOCHECK sobre `jornadas_caja`, `cobros`, `cobros_medios`, `movimientos_caja` y `liquidaciones`. Cambian CU-31 a CU-33, CU-35, CU-36, CU-56, CU-67, CU-77, CU-97, RN-28, RN-29 y RN-32 (documento v12).
+
+## D-31 · Contrato, revocación, identificación del cliente y régimen informativo (CU-102 a CU-105; RN-77 a RN-84)
+
+**Contexto.** El estudio normativo (sección 1.8 del documento v12) identificó obligaciones que la v11 no cubría: el contrato de la Ley 24.240 (art. 36), la revocación del préstamo, la identificación del cliente de la Resolución UIF 200/2024 y el régimen informativo de la Central de Deudores.
+
+**Decisión.**
+1. **Contrato (CU-103, RN-78).** Se genera con cada aprobación vigente: si la aprobación queda sin efecto y la solicitud se vuelve a aprobar, el nuevo contrato instrumenta las nuevas condiciones y exige una nueva constancia. El Analista lo imprime en dos ejemplares, entrega uno al cliente e incorpora al legajo la copia escaneada del firmado, con la fecha de recepción, que inicia el plazo de revocación; el Cajero no liquida sin ella (RN-25). La constancia es un tipo de documento interno, inactivo en el catálogo para que ninguna línea lo exija. Los datos de la entidad se configuran en `.env`. Precisa el punto 3 de D-29.
+2. **Revocación (CU-102, RN-79).** Dentro de los 10 días hábiles desde la recepción del contrato o el desembolso, lo último. El cliente restituye el capital y el interés devengado, sin gastos; confirmada la restitución, el crédito pasa a Revocado (nuevo estado de 4.2.7).
+3. **Identificación (RN-80).** CU-11 agrega nacionalidad, actividad principal obligatoria y la declaración sobre persona expuesta políticamente, que alerta al Gerente. La declaración se guarda en `clientes` con su fecha (para la persona jurídica comprende a sus representantes y beneficiarios). Los clientes anteriores quedan con los datos vacíos: la validación los exige en la próxima modificación y CU-22 no registra solicitudes hasta completarlos. La consulta del padrón de ARCA es opcional (A9, ACT-10).
+4. **Pre-registro (CU-104).** Precisa el punto 1 de D-29.
+5. **Régimen informativo (CU-105, RN-84).** Clasificación mensual de los deudores en situaciones 1 a 5 y archivo para la Central de Deudores; la presentación ante el BCRA la hace la entidad.
+6. **Tope global (RN-83) y confirmación de cambios (RN-82)** quedan como reglas propias, ya implementadas en D-22 y D-24.
+
+**Consecuencias.** Nuevos RF-19, RNF-17, GLO-75 a GLO-84, clases ContratoPrestamo, Revocacion y SituacionDeudor, y tablas en las iteraciones 3 y 4. Fuentes de los diagramas de estados en `docs/diseno/estados` y de secuencia de la iteración 2 en `docs/diseno/iteracion-2`.
+
+## D-32 · Cobro de cuotas en ventanilla y su anulación (CU-33, CU-35, CU-32, CU-37)
+
+**Contexto.** CU-33 indica el orden de imputación dentro de una cuota (RN-29), pero no entre cuotas de distintos créditos, ni cómo se exigen los punitorios que CU-88 devenga con cuatro decimales, ni cuándo cambia el estado del crédito.
+
+**Decisión.**
+1. **Orden entre créditos.** Por cada crédito la selección comienza por la cuota impaga más antigua y es consecutiva (A8). Entre créditos, el importe se imputa por fecha de vencimiento y, a igual fecha, por crédito y número de cuota.
+2. **Punitorios.** Se exigen los que CU-88 dejó en la cuota, redondeados a dos decimales; su IVA integra el concepto IVA. Dentro del IVA se cancela primero el de los conceptos ordinarios. Un concepto cancelado queda en cero aunque tuviera fracciones de centavo.
+3. **Estados.** La cuota cancelada pasa a Pagada; la alcanzada parcialmente conserva su saldo y su estado (D-12). El crédito pasa a Cancelado sin cuotas impagas, y de En mora a Activo cuando no le quedan cuotas vencidas impagas.
+4. **Comprobante.** Se emite en la misma transacción. Cada consulta y cada reemisión se audita, y la reemisión incrementa su contador (RN-31).
+5. **Anulación (CU-37).** Cada concepto de la cuota recupera lo imputado; el IVA vuelve primero al ordinario, hasta su importe nominal. Los punitorios se restituyen redondeados a dos decimales y CU-88 los recalcula desde el vencimiento original. Son operaciones dependientes los cobros posteriores confirmados sobre las mismas cuotas: se presentan y el Gerente confirma que quedan identificados para su revisión. El cobro y sus movimientos de caja se conservan, porque el dinero se recibió; el importe queda como saldo a favor (RN-33, RN-57).
+6. **Pendiente.** La advertencia de cuotas incluidas en una orden de pago electrónico (A6) y la reversión por la pasarela (CU-37 A3) se incorporan con los pagos electrónicos (E03).
+
+**Consecuencias.** Sin cambios de esquema. Componentes nuevos: `CobroCuotas` (con 9 pruebas) y `CobroService`; controlador `Admin\Cobros` y consulta de jornadas en `Admin\Cajas`.
+
+## D-33 · Cálculo de los intereses punitorios (CU-60, CU-88, CU-33)
+
+**Contexto.** RN-34, RN-35 y RN-53 definen la base, la tasa, el tope y la tolerancia, pero no cómo se combina el proceso nocturno con un pago realizado durante el día, ni qué tasa rige el día en que se cambia el parámetro.
+
+**Decisión.**
+1. **Día procesado.** CU-88 corre a las 00:05 y procesa el día anterior: marca Vencidas las cuotas con vencimiento hasta ese día y En mora sus créditos, y registra un tramo por cada día de atraso sin calcular, desde el día siguiente al vencimiento. Si el proceso no corrió algunos días, cada cuota completa sus días faltantes en la siguiente ejecución (A1); la clave única (cuota, fecha) evita duplicar (A2).
+2. **Tasa de cada día.** Rige la versión de parámetros vigente al cierre del día (23:59 hora local), limitada por el tope sobre la TNA del crédito. Un cambio registrado hoy se aplica desde el día de hoy y no modifica los tramos ya calculados (RN-35).
+3. **Base.** El capital pendiente de la cuota en el momento del cálculo. El día de un pago parcial se calcula sobre el capital anterior al pago, porque el tramo del día se registra antes de imputarlo; los días siguientes usan el capital reducido (RN-34).
+4. **Tolerancia.** Los tramos se registran como condicionales. Cuando el atraso supera la tolerancia asignada al crédito al liquidarlo, todos pasan a exigibles y su suma se agrega a los punitorios pendientes de la cuota (RN-53). Una cuota cancelada dentro de la tolerancia no paga punitorios.
+5. **Cobro.** Antes de mostrar la deuda y de registrar un cobro (CU-33), se calculan los tramos hasta el día del pago, de modo que un pago al cuarto día de atraso incluye los cuatro días (RN-53).
+6. **Morosidad avanzada (RN-65).** Se determina al consultar, a partir de los días de atraso de las cuotas exigibles y del umbral vigente; no se guarda una clasificación aparte.
+
+**Consecuencias.** Sin cambios de esquema (usa `tramos_punitorios`, `cuotas.punitorio_pendiente` y `creditos.tolerancia_dias`). Componentes nuevos: `ValidadorParametrosMorosidad`, `PunitorioService`, el comando `cartera:punitorios` y la línea habilitada del crontab.
+
+## D-34 · Importe y registro de la revocación (CU-102, RN-79)
+
+**Contexto.** El art. 1112 del Código Civil y Comercial obliga a restituir lo recibido; RN-79 agrega el interés compensatorio devengado y excluye gastos y comisiones. Faltaba precisar sobre qué capital se calcula, hasta qué día y cómo entra el dinero.
+
+**Decisión.**
+1. **Capital.** El neto desembolsado, que es lo que el cliente recibió; el gasto de otorgamiento retenido no se restituye ni se cobra.
+2. **Interés.** Interés simple a la TNA del crédito por los días corridos desde el desembolso hasta la comunicación de la revocación, más su IVA, que es un impuesto y no un gasto. Se descuenta lo que el cliente haya pagado por sus cuotas; si pagó más, el exceso queda como saldo a favor (RN-57).
+3. **Plazo.** Diez días hábiles, según el calendario operativo, desde el día de la recepción del contrato o del desembolso, lo que ocurra último. Sin constancia de recepción (CU-103) no se puede computar el plazo.
+4. **Dos momentos.** La comunicación registra la revocación y fija el importe; el crédito conserva su plan y sigue sujeto a CU-88 hasta que se confirma la transferencia recibida. Entonces el crédito pasa a Revocado y sus cuotas no pagadas, a SinEfecto. Si lo pagado cubre el importe, se confirma en el acto.
+5. **Ingreso.** La transferencia se registra como un cobro de tipo Revocacion, sin imputaciones a cuotas, con su movimiento de caja: integra la conciliación de la jornada (RN-32) y vuelve a los fondos disponibles. No puede anularse con CU-37.
+
+**Consecuencias.** Migración 19 y componentes `Revocacion` (con 3 pruebas), `RevocacionService` y `Admin\Revocaciones`; permiso 102 del Cajero. Se agrega el estado Revocado al diagrama de 4.2.7, ya incluido en la v12.
+
+
+## D-35 · Órdenes y confirmación de pagos electrónicos (CU-34, CU-38, CU-90, CU-91; RN-30, RN-54 a RN-57)
+
+**Contexto.** RN-30 exige que el pago electrónico se confirme una sola vez y solo con información de la pasarela, y RN-55 que los punitorios se calculen hasta la fecha efectiva del pago. Faltaba precisar cuándo existe la orden, qué estados de la pasarela son definitivos, cómo se imputa un importe distinto y qué se hace con los punitorios que el proceso nocturno registró después del pago.
+
+**Decisión.**
+1. **Orden.** Cuotas completas y consecutivas desde la más antigua (RN-29), por su total actualizado al emitirla. Vence a las 00:00 del día siguiente, hora local, como límite exclusivo. Una cuota no integra dos órdenes pendientes y vigentes (A7): se vuelve a compartir el enlace de la existente. La orden se registra y después se envía a la pasarela, fuera de la transacción; si la pasarela no responde, se elimina y el intento queda auditado (A1).
+2. **Notificación.** El webhook solo registra el cuerpo y la validez de la firma y responde el acuse; una firma no válida queda Descartada como incidencia de seguridad. El proceso `pagos:notificaciones` (cada minuto) no confía en el cuerpo: consulta a la pasarela las transacciones de la orden y procesa cada una (RNF-08).
+3. **Estados.** Aprobado (`approved`, `accredited`) confirma; rechazado (`rejected`, `cancelled`, `refunded`, `charged_back`) deja la deuda; cualquier otro es no definitivo: la orden pasa a En conciliación con una incidencia EstadoDesconocido, que se resuelve cuando llega el estado definitivo. El identificador externo es único: una transacción ya definitiva no se procesa de nuevo.
+4. **Confirmación.** Se calculan los punitorios hasta la fecha efectiva (hora local) y se eliminan los tramos de días posteriores, descontándolos de los punitorios pendientes con su detalle en la auditoría (RN-55). El importe recibido se imputa a las cuotas impagas de la orden con el mismo orden y conceptos que en ventanilla (RN-36); el cobro tiene canal Electronico, medio PagoElectronico, la transacción que lo confirmó y comprobante.
+5. **Diferencias.** Un importe distinto o en otra moneda, o una fecha efectiva igual o posterior al vencimiento, se imputan igual y generan incidencias ImporteDistinto o FueraDePlazo con alerta al Gerente (RN-56). El excedente y, si las cuotas ya se pagaron por otro medio, todo el importe (ObligacionesCanceladas) quedan como saldo a favor vinculado a la transacción (RN-57).
+6. **Conciliación.** `pagos:conciliar` (cada 30 minutos) consulta las órdenes pendientes de más de 10 minutos, las En conciliación y las vencidas en los dos últimos días; una orden vencida sin transacciones pasa a Vencida, y una En conciliación por más de 48 horas genera una alerta al Gerente (CU-91 A2). El Cajero puede pedir la misma consulta desde CU-38.
+7. **Simulador.** Fuera de producción, `simulador/pagar/{referencia}` permite aprobar, rechazar, dejar en proceso o pagar otro importe u otra fecha, con o sin notificación y con firma no válida.
+
+**Consecuencias.** Migración 20 (`ordenes_pago_electronico.url_pago`). Componentes nuevos: `PagoElectronico` (con 3 pruebas), `PagoElectronicoService`, `Admin\PagosElectronicos`, `Api\Webhooks\Pasarela`, `Simulador\Pasarela` y los comandos `pagos:notificaciones` y `pagos:conciliar`, con sus líneas del crontab. `CobroService::imputar()` pasa a ser compartido por ambos canales, y CU-33 advierte las cuotas incluidas en una orden pendiente (A6).
+
+## D-36 · Circuito de refinanciación y condonación de punitorios (CU-39 a CU-44, CU-74, CU-96; RN-36 a RN-38, RN-70)
+
+**Contexto.** RN-36 y RN-70 fijan qué se refinancia y cuándo una propuesta queda Observada, pero no cómo se detecta que la deuda varió si los punitorios siguen creciendo después del corte, qué crédito recibe el nuevo plan ni cómo se trata el IVA de los punitorios condonados.
+
+**Decisión.**
+1. **Composición por cuota.** Para cada cuota no pagada de los créditos En mora seleccionados se guarda, en la simulación y en la propuesta, el capital pendiente, el concepto no capitalizable a la fecha de corte (interés, gastos, IVA y punitorios exigibles con su IVA si la cuota venció antes del corte, más el no capitalizable de una refinanciación anterior) y la parte de punitorios incluida. El corte de la simulación es el día en que se genera; el de la propuesta, el día de su registro.
+2. **Variación.** La deuda varió si una cuota dejó de estar pendiente o volvió a estarlo, si cambió su capital o su no capitalizable sin punitorios, si bajaron sus punitorios o si un crédito dejó de estar en mora. El aumento de los punitorios no es una variación: la diferencia con el corte se incorpora al concepto no capitalizable al aplicar.
+3. **Momentos de control.** CU-40 rechaza registrar la propuesta si la deuda cambió desde la simulación (A2). CU-41 y CU-74 revalidan y, si cambió, dejan la propuesta Observada sin aprobarla ni aplicarla. Además, todo cobro (ventanilla o electrónico), anulación de cobro o condonación sobre cuotas comprendidas deja Observadas en la misma transacción las propuestas pendientes o aprobadas, con alerta al Analista. Una propuesta vencida se marca Vencida al intentar operarla y, en general, por CU-89.
+4. **Versiones.** Una propuesta Observada se corrige con una nueva simulación: al registrar la propuesta sobre los mismos créditos, queda como versión siguiente con el mismo número, vinculada con la anterior y con nuevo plazo de 7 días. La numeración usa la secuencia `seq_propuestas`.
+5. **Aplicación.** En una sola transacción: el nuevo crédito tiene origen Refinanciación, la propuesta de origen, las condiciones de la línea del crédito original de menor número, el régimen de morosidad vigente y fecha de liquidación igual a la aplicación, sin desembolso ni movimiento de fondos. Su plan francés no tiene gastos administrativos; el IVA corresponde al interés y el no capitalizable se reparte en partes iguales (RN-70). Las cuotas originales pasan a Sustituida conservando sus saldos como antecedente, y los créditos originales, a Refinanciado. No se aplica mientras alguna cuota esté en una orden de pago electrónico vigente.
+6. **Cancelación.** El Analista cancela por desistimiento con fecha y medio de la constancia; el Gerente, por causa administrativa. Procede en Pendiente de resolución, Aprobada pendiente de aceptación u Observada.
+7. **Condonación.** El máximo es el porcentaje configurado de los punitorios pendientes de las cuotas elegidas, truncado a centavos y sin IVA. El importe se aplica desde la cuota más antigua y el IVA del punitorio se reduce en la misma proporción (todo, si se condona todo el punitorio de la cuota). No reduce capital ni otros conceptos.
+
+**Consecuencias.** Migración 21: columnas de composición en `simulaciones_refinanciacion`, tabla `simulaciones_refinanciacion_cuotas`, `propuestas_cuotas.punitorio`, datos de cancelación en `propuestas_refinanciacion`, `aceptaciones_refinanciacion.fecha_constancia` y `punitorios_incorporados`, `condonaciones.cliente_id` y `condonaciones_cuotas.iva`. Componentes nuevos: `DeudaRefinanciable` y `Condonacion` (con 6 pruebas), `RefinanciacionService`, `CondonacionService`, `Admin\Refinanciaciones` y `Admin\Condonaciones`. CU-89 vence las propuestas. La cancelación anticipada (CU-97, E07) deberá llamar también a `observarPorCuotas()`.
+
+## D-37 · Aplicación y devolución de saldos a favor (CU-76 a CU-78; RN-57, RN-73, RN-77)
+
+**Contexto.** RN-57 y RN-73 fijan quién aplica o devuelve un saldo a favor y con qué garantías, pero un cliente puede tener varios saldos de orígenes distintos, la autorización del esquema se refiere a un solo saldo y la pasarela es el único medio que admite devoluciones automáticas.
+
+**Decisión.**
+1. **Aplicación.** El Cajero elige cuotas consecutivas desde la más antigua, como en un cobro, y registra la constancia de la conformidad del cliente. Se aplica el menor entre el disponible y el total seleccionado, tomando los saldos desde el más antiguo: cada saldo usado genera su aplicación, con imputaciones propias (columna `aplicacion_saldo_id`) y la prelación de RN-29. Si no alcanza, la última cuota queda con imputación parcial excepcional. No requiere caja abierta ni genera movimiento de caja: no ingresa dinero.
+2. **Autorización por saldo.** Cada autorización corresponde a un saldo y reserva su importe; un saldo admite una sola autorización en curso. Para cambiar importe o destino se anula y se registra otra.
+3. **Destino.** El medio de pago original solo se ofrece para saldos originados en un pago electrónico, porque la pasarela devuelve sobre la transacción. Los saldos originados en la anulación de un cobro en ventanilla o en una revocación se devuelven por transferencia a una cuenta del cliente: CBU válido (no CVU), CUIT del titular igual al del cliente, entidad y evidencia de titularidad.
+4. **Ejecución.** Por la pasarela, la ejecución se registra antes de llamarla, con un identificador de operación único (`SIGCCR-DEV-{n}`); desde ese momento el vencimiento ya no libera la reserva. Confirmada completa la devolución y consume la reserva; Rechazada la deja Fallida, libera el importe y alerta al Gerente; sin respuesta o con estado no definitivo queda En conciliación y la resuelve `pagos:conciliar`, con alerta al Gerente a las 48 horas. Por transferencia, el comprobante debe coincidir en importe y CBU con lo autorizado; si no coincide se rechaza el registro y se alerta al Gerente.
+5. **Vencimiento.** CU-89 vence las autorizaciones sin ejecución iniciada después de 72 horas y libera la reserva.
+6. **Fondos.** Los saldos a favor no integran los fondos hasta que se aplican (RN-57): la disponibilidad deja de descontar las devoluciones completadas, que se descontaban sin haberse sumado.
+
+**Consecuencias.** Migración 22: constancia de la solicitud, entidad, evidencia y anulación en `autorizaciones_devolucion`; importe, cuenta, fecha y detalle en `ejecuciones_devolucion`. La interfaz de la pasarela suma `devolver()` y `consultarDevolucion()`, y el simulador, la página `simulador/devoluciones`. Componentes nuevos: `SaldoAFavor` y `Devolucion` (con 4 pruebas), `SaldoFavorService`, `DevolucionService` y `Admin\SaldosFavor`. `CobroService::imputar()` admite el origen de la aplicación de saldo y `CobroService::seleccionar()` concentra la selección de cuotas de CU-33, CU-34 y CU-76; la búsqueda del cliente de las operaciones que parten de él pasa a `BaseController::clienteSeleccionado()`.
+
+## D-38 · Cancelación anticipada, proyección de fondos y cierre de los vencimientos (CU-97, CU-92, CU-89, CU-81; RN-39, RN-67)
+
+**Contexto.** RN-67 define el importe de la cancelación anticipada pero no cómo se imputa la parte no devengada ni qué ocurre con el concepto no capitalizable de un crédito refinanciado. CU-92 depende de CU-93 y CU-94, que se construyen en la iteración 4.
+
+**Decisión.**
+1. **Importe.** Al cálculo de RN-67 se suma el concepto no capitalizable pendiente de las cuotas no vencidas de un crédito refinanciado: es deuda ya devengada que solo se difirió (RN-70). El IVA es el de la alícuota vigente de Estructuración. Si la cuota en curso tiene un pago parcial previo (D-12), lo ya pagado de su interés cubre primero lo devengado: se cobra el interés proporcional, calculado sobre el interés original de la cuota, menos lo ya pagado, sin bajar de cero; el IVA del interés devengado se reduce del mismo modo por el IVA ya pagado de esa cuota.
+2. **Imputación y reducción.** El cobro imputa las cuotas vencidas por todos sus conceptos; la cuota en curso, por su capital, su no capitalizable, el interés proporcional y su IVA; las demás, por su capital y su no capitalizable. Todas las cuotas quedan Pagadas con sus saldos en cero y el crédito Cancelado; la reducción del interés, los gastos y el IVA no devengados queda en `cancelaciones_anticipadas` y se muestra en el comprobante. El importe debe ser igual al total: no hay cancelación parcial. No procede si alguna cuota integra una orden de pago electrónico pendiente o en conciliación, y deja Observada la propuesta de refinanciación vigente (RN-36).
+3. **Sin anulación.** El cobro de una cancelación anticipada no se anula con CU-37, porque la reducción aplicada no se reconstruye a partir de las imputaciones.
+4. **Proyección.** Ingresos esperados: saldo pendiente de las cuotas de créditos activos o en mora que vencen dentro del período, por el factor de cobrabilidad. Egresos comprometidos: reservas y compromisos vigentes más los egresos programados hasta el fin del período; los ingresos programados no se suponen. Proyectada = fondos + ingresos − egresos − reserva mínima. Se registra con su versión de parámetros, alerta al Gerente si es negativa y deja en la auditoría si corresponde activar o cerrar una campaña, hasta que CU-93 y CU-94 se construyan.
+5. **CU-89 completo.** Se agregan las órdenes de pago pendientes cuyo límite se alcanzó (las en conciliación no vencen y las vencidas se siguen consultando por CU-91), además de las propuestas y las autorizaciones de devolución de D-36 y D-37.
+6. **CU-81.** Ya estaba construido desde D05; solo se agrega la confirmación antes de cambiar el estado.
+
+**Consecuencias.** Migración 23 (`cancelaciones_anticipadas`). Componentes nuevos: `CancelacionAnticipada::distribuir()` (con 1 prueba nueva; otra para el pago parcial previo), `CancelacionAnticipadaService`, `Admin\CancelacionesAnticipadas`, `FondosService::proyectar()` y el comando `fondos:proyectar` (06:00, línea del crontab habilitada). `CobroService::asentarVentanilla()` concentra el registro del cobro en ventanilla con medios, movimientos de caja y comprobante.
+
+## D-39 · Pruebas de punta a punta automatizadas (RNF-15, plan de pruebas)
+
+**Contexto.** Las pruebas unitarias cubren el motor financiero y las reglas, pero no ejecutan SQL Server, la sesión ni las pantallas. La prueba funcional se hacía solo a mano. La primera instalación desde cero en la integración continua mostró defectos que ninguna de las dos detectaba: la migración 19 fallaba con la base vacía, faltaban permisos DELETE del rol de la aplicación, no se podía desactivar una cuenta sin contraseña y el mensaje del cierre de sesión se perdía.
+
+**Decisión.**
+1. **Batería con Playwright** en `tests/e2e/`, contra la pila Docker completa (Nginx, PHP-FPM y SQL Server), en una pila aislada (`sigccr_e2e`) que se crea con la base vacía en cada ejecución. Se instala desde cero: migraciones, semillas y Administrador inicial por variables de entorno.
+2. **Trazabilidad.** Cada prueba lleva el identificador de su caso de la prueba funcional integral (R-xxx), y sus aserciones son los resultados esperados del documento aprobado. Una diferencia se resuelve corrigiendo el sistema o el documento, nunca solo la prueba.
+3. **Verificación fuera del navegador.** Los correos simulados, los procesos del Temporizador (`docker exec … php spark`) y el estado de la base (consultas de solo lectura) se usan para confirmar resultados y para simular el paso del tiempo (fin de un bloqueo, reintentos de envío), sin modificar las reglas.
+4. **Ejecución.** Un comando (`bash tests/e2e/ejecutar.sh`) en desarrollo y el flujo `E2E` en cada *pull request*, con un informe HTML con capturas. La prueba manual se mantiene como aceptación de cada Control.
+
+**Consecuencias.** Flujo `.github/workflows/e2e.yml`. `AdministradorInicialSeeder` acepta `SIGCCR_ADMIN_*`. `verificar.py` controla los permisos DELETE. La batería crece por iteración junto con la prueba integral.
+
+## D-40 · El enlace de activación verifica el correo del cliente (CU-04, RN-10)
+
+**Contexto.** CU-04 exigía que el correo ingresado coincidiera con un correo ya verificado. El cliente verifica su correo solo con el enlace que recibe en el alta (CU-11), y el panel no permite reenviarlo. Si el cliente no abría ese enlace a tiempo, o lo perdía porque la entidad lo desactivó y reactivó (CU-13 invalida sus autorizaciones), no podía activar ni rehabilitar el portal. Lo detectaron las pruebas de punta a punta (R-028 y R-030).
+
+**Decisión.** CU-04 acepta el correo si coincide con el registrado en la cuenta, esté verificado o no. El enlace se envía a ese correo, así que definir la contraseña con él demuestra que el cliente lo controla: la cuenta queda Habilitada y con el correo verificado, como ya ocurría al restablecer la contraseña (CU-02). La respuesta ante datos que no coinciden sigue siendo la misma, para no revelar si el cliente existe (A1).
+
+**Consecuencias.** `ReglasActivacion::evaluar()` deja de exigir la verificación (prueba nueva). `ActivacionService::definirContrasena()` marca el correo verificado. Hay que actualizar el texto de CU-04 (paso 4) en el documento.
+

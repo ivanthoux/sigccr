@@ -7,7 +7,6 @@ namespace App\Services\Caja;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Caja\ReglasCaja;
-use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 use App\Services\Comunes\AuditoriaService;
@@ -186,7 +185,7 @@ class CajaService extends BaseService
         if ($jornada !== null) {
             $jornada['fecha_local'] = (new DateTimeImmutable((string) $jornada['apertura']))->setTimezone(new DateTimeZone(config('Sigccr')->zonaNegocio))->format('Y-m-d');
             $jornada['anterior'] = $jornada['fecha_local'] < $hoy;
-            $jornada['resumen'] = $this->resumen((int) $jornada['id'], (string) $jornada['fondo_inicial']);
+            $jornada['resumen'] = $this->resumen((int) $jornada['id']);
         }
 
         return ['asignacion' => $asignacion, 'jornada' => $jornada];
@@ -194,7 +193,7 @@ class CajaService extends BaseService
 
     /**
      * Jornada en la que el Cajero puede registrar operaciones: abierta hoy y con la asignación vigente (RN-28). La
-     * usan los desembolsos en efectivo (CU-27) y los cobros (CU-33).
+     * usan los cobros en ventanilla (CU-33, CU-97).
      *
      * @return ?array<string, mixed>
      */
@@ -208,15 +207,10 @@ class CajaService extends BaseService
         return $s['jornada'];
     }
 
-    /** CU-31 pasos 4 a 7 (A1 a A4). */
-    public function abrir(int $usuarioId, string $fondoTexto): int
+    /** CU-31 pasos 4 a 7 (A1 a A4). La jornada se abre sin fondo inicial: la caja no maneja efectivo (D-30, RN-77). */
+    public function abrir(int $usuarioId): int
     {
-        $fondo = ReglasCaja::importeNoNegativo($fondoTexto);
-        if ($fondo === null) {
-            throw new ValidacionException(['fondo_inicial' => 'Ingrese el fondo inicial en efectivo (un importe no negativo, por ejemplo 50.000,00).']);
-        }
-
-        return $this->transaccion(function () use ($usuarioId, $fondo): int {
+        return $this->transaccion(function () use ($usuarioId): int {
             $s = $this->situacion($usuarioId);
             if ($s['jornada'] !== null) {
                 throw new ReglaNegocioException('Ya tiene una caja abierta (' . $s['jornada']['codigo'] . '): ciérrela antes de abrir otra (RN-28).');
@@ -224,62 +218,125 @@ class CajaService extends BaseService
             if ($s['asignacion'] === null || $s['asignacion']['estado_caja'] !== 'Habilitada') {
                 throw new ReglaNegocioException('No tiene una caja asignada y habilitada: solicite la asignación al Gerente (CU-72).');
             }
-            $ahora = $this->ahoraUtc();
             $this->db->table('jornadas_caja')->insert([
                 'asignacion_caja_id' => (int) $s['asignacion']['id'], 'caja_id' => (int) $s['asignacion']['caja_id'], 'usuario_id' => $usuarioId,
-                'apertura' => $ahora, 'fondo_inicial' => $fondo, 'estado' => 'Abierta',
+                'apertura' => $this->ahoraUtc(), 'fondo_inicial' => '0.00', 'estado' => 'Abierta',
             ]);
             $id = (int) $this->db->insertID();
-            if (Decimal::of($fondo)->isPositive()) {
-                $this->db->table('movimientos_caja')->insert(['jornada_caja_id' => $id, 'fecha_hora' => $ahora, 'tipo' => 'FondoInicial', 'importe' => $fondo, 'medio' => 'Efectivo', 'concepto' => 'Fondo inicial de la jornada']);
-            }
-            (new AuditoriaService($this->db))->registrar('cajas.abrir', 'jornadas_caja', $id, 'Exitoso', null, ['caja' => $s['asignacion']['codigo'], 'fondo_inicial' => $fondo]);
+            (new AuditoriaService($this->db))->registrar('cajas.abrir', 'jornadas_caja', $id, 'Exitoso', null, ['caja' => $s['asignacion']['codigo']]);
 
             return $id;
         });
     }
 
     /**
-     * CU-36 pasos 5 a 10 (A1 a A3, A5).
+     * CU-36 pasos 4 a 10 (A1 a A3, A5): conciliación de cada medio de pago y cierre (RN-32, D-30).
      *
-     * @return array{esperado: string, declarado: string, diferencia: string}
+     * @param array<string, mixed> $acreditados total acreditado por medio, según el extracto o el procesador
+     * @param array<string, mixed> $explicaciones explicación de la diferencia por medio
+     * @return list<array{medio: string, total_registrado: string, total_acreditado: string, diferencia: string, explicacion: ?string}>
      */
-    public function cerrar(int $usuarioId, int $versionLeida, string $declaradoTexto, string $explicacion): array
+    public function cerrar(int $usuarioId, int $versionLeida, array $acreditados, array $explicaciones): array
     {
-        return $this->transaccion(function () use ($usuarioId, $versionLeida, $declaradoTexto, $explicacion): array {
+        return $this->transaccion(function () use ($usuarioId, $versionLeida, $acreditados, $explicaciones): array {
             $s = $this->situacion($usuarioId);
             if ($s['jornada'] === null) {
                 throw new ReglaNegocioException('No tiene una caja abierta.');
             }
             $j = $this->bloquear('jornadas_caja', [(int) $s['jornada']['id']])[0];
-            $resumen = $this->resumen((int) $j['id'], (string) $j['fondo_inicial']);
-            $v = ReglasCaja::validarCierre($declaradoTexto, $explicacion, $resumen['esperado']);
+            $resumen = $this->resumen((int) $j['id']);
+            $v = ReglasCaja::validarConciliacion($resumen['por_medio'], $acreditados, $explicaciones);
             if ($v['errores'] !== []) {
                 throw new ValidacionException($v['errores'], 'RN-32');
             }
-            $this->actualizarConVersion('jornadas_caja', (int) $j['id'], $versionLeida, [
-                'cierre' => $this->ahoraUtc(), 'efectivo_esperado' => $resumen['esperado'], 'efectivo_declarado' => $v['declarado'],
-                'diferencia' => $v['diferencia'], 'explicacion' => $v['explicacion'] === '' ? null : $v['explicacion'], 'estado' => 'Cerrada',
-            ]);
-            (new AuditoriaService($this->db))->registrar('cajas.cerrar', 'jornadas_caja', (int) $j['id'], 'Exitoso', $v['explicacion'] === '' ? null : $v['explicacion'], [
-                'esperado' => $resumen['esperado'], 'declarado' => $v['declarado'], 'diferencia' => $v['diferencia'], 'movimientos' => $resumen['cantidad'],
+            $this->actualizarConVersion('jornadas_caja', (int) $j['id'], $versionLeida, ['cierre' => $this->ahoraUtc(), 'estado' => 'Cerrada']);
+            foreach ($v['conciliaciones'] as $c) {
+                $this->db->table('conciliaciones_jornada')->insert(['jornada_caja_id' => (int) $j['id']] + $c);
+            }
+            $diferencias = array_values(array_filter($v['conciliaciones'], static fn ($c) => $c['diferencia'] !== '0.00'));
+            (new AuditoriaService($this->db))->registrar('cajas.cerrar', 'jornadas_caja', (int) $j['id'], 'Exitoso', $diferencias === [] ? null : 'Cierre con diferencias en ' . count($diferencias) . ' medio(s).', [
+                'cobros' => $resumen['cantidad'], 'total' => $resumen['total'], 'conciliacion' => $v['conciliaciones'],
             ]);
 
-            return ['esperado' => $resumen['esperado'], 'declarado' => (string) $v['declarado'], 'diferencia' => (string) $v['diferencia']];
+            return $v['conciliaciones'];
         });
     }
 
     /**
-     * RN-32: arqueo de la jornada y sus movimientos.
+     * Conciliación registrada al cerrar una jornada (CU-32, CU-56).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function conciliacion(int $jornadaId): array
+    {
+        return $this->db->table('conciliaciones_jornada')->where('jornada_caja_id', $jornadaId)->orderBy('id')->get()->getResultArray();
+    }
+
+    /**
+     * CU-32 pasos 2 a 4 (A1, A3): jornadas por caja, Cajero, fecha y estado. Un Cajero solo ve las propias.
+     *
+     * @param array<string, mixed> $f caja_id, cajero_id, fecha (Y-m-d), estado
+     * @return list<array<string, mixed>>
+     */
+    public function jornadas(array $f, ?int $soloCajero): array
+    {
+        $b = $this->db->table('jornadas_caja j')
+            ->select("j.id, j.apertura, j.cierre, j.estado, j.fondo_inicial, j.diferencia, c.codigo, c.denominacion, u.apellido + ', ' + u.nombre AS cajero, "
+                . '(SELECT COUNT(*) FROM dbo.conciliaciones_jornada x WHERE x.jornada_caja_id = j.id AND x.diferencia <> 0) AS medios_con_diferencia, '
+                . "(SELECT COALESCE(SUM(m.importe), 0) FROM dbo.movimientos_caja m WHERE m.jornada_caja_id = j.id AND m.tipo = 'Cobro') AS total_cobrado", false)
+            ->join('cajas c', 'c.id = j.caja_id')->join('usuarios_internos u', 'u.id = j.usuario_id');
+        if ($soloCajero !== null) {
+            $b->where('j.usuario_id', $soloCajero);
+        } elseif ((int) ($f['cajero_id'] ?? 0) > 0) {
+            $b->where('j.usuario_id', (int) $f['cajero_id']);
+        }
+        if ((int) ($f['caja_id'] ?? 0) > 0) {
+            $b->where('j.caja_id', (int) $f['caja_id']);
+        }
+        if (in_array($f['estado'] ?? '', ['Abierta', 'Cerrada'], true)) {
+            $b->where('j.estado', $f['estado']);
+        }
+        if (($f['fecha'] ?? null) !== null) {
+            // Fecha local de negocio (UTC−3, sin horario de verano)
+            $b->where("CAST(SWITCHOFFSET(j.apertura, '-03:00') AS date) = " . $this->db->escape((string) $f['fecha']), null, false);
+        }
+
+        return $b->orderBy('j.apertura', 'DESC')->limit(200)->get()->getResultArray();
+    }
+
+    /**
+     * CU-32 pasos 5 y 6 (A2, A3): detalle de una jornada con sus movimientos, totales por medio y conciliación.
      *
      * @return array<string, mixed>
      */
-    private function resumen(int $jornadaId, string $fondoInicial): array
+    public function jornada(int $id, ?int $soloCajero): array
+    {
+        $j = $this->db->query(
+            "SELECT j.*, c.codigo, c.denominacion, u.apellido + ', ' + u.nombre AS cajero FROM dbo.jornadas_caja j JOIN dbo.cajas c ON c.id = j.caja_id "
+            . 'JOIN dbo.usuarios_internos u ON u.id = j.usuario_id WHERE j.id = ?',
+            [$id],
+        )->getRowArray();
+        if ($j === null || ($soloCajero !== null && (int) $j['usuario_id'] !== $soloCajero)) {
+            throw new ReglaNegocioException('La jornada no existe o no le corresponde: un Cajero consulta solo sus jornadas (CU-32 A3).');
+        }
+        $j['resumen'] = $this->resumen($id);
+        $j['conciliacion'] = $this->conciliacion($id);
+        (new AuditoriaService($this->db))->registrar('cajas.consultar-movimientos', 'jornadas_caja', $id, 'Exitoso');
+
+        return $j;
+    }
+
+    /**
+     * RN-32: movimientos de la jornada y total registrado por medio.
+     *
+     * @return array<string, mixed>
+     */
+    private function resumen(int $jornadaId): array
     {
         $movimientos = $this->db->table('movimientos_caja')->select('id, fecha_hora, tipo, medio, importe, concepto')
             ->where('jornada_caja_id', $jornadaId)->orderBy('fecha_hora')->get()->getResultArray();
 
-        return ReglasCaja::arqueo($fondoInicial, array_map(static fn ($m) => ['tipo' => (string) $m['tipo'], 'medio' => (string) $m['medio'], 'importe' => (string) $m['importe']], $movimientos))
+        return ReglasCaja::totalesPorMedio(array_map(static fn ($m) => ['tipo' => (string) $m['tipo'], 'medio' => (string) $m['medio'], 'importe' => (string) $m['importe']], $movimientos))
             + ['movimientos' => $movimientos];
     }
 

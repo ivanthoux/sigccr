@@ -29,4 +29,20 @@ interface PasarelaInterface
      * @param array<string, string> $cabeceras
      */
     public function firmaValida(string $cuerpo, array $cabeceras): bool;
+
+    /**
+     * Solicita la devolución total o parcial de una transacción aprobada (CU-78, RN-73). El identificador de operación
+     * es único: repetirlo no genera una segunda devolución.
+     *
+     * @return array{estado: string, id_devolucion: ?string, detalle: ?string}
+     */
+    public function devolver(string $idTransaccion, string $importe, string $idOperacion): array;
+
+    /**
+     * Estado de una devolución solicitada, para conciliar las de resultado incierto (CU-91). Null si la pasarela no
+     * la registra.
+     *
+     * @return array{estado: string, id_devolucion: ?string, detalle: ?string}|null
+     */
+    public function consultarDevolucion(string $idOperacion): ?array;
 }

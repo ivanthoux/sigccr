@@ -82,6 +82,8 @@ $this->section('contenido');
                 </select>
                 <?= error_campo('estado_civil') ?>
             </div>
+            <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-4') ?>
+            <datalist id="nacionalidades"><option value="Argentina"><option value="Boliviana"><option value="Brasileña"><option value="Chilena"><option value="Paraguaya"><option value="Peruana"><option value="Uruguaya"><option value="Venezolana"></datalist>
         </div>
         <div class="row g-3" data-solo="PersonaJuridica">
             <?= $campo('razon_social', 'Razón social', $texto('razon_social', 200), '', 'col-md-8') ?>
@@ -141,7 +143,7 @@ $this->section('contenido');
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Datos laborales y económicos</legend>
         <div class="row g-3">
-            <div class="col-md-6" data-solo="PersonaHumana"><?= str_replace('col-md-6', 'p-0', $campo('ocupacion', 'Ocupación <span class="text-body-secondary fw-normal">(opcional)</span>', $texto('ocupacion', 100))) ?></div>
+            <div class="col-md-6" data-solo="PersonaHumana"><?= str_replace('col-md-6', 'p-0', $campo('ocupacion', 'Actividad laboral o profesional principal', $texto('ocupacion', 100), 'Por ejemplo: empleado administrativo, docente, comerciante (RN-80).')) ?></div>
             <div class="col-md-6" data-solo="PersonaHumana"><?= str_replace('col-md-6', 'p-0', $campo('empleador', 'Empleador o actividad <span class="text-body-secondary fw-normal">(opcional)</span>', $texto('empleador', 150))) ?></div>
             <div class="col-md-6" data-solo="PersonaHumana">
                 <label for="categoria_ingresos" class="form-label">Categoría de ingresos</label>
@@ -179,6 +181,24 @@ $this->section('contenido');
             </div>
         </fieldset>
     <?php endif ?>
+
+    <fieldset class="hoja p-4 mb-3">
+        <legend class="h5">Persona expuesta políticamente</legend>
+        <p class="small">Declaración jurada del cliente<span data-solo="PersonaJuridica"> sobre sus representantes y beneficiarios</span>: ¿ejerce o ejerció en los últimos años una función pública relevante, o es familiar o allegado de quien la ejerce? (Resolución UIF 200/2024, RN-80).</p>
+        <?php $pep = old('persona_expuesta') ?? ($c === null || $c['persona_expuesta'] === null ? '' : ((int) $c['persona_expuesta'] === 1 ? 'Si' : 'No')); ?>
+        <div class="<?= campo_invalido('persona_expuesta') !== '' ? 'is-invalid' : '' ?>">
+            <div class="form-check form-check-inline">
+                <input class="form-check-input<?= campo_invalido('persona_expuesta') ?>" type="radio" name="persona_expuesta" id="pep-no" value="No"<?= $pep === 'No' ? ' checked' : '' ?>>
+                <label class="form-check-label" for="pep-no">No es persona expuesta políticamente</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input<?= campo_invalido('persona_expuesta') ?>" type="radio" name="persona_expuesta" id="pep-si" value="Si"<?= $pep === 'Si' ? ' checked' : '' ?>>
+                <label class="form-check-label" for="pep-si">Es persona expuesta políticamente</label>
+            </div>
+        </div>
+        <?= error_campo('persona_expuesta') ?>
+        <p class="small text-body-secondary mt-2 mb-0">Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
+    </fieldset>
 
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Tratamiento de datos</legend>

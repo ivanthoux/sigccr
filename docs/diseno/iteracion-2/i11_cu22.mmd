@@ -1,0 +1,30 @@
+sequenceDiagram
+autonumber
+actor AN as Analista
+participant V as Vista solicitudes
+participant C as Admin Solicitudes
+participant S as SolicitudService
+participant L as LegajoService
+participant RD as RequisitosDocumentales
+participant A as AuditoriaService
+participant DB as SQL Server
+AN->>V: elige una simulación vigente y adjunta la documentación faltante
+V->>C: POST solicitudes
+C->>L: validarArchivos(archivos): tipo, tamaño y contenido (RNF-12)
+C->>S: registrar(simulación, archivos, usuario)
+S->>DB: BEGIN, simulación con UPDLOCK: vigente (RN-48)
+S->>DB: bloquea clientes y lineas_credito (RN-18)
+S->>S: cliente activo con CUIT/CUIL, elegible y dentro de los límites (RN-13, RN-76)
+S->>DB: ninguna solicitud en trámite de la misma línea (RN-18)
+S->>RD: faltantes(exigidos por la versión, legajo + adjuntos) (RN-11)
+alt faltan documentos
+S-->>C: ValidacionException por documento (A4)
+end
+S->>L: guardar(cliente, documento) por cada adjunto
+S->>DB: solicitudes_credito PendienteVerificacion, transición y revisión documental pendiente
+S->>A: auditoría solicitudes.registrar
+S->>DB: COMMIT
+opt error
+S->>L: descartar los archivos movidos
+end
+C-->>V: solicitud N.º registrada, pendiente de verificación

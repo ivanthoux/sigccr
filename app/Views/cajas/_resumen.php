@@ -1,23 +1,23 @@
 <?php
 /**
- * Resumen de la jornada de caja (RN-32): fondo inicial, cobros por medio, desembolsos y efectivo esperado.
+ * Resumen de la jornada de caja (RN-32): cobros registrados por medio de pago y sus movimientos.
  *
  * @var array<string, mixed> $j jornada con su resumen
  */
+use App\Libraries\Caja\ReglasCaja;
+
 $r = $j['resumen'];
-$medios = ['Efectivo' => 'Efectivo', 'TarjetaDebito' => 'Tarjeta de débito', 'TarjetaCredito' => 'Tarjeta de crédito', 'Transferencia' => 'Transferencia', 'PagoElectronico' => 'Pago electrónico'];
+$medios = ReglasCaja::MEDIOS_VENTANILLA + ['Efectivo' => 'Efectivo', 'PagoElectronico' => 'Pago electrónico'];
+$tipos = ['FondoInicial' => 'Fondo inicial', 'Cobro' => 'Cobro', 'Desembolso' => 'Desembolso'];
 ?>
 <dl class="resumen-plan">
-    <div><dt>Fondo inicial</dt><dd class="importe"><?= esc(formato_importe($j['fondo_inicial'])) ?></dd></div>
-    <div><dt>Cobros en efectivo</dt><dd class="importe"><?= esc(formato_importe($r['cobros_efectivo'])) ?></dd></div>
-    <div><dt>Desembolsos en efectivo</dt><dd class="importe"><?= esc(formato_importe($r['desembolsos'])) ?></dd></div>
-    <div><dt>Efectivo esperado</dt><dd class="importe fw-semibold"><?= esc(formato_importe($r['esperado'])) ?></dd></div>
+    <?php foreach (ReglasCaja::MEDIOS_VENTANILLA as $m => $nombre): ?>
+        <div><dt><?= esc($nombre) ?></dt><dd class="importe"><?= esc(formato_importe($r['por_medio'][$m])) ?></dd></div>
+    <?php endforeach ?>
+    <div><dt>Total cobrado (<?= (int) $r['cantidad'] ?> <?= $r['cantidad'] === 1 ? 'medio' : 'medios' ?>)</dt><dd class="importe fw-semibold"><?= esc(formato_importe($r['total'])) ?></dd></div>
 </dl>
-<?php if ($r['cobros_por_medio'] !== []): ?>
-    <p class="small mb-2">Cobros por medio: <?= implode(' · ', array_map(static fn ($m, $i) => esc($medios[$m] ?? $m) . ' ' . esc(formato_importe($i)), array_keys($r['cobros_por_medio']), $r['cobros_por_medio'])) ?>. Solo el efectivo integra el arqueo.</p>
-<?php endif ?>
 <?php if ($r['movimientos'] === []): ?>
-    <p class="small mb-0">La jornada no registra movimientos.</p>
+    <p class="small mb-0">La jornada no registra cobros.</p>
 <?php else: ?>
     <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
@@ -26,10 +26,10 @@ $medios = ['Efectivo' => 'Efectivo', 'TarjetaDebito' => 'Tarjeta de débito', 'T
             <?php foreach ($r['movimientos'] as $m): ?>
                 <tr>
                     <td><?= esc(formato_fecha_hora($m['fecha_hora'])) ?></td>
-                    <td><?= esc(['FondoInicial' => 'Fondo inicial', 'Cobro' => 'Cobro', 'Desembolso' => 'Desembolso'][$m['tipo']] ?? $m['tipo']) ?></td>
+                    <td><?= esc($tipos[$m['tipo']] ?? $m['tipo']) ?></td>
                     <td><?= esc($medios[$m['medio']] ?? $m['medio']) ?></td>
                     <td class="small"><?= esc((string) $m['concepto']) ?></td>
-                    <td class="importe<?= $m['tipo'] === 'Desembolso' ? ' text-danger' : '' ?>"><?= $m['tipo'] === 'Desembolso' ? '−' : '' ?><?= esc(formato_importe($m['importe'], false)) ?></td>
+                    <td class="importe"><?= esc(formato_importe($m['importe'], false)) ?></td>
                 </tr>
             <?php endforeach ?>
             </tbody>

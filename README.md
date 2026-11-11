@@ -93,6 +93,16 @@ php tests/_local/run.php               # ejecutor mínimo sin Composer (usa un r
 
 `tests/_local/` existe solo para ejecutar las pruebas en un entorno sin Composer ni BCMath; en el proyecto se usa PHPUnit.
 
+## Pruebas de punta a punta
+
+```bash
+bash tests/e2e/ejecutar.sh                 # todas, con la base vacía
+bash tests/e2e/ejecutar.sh --grep R-01     # solo los casos que coinciden
+E2E_CONSERVAR=1 bash tests/e2e/ejecutar.sh # deja la pila levantada al terminar
+```
+
+Levanta una pila aparte (proyecto `sigccr_e2e`, puertos 18080 y 18443) con SQL Server vacío, aplica las migraciones y las semillas, crea el Administrador `admin@prueba.local` y recorre con Playwright el circuito de la prueba funcional integral (`docs/pruebas/prueba_funcional_integral_1_a_3.md`). Cada prueba lleva el identificador de su caso (R-xxx). El informe con las capturas de cada paso queda en `tests/e2e/informe/index.html`. No toca los contenedores ni la base del entorno de desarrollo. La integración continua la ejecuta en cada *pull request* y publica el informe como artefacto.
+
 ## Conexión cifrada con SQL Server
 
 El controlador ODBC 18 exige un certificado de confianza para cifrar la conexión. En desarrollo la conexión viaja por la red interna de Docker sin cifrar (`database.default.encrypt = false`). Para cifrarla: configurar un certificado TLS en SQL Server (`mssql-conf set network.tlscert/tlskey`), agregar su autoridad a la imagen `app` (`/usr/local/share/ca-certificates` + `update-ca-certificates`) y poner `encrypt = true`.

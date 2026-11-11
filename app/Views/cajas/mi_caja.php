@@ -14,8 +14,11 @@ $this->section('contenido');
         <h1>Mi caja</h1>
         <p><?= $jornada ? 'Jornada abierta en ' . esc($jornada['codigo'] . ' · ' . $jornada['denominacion']) : ($asignacion ? 'Caja asignada: ' . esc($asignacion['codigo'] . ' · ' . $asignacion['denominacion']) : 'Sin caja asignada') ?></p>
     </div>
-    <?php if ($jornada && tiene_permiso('cajas.cerrar')): ?>
-        <a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-primary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a>
+    <?php if ($jornada): ?>
+        <div class="d-flex gap-2">
+            <?php if (!$jornada['anterior'] && tiene_permiso('cobros.registrar')): ?><a href="<?= url_to('cobros.registrar') ?>" class="btn btn-outline-primary"><i class="bi bi-cash me-1" aria-hidden="true"></i>Registrar cobro</a><?php endif ?>
+            <?php if (tiene_permiso('cajas.cerrar')): ?><a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-primary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a><?php endif ?>
+        </div>
     <?php endif ?>
 </div>
 <?php if ($jornada): ?>
@@ -37,9 +40,7 @@ $this->section('contenido');
         <?= csrf_field() ?>
         <h2 class="h5">Abrir la caja <?= esc($asignacion['codigo']) ?></h2>
         <p class="small"><?= esc($asignacion['denominacion']) ?><?= $asignacion['ubicacion'] ? ' · ' . esc($asignacion['ubicacion']) : '' ?>. Asignada desde el <?= esc(formato_fecha($asignacion['desde'])) ?><?= $asignacion['hasta'] ? ' hasta el ' . esc(formato_fecha($asignacion['hasta'])) : '' ?>.</p>
-        <label for="fondo_inicial" class="form-label">Fondo inicial en efectivo</label>
-        <input type="text" class="form-control<?= campo_invalido('fondo_inicial') ?>" id="fondo_inicial" name="fondo_inicial" inputmode="decimal" placeholder="50.000,00" value="<?= esc((string) old('fondo_inicial'), 'attr') ?>" required>
-        <?= error_campo('fondo_inicial') ?>
+        <p class="small mb-0">La caja no maneja efectivo: los cobros se reciben por transferencia, depósito o tarjeta, con su número de operación, y al cerrar se concilian con lo acreditado en las cuentas de la entidad (RN-77, RN-32).</p>
         <div class="text-end mt-3"><button type="submit" class="btn btn-primary"><i class="bi bi-unlock me-1" aria-hidden="true"></i>Abrir caja</button></div>
     </form>
 <?php endif ?>

@@ -1,0 +1,76 @@
+// Operaciones de la iteración 3 sobre créditos liquidados: cobro en ventanilla, paso del tiempo y consultas.
+const { expect } = require('@playwright/test');
+const { consulta, valor, spark } = require('./sistema');
+
+const idCliente = (cliente) => valor('SELECT id FROM dbo.clientes WHERE cuit_cuil = @c', { c: cliente.cuil || cliente.cuit });
+
+/** Crédito liquidado más antiguo del cliente (los de A.10), o el de origen indicado. */
+async function credito(cliente, origen = null) {
+  const filas = await consulta(
+    'SELECT TOP 1 c.id, c.numero, c.estado FROM dbo.creditos c JOIN dbo.clientes cl ON cl.id = c.cliente_id '
+      + 'WHERE cl.cuit_cuil = @c AND (@o IS NULL OR c.origen = @o) ORDER BY c.id',
+    { c: cliente.cuil, o: origen },
+  );
+  return filas[0];
+}
+
+const cuota = async (creditoId, numero) => (await consulta('SELECT * FROM dbo.cuotas WHERE credito_id = @c AND numero = @n', { c: creditoId, n: numero }))[0];
+
+/**
+ * C.1: adelanta los vencimientos del crédito los días indicados y ejecuta el cálculo de punitorios, como si el tiempo
+ * hubiera pasado (el proceso usa la fecha de hoy).
+ */
+async function atrasar(creditoId, dias) {
+  // Los días simulados necesitan parámetros de morosidad e IVA vigentes en esas fechas (versión 1 desde un año antes)
+  await consulta(
+    "UPDATE dbo.versiones_parametros SET vigente_desde = DATEADD(year, -1, vigente_desde) "
+      + "WHERE tipo IN ('Morosidad', 'Estructuracion') AND numero = 1 AND vigente_desde > DATEADD(month, -6, SYSDATETIMEOFFSET())",
+  );
+  await consulta('UPDATE dbo.cuotas SET vencimiento = DATEADD(day, -@d, vencimiento) WHERE credito_id = @c', { d: dias, c: creditoId });
+  // Los tramos ya calculados también se corren: el proceso calcula desde el último tramo registrado (RN-53)
+  await consulta('UPDATE t SET t.fecha = DATEADD(day, -@d, t.fecha) FROM dbo.tramos_punitorios t JOIN dbo.cuotas q ON q.id = t.cuota_id WHERE q.credito_id = @c', { d: dias, c: creditoId });
+  // El proceso calcula cada día una sola vez: se olvida la ejecución de ayer para volver a calcularlo con el atraso nuevo
+  await consulta(
+    "DELETE FROM dbo.ejecuciones_proceso WHERE proceso = 'cartera:punitorios' "
+      + "AND fecha_referencia >= DATEADD(day, -1, CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time' AS date))",
+  );
+  spark('cartera:punitorios');
+}
+
+/**
+ * CU-33: abre el cobro del cliente, marca las cuotas y completa los medios. `medios` es una lista de
+ * { medio, importe, operacion }; `importe` vacío cobra el total de las cuotas.
+ */
+async function cobrar(page, cliente, creditoId, cuotas, { importe = '', medios = [] } = {}) {
+  await page.goto(`/admin/cobros?cliente=${await idCliente(cliente)}`);
+  for (const n of cuotas) await page.locator(`input[name="cuotas[${creditoId}][]"][value="${n}"]`).check();
+  await page.locator('#importe').fill(String(importe));
+  for (let i = 0; i < 3; i++) {
+    const m = medios[i] || { medio: 'Transferencia', importe: '', operacion: '' };
+    await page.locator(`#medio-${i}`).selectOption(m.medio);
+    await page.locator(`#medio-importe-${i}`).fill(String(m.importe ?? ''));
+    await page.locator(`#medio-operacion-${i}`).fill(m.operacion || '');
+  }
+  await page.getByRole('button', { name: 'Registrar el cobro' }).click();
+  await page.waitForLoadState();
+}
+
+/** Total exigible de las cuotas marcadas, tal como lo muestra la pantalla («$ 1.234,56» → «1.234,56»). */
+async function totalSeleccionado(page) {
+  return (await page.locator('[data-cobro-total]').innerText()).replace('$', '').trim();
+}
+
+/** Marca las cuotas, lee el total y cobra ese total con un solo medio. */
+async function cobrarTotal(page, cliente, creditoId, cuotas, medio, operacion) {
+  await page.goto(`/admin/cobros?cliente=${await idCliente(cliente)}`);
+  for (const n of cuotas) await page.locator(`input[name="cuotas[${creditoId}][]"][value="${n}"]`).check();
+  const total = await totalSeleccionado(page);
+  await cobrar(page, cliente, creditoId, cuotas, { medios: [{ medio, importe: total, operacion }] });
+  return total;
+}
+
+async function esperarExito(page, texto) {
+  await expect(page.locator('.alert-success[role="status"]')).toContainText(texto);
+}
+
+module.exports = { idCliente, credito, cuota, atrasar, cobrar, cobrarTotal, totalSeleccionado, esperarExito };

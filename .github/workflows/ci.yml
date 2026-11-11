@@ -30,6 +30,9 @@ jobs:
       - name: Dependencias
         run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
 
+      - name: Sintaxis de PHP en todo el código
+        run: find app tests -name '*.php' -not -path 'tests/_local/*' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
+
       - name: Pruebas unitarias (finanzas, seguridad y validación de campos)
         run: vendor/bin/phpunit -c phpunit.xml.dist --testsuite Unitarias --no-coverage
 

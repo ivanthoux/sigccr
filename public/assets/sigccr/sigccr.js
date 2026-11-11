@@ -81,7 +81,14 @@
                 aria: { orderable: 'Ordenar por esta columna', orderableReverse: 'Invertir el orden' },
             },
         });
-        document.querySelectorAll('table[data-tabla]').forEach((t) => new window.DataTable(t));
+        document.querySelectorAll('table[data-tabla]').forEach((t) => {
+            new window.DataTable(t);
+            // En pantallas angostas la tabla se desplaza dentro de su recuadro, sin ensanchar la página (360 px)
+            const marco = document.createElement('div');
+            marco.className = 'table-responsive';
+            t.parentNode.insertBefore(marco, t);
+            marco.appendChild(t);
+        });
 
         // Plan de cuotas (D-23): de a 12 cuotas por página, sin búsqueda ni orden; al imprimir se muestran todas
         document.querySelectorAll('table[data-plan-cuotas]').forEach((t) => {
@@ -100,4 +107,37 @@
             window.addEventListener('afterprint', () => { plan.page.len(largo).draw(false); });
         });
     }
+
+    // Adjuntos de hasta 5 MB (RNF-12): se avisa junto al campo apenas se elige el archivo y no se envía el formulario,
+    // en lugar de que el servidor rechace la solicitud completa (error 413). El servidor vuelve a validarlo.
+    const MAXIMO_ADJUNTO = 5 * 1024 * 1024;
+    const revisarAdjuntos = (campo) => {
+        const grandes = [...(campo.files || [])].filter((f) => f.size > MAXIMO_ADJUNTO).map((f) => f.name);
+        let aviso = campo.parentElement.querySelector('.aviso-adjunto');
+        if (grandes.length === 0) {
+            aviso?.remove();
+            campo.classList.remove('is-invalid');
+            return true;
+        }
+        if (!aviso) {
+            aviso = document.createElement('div');
+            aviso.className = 'invalid-feedback d-block aviso-adjunto';
+            campo.insertAdjacentElement('afterend', aviso);
+        }
+        aviso.textContent = grandes.map((n) => `El archivo ${n} supera los 5 MB.`).join(' ');
+        campo.classList.add('is-invalid');
+        return false;
+    };
+    const campos = [...document.querySelectorAll('input[type="file"]')];
+    campos.forEach((campo) => campo.addEventListener('change', () => revisarAdjuntos(campo)));
+    new Set(campos.map((c) => c.form).filter(Boolean)).forEach((form) => {
+        form.addEventListener('submit', (evento) => {
+            const invalidos = [...form.querySelectorAll('input[type="file"]')].filter((c) => !revisarAdjuntos(c));
+            if (invalidos.length > 0) {
+                evento.preventDefault();
+                evento.stopImmediatePropagation();
+                invalidos[0].focus();
+            }
+        });
+    });
 })();

@@ -157,6 +157,12 @@ abstract class BaseProcesoCommand extends BaseCommand
         return $fechas;
     }
 
+    /** Errores registrados en la ejecución en curso. */
+    protected function erroresRegistrados(): int
+    {
+        return $this->errores;
+    }
+
     protected function ahoraUtc(): string
     {
         return Time::now('UTC')->format('Y-m-d H:i:s.vP');

@@ -111,8 +111,8 @@ $this->section('contenido');
     <div class="row g-3">
         <?php foreach (RequisitosDocumentales::CATEGORIAS as $tipoCliente => $cats): ?>
             <?php foreach ($cats as $cat => $nombreCat): ?>
-                <fieldset class="col-md-6 col-xl-4">
-                    <div class="border rounded p-3 h-100<?= campo_invalido("sugeridos_{$cat}") !== '' ? ' border-danger' : '' ?>">
+                <div class="col-md-6 col-xl-4">
+                    <fieldset class="border rounded p-3 h-100<?= campo_invalido("sugeridos_{$cat}") !== '' ? ' border-danger' : '' ?>">
                         <legend class="h6"><?= esc($nombreCat) ?></legend>
                         <?php foreach ($activos as $t): ?>
                             <?php if (!in_array($t['aplica_a'], ['Ambos', $tipoCliente], true)) {
@@ -124,8 +124,8 @@ $this->section('contenido');
                             </div>
                         <?php endforeach ?>
                         <?= error_campo("sugeridos_{$cat}") ?>
-                    </div>
-                </fieldset>
+                    </fieldset>
+                </div>
             <?php endforeach ?>
         <?php endforeach ?>
     </div>

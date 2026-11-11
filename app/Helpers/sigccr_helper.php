@@ -184,3 +184,28 @@ if (!function_exists('etiqueta_estado_solicitud')) {
         return '<span class="badge rounded-pill ' . $clase . '">' . esc($texto) . '</span>';
     }
 }
+
+if (!function_exists('finalizar_sesion')) {
+    /**
+     * Cierra la sesión actual sin perder el mensaje para la pantalla siguiente (RNF-11): borra todos sus datos y
+     * cambia el identificador eliminando la sesión anterior. Con session()->destroy() el mensaje que se agrega con
+     * with() se escribía en una sesión ya destruida y no llegaba a mostrarse.
+     */
+    function finalizar_sesion(): void
+    {
+        $sesion = session();
+        $sesion->remove(array_keys((array) $sesion->get()));
+        $sesion->regenerate(true);
+    }
+}
+
+if (!function_exists('hoy_negocio')) {
+    /**
+     * Fecha de hoy en la zona de negocio (Y-m-d). PHP corre en UTC (3.5.1): date('Y-m-d') da el día siguiente entre
+     * las 21:00 y las 24:00 de Argentina, y los formularios proponían una fecha futura que la validación rechaza.
+     */
+    function hoy_negocio(): string
+    {
+        return \CodeIgniter\I18n\Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d');
+    }
+}

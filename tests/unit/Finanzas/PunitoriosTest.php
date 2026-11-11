@@ -77,4 +77,13 @@ final class PunitoriosTest extends TestCase
         $this->assertSame('100.34', $r['importe']->toFixed(2));
         $this->assertSame('21.07', $r['iva']->toFixed(2));
     }
+
+    /** CU-88 A1 y A2: días sin tramo desde el vencimiento o el último tramo registrado, sin repetir. */
+    public function testDiasSinTramo(): void
+    {
+        $this->assertSame(['2026-10-06', '2026-10-07', '2026-10-08'], Punitorios::diasSinTramo('2026-10-05', null, '2026-10-08'));
+        $this->assertSame(['2026-10-08'], Punitorios::diasSinTramo('2026-10-05', '2026-10-07', '2026-10-08'));
+        $this->assertSame([], Punitorios::diasSinTramo('2026-10-05', '2026-10-08', '2026-10-08'));
+        $this->assertSame([], Punitorios::diasSinTramo('2026-10-05', null, '2026-10-05'));
+    }
 }

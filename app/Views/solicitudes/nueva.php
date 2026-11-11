@@ -19,8 +19,8 @@ $this->section('contenido');
         <a href="<?= url_to('solicitudes.simular') ?>?cliente=<?= (int) $cliente['id'] ?>" class="btn btn-outline-secondary"><i class="bi bi-calculator me-1" aria-hidden="true"></i>Nueva simulación</a>
     <?php endif ?>
 </div>
-<?php if (($cliente['cuit_cuil'] ?? null) === null || $cliente['cuit_cuil'] === ''): ?>
-    <div class="alert alert-warning">El cliente no tiene CUIT/CUIL informado: debe completarse con <a href="<?= site_url('admin/clientes/' . (int) $cliente['id'] . '/editar') ?>">Modificar datos</a> antes de registrar una solicitud (A6).</div>
+<?php $faltan = \App\Libraries\Validacion\ValidadorCliente::identificacionIncompleta($cliente); if ($faltan !== []): ?>
+    <div class="alert alert-warning">La identificación del cliente está incompleta (falta <?= esc(implode(', ', $faltan)) ?>): complétela con <a href="<?= site_url('admin/clientes/' . (int) $cliente['id'] . '/editar') ?>">Modificar datos</a> antes de registrar una solicitud (A6, RN-80).</div>
 <?php endif ?>
 <?php if ($simulaciones === []): ?>
     <div class="hoja p-4"><p class="mb-0">El cliente no tiene simulaciones vigentes (duran 7 días corridos). Genere una con «Nueva simulación» para continuar.</p></div>

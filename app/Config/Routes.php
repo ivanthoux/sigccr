@@ -82,6 +82,59 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('caja', 'Admin\MiCaja::abrir', ['filter' => 'permiso:cajas.abrir']);
         $routes->get('caja/cierre', 'Admin\MiCaja::cierre', ['as' => 'cajas.cerrar', 'filter' => 'permiso:cajas.cerrar']);
         $routes->post('caja/cierre', 'Admin\MiCaja::cerrar', ['filter' => 'permiso:cajas.cerrar']);
+        $routes->get('cobros', 'Admin\Cobros::index', ['as' => 'cobros.registrar', 'filter' => 'permiso:cobros.registrar']);
+        $routes->post('cobros', 'Admin\Cobros::registrar', ['filter' => 'permiso:cobros.registrar']);
+        $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
+        $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        // SS-06 Refinanciaciones (CU-39 a CU-43, CU-74, CU-96) y condonación de punitorios (CU-44)
+        $routes->get('refinanciaciones', 'Admin\Refinanciaciones::index', ['as' => 'refinanciaciones.localizar', 'filter' => 'permiso:refinanciaciones.localizar']);
+        $routes->get('refinanciaciones/simular', 'Admin\Refinanciaciones::simular', ['as' => 'refinanciaciones.simular', 'filter' => 'permiso:refinanciaciones.simular']);
+        $routes->post('refinanciaciones/simular', 'Admin\Refinanciaciones::crearSimulacion', ['filter' => 'permiso:refinanciaciones.simular']);
+        $routes->get('refinanciaciones/simulaciones/(:num)', 'Admin\Refinanciaciones::simulacion/$1', ['filter' => 'permiso:refinanciaciones.simular']);
+        $routes->get('refinanciaciones/nueva', 'Admin\Refinanciaciones::nueva', ['as' => 'refinanciaciones.registrar-propuesta', 'filter' => 'permiso:refinanciaciones.registrar-propuesta']);
+        $routes->post('refinanciaciones/simulaciones/(:num)/propuesta', 'Admin\Refinanciaciones::registrarPropuesta/$1', ['filter' => 'permiso:refinanciaciones.registrar-propuesta']);
+        $routes->get('refinanciaciones/(:num)', 'Admin\Refinanciaciones::ver/$1', ['filter' => 'permiso:refinanciaciones.consultar']);
+        $routes->get('refinanciaciones/(:num)/resolver', 'Admin\Refinanciaciones::resolucion/$1', ['filter' => 'permiso:refinanciaciones.resolver']);
+        $routes->post('refinanciaciones/(:num)/resolver', 'Admin\Refinanciaciones::resolver/$1', ['filter' => 'permiso:refinanciaciones.resolver']);
+        $routes->get('refinanciaciones/(:num)/aplicar', 'Admin\Refinanciaciones::aceptacion/$1', ['filter' => 'permiso:refinanciaciones.aplicar']);
+        $routes->post('refinanciaciones/(:num)/aplicar', 'Admin\Refinanciaciones::aplicar/$1', ['filter' => 'permiso:refinanciaciones.aplicar']);
+        $routes->get('refinanciaciones/(:num)/cancelar', 'Admin\Refinanciaciones::cancelacion/$1', ['filter' => 'permiso:refinanciaciones.cancelar-propuesta']);
+        $routes->post('refinanciaciones/(:num)/cancelar', 'Admin\Refinanciaciones::cancelar/$1', ['filter' => 'permiso:refinanciaciones.cancelar-propuesta']);
+        $routes->get('punitorios/condonar', 'Admin\Condonaciones::index', ['as' => 'punitorios.condonar', 'filter' => 'permiso:punitorios.condonar']);
+        $routes->post('punitorios/condonar', 'Admin\Condonaciones::condonar', ['filter' => 'permiso:punitorios.condonar']);
+
+        // SS-06 Cancelación anticipada (CU-97)
+        $routes->get('creditos/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::index', ['as' => 'creditos.cancelar-anticipadamente', 'filter' => 'permiso:creditos.cancelar-anticipadamente']);
+        $routes->get('creditos/(:num)/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::credito/$1', ['filter' => 'permiso:creditos.cancelar-anticipadamente']);
+        $routes->post('creditos/(:num)/cancelacion-anticipada', 'Admin\CancelacionesAnticipadas::registrar/$1', ['filter' => 'permiso:creditos.cancelar-anticipadamente']);
+
+        // SS-05 Saldos a favor y devoluciones (CU-76 a CU-78)
+        $routes->get('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicacion', ['as' => 'saldos-favor.aplicar', 'filter' => 'permiso:saldos-favor.aplicar']);
+        $routes->post('saldos-favor/aplicar', 'Admin\SaldosFavor::aplicar', ['filter' => 'permiso:saldos-favor.aplicar']);
+        $routes->get('saldos-favor/devoluciones', 'Admin\SaldosFavor::autorizacion', ['as' => 'saldos-favor.autorizar-devolucion', 'filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->post('saldos-favor/(:num)/devolucion', 'Admin\SaldosFavor::autorizar/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->get('saldos-favor/autorizaciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->post('saldos-favor/autorizaciones/(:num)/anular', 'Admin\SaldosFavor::anular/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
+        $routes->get('devoluciones', 'Admin\SaldosFavor::devoluciones', ['as' => 'saldos-favor.ejecutar-devolucion', 'filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+        $routes->get('devoluciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+        $routes->post('devoluciones/(:num)/ejecutar', 'Admin\SaldosFavor::ejecutar/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+
+        // SS-05 Pagos electrónicos (CU-34, CU-38)
+        $routes->get('pagos-electronicos/nueva', 'Admin\PagosElectronicos::nueva', ['as' => 'pagos-electronicos.generar-orden', 'filter' => 'permiso:pagos-electronicos.generar-orden']);
+        $routes->post('pagos-electronicos/nueva', 'Admin\PagosElectronicos::generar', ['filter' => 'permiso:pagos-electronicos.generar-orden']);
+        $routes->get('pagos-electronicos', 'Admin\PagosElectronicos::index', ['as' => 'pagos-electronicos.consultar-estado', 'filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->get('pagos-electronicos/(:num)', 'Admin\PagosElectronicos::ver/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->post('pagos-electronicos/(:num)/consultar', 'Admin\PagosElectronicos::consultar/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->get('cobros/anulaciones', 'Admin\Cobros::comprobantes', ['as' => 'cobros.anular', 'filter' => 'permiso:cobros.anular']);
+        $routes->get('cobros/(:num)/anular', 'Admin\Cobros::anulacion/$1', ['filter' => 'permiso:cobros.anular']);
+        $routes->post('cobros/(:num)/anular', 'Admin\Cobros::anular/$1', ['filter' => 'permiso:cobros.anular']);
+        $routes->get('revocaciones', 'Admin\Revocaciones::index', ['as' => 'creditos.revocar', 'filter' => 'permiso:creditos.revocar']);
+        $routes->get('revocaciones/(:num)', 'Admin\Revocaciones::credito/$1', ['filter' => 'permiso:creditos.revocar']);
+        $routes->post('revocaciones/(:num)', 'Admin\Revocaciones::registrar/$1', ['filter' => 'permiso:creditos.revocar']);
+        $routes->post('revocaciones/(:num)/confirmar', 'Admin\Revocaciones::confirmar/$1', ['filter' => 'permiso:creditos.revocar']);
+        $routes->get('cajas/movimientos', 'Admin\Cajas::movimientos', ['as' => 'cajas.consultar-movimientos', 'filter' => 'permiso:cajas.consultar-movimientos']);
+        $routes->get('cajas/jornadas/(:num)', 'Admin\Cajas::jornada/$1', ['filter' => 'permiso:cajas.consultar-movimientos']);
         $routes->get('cajas', 'Admin\Cajas::index', ['as' => 'cajas.registrar', 'filter' => 'permiso:cajas.registrar']);
         $routes->post('cajas', 'Admin\Cajas::registrar', ['filter' => 'permiso:cajas.registrar']);
         $routes->post('cajas/(:num)/asignar', 'Admin\Cajas::asignar/$1', ['filter' => 'permiso:cajas.asignar-cajero']);
@@ -105,6 +158,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->post('monotributo', 'Admin\Monotributo::registrar', ['filter' => 'permiso:monotributo.actualizar']);
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
+        $routes->get('contratos', 'Admin\Contratos::index', ['as' => 'contratos.registrar-firmado', 'filter' => 'permiso:contratos.registrar-firmado']);
+        $routes->get('contratos/(:num)', 'Admin\Contratos::ver/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
+        $routes->post('contratos/(:num)', 'Admin\Contratos::registrar/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
         $routes->get('liquidaciones/(:num)', 'Admin\Liquidaciones::ver/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->post('liquidaciones/(:num)', 'Admin\Liquidaciones::liquidar/$1', ['filter' => 'permiso:creditos.liquidar']);
@@ -160,6 +216,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('evaluacion', 'Admin\Parametros::guardarEvaluacion', ['filter' => 'permiso:parametros.evaluacion']);
             $routes->get('estructuracion', 'Admin\Parametros::estructuracion', ['as' => 'parametros.estructuracion', 'filter' => 'permiso:parametros.estructuracion']);
             $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
+            $routes->get('morosidad', 'Admin\Parametros::morosidad', ['as' => 'parametros.morosidad', 'filter' => 'permiso:parametros.morosidad']);
+            $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
         });
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
@@ -197,5 +255,13 @@ $routes->group('portal', static function (RouteCollection $routes): void {
 
 // Notificaciones de servicios externos (sin sesión ni CSRF; se validan por firma, RNF-08)
 $routes->group('api', static function (RouteCollection $routes): void {
-    // $routes->post('webhooks/pasarela', 'Api\Webhooks\Pasarela::recibir');
+    $routes->post('webhooks/pasarela', 'Api\Webhooks\Pasarela::recibir', ['as' => 'webhooks.pasarela']);
 });
+
+// Simulador de la pasarela de pagos: solo en desarrollo y pruebas
+if (ENVIRONMENT !== 'production') {
+    $routes->get('simulador/pagar/(:segment)', 'Simulador\Pasarela::pagar/$1');
+    $routes->post('simulador/pagar/(:segment)', 'Simulador\Pasarela::registrar/$1');
+    $routes->get('simulador/devoluciones', 'Simulador\Pasarela::devoluciones');
+    $routes->post('simulador/devoluciones', 'Simulador\Pasarela::configurarDevoluciones');
+}
