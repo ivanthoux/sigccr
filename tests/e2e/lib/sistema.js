@@ -20,6 +20,14 @@ function spark(...args) {
   return enApp('php', 'spark', ...args);
 }
 
+/** php spark db:seed <seeder> con la conexión del dueño del esquema, como se ejecuta en la instalación. */
+function sembrar(seeder) {
+  return execFileSync(DOCKER, ['exec', '-u', 'www-data', '-e', 'SIGCCR_DB_GRUPO=migraciones', '-w', '/var/www/html', contenedorApp, 'php', 'spark', 'db:seed', seeder], {
+    encoding: 'utf8',
+    maxBuffer: 20 * 1024 * 1024,
+  });
+}
+
 /** Decodifica las entidades HTML con que esc(…, 'attr') escribe el enlace (&#x3A; por «:», &amp; por «&»). */
 function decodificar(texto) {
   return texto
@@ -82,4 +90,4 @@ async function cerrarBase() {
   pool = undefined;
 }
 
-module.exports = { spark, enApp, ultimoCorreo, cantidadCorreos, consulta, valor, cerrarBase };
+module.exports = { spark, sembrar, enApp, ultimoCorreo, cantidadCorreos, consulta, valor, cerrarBase };
