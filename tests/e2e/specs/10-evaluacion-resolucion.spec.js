@@ -8,8 +8,8 @@ const f = require('../lib/flujo');
 const { C01: ana, C02: bruno, C05: elena, C06: federico, C08: hernan, C09: ines, C11: lucia } = clientes;
 const exito = (page) => page.locator('.alert-success');
 const solicitudDe = (cliente) => valor(
-  'SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.correo = @c ORDER BY s.id DESC',
-  { c: cliente.correo },
+  'SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c ORDER BY s.id DESC',
+  { c: cliente.cuil },
 );
 
 /** Simula, registra y verifica con todo Conforme; luego el Temporizador evalúa. */

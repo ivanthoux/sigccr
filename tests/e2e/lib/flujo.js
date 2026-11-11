@@ -4,14 +4,15 @@ const { fecha, ddmmaaaa } = require('./datos');
 const { documento } = require('./archivos');
 const { spark, valor } = require('./sistema');
 
-const idCliente = (correo) => valor('SELECT id FROM dbo.clientes WHERE correo = @c', { c: correo });
+// Por CUIT/CUIL: el correo de Ana cambia en R-024
+const idCliente = (cliente) => valor('SELECT id FROM dbo.clientes WHERE cuit_cuil = @c', { c: cliente.cuil || cliente.cuit });
 const idLinea = (codigo) => valor('SELECT id FROM dbo.lineas_credito WHERE codigo = @c', { c: codigo });
 const estadoSolicitud = (id) => valor('SELECT estado FROM dbo.solicitudes_credito WHERE id = @id', { id });
 const idDeUrl = (page, patron) => Number(page.url().match(patron)[1]);
 
 /** CU-21: simula y devuelve el id de la simulación (o null si quedó en el formulario con errores). */
 async function simular(page, cliente, codigoLinea, importe, cuotas) {
-  await page.goto(`/admin/simulaciones?cliente=${await idCliente(cliente.correo)}&linea=${await idLinea(codigoLinea)}`);
+  await page.goto(`/admin/simulaciones?cliente=${await idCliente(cliente)}&linea=${await idLinea(codigoLinea)}`);
   await page.locator('#importe').fill(String(importe));
   await page.locator('#cantidad_cuotas').fill(String(cuotas));
   await page.getByRole('button', { name: 'Simular' }).click();

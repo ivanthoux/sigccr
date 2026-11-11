@@ -8,8 +8,8 @@ const f = require('../lib/flujo');
 const { C01: ana, C02: bruno, C05: elena, C06: federico, C12: marcos } = clientes;
 const exito = (page) => page.locator('.alert-success');
 const solicitudDe = (cliente) => valor(
-  "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.correo = @c AND s.estado NOT IN ('Rechazada', 'Cancelada') ORDER BY s.id DESC",
-  { c: cliente.correo },
+  "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado NOT IN ('Rechazada', 'Cancelada') ORDER BY s.id DESC",
+  { c: cliente.cuil },
 );
 
 test.describe.configure({ mode: 'serial' });
@@ -106,7 +106,7 @@ test('R-087 Cancelar una solicitud aprobada (CU-28)', async ({ comoUsuario }) =>
   };
   await cancelar(id);
   await expect(analista.locator('.alert-success')).toContainText('Solicitud cancelada.');
-  await cancelar(await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.correo = @c AND s.estado = 'Liquidada'", { c: ana.correo }));
+  await cancelar(await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado = 'Liquidada'", { c: ana.cuil }));
   await expect(analista.locator('body')).toContainText('La solicitud ya finalizó: no se puede cancelar.');
 });
 
@@ -123,7 +123,7 @@ test('R-088 Buscar solicitudes', async ({ comoUsuario }) => {
 
 test('R-089 Ficha completa de la solicitud', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
-  await page.goto(`/admin/solicitudes/${await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.correo = @c AND s.estado = 'Liquidada'", { c: ana.correo })}`);
+  await page.goto(`/admin/solicitudes/${await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado = 'Liquidada'", { c: ana.cuil })}`);
   for (const texto of ['Liquidada', 'Favorable', 'Contrato']) await expect(page.locator('main')).toContainText(texto);
 });
 

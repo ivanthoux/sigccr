@@ -10,8 +10,8 @@ const { C01: ana, C02: bruno, C07: gabriela } = clientes;
 const exito = (page) => page.locator('.alert-success');
 const estado = (page) => page.locator('main');
 const solicitudDe = (cliente) => valor(
-  "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.correo = @c AND s.estado NOT IN ('Cancelada', 'Rechazada') ORDER BY s.id DESC",
-  { c: cliente.correo },
+  "SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado NOT IN ('Cancelada', 'Rechazada') ORDER BY s.id DESC",
+  { c: cliente.cuil },
 );
 
 test.describe.configure({ mode: 'serial' });
@@ -37,7 +37,7 @@ test('R-054 Validaciones de la simulación', async ({ comoUsuario }) => {
 
 test('R-055 Línea que no admite al cliente', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
-  await page.goto(`/admin/simulaciones?cliente=${await f.idCliente(ana.correo)}&linea=${await f.idLinea('PYME-CT')}`);
+  await page.goto(`/admin/simulaciones?cliente=${await f.idCliente(ana)}&linea=${await f.idLinea('PYME-CT')}`);
   await expect(page.locator('main')).toContainText('Seleccione otra línea.');
 });
 
@@ -50,7 +50,7 @@ test('R-056 Gasto administrativo porcentual', async ({ comoUsuario }) => {
 test('R-057 Comparar líneas (CU-99)', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   for (const criterio of ['Monto', 'Costo']) {
-    await page.goto(`/admin/simulaciones/comparar?cliente=${await f.idCliente(ana.correo)}`);
+    await page.goto(`/admin/simulaciones/comparar?cliente=${await f.idCliente(ana)}`);
     await page.locator('#importe').fill('500000');
     await page.locator('#cantidad_cuotas').fill('12');
     await page.locator(`#criterio-${criterio}`).check();
