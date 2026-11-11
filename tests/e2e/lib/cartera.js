@@ -22,6 +22,8 @@ const cuota = async (creditoId, numero) => (await consulta('SELECT * FROM dbo.cu
  */
 async function atrasar(creditoId, dias) {
   await consulta('UPDATE dbo.cuotas SET vencimiento = DATEADD(day, -@d, vencimiento) WHERE credito_id = @c', { d: dias, c: creditoId });
+  // Los tramos ya calculados también se corren: el proceso calcula desde el último tramo registrado (RN-53)
+  await consulta('UPDATE t SET t.fecha = DATEADD(day, -@d, t.fecha) FROM dbo.tramos_punitorios t JOIN dbo.cuotas q ON q.id = t.cuota_id WHERE q.credito_id = @c', { d: dias, c: creditoId });
   spark('cartera:punitorios');
 }
 

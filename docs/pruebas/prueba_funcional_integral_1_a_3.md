@@ -558,8 +558,8 @@ Carpeta `Datos de prueba` de la documentación. Son documentos ficticios, marcad
 
 En `consultas_de_apoyo.sql`, reemplazar los números marcados con `…`.
 
-- **C.1 Llevar un crédito a mora.** Adelanta todos sus vencimientos; después, ejecutar `cartera:punitorios`.
-- **C.2 Vencer una orden de pago.**
+- **C.1 Llevar un crédito a mora.** Adelanta todos sus vencimientos y los tramos de punitorios ya calculados (sin esto, el segundo adelanto de R-102 no genera los días intermedios, RN-53); después, ejecutar `cartera:punitorios`.
+- **C.2 Vencer una orden de pago.** Adelanta también la emisión, que debe ser anterior al vencimiento.
 - **C.3 Vencer una propuesta de refinanciación.**
 - **C.4 Sacar un crédito del plazo de revocación.**
 - **C.5 Vencer una simulación, una alternativa, una aprobación y una autorización de devolución.**
