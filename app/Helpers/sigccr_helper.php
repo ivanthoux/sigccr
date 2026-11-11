@@ -194,7 +194,7 @@ if (!function_exists('finalizar_sesion')) {
     function finalizar_sesion(): void
     {
         $sesion = session();
-        $sesion->remove(array_keys($_SESSION ?? []));
+        $sesion->remove(array_keys((array) $sesion->get()));
         $sesion->regenerate(true);
     }
 }

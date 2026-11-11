@@ -338,7 +338,7 @@ add('cuentas_acceso', 'SS-01', 'CuentaAcceso', 'Superclase de las cuentas de acc
     C('version_seguridad', 'INT', default='1', d='Se incrementa al desactivar, cambiar el rol o restablecer credenciales; las sesiones con un valor anterior se invalidan (RNF-11).'),
     VF(),
     CREADO(), ACT(),
-], ck=[('CK_cuentas_acceso_contrasena', "estado = 'PendienteActivacion' OR hash_contrasena IS NOT NULL"),
+], ck=[('CK_cuentas_acceso_contrasena', "estado IN ('PendienteActivacion', 'Desactivada') OR hash_contrasena IS NOT NULL"),
        ('CK_cuentas_acceso_intentos', 'intentos_fallidos BETWEEN 0 AND 5')],
    uq=[('UQ_cuentas_acceso_correo', ['tipo_cuenta', 'correo'], None),
        ('UQ_cuentas_acceso_id_tipo', ['id', 'tipo_cuenta'], None)])

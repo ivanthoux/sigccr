@@ -59,9 +59,15 @@ for m in re.finditer(r'ALTER TABLE dbo\.(\w+) ADD CONSTRAINT \w+ FOREIGN KEY \((
     if tipo and tipo_pk.get(ref) and tipo.group(1) != tipo_pk[ref]:
         errores.append(f'migraciones: {tabla}.{col} es {tipo.group(1)} y {ref}.id es {tipo_pk[ref]}')
 # Cada tabla que la aplicación borra necesita GRANT DELETE para rol_sigccr_app (el rol solo tiene SELECT, INSERT y UPDATE)
-codigo = '\n'.join(open(f, encoding='utf-8').read() for f in glob.glob(os.path.join(AQUI, '..', '..', 'app', '**', '*.php'), recursive=True)
-                   if os.sep + 'Database' + os.sep not in f)
-borradas = set(re.findall(r"table\('(\w+)'\)(?:->\w+\([^;]*?\))*?->delete\(", codigo)) | set(re.findall(r'DELETE FROM dbo\.(\w+)', codigo))
+borradas = set()
+for archivo in glob.glob(os.path.join(AQUI, '..', '..', 'app', '**', '*.php'), recursive=True):
+    if os.sep + 'Database' + os.sep in archivo:
+        continue
+    with open(archivo, encoding='utf-8') as f:
+        for sentencia in f.read().split(';'):
+            if '->delete(' in sentencia:
+                borradas.update(re.findall(r"table\('(\w+)'\)", sentencia))
+            borradas.update(re.findall(r'DELETE FROM dbo\.(\w+)', sentencia))
 con_permiso = set(re.findall(r'GRANT DELETE ON dbo\.(\w+) TO rol_sigccr_app', repo))
 errores += [f'la aplicación borra filas de {t} sin GRANT DELETE para rol_sigccr_app' for t in sorted(borradas - con_permiso)]
 errores += [f'no está en la especificación: {o}' for o in sorted(real - esperado)]
