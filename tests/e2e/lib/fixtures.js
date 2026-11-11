@@ -34,9 +34,16 @@ async function diagnosticar(paginas, testInfo) {
   }
 }
 
+/** Acepta las confirmaciones del navegador (data-confirmar: cobros, cambios de estado, anulaciones). */
+const aceptarDialogos = (contexto) => {
+  contexto.on('page', (p) => p.on('dialog', (d) => d.accept()));
+  contexto.pages().forEach((p) => p.on('dialog', (d) => d.accept()));
+};
+
 const test = base.test.extend({
   context: async ({ context }, use) => {
     await context.addInitScript(ocultarBarra);
+    aceptarDialogos(context);
     await use(context);
   },
   page: async ({ page }, use, testInfo) => {
@@ -53,6 +60,7 @@ const test = base.test.extend({
       const usuario = typeof u === 'string' ? usuarios[u] : u;
       const contexto = await browser.newContext({ storageState: sesiones.get(usuario.correo) });
       await contexto.addInitScript(ocultarBarra);
+      aceptarDialogos(contexto);
       abiertos.push(contexto);
       const page = await contexto.newPage();
       await page.goto('/admin');
@@ -73,4 +81,18 @@ function olvidarSesion(usuario) {
   sesiones.delete(usuario.correo);
 }
 
-module.exports = { test, expect: base.expect, entrar, olvidarSesion };
+/**
+ * Envía un formulario con el botón indicado y, si el servidor pide confirmar el cambio por las solicitudes en trámite
+ * (D-24), marca la confirmación y lo vuelve a enviar.
+ */
+async function enviarConfirmando(page, boton) {
+  await page.getByRole('button', { name: boton }).click();
+  await page.waitForLoadState();
+  if (await page.locator('#confirmar_cambio').count()) {
+    await page.locator('#confirmar_cambio').check();
+    await page.getByRole('button', { name: boton }).click();
+    await page.waitForLoadState();
+  }
+}
+
+module.exports = { test, expect: base.expect, entrar, olvidarSesion, enviarConfirmando };

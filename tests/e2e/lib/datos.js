@@ -33,7 +33,7 @@ const clientes = {
   C08: h('C-08', 'Hernán', 'Ojeda', '37888994', '20378889945', '1992-04-23', 'Casado', 'falla.transitoria@prueba.local', '3758 41-1008', 808, 'RelacionDependencia', '1500000', 'Chofer', 'Transporte Apóstoles S.R.L.'),
   C09: h('C-09', 'Inés', 'Villalba', '38999102', '27389991029', '1993-09-11', 'Soltero', 'incierto@prueba.local', '3758 41-1009', 909, 'RelacionDependencia', '1500000', 'Administrativa', 'Municipalidad de Apóstoles'),
   C10: h('C-10', 'Julián', 'Ríos', '29111203', '20291112030', '1982-02-28', 'Casado', 'julian.rios@prueba.local', '3758 41-1010', 1010, 'RelacionDependencia', '1500000', 'Contador', 'Estudio Ríos y Asociados'),
-  C11: h('C-11', 'Lucía', 'Martínez', '40111304', '27401113040', '1996-06-19', 'Soltero', 'lucia.martinez@prueba.local', '3758 41-1011', 1111, 'RelacionDependencia', '150000', 'Ayudante de cocina', 'Restaurante El Paso', { comunicaciones: false }),
+  C11: h('C-11', 'Lucía', 'Martínez', '40111304', '27401113040', '1996-06-19', 'Soltero', 'lucia.martinez@prueba.local', '3758 41-1011', 1111, 'RelacionDependencia', '20000', 'Ayudante de cocina', 'Restaurante El Paso', { comunicaciones: false }),
   C12: h('C-12', 'Marcos', 'Paredes', '27222403', '20272224030', '1979-10-03', 'Casado', 'marcos.paredes@prueba.local', '3758 41-1012', 1212, 'Monotributista', '1200000', 'Comerciante', 'Almacén propio', { monotributo: 'B' }),
   C13: h('C-13', 'Nora', 'Kowalski', '25333502', '27253335020', '1976-01-12', 'Viudo', 'nora.kowalski@prueba.local', '3758 41-1013', 1313, 'RelacionDependencia', '1500000', 'Concejal', 'Concejo Deliberante de Apóstoles', { pep: true, nacionalidad: 'Paraguaya' }),
   C14: h('C-14', 'Sofía', 'Menor', '48000000', '27480000000', '2010-05-15', 'Soltero', 'sofia.menor@prueba.local', '3758 41-1014', 1414, 'RelacionDependencia', '300000', 'Estudiante', ''),
@@ -79,3 +79,19 @@ const parametros = {
 
 module.exports.ddmmaaaa = ddmmaaaa;
 module.exports.parametros = parametros;
+
+// A.10 Créditos de la iteración 3 (Motos, 12 cuotas) y desembolsos
+const desembolsos = {
+  C01: { importe: 500000, cbu: '0170099240000000123457', evidencia: 'Constancia de CBU del Banco Francés presentada por la titular', operacion: 'DES-0001' },
+  C02: { importe: 600000, cbu: '0110599520000000678908', evidencia: 'Constancia de CBU del Banco Nación', operacion: 'DES-0002' },
+  C03: { importe: 400000, cbu: '0720123988000000456784', evidencia: 'Constancia de CBU del Banco Santander', operacion: 'DES-0003' },
+  C04: { importe: 300000, cbu: '1500001531000000987653', evidencia: 'Constancia de CBU del HSBC', operacion: 'DES-0004' },
+  C10: { importe: 450000, cbu: '0140321155000000112233', evidencia: 'Constancia de CBU del Banco Provincia', operacion: 'DES-0005' },
+  C06: { importe: 450000, cbu: '0340007466000000334455', evidencia: 'Constancia de CBU del Banco Patagonia', operacion: 'DES-0006' },
+};
+const cbuInvalido = '2850590909400904181357';
+const cvu = '0000003110000123456781';
+
+module.exports.desembolsos = desembolsos;
+module.exports.cbuInvalido = cbuInvalido;
+module.exports.cvu = cvu;

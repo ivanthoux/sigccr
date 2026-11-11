@@ -4,7 +4,7 @@ const { test, expect } = require('../lib/fixtures');
 const { usuarios, fecha, ddmmaaaa } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
 
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const libre = (page) => page.locator('dt', { hasText: 'Disponible libre' }).locator('xpath=following-sibling::dd[1]');
 const aNumero = (texto) => Number(texto.replace(/[^\d,-]/g, '').replace(',', '.'));
 const idCaja = (codigo) => valor('SELECT id FROM dbo.cajas WHERE codigo = @c', { c: codigo });
@@ -127,7 +127,6 @@ test('R-051 Apertura sin efectivo (D-30)', async ({ comoUsuario }) => {
 
 test('R-052 Inhabilitar y rehabilitar cajas', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
-  page.on('dialog', (d) => d.accept());
   const cambiarEstado = async (caja, motivo) => {
     const id = await idCaja(caja);
     await page.goto('/admin/cajas');

@@ -107,10 +107,13 @@ class EstructuracionService extends BaseService
             return null;
         }
         $e['parametros'] = json_decode((string) $e['parametros'], true);
+        // D-19: la combinación pedida en la solicitud se presenta primero; luego por importe descendente
         $e['alternativas'] = $this->db->query(
             "SELECT a.*, CASE WHEN a.estado = 'Vigente' AND a.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END AS vigente "
-            . 'FROM dbo.alternativas_financiacion a WHERE a.estructuracion_id = ? '
-            . "ORDER BY CASE a.estado WHEN 'Confirmada' THEN 0 WHEN 'Vigente' THEN 1 ELSE 2 END, a.importe DESC, a.cantidad_cuotas",
+            . 'FROM dbo.alternativas_financiacion a JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id '
+            . 'JOIN dbo.solicitudes_credito s ON s.id = e.solicitud_id WHERE a.estructuracion_id = ? '
+            . "ORDER BY CASE a.estado WHEN 'Confirmada' THEN 0 WHEN 'Vigente' THEN 1 ELSE 2 END, "
+            . 'CASE WHEN a.importe = s.importe AND a.cantidad_cuotas = s.cantidad_cuotas THEN 0 ELSE 1 END, a.importe DESC, a.cantidad_cuotas',
             [(int) $e['id']],
         )->getResultArray();
 

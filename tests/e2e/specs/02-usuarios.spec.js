@@ -4,7 +4,7 @@ const { usuarios, internos } = require('../lib/datos');
 const { ultimoCorreo, consulta, valor, cerrarBase } = require('../lib/sistema');
 
 const { admin, gerente, cajero2, cajero3 } = usuarios;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const idDe = (u) => valor('SELECT id FROM dbo.cuentas_acceso WHERE correo = @c', { c: u.correo });
 const estadoDe = (u) => valor('SELECT estado FROM dbo.cuentas_acceso WHERE correo = @c', { c: u.correo });
 const cantidadUsuarios = () => valor('SELECT COUNT(*) FROM dbo.usuarios_internos');

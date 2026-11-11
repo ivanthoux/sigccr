@@ -160,7 +160,7 @@ Como Analista Martín López.
 |---|---|---|---|---|
 | R-053 | Simular | Simular para Ana $ 500.000 en 12 cuotas en «Motos». | «Simulación registrada. Es preliminar…»; cuota, TEA, CFTEA, total, plan paginado y el recuadro con los datos del cliente. | |
 | R-054 | Validaciones | Importe vacío, `abc`, cuotas `6,5`, $ 100.000 (menor que el mínimo) y 30 cuotas. | Cada error junto a su campo con los límites de la línea. | |
-| R-055 | Línea no admitida | Simular para Ana en «Capital de trabajo Pyme». | El motivo de la línea seguido de «Seleccione otra línea.» | |
+| R-055 | Línea no admitida | Simular para Ana en «Capital de trabajo Pyme». | No permite simularla: figura en «Líneas que no admiten al cliente» con su motivo («La línea no admite personas humanas.»). | |
 | R-056 | Gasto porcentual | Simular para Bruno $ 800.000 en 12 cuotas en «Personal». | Cada cuota tiene $ 4.000,00 de gastos y su IVA (0,5 % del capital). | |
 | R-057 | Comparar líneas | Comparar para Ana con «Mayor monto prestable» y con «Menor costo (CFTEA)». | Líneas viables con su monto y CFTEA, las no viables con su motivo, y marcadas la de mayor monto y la de menor costo. | |
 
@@ -187,7 +187,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 | R-067 | Excluyente | Hernán Ojeda (C-08). | Desfavorable por la situación 5 vigente (RN-69); la solicitud queda Rechazada. | |
 | R-068 | Contingencia | Inés Villalba (C-09); ejecutar `evaluacion:ejecutar`. | Pendiente de evaluación de contingencia; figura en Crédito → Contingencias. | |
 | R-069 | Registrar la contingencia | Probar los datos inválidos de A.9; registrar con los válidos. | Cada error junto a su campo; con los válidos: «Evaluación de contingencia registrada: la solicitud queda pendiente de resolución…» | |
-| R-070 | Sin capacidad | Lucía Martínez (C-11, ingresos $ 150.000), $ 1.000.000 en 6 cuotas en «Personal». | Sin alternativas viables: pasa a resolución del Gerente. | |
+| R-070 | Sin capacidad | Lucía Martínez (C-11, ingresos $ 20.000), $ 1.000.000 en 6 cuotas en «Personal». | Sin alternativas viables: pasa a resolución del Gerente. | |
 
 ### 12. Alternativas y resolución (CU-87, CU-64, CU-79 y CU-26)
 
@@ -198,7 +198,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 | R-073 | Aprobación automática | Confirmar la alternativa pedida con la fecha de hoy y «Presencial, con firma del cliente». | «Alternativa confirmada y solicitud aprobada automáticamente. La aprobación vence el …»; el vencimiento salta feriados y fines de semana (RN-49); Fondos muestra la reserva. | |
 | R-074 | Confirmación simultánea | En otra solicitud, abrir la misma alternativa en dos pestañas y confirmar en ambas. | La segunda informa que la solicitud cambió; hay una sola reserva. | |
 | R-075 | Bandeja del Gerente | Como Gerente, abrir Resolver solicitudes. | Las de Federico, Inés y Lucía, con evaluación, capacidad de pago y fondos disponibles. | |
-| R-076 | Validaciones de la resolución | Enviar sin decisión; «Devolver» sin etapa; «Aprobar» sin plan. | Cada error junto a su campo. | |
+| R-076 | Validaciones de la resolución | Enviar sin decisión; «Devolver» sin etapa; «Aprobar» borrando el importe y las cuotas propuestos. | Cada error junto a su campo. | |
 | R-077 | Aprobar con plan del Gerente | Aprobar a Federico con el plan de A.9 y fundamento. | «Solicitud aprobada: …», con la reserva del neto. | |
 | R-078 | Tope global | Fijar el tope global de A.6, aprobar a Inés con un plan de $ 600.000; luego quitar el tope y aprobarla con $ 400.000. | «El importe supera el tope global por cliente…»; sin tope se aprueba. | |
 | R-079 | Devolver y rechazar | Devolver la de Lucía a «Verificación» con el fundamento de A.9; como Analista, corregirla con una aclaración y verificarla; cuando vuelva a la bandeja, rechazarla con fundamento. | «Solicitud devuelta para revisión…»; con la corrección vuelve a Pendiente de verificación; al final, «Solicitud rechazada…». | |
@@ -213,7 +213,7 @@ En esta sección se liquidan los cinco créditos de la iteración 3. Para cada c
 | R-081 | Liquidar sin constancia | Como Paula, en Liquidar créditos, intentar liquidar la de Ana. | «Falta la constancia firmada del contrato de préstamo en el legajo…» | |
 | R-082 | Incorporar la constancia | Como Analista, adjuntar `contrato_firmado_prueba.pdf` con la fecha de recepción de hoy. | «Constancia firmada incorporada al legajo: la solicitud ya puede liquidarse (CU-27)…» | |
 | R-083 | Validaciones del desembolso | Liquidar la de Ana con el DNI de Bruno, el CBU inválido, el CVU, sin evidencia, sin número de operación, con fecha futura y con otro importe. | Cada error junto a su campo («El documento no coincide…», «Ingrese un CBU válido de 22 dígitos.», «Es un CVU de una billetera virtual…», «El importe transferido debe ser el neto a desembolsar.»). | |
-| R-084 | Liquidar | Liquidar con los datos de A.10 (CBU de Ana). | «Crédito liquidado: se desembolsaron …»; constancia imprimible; la reserva se consume. Repetir la liquidación: «La solicitud ya fue liquidada el …» | |
+| R-084 | Liquidar | Liquidar con los datos de A.10 (CBU de Ana). | «Crédito liquidado: se desembolsaron …»; constancia imprimible; la reserva se consume. Al volver a abrir la liquidación se muestra la constancia, sin opción de liquidar otra vez | |
 | R-085 | Plan del Gerente | Liquidar la de Federico sin marcar la conformidad y luego marcándola. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).»; luego liquida. | |
 | R-086 | Créditos de la iteración 3 | Liquidar los de Bruno, Carla, Diego y Julián con A.10 (cada uno con su contrato). | Quedan los créditos A (Ana), B (Bruno), C (Carla), D (Diego) y E (Julián). Anotar sus números en A.10. | |
 | R-087 | Cancelar una solicitud | Confirmar la alternativa de Elena (queda aprobada) y cancelarla con el motivo de A.9 (pide confirmación adicional); intentar cancelar la de Ana. | Se cancela y libera la reserva; la de Ana: «La solicitud ya finalizó: no se puede cancelar.» | |
@@ -243,7 +243,7 @@ Antes de empezar: Paula con `CAJA-01` abierta (R-051). Los créditos A a E son l
 | R-095 | Cobro total | Cobrar la cuota 1 de Ana por transferencia con la operación de A.11. | «Cobro N.º … registrado por $ …: 1 cuota(s) pagada(s).»; comprobante con medio, cuota y conceptos. | |
 | R-096 | Cobro parcial con dos medios | Cobrar $ 20.000 de la cuota 2 de Ana: $ 12.000 con tarjeta de débito y $ 8.000 por transferencia (A.11). | «…la cuota 2 con saldo pendiente (D-12).»; el comprobante muestra los dos medios. | |
 | R-097 | Comprobantes y movimientos | Buscar el comprobante de R-095 por número, cliente y fecha, y reemitirlo; abrir la jornada en Movimientos de caja. | La reemisión incrementa el contador (RN-31); la jornada muestra un movimiento por medio y los totales por medio. | |
-| R-098 | Anular con dependientes | Como Gerente, en Anular cobros, anular el de R-095 con el motivo de A.11, primero sin confirmar los dependientes. | «Hay 1 cobro(s) posteriores sobre las mismas cuotas…»; al confirmar: «Cobro anulado: 1 cuota(s) recuperaron su saldo y el importe de $ … quedó como saldo a favor…» | |
+| R-098 | Anular un cobro | Como Gerente, en Anular cobros, anular el de R-095 con el motivo de A.11. Si hubiera cobros posteriores sobre **las mismas cuotas**, el sistema los avisa y pide continuar (A2); el de R-096 es sobre la cuota 2, así que no se avisa. | «Cobro anulado: 1 cuota(s) recuperaron su saldo y el importe de $ … quedó como saldo a favor…» | |
 | R-099 | Efectos y repetición | Revisar el crédito A y la caja; volver a anular el mismo cobro. | La cuota 1 vuelve a pendiente; el cobro y sus movimientos se conservan como anulados; «…ya fue anulado: no se generan nuevos ajustes (A1).» | |
 | R-100 | Volver a cobrar | Como Paula, cobrar la cuota 1 de Ana por tarjeta de crédito (A.11). | Cobro registrado; el saldo a favor de R-098 sigue disponible para la sección 18. | |
 
@@ -293,8 +293,8 @@ Con el crédito B de Bruno en mora (sección 16). Analista Martín, Gerente Laur
 | R-123 | Observar y nueva versión | Como Gerente, observarla con el fundamento de A.14; como Analista, simular y registrar otra vez. | Observada con el motivo; luego «Propuesta N.º … (versión 2) registrada…» con el mismo número. | |
 | R-124 | Aprobar y plan definitivo | Como Gerente, aprobar la versión 2; al día siguiente (o después de `cartera:punitorios`), abrir «Registrar aceptación y aplicar». | «Propuesta aprobada…»; el plan definitivo suma los punitorios posteriores al corte (RN-70). | |
 | R-125 | Aplicar | Registrar la aceptación con la fecha de hoy y «Firma presencial». | «Refinanciación aplicada: el crédito N.º … reemplaza a 1 crédito(s)…»; el crédito B queda Refinanciado y sus cuotas Sustituidas; Fondos no cambia. Anotar el crédito nuevo (F) en A.10. | |
-| R-126 | Observación por un pago | Llevar a mora el crédito A de Ana con la consulta C.1 (−40 días) y `cartera:punitorios`; simular y registrar una propuesta; como Paula, cobrar en ventanilla la cuota vencida más antigua. | La propuesta pasa a Observada en el acto, con el motivo del cobro (RN-36). | |
-| R-127 | Rechazar, cancelar y vencer | Con nuevas propuestas sobre el crédito A: rechazar una; cancelar otra como Analista por desistimiento (sin y con fecha y medio) y otra como Gerente; vencer otra con la consulta C.3. | «Propuesta rechazada (A3).»; «…cancelada por desistimiento del cliente…»; «…por causa administrativa…»; la vencida no puede resolverse (A1). | |
+| R-126 | Observación por un pago | Llevar a mora el crédito A de Ana con la consulta C.1 (−100 días: sus cuotas 1 y 2 ya están pagas, así que vence la 3) y `cartera:punitorios`; simular y registrar una propuesta; como Paula, cobrar en ventanilla la cuota vencida más antigua. | La propuesta pasa a Observada en el acto, con el motivo del cobro (RN-36). | |
+| R-127 | Rechazar, cancelar y vencer | El cobro de R-126 dejó el crédito A al día: volver a llevarlo a mora con la consulta C.1 (−30 días, vence la cuota 4). Con nuevas propuestas sobre el crédito A: rechazar una; cancelar otra como Analista por desistimiento (sin y con fecha y medio) y otra como Gerente; vencer otra con la consulta C.3. | «Propuesta rechazada (A3).»; «…cancelada por desistimiento del cliente…»; «…por causa administrativa…»; la vencida no puede resolverse (A1). | |
 | R-128 | Condonación | Como Gerente, en Cartera → Condonar punitorios, con Ana: fijar el límite en 50 % (parámetros de morosidad), intentar más del máximo, sin fundamento y luego válido (A.14). | «El importe supera el máximo condonable…»; sin fundamento se rechaza; válida: «Condonación registrada por $ …, con su IVA. El capital adeudado no se redujo.». Volver el límite al 100 %. | |
 
 ### 20. Revocación (CU-102)
@@ -377,7 +377,7 @@ Domicilio común: provincia **Misiones**, localidad **Apóstoles**, código post
 | C-08 | Hernán | Ojeda | 37888994 | 20378889945 | 23/04/1992 | Casado | `falla.transitoria@prueba.local` | 3758 41-1008 | 808 | Relación de dependencia | 1.500.000 | Chofer | Transporte Apóstoles S.R.L. | No | Situación 5 excluyente y reintentos |
 | C-09 | Inés | Villalba | 38999102 | 27389991029 | 11/09/1993 | Soltera | `incierto@prueba.local` | 3758 41-1009 | 909 | Relación de dependencia | 1.500.000 | Administrativa | Municipalidad de Apóstoles | No | Contingencia y resultado incierto |
 | C-10 | Julián | Ríos | 29111203 | 20291112030 | 28/02/1982 | Casado | `julian.rios@prueba.local` | 3758 41-1010 | 1010 | Relación de dependencia | 1.500.000 | Contador | Estudio Ríos y Asociados | No | Crédito E: cancelación anticipada |
-| C-11 | Lucía | Martínez | 40111304 | 27401113040 | 19/06/1996 | Soltera | `lucia.martinez@prueba.local` | 3758 41-1011 | 1111 | Relación de dependencia | 150.000 | Ayudante de cocina | Restaurante El Paso | No | Sin capacidad de pago |
+| C-11 | Lucía | Martínez | 40111304 | 27401113040 | 19/06/1996 | Soltera | `lucia.martinez@prueba.local` | 3758 41-1011 | 1111 | Relación de dependencia | 20.000 | Ayudante de cocina | Restaurante El Paso | No | Sin capacidad de pago |
 | C-12 | Marcos | Paredes | 27222403 | 20272224030 | 03/10/1979 | Casado | `marcos.paredes@prueba.local` | 3758 41-1012 | 1212 | Monotributista (categoría B) | 1.200.000 | Comerciante | Almacén propio | No | Monotributo |
 | C-13 | Nora | Kowalski | 25333502 | 27253335020 | 12/01/1976 | Viuda | `nora.kowalski@prueba.local` | 3758 41-1013 | 1313 | Relación de dependencia | 1.500.000 | Concejal | Concejo Deliberante de Apóstoles | **Sí** | Persona expuesta políticamente; nacionalidad «Paraguaya» |
 | C-14 | Sofía | Menor | 48000000 | 27480000000 | 15/05/2010 | Soltera | `sofia.menor@prueba.local` | 3758 41-1014 | 1414 | Relación de dependencia | 300.000 | Estudiante | — | No | Solo validaciones (menor de edad) |
@@ -483,7 +483,7 @@ CBU inválido: `2850590909400904181357`. CVU: `0000003110000123456781`.
 
 | Caso | Medio | N.º de operación | Importe |
 |---|---|---|---|
-| R-094 (repetido) | Transferencia y tarjeta | `TRF-1001` en los dos | — |
+| R-094 (repetido) | Dos transferencias | `TRF-1001` en las dos | — |
 | R-095 | Transferencia | `TRF-1001` | total de la cuota 1 |
 | R-096 | Tarjeta de débito + transferencia | `DEB-2001` y `TRF-1002` | 12.000 + 8.000 |
 | R-100 | Tarjeta de crédito | `CRE-3001` | total de la cuota 1 |
@@ -558,8 +558,8 @@ Carpeta `Datos de prueba` de la documentación. Son documentos ficticios, marcad
 
 En `consultas_de_apoyo.sql`, reemplazar los números marcados con `…`.
 
-- **C.1 Llevar un crédito a mora.** Adelanta todos sus vencimientos; después, ejecutar `cartera:punitorios`.
-- **C.2 Vencer una orden de pago.**
+- **C.1 Llevar un crédito a mora.** Hace regir la configuración inicial de morosidad e IVA desde un año antes (los días simulados son anteriores a la instalación y no tendrían tasa vigente), olvida la ejecución de ayer del cálculo nocturno (procesa cada día una sola vez), adelanta todos sus vencimientos y los tramos de punitorios ya calculados (sin esto, el segundo adelanto de R-102 no genera los días intermedios, RN-53); después, ejecutar `cartera:punitorios`.
+- **C.2 Vencer una orden de pago.** Adelanta también la emisión, que debe ser anterior al vencimiento.
 - **C.3 Vencer una propuesta de refinanciación.**
 - **C.4 Sacar un crédito del plazo de revocación.**
 - **C.5 Vencer una simulación, una alternativa, una aprobación y una autorización de devolución.**

@@ -3,7 +3,7 @@ const { test, expect } = require('../lib/fixtures');
 const { parametros, fecha, ddmmaaaa } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
 
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const versiones = (tipo) => valor('SELECT COUNT(*) FROM dbo.versiones_parametros WHERE tipo = @t', { t: tipo });
 
 /** Completa un formulario de parámetros con los valores dados y registra la versión. */

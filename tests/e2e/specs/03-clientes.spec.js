@@ -7,7 +7,7 @@ const { valor, cerrarBase } = require('../lib/sistema');
 
 const { C01: ana, C02: bruno, C12: marcos, C14: sofia } = clientes;
 const pyme = empresas.P01;
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const cantidadClientes = () => valor('SELECT COUNT(*) FROM dbo.clientes');
 const idCliente = (correo) => valor('SELECT id FROM dbo.clientes WHERE correo = @c', { c: correo });
 const error = (page, campo) => page.locator(`#error-${campo}`);

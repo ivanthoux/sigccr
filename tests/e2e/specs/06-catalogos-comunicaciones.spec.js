@@ -3,7 +3,7 @@ const { test, expect } = require('../lib/fixtures');
 const { clientes, fecha } = require('../lib/datos');
 const { spark, consulta, valor, cerrarBase } = require('../lib/sistema');
 
-const exito = (page) => page.locator('.alert-success');
+const exito = (page) => page.locator('.alert-success[role="status"]');
 const error = (page, campo) => page.locator(`#error-${campo}`);
 const TOPES = { A: '13000000', B: '19000000', C: '26500000', D: '33000000', E: '39000000', F: '48500000', G: '58000000', H: '88000000', I: '98500000', J: '113000000', K: '136000000' };
 
