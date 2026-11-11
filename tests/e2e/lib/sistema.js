@@ -4,10 +4,12 @@ const sql = require('mssql');
 
 const proyecto = process.env.E2E_PROYECTO || 'sigccr_e2e';
 const contenedorApp = `${proyecto}-app-1`;
+// Ruta fija del cliente de Docker de la imagen de pruebas (tests/e2e/Dockerfile), sin depender del PATH
+const DOCKER = process.env.E2E_DOCKER || '/usr/local/bin/docker';
 
 /** Ejecuta un comando dentro del contenedor app como www-data (dueño de writable/). */
 function enApp(...args) {
-  return execFileSync('docker', ['exec', '-u', 'www-data', '-w', '/var/www/html', contenedorApp, ...args], {
+  return execFileSync(DOCKER, ['exec', '-u', 'www-data', '-w', '/var/www/html', contenedorApp, ...args], {
     encoding: 'utf8',
     maxBuffer: 20 * 1024 * 1024,
   });
@@ -21,9 +23,9 @@ function spark(...args) {
 /** Decodifica las entidades HTML con que esc(…, 'attr') escribe el enlace (&#x3A; por «:», &amp; por «&»). */
 function decodificar(texto) {
   return texto
-    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
-    .replace(/&#([0-9]+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(Number.parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replaceAll('&quot;', '"').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
 }
 
 /**

@@ -65,7 +65,7 @@ class AdministradorInicialSeeder extends Seeder
         $datos = [$correo, (string) getenv('SIGCCR_ADMIN_NOMBRE'), (string) getenv('SIGCCR_ADMIN_APELLIDO'), (string) getenv('SIGCCR_ADMIN_DNI'), (string) getenv('SIGCCR_ADMIN_CLAVE')];
         $largo = mb_strlen($datos[4]);
         if (filter_var($correo, FILTER_VALIDATE_EMAIL) === false || $datos[1] === '' || $datos[2] === '' || !ctype_digit($datos[3]) || $largo < 15 || $largo > 128) {
-            throw new \RuntimeException('Datos del Administrador incompletos o inválidos en las variables SIGCCR_ADMIN_* (contraseña de 15 a 128 caracteres, RN-62).');
+            throw new \InvalidArgumentException('Datos del Administrador incompletos o inválidos en las variables SIGCCR_ADMIN_* (contraseña de 15 a 128 caracteres, RN-62).');
         }
 
         return $datos;
