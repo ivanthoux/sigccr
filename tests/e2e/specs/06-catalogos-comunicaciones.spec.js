@@ -79,7 +79,7 @@ let urlAlerta;
 test('R-039 Consultar alertas', async ({ comoUsuario }) => {
   const page = await comoUsuario('admin');
   await page.goto(`/admin/alertas?estado=Todas&desde=${fecha()}&hasta=${fecha()}`);
-  const filas = page.locator('table tbody tr');
+  const filas = page.locator('main table tbody tr');
   await expect(filas.first()).toBeVisible();
   const enlace = filas.first().getByRole('link').first();
   urlAlerta = await enlace.getAttribute('href');

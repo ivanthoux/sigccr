@@ -66,3 +66,16 @@ function fecha(dias = 0) {
 
 module.exports.lineas = lineas;
 module.exports.fecha = fecha;
+
+/** Fecha en formato dd/mm/aaaa a partir de AAAA-MM-DD. */
+const ddmmaaaa = (iso) => iso.split('-').reverse().join('/');
+
+// A.6 Parámetros válidos
+const parametros = {
+  estructuracion: { porcentaje_afectacion: '30', alicuota_iva: '21', vigencia_alternativas_dias: '7', paso_redondeo: '1000', escalones: '100 75 50', tope_global_cliente: '' },
+  morosidad: { tasa_punitoria_diaria: '0,12', tope_sobre_tna: '50', tolerancia_dias: '3', umbral_morosidad_avanzada_dias: '60', limite_condonacion: '100', refinanciacion_tasa_minima: '30', refinanciacion_tasa_maxima: '80', refinanciacion_cuotas_maximas: '36' },
+  motivo: 'Configuración inicial para la prueba integral',
+};
+
+module.exports.ddmmaaaa = ddmmaaaa;
+module.exports.parametros = parametros;

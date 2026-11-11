@@ -101,7 +101,7 @@ test('R-022 Legajo: incorporar y descargar', async ({ comoUsuario }) => {
   await page.locator('#archivo-nuevo').setInputFiles(documento('otro_documento_prueba.pdf'));
   await page.getByRole('button', { name: 'Incorporar' }).click();
   await expect(exito(page)).toContainText('Documento incorporado al legajo.');
-  const fila = page.locator('table tr', { hasText: 'otro_documento_prueba.pdf' });
+  const fila = page.locator('main table tr', { hasText: 'otro_documento_prueba.pdf' });
   await expect(fila).toHaveCount(1);
   const [descarga] = await Promise.all([page.waitForEvent('download'), fila.getByRole('link').click()]);
   expect(descarga.suggestedFilename()).toBe('otro_documento_prueba.pdf');
@@ -109,9 +109,9 @@ test('R-022 Legajo: incorporar y descargar', async ({ comoUsuario }) => {
 
 test('R-023 Localizar clientes', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
-  const filas = page.locator('table tbody tr');
+  const filas = page.locator('main table tbody tr');
   await page.goto('/admin/clientes');
-  await expect(page.locator('table')).toHaveCount(0);
+  await expect(page.locator('main table')).toHaveCount(0);
   await page.goto('/admin/clientes?texto=Góm');
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText('Gómez');

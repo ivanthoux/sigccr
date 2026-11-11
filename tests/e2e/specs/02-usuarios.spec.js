@@ -92,7 +92,7 @@ test('R-010 Definición inicial de la contraseña y menú de cada rol', async ({
 
 test('R-011 Localizar y edición simultánea', async ({ comoUsuario }) => {
   const page = await comoUsuario('admin');
-  const filas = page.locator('table tbody tr');
+  const filas = page.locator('main table tbody tr');
 
   await page.goto('/admin/usuarios?texto=Silva');
   await expect(filas).toHaveCount(1);

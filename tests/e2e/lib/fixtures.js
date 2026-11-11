@@ -24,16 +24,30 @@ async function entrar(page, usuario, clave = usuario.clave) {
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
 }
 
+/** Ante una falla, deja en la salida la dirección y el texto visible de cada página abierta (el informe tiene las capturas). */
+async function diagnosticar(paginas, testInfo) {
+  if (testInfo.status === testInfo.expectedStatus) return;
+  for (const p of paginas) {
+    if (p.isClosed()) continue;
+    const texto = await p.locator('body').innerText({ timeout: 2000 }).catch(() => '(sin texto)');
+    console.log(`\n--- Página al fallar ${testInfo.title}: ${p.url()}\n${texto.replace(/\n{2,}/g, '\n').slice(0, 2500)}\n---`);
+  }
+}
+
 const test = base.test.extend({
   context: async ({ context }, use) => {
     await context.addInitScript(ocultarBarra);
     await use(context);
   },
+  page: async ({ page }, use, testInfo) => {
+    await use(page);
+    await diagnosticar(page.context().pages(), testInfo);
+  },
   /**
    * Abre una página con la sesión del usuario indicado (clave de usuarios en datos.js o el objeto).
    * Reutiliza la sesión guardada; si expiró o se cerró, vuelve a ingresar.
    */
-  comoUsuario: async ({ browser }, use) => {
+  comoUsuario: async ({ browser }, use, testInfo) => {
     const abiertos = [];
     await use(async (u) => {
       const usuario = typeof u === 'string' ? usuarios[u] : u;
@@ -49,6 +63,7 @@ const test = base.test.extend({
       }
       return page;
     });
+    await diagnosticar(abiertos.flatMap((c) => c.pages()), testInfo);
     for (const c of abiertos) await c.close();
   },
 });
