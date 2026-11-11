@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.4.0] - 2026-11-11
+
+Control 3 (previsto para el 23/11/2026): iteración 3 completa (SS-05 y SS-06: caja sin efectivo, cobranza, punitorios, pagos electrónicos, saldos a favor, refinanciación, condonación, cancelación anticipada, contrato, revocación y procesos automáticos). Prueba funcional integral de las iteraciones 1 a 3 aprobada, con su batería de punta a punta en la integración continua.
+
 ### Corregido (revisión previa al Control 3)
 - CU-97: la cancelación anticipada cobraba de más cuando la cuota en curso tenía un pago parcial previo (D-12), porque el interés proporcional se calculaba sobre el interés pendiente y no sobre el original menos lo ya pagado. Con un interés de $ 10.000, $ 6.000 ya pagados y 15 días transcurridos cobraba $ 2.000 más IVA; ahora no cobra interés, porque lo devengado ($ 5.000) ya está cubierto. El IVA del interés devengado descuenta el IVA ya pagado de la cuota (RN-67, D-38).
 - Registro de decisiones: la tabla de estados no listaba D-35 a D-38.
@@ -220,7 +224,8 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.4.0...develop
+[0.4.0]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ivanthoux/sigccr/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ivanthoux/sigccr/releases/tag/v0.1.0
