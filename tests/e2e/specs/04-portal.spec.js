@@ -1,7 +1,7 @@
 // Parte 1, sección 4. Portal del cliente (CU-01 a CU-04): R-027 a R-031.
 const { test, expect } = require('../lib/fixtures');
 const { clientes, empresas, portal } = require('../lib/datos');
-const { ultimoCorreo, consulta, cerrarBase } = require('../lib/sistema');
+const { ultimoCorreo, consulta, valor, cerrarBase } = require('../lib/sistema');
 
 const { C01: ana, C02: bruno } = clientes;
 const pyme = empresas.P01;
@@ -49,10 +49,8 @@ test('R-027 Verificar el correo y activar el portal (D-16)', async ({ page }) =>
   await entrarPortal(page, correoNuevoAna, portal.C01);
 });
 
-// R-028 y R-030 quedan pendientes de una decisión: CU-04 exige un correo verificado (ReglasActivacion), y Bruno y la
-// pyme no verificaron el suyo. La pyme además perdió su enlace de verificación al desactivarse en R-026 y el panel no
-// permite reenviarlo. Ver la PR de las pruebas de punta a punta.
-test.fixme('R-028 Activar sin el enlace del alta', async ({ page }) => {
+// Bruno y la pyme no verificaron su correo con el enlace del alta: CU-04 lo verifica al usar su enlace (D-40)
+test('R-028 Activar sin el enlace del alta', async ({ page }) => {
   await solicitarActivacion(page, 'DNI', bruno.dni, bruno.correo);
   await expect(exito(page)).toBeVisible();
   const enlace = ultimoCorreo(bruno.correo).enlace;
@@ -67,12 +65,13 @@ test('R-029 Datos que no coinciden', async ({ page }) => {
   await expect(page.locator('.alert-danger')).toContainText('No pudimos verificar los datos ingresados');
 });
 
-test.fixme('R-030 Activar el portal de la persona jurídica', async ({ page }) => {
+test('R-030 Activar el portal de la persona jurídica', async ({ page }) => {
   await solicitarActivacion(page, 'CUIT', pyme.cuit, pyme.correo);
   await expect(exito(page)).toBeVisible();
   await page.goto(ultimoCorreo(pyme.correo).enlace);
   await definirContrasena(page, portal.P01);
   await entrarPortal(page, pyme.correo, portal.P01);
+  expect(await valor("SELECT correo_verificado FROM dbo.cuentas_acceso WHERE correo = @c AND tipo_cuenta = 'Cliente'", { c: pyme.correo })).toBe(true);
 });
 
 test('R-031 Sesiones separadas del portal y el panel', async ({ page }) => {
