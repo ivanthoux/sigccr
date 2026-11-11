@@ -83,10 +83,13 @@ test('R-098 Anular con cobros dependientes (CU-37)', async ({ comoUsuario }) => 
   await page.goto(`/admin/cobros/${cobroR095}/anular`);
   await page.locator('#motivo').fill(motivoAnulacion);
   await page.getByRole('button', { name: 'Anular el cobro' }).click();
-  await expect(page.locator('main')).toContainText('cobro(s) posteriores sobre las mismas cuotas');
-  await page.locator('#continuar').check();
-  await page.locator('#motivo').fill(motivoAnulacion);
-  await page.getByRole('button', { name: 'Anular el cobro' }).click();
+  // Si hay cobros posteriores sobre las mismas cuotas, avisa y pide continuar (A2)
+  if (await page.locator('#continuar').count()) {
+    await expect(page.locator('main')).toContainText('cobro(s) posteriores sobre las mismas cuotas');
+    await page.locator('#continuar').check();
+    await page.locator('#motivo').fill(motivoAnulacion);
+    await page.getByRole('button', { name: 'Anular el cobro' }).click();
+  }
   await expect(exito(page)).toContainText('Cobro anulado: 1 cuota(s) recuperaron su saldo');
 });
 

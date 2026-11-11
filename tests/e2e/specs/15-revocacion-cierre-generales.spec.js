@@ -85,7 +85,7 @@ let cobroCancelacion;
 test('R-134 Registrar la cancelación anticipada', async ({ comoUsuario }) => {
   const page = await comoUsuario('cajero');
   await consulta(
-    "UPDATE o SET o.vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) FROM dbo.ordenes_pago_electronico o JOIN dbo.ordenes_pago_cuotas oc ON oc.orden_pago_id = o.id "
+    "UPDATE o SET o.emision = DATEADD(hour, -2, SYSDATETIMEOFFSET()), o.vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) FROM dbo.ordenes_pago_electronico o JOIN dbo.ordenes_pago_cuotas oc ON oc.orden_pago_id = o.id "
       + "JOIN dbo.cuotas q ON q.id = oc.cuota_id WHERE q.credito_id = @c AND o.estado = 'PendienteConfirmacion'",
     { c: creditoE.id },
   );

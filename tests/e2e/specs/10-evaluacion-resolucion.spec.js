@@ -1,6 +1,6 @@
 // Parte 2, secciones 11 y 12. Evaluación crediticia, alternativas y resolución (CU-86, CU-24, CU-25, CU-87, CU-64,
 // CU-79 y CU-26): R-064 a R-079.
-const { test, expect } = require('../lib/fixtures');
+const { test, expect, enviarConfirmando } = require('../lib/fixtures');
 const { clientes, parametros, fecha, ddmmaaaa } = require('../lib/datos');
 const { consulta, valor, cerrarBase } = require('../lib/sistema');
 const f = require('../lib/flujo');
@@ -38,7 +38,7 @@ async function topeGlobal(page, tope) {
   await page.goto('/admin/parametros/estructuracion');
   for (const [campo, v] of Object.entries({ ...parametros.estructuracion, tope_global_cliente: tope })) await page.locator(`#${campo}`).fill(v);
   await page.locator('#motivo').fill(parametros.motivo);
-  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await enviarConfirmando(page, 'Registrar nueva versión');
   await expect(exito(page)).toBeVisible();
 }
 

@@ -106,7 +106,7 @@ test('R-110 Firma no válida y conciliación sin notificación (CU-91)', async (
   await expect(page.locator('body')).toContainText('firma no válida');
   spark('pagos:notificaciones');
   expect(await estadoOrden(orden.id)).toBe('PendienteConfirmacion');
-  await pagar(page, orden.url, { notificar: false, actualizar: 'anterior' });
+  // El pago existe en la pasarela aunque su aviso se descartó: la conciliación lo encuentra
   spark('pagos:conciliar');
   expect(await estadoOrden(orden.id)).toBe('Confirmada');
 });
@@ -126,7 +126,7 @@ test('R-111 Cuotas ya pagadas: todo a saldo a favor (A6)', async ({ comoUsuario 
 test('R-112 Orden vencida (CU-89)', async ({ comoUsuario }) => {
   const page = await comoUsuario('cajero');
   const orden = await generarOrden(page, carla, creditoC.id, [6]);
-  await consulta('UPDATE dbo.ordenes_pago_electronico SET vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) WHERE id = @id', { id: orden.id });
+  await consulta('UPDATE dbo.ordenes_pago_electronico SET emision = DATEADD(hour, -2, SYSDATETIMEOFFSET()), vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) WHERE id = @id', { id: orden.id });
   spark('vencimientos:controlar');
   expect(await estadoOrden(orden.id)).toBe('Vencida');
   await page.goto(`/admin/pagos-electronicos/nueva?cliente=${await k.idCliente(carla)}`);

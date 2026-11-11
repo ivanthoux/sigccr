@@ -81,4 +81,18 @@ function olvidarSesion(usuario) {
   sesiones.delete(usuario.correo);
 }
 
-module.exports = { test, expect: base.expect, entrar, olvidarSesion };
+/**
+ * Envía un formulario con el botón indicado y, si el servidor pide confirmar el cambio por las solicitudes en trámite
+ * (D-24), marca la confirmación y lo vuelve a enviar.
+ */
+async function enviarConfirmando(page, boton) {
+  await page.getByRole('button', { name: boton }).click();
+  await page.waitForLoadState();
+  if (await page.locator('#confirmar_cambio').count()) {
+    await page.locator('#confirmar_cambio').check();
+    await page.getByRole('button', { name: boton }).click();
+    await page.waitForLoadState();
+  }
+}
+
+module.exports = { test, expect: base.expect, entrar, olvidarSesion, enviarConfirmando };

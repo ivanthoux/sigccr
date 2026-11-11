@@ -1,5 +1,5 @@
 // Parte 3, sección 19. Refinanciación y condonación (CU-39 a CU-44, CU-74 y CU-96): R-120 a R-128.
-const { test, expect } = require('../lib/fixtures');
+const { test, expect, enviarConfirmando } = require('../lib/fixtures');
 const { clientes, parametros, fecha } = require('../lib/datos');
 const { consulta, valor, spark, cerrarBase } = require('../lib/sistema');
 const k = require('../lib/cartera');
@@ -164,7 +164,7 @@ async function limiteCondonacion(page, limite) {
   await page.goto('/admin/parametros/morosidad');
   for (const [campo, v] of Object.entries({ ...parametros.morosidad, limite_condonacion: limite })) await page.locator(`#${campo}`).fill(v);
   await page.locator('#motivo').fill(parametros.motivo);
-  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await enviarConfirmando(page, 'Registrar nueva versión');
   await expect(exito(page)).toBeVisible();
 }
 

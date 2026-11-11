@@ -120,7 +120,7 @@ test('R-088 Buscar solicitudes', async ({ comoUsuario }) => {
   await page.goto('/admin/solicitudes?estado=Liquidada');
   await expect(filas).toHaveCount(6);
   await page.goto(`/admin/solicitudes?desde=${fecha(1)}&hasta=${fecha(-1)}`);
-  await expect(page.locator('main')).toContainText('(A2)');
+  await expect(page.locator('main')).toContainText('La fecha final no puede ser anterior a la inicial.');
 });
 
 test('R-089 Ficha completa de la solicitud', async ({ comoUsuario }) => {
