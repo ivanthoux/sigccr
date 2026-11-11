@@ -98,7 +98,8 @@ test('R-099 Efectos de la anulación y repetición (A1)', async ({ comoUsuario }
   expect((await k.cuota(creditoA.id, 1)).estado).not.toBe('Pagada');
   expect(await valor('SELECT estado FROM dbo.cobros WHERE id = @id', { id: cobroR095 })).toBe('Anulado');
   await page.goto(`/admin/cobros/${cobroR095}/anular`);
-  await expect(page.locator('main')).toContainText('ya fue anulado');
+  await expect(page.locator('main')).toContainText('fue anulado el');
+  await expect(page.locator('main')).toContainText('No se generan nuevos ajustes (A1)');
 });
 
 test('R-100 Volver a cobrar la cuota 1', async ({ comoUsuario }) => {

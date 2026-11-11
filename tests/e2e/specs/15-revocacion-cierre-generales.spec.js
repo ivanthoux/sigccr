@@ -102,7 +102,9 @@ test('R-134 Registrar la cancelación anticipada', async ({ comoUsuario }) => {
 test('R-135 No se anula; cálculo del crédito refinanciado', async ({ comoUsuario }) => {
   const gerente = await comoUsuario('gerente');
   await gerente.goto(`/admin/cobros/${cobroCancelacion}/anular`);
-  await expect(gerente.locator('body')).toContainText('cancelación anticipada no se anula');
+  await gerente.locator('#motivo').fill('Intento de anular el cobro de la cancelación anticipada');
+  await gerente.getByRole('button', { name: 'Anular el cobro' }).click();
+  await expect(gerente.locator('body')).toContainText('El cobro de una cancelación anticipada no se anula');
   const cajero = await comoUsuario('cajero');
   const creditoF = await k.credito(clientes.C02, 'Refinanciacion');
   await cajero.goto(`/admin/creditos/${creditoF.id}/cancelacion-anticipada`);

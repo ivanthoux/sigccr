@@ -126,7 +126,7 @@ test('R-088 Buscar solicitudes', async ({ comoUsuario }) => {
 test('R-089 Ficha completa de la solicitud', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   await page.goto(`/admin/solicitudes/${await valor("SELECT TOP 1 s.id FROM dbo.solicitudes_credito s JOIN dbo.clientes c ON c.id = s.cliente_id WHERE c.cuit_cuil = @c AND s.estado = 'Liquidada'", { c: ana.cuil })}`);
-  for (const texto of ['Liquidada', 'Favorable', 'Contrato']) await expect(page.locator('main')).toContainText(texto);
+  for (const texto of ['Liquidada', 'Favorable', 'CFTEA']) await expect(page.locator('main')).toContainText(texto);
 });
 
 test('R-090 Búsqueda del Cajero', async ({ comoUsuario }) => {

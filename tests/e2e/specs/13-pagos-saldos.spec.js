@@ -106,7 +106,9 @@ test('R-110 Firma no válida y conciliación sin notificación (CU-91)', async (
   await expect(page.locator('body')).toContainText('firma no válida');
   spark('pagos:notificaciones');
   expect(await estadoOrden(orden.id)).toBe('PendienteConfirmacion');
-  // El pago existe en la pasarela aunque su aviso se descartó: la conciliación lo encuentra
+  // El pago existe en la pasarela aunque su aviso se descartó: la conciliación consulta las órdenes pendientes de
+  // más de 10 minutos y lo encuentra
+  await consulta('UPDATE dbo.ordenes_pago_electronico SET emision = DATEADD(minute, -11, emision) WHERE id = @id', { id: orden.id });
   spark('pagos:conciliar');
   expect(await estadoOrden(orden.id)).toBe('Confirmada');
 });
