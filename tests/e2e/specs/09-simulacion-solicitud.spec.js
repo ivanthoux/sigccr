@@ -29,7 +29,7 @@ test('R-053 Simular', async ({ comoUsuario }) => {
 
 test('R-054 Validaciones de la simulación', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
-  for (const [importe, cuotas, campo] of [['', 12, 'importe'], ['abc', 12, 'importe'], ['500000', '6,5', 'cantidad_cuotas'], ['100000', 12, 'importe'], ['500000', 30, 'cantidad_cuotas']]) {
+  for (const [importe, cuotas, campo] of [['', 12, 'importe'], ['abc', 12, 'importe'], ['500000', '6.5', 'cantidad_cuotas'], ['100000', 12, 'importe'], ['500000', 30, 'cantidad_cuotas']]) {
     expect(await f.simular(page, ana, 'MOTOS', importe, cuotas)).toBeNull();
     await expect(page.locator(`#error-${campo}`), `${importe} en ${cuotas}`).toBeVisible();
   }

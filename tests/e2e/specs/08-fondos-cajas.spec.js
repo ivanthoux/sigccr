@@ -127,7 +127,6 @@ test('R-051 Apertura sin efectivo (D-30)', async ({ comoUsuario }) => {
 
 test('R-052 Inhabilitar y rehabilitar cajas', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
-  page.on('dialog', (d) => d.accept());
   const cambiarEstado = async (caja, motivo) => {
     const id = await idCaja(caja);
     await page.goto('/admin/cajas');
