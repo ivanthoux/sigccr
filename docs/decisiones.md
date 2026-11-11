@@ -38,6 +38,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-32 | 07/11/2026 | Propuesta |
 | D-33 | 07/11/2026 | Propuesta |
 | D-34 | 07/11/2026 | Propuesta |
+| D-39 | 10/11/2026 | Propuesta |
+| D-40 | 10/11/2026 | Aceptada (10/11/2026) |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -515,3 +517,24 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **CU-81.** Ya estaba construido desde D05; solo se agrega la confirmación antes de cambiar el estado.
 
 **Consecuencias.** Migración 23 (`cancelaciones_anticipadas`). Componentes nuevos: `CancelacionAnticipada::distribuir()` (con 1 prueba nueva), `CancelacionAnticipadaService`, `Admin\CancelacionesAnticipadas`, `FondosService::proyectar()` y el comando `fondos:proyectar` (06:00, línea del crontab habilitada). `CobroService::asentarVentanilla()` concentra el registro del cobro en ventanilla con medios, movimientos de caja y comprobante.
+
+## D-39 · Pruebas de punta a punta automatizadas (RNF-15, plan de pruebas)
+
+**Contexto.** Las pruebas unitarias cubren el motor financiero y las reglas, pero no ejecutan SQL Server, la sesión ni las pantallas. La prueba funcional se hacía solo a mano. La primera instalación desde cero en la integración continua mostró defectos que ninguna de las dos detectaba: la migración 19 fallaba con la base vacía, faltaban permisos DELETE del rol de la aplicación, no se podía desactivar una cuenta sin contraseña y el mensaje del cierre de sesión se perdía.
+
+**Decisión.**
+1. **Batería con Playwright** en `tests/e2e/`, contra la pila Docker completa (Nginx, PHP-FPM y SQL Server), en una pila aislada (`sigccr_e2e`) que se crea con la base vacía en cada ejecución. Se instala desde cero: migraciones, semillas y Administrador inicial por variables de entorno.
+2. **Trazabilidad.** Cada prueba lleva el identificador de su caso de la prueba funcional integral (R-xxx), y sus aserciones son los resultados esperados del documento aprobado. Una diferencia se resuelve corrigiendo el sistema o el documento, nunca solo la prueba.
+3. **Verificación fuera del navegador.** Los correos simulados, los procesos del Temporizador (`docker exec … php spark`) y el estado de la base (consultas de solo lectura) se usan para confirmar resultados y para simular el paso del tiempo (fin de un bloqueo, reintentos de envío), sin modificar las reglas.
+4. **Ejecución.** Un comando (`bash tests/e2e/ejecutar.sh`) en desarrollo y el flujo `E2E` en cada *pull request*, con un informe HTML con capturas. La prueba manual se mantiene como aceptación de cada Control.
+
+**Consecuencias.** Flujo `.github/workflows/e2e.yml`. `AdministradorInicialSeeder` acepta `SIGCCR_ADMIN_*`. `verificar.py` controla los permisos DELETE. La batería crece por iteración junto con la prueba integral.
+
+## D-40 · El enlace de activación verifica el correo del cliente (CU-04, RN-10)
+
+**Contexto.** CU-04 exigía que el correo ingresado coincidiera con un correo ya verificado. El cliente verifica su correo solo con el enlace que recibe en el alta (CU-11), y el panel no permite reenviarlo. Si el cliente no abría ese enlace a tiempo, o lo perdía porque la entidad lo desactivó y reactivó (CU-13 invalida sus autorizaciones), no podía activar ni rehabilitar el portal. Lo detectaron las pruebas de punta a punta (R-028 y R-030).
+
+**Decisión.** CU-04 acepta el correo si coincide con el registrado en la cuenta, esté verificado o no. El enlace se envía a ese correo, así que definir la contraseña con él demuestra que el cliente lo controla: la cuenta queda Habilitada y con el correo verificado, como ya ocurría al restablecer la contraseña (CU-02). La respuesta ante datos que no coinciden sigue siendo la misma, para no revelar si el cliente existe (A1).
+
+**Consecuencias.** `ReglasActivacion::evaluar()` deja de exigir la verificación (prueba nueva). `ActivacionService::definirContrasena()` marca el correo verificado. Hay que actualizar el texto de CU-04 (paso 4) en el documento.
+

@@ -103,7 +103,8 @@ class ActivacionService extends BaseService
     }
 
     /**
-     * CU-04 pasos 8 a 10. Devuelve el correo de la cuenta, para invitar al cliente a iniciar sesión con él.
+     * CU-04 pasos 8 a 10. Devuelve el correo de la cuenta, para invitar al cliente a iniciar sesión con él. Usar el
+     * enlace deja el correo verificado (D-40), como en la recuperación de la contraseña.
      *
      * @throws ReglaNegocioException por la política de contraseñas (A4) o por un enlace inválido (A3)
      */
@@ -126,7 +127,7 @@ class ActivacionService extends BaseService
                 throw new ReglaNegocioException(self::MENSAJE_INVALIDA, 'RN-10');
             }
             $this->db->query(
-                "UPDATE dbo.cuentas_acceso SET hash_contrasena = ?, estado = 'Habilitada', version_seguridad = version_seguridad + 1, "
+                "UPDATE dbo.cuentas_acceso SET hash_contrasena = ?, estado = 'Habilitada', correo_verificado = 1, version_seguridad = version_seguridad + 1, "
                 . 'intentos_fallidos = 0, inicio_ventana_intentos = NULL, bloqueada_hasta = NULL, actualizado_en = ?, version_fila = version_fila + 1 '
                 . "WHERE id = ? AND tipo_cuenta = 'Cliente' AND estado IN ('PendienteActivacion', 'Desactivada')",
                 [password_hash($contrasena, PASSWORD_ARGON2ID), $this->ahoraUtc(), $cuentaId],
