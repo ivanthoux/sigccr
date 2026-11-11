@@ -78,6 +78,7 @@ class DemostracionSeeder extends Seeder
         $this->fondos();
 
         $resumen = [];
+        $creditos = [];
         foreach (self::CREDITOS as $n => [$nombre, $apellido, $dni, $nacimiento, $ocupacion, $empleador, $linea, $importe, $cuotas, $atraso]) {
             $prefijo = $n % 2 === 0 ? '27' : '20';
             $cuil = self::cuil($prefijo, $dni);
@@ -86,12 +87,22 @@ class DemostracionSeeder extends Seeder
             $this->atrasar($creditoId, $atraso);
             $c = $this->db->query('SELECT numero, capital, cantidad_cuotas FROM dbo.creditos WHERE id = ?', [$creditoId])->getRowArray();
             $resumen[] = [$apellido . ', ' . $nombre, $cuil, $linea, 'N.º ' . $c['numero'] . ': $ ' . number_format((float) $c['capital'], 0, ',', '.') . " en {$c['cantidad_cuotas']} cuotas", $atraso <= 0 ? 'vence en ' . -$atraso . ' días' : "{$atraso} días"];
+            $creditos[] = $creditoId;
             CLI::write("Crédito de {$apellido}, {$nombre} liquidado ({$linea}, atraso de la cuota 1: {$atraso} días).");
         }
 
         $this->calcularPunitorios();
+        foreach ($creditos as $i => $creditoId) {
+            $p = $this->db->query(
+                "SELECT COUNT(*) AS vencidas, SUM(punitorio_pendiente) AS punitorio, SUM(iva_punitorio_pendiente) AS iva FROM dbo.cuotas WHERE credito_id = ? AND estado = 'Vencida'",
+                [$creditoId],
+            )->getRowArray();
+            $estado = (string) $this->db->query('SELECT estado FROM dbo.creditos WHERE id = ?', [$creditoId])->getRow()->estado;
+            $resumen[$i][] = ($estado === 'EnMora' ? 'En mora' : $estado) . ', ' . $p['vencidas'] . ' vencidas';
+            $resumen[$i][] = '$ ' . number_format((float) $p['punitorio'], 2, ',', '.') . ' + IVA $ ' . number_format((float) $p['iva'], 2, ',', '.');
+        }
         CLI::newLine();
-        CLI::table($resumen, ['Cliente', 'CUIL', 'Línea', 'Crédito', 'Atraso de la cuota 1']);
+        CLI::table($resumen, ['Cliente', 'CUIL', 'Línea', 'Crédito', 'Atraso de la cuota 1', 'Estado', 'Punitorios exigibles al cierre de ayer']);
         CLI::write('Datos de demostración cargados. Los punitorios se ven en Caja y cobranzas → Cobrar y en Cartera.', 'green');
     }
 

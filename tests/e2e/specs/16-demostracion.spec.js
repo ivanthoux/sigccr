@@ -28,6 +28,7 @@ const creditos = () =>
 
 test('R-148 El seeder de demostración carga líneas, clientes y créditos liquidados', async () => {
   const salida = sembrar('DemostracionSeeder');
+  console.log(salida);
   expect(salida).toContain('Datos de demostración cargados');
   const lineas = await consulta("SELECT codigo FROM dbo.lineas_credito WHERE codigo IN ('ELECTRO', 'HOGAR', 'MOTOS', 'PERSONAL') AND estado = 'Activa'");
   expect(lineas).toHaveLength(4);
