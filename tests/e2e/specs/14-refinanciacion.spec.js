@@ -80,11 +80,12 @@ test('R-122 Registrar la propuesta y duplicado (A3)', async ({ comoUsuario }) =>
   await expect(exito(page)).toContainText('registrada, pendiente de resolución gerencial');
   const otra = await simular(page, bruno, [creditoB.id], 60, 12);
   if (otra) {
-    expect(await registrarPropuesta(page, otra)).toBeNull();
-    await expect(page.locator('body')).toContainText('vigente');
+    await registrarPropuesta(page, otra);
+    await expect(page.locator('body')).toContainText('ya tiene la propuesta N.º');
   } else {
     await expect(page.locator('main')).toContainText('propuesta');
   }
+  expect(await valor('SELECT COUNT(*) FROM dbo.propuestas_refinanciacion WHERE cliente_id = (SELECT cliente_id FROM dbo.creditos WHERE id = @c)', { c: creditoB.id })).toBe(1);
 });
 
 test('R-123 Observar y nueva versión', async ({ comoUsuario }) => {

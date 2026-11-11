@@ -558,7 +558,7 @@ Carpeta `Datos de prueba` de la documentación. Son documentos ficticios, marcad
 
 En `consultas_de_apoyo.sql`, reemplazar los números marcados con `…`.
 
-- **C.1 Llevar un crédito a mora.** Hace regir la configuración inicial de morosidad e IVA desde un año antes (los días simulados son anteriores a la instalación y no tendrían tasa vigente), adelanta todos sus vencimientos y los tramos de punitorios ya calculados (sin esto, el segundo adelanto de R-102 no genera los días intermedios, RN-53); después, ejecutar `cartera:punitorios`.
+- **C.1 Llevar un crédito a mora.** Hace regir la configuración inicial de morosidad e IVA desde un año antes (los días simulados son anteriores a la instalación y no tendrían tasa vigente), olvida la ejecución de ayer del cálculo nocturno (procesa cada día una sola vez), adelanta todos sus vencimientos y los tramos de punitorios ya calculados (sin esto, el segundo adelanto de R-102 no genera los días intermedios, RN-53); después, ejecutar `cartera:punitorios`.
 - **C.2 Vencer una orden de pago.** Adelanta también la emisión, que debe ser anterior al vencimiento.
 - **C.3 Vencer una propuesta de refinanciación.**
 - **C.4 Sacar un crédito del plazo de revocación.**
