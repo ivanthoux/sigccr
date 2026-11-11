@@ -1,0 +1,27 @@
+sequenceDiagram
+autonumber
+participant T as Temporizador (00:05)
+participant P as CalcularPunitorios
+participant PU as PunitorioService
+participant R as Punitorios
+participant PA as ParametroService
+participant DB as SQL Server
+T->>P: php spark cartera:punitorios
+P->>DB: bloqueo de aplicación y ejecuciones_proceso (RNF-10)
+P->>P: fechasPendientes(): días anteriores a hoy sin ejecución finalizada (A1)
+loop cada día pendiente
+P->>PU: marcarVencidas(día): cuotas Vencidas y créditos En mora
+P->>PU: cuotasEnAtraso(día)
+loop cada cuota, en su propia transacción (A4)
+P->>PU: devengar(cuota, día)
+PU->>DB: BEGIN y bloquea la cuota con su crédito
+PU->>R: diasSinTramo(vencimiento, último tramo, día)
+PU->>PA: versión de Morosidad vigente al cierre de cada día (RN-35)
+PU->>R: tasaDiaria(tasa, tope, TNA) y tramo(capital pendiente, tasa, IVA) (RN-34)
+PU->>DB: tramos_punitorios condicionales, clave única (cuota, fecha) (A2)
+PU->>R: esExigible(días, tolerancia del crédito) (RN-53)
+PU->>DB: si supera la tolerancia: tramos exigibles y punitorios pendientes de la cuota, COMMIT
+end
+P->>PU: auditar(día, cuotas, vencidas, errores)
+end
+P->>DB: ejecución Finalizada

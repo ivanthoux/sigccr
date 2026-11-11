@@ -1,0 +1,25 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin PagosElectronicos
+participant PE as PagoElectronicoService
+participant CS as CobroService
+participant R as PagoElectronico
+participant PS as Pasarela (adaptador)
+participant DB as SQL Server
+CA->>C: POST cuotas elegidas y medio de presentación
+C->>PE: generarOrden(usuario, cliente, selección, presentado)
+PE->>DB: BEGIN
+PE->>CS: seleccionar(cliente, selección): cuotas completas y consecutivas, punitorios al día (RN-29)
+PE->>DB: ninguna cuota integra otra orden pendiente y vigente (A7)
+PE->>R: vencimiento(emisión): 00:00 del día siguiente, hora local (RN-54)
+PE->>DB: ordenes_pago_electronico Pendiente de confirmación y ordenes_pago_cuotas, COMMIT
+PE->>PS: crearOrden(número, importe, descripción, vence), fuera de la transacción (RNF-08)
+alt la pasarela responde
+PS-->>PE: referencia externa y URL de pago
+PE->>DB: guarda la referencia y la URL, auditoría
+C-->>CA: orden con su enlace de pago
+else sin respuesta (A1)
+PE->>DB: elimina la orden y audita el intento fallido
+C-->>CA: la pasarela no está disponible, no se generó la orden
+end

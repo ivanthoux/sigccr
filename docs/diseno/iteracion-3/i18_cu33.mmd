@@ -1,0 +1,25 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin Cobros
+participant CS as CobroService
+participant CJ as CajaService
+participant PU as PunitorioService
+participant R as CobroCuotas, MediosCobro e Imputador
+participant RF as RefinanciacionService
+participant DB as SQL Server
+CA->>C: GET cobros?cliente: cuotas impagas con su total al día y órdenes pendientes (A6)
+CA->>C: POST cuotas elegidas, importe y medios de pago
+C->>CS: registrar(usuario, cliente, selección, importe, medios)
+CS->>DB: BEGIN
+CS->>CJ: jornadaOperable(usuario): caja abierta hoy (A3, RN-28)
+CS->>DB: bloquea los créditos y sus cuotas impagas
+CS->>PU: devengarCuotas(cuotas, hoy): punitorios hasta el día del pago (RN-53)
+CS->>R: validarSeleccion: consecutivas desde la más antigua (A8), importe entre 0 y el total (RN-29)
+CS->>R: componer(medios): sin efectivo, con número de operación y suma igual al importe (RN-77)
+CS->>R: imputar(importe, cuotas): por vencimiento y prelación de conceptos (RN-29)
+CS->>DB: cobros Confirmado, cobros_medios, movimientos_caja y comprobantes_pago
+CS->>DB: imputaciones, saldos de las cuotas (Pagada o con saldo), crédito Cancelado o Activo
+CS->>RF: observarPorCuotas: la propuesta vigente queda Observada (RN-36)
+CS->>DB: auditoría y COMMIT
+C-->>CA: comprobante del cobro (CU-35)

@@ -1,0 +1,21 @@
+sequenceDiagram
+autonumber
+actor G as Gerente
+participant C as Admin Cobros
+participant CS as CobroService
+participant R as CobroCuotas
+participant RF as RefinanciacionService
+participant DB as SQL Server
+G->>C: GET cobros/{id}/anular: cobro, imputaciones y cobros posteriores dependientes
+G->>C: POST motivo y confirmación de los dependientes
+C->>CS: anular(cobro, motivo, continuar, usuario)
+CS->>DB: BEGIN y bloquea el cobro
+CS->>CS: no es una revocación ni una cancelación anticipada y no está anulado (A1, RN-33)
+CS->>CS: dependientes(cobro): exige la confirmación si los hay
+CS->>DB: bloquea las cuotas alcanzadas y sus créditos
+CS->>R: restaurar(cuota, imputaciones, hoy): saldos por concepto y estado Pendiente o Vencida
+CS->>DB: cuotas con sus saldos, créditos En mora o Activo
+CS->>RF: observarPorCuotas (RN-36)
+CS->>DB: saldos_a_favor por el importe recibido (RN-57) y anulaciones_cobro
+CS->>DB: cobro Anulado (se conserva con sus movimientos de caja), auditoría y COMMIT
+C-->>G: cobro anulado y saldo a favor generado

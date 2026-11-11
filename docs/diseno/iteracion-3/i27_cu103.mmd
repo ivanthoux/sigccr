@@ -1,0 +1,20 @@
+sequenceDiagram
+autonumber
+actor A as Analista de Crédito
+participant C as Admin Contratos
+participant CT as ContratoService
+participant R as Contrato y ArchivoLegajo
+participant LG as LegajoService
+participant DB as SQL Server
+A->>C: GET contratos/{solicitud}
+C->>CT: obtener(solicitud): genera el contrato de la aprobación vigente si no existe (RN-78)
+C-->>A: contrato para imprimir en dos ejemplares
+A->>C: POST copia escaneada del contrato firmado y fecha de recepción
+C->>CT: registrarConstancia(solicitud, archivo, fecha, usuario)
+CT->>R: validar(archivo): PDF, JPG o PNG de hasta 5 MB (RNF-12)
+CT->>DB: BEGIN y bloquea la solicitud: Aprobada pendiente de liquidación (A2)
+CT->>R: validarRecepcion(fecha, aprobación, hoy)
+CT->>LG: guardar(cliente, documento): reemplaza la constancia anterior, que se conserva (A3, RN-44)
+CT->>DB: contratos_prestamo con el documento, la fecha de recepción y el responsable
+CT->>DB: auditoría y COMMIT, si falla, se descarta el archivo
+C-->>A: constancia registrada: la solicitud puede liquidarse (RN-25) y corre el plazo de revocación (RN-79)

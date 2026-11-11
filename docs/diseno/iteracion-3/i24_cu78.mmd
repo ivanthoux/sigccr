@@ -1,0 +1,30 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin SaldosFavor
+participant DS as DevolucionService
+participant R as Devolucion
+participant PS as Pasarela (adaptador)
+participant DB as SQL Server
+CA->>C: POST ejecutar (datos de la transferencia, si el destino es una cuenta)
+C->>DS: ejecutar(usuario, autorización, versión, transferencia)
+DS->>DB: BEGIN y bloquea la autorización: Pendiente de ejecución, sin ejecución previa (A3)
+DS->>DS: vigente(72 horas), si venció, queda Vencida y libera la reserva
+alt destino Transferencia (A1)
+DS->>R: validarTransferencia: importe y CBU iguales a los autorizados (A6, RN-73)
+DS->>DB: ejecuciones_devolucion Confirmada, autorización Completada, consume la reserva, COMMIT
+C-->>CA: devolución completada y constancia
+else medio de pago original
+DS->>DB: ejecuciones_devolucion Pendiente con el identificador SIGCCR-DEV-n, En ejecución, COMMIT
+DS->>PS: devolver(transacción, importe, identificador), fuera de la transacción
+DS->>DB: BEGIN y registra el resultado
+alt confirmada
+DS->>DB: Completada y consume la reserva
+else rechazada
+DS->>DB: Fallida, libera el importe y alerta al Gerente
+else sin respuesta o estado no definitivo
+DS->>DB: En conciliación, la resuelve pagos:conciliar (CU-91)
+end
+DS->>DB: auditoría y COMMIT
+C-->>CA: resultado de la devolución
+end

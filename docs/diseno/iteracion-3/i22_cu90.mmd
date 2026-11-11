@@ -1,0 +1,32 @@
+sequenceDiagram
+autonumber
+participant PS as Pasarela
+participant W as Api Webhooks Pasarela
+participant P as pagos:notificaciones (cada minuto)
+participant PE as PagoElectronicoService
+participant PU as PunitorioService
+participant CS as CobroService
+participant DB as SQL Server
+PS->>W: POST notificación firmada
+W->>PE: recibirNotificacion(cuerpo, cabeceras)
+PE->>DB: notificaciones_pasarela Pendiente, o Descartada si la firma no es válida (A1)
+W-->>PS: acuse
+P->>PE: procesarNotificacion(id)
+PE->>PS: consultarPagos(referencia), fuera de la transacción: no confía en el cuerpo (RNF-08)
+loop cada transacción informada, en su propia transacción
+PE->>DB: BEGIN, bloquea la orden y la transacción por su identificador externo
+PE->>PE: clasificar(estado): ya definitiva, no se repite (RN-30)
+alt estado no definitivo (A7)
+PE->>DB: orden En conciliación e incidencia EstadoDesconocido
+else rechazado (A3)
+PE->>DB: orden Rechazada, la deuda se mantiene
+else aprobado
+PE->>PU: devengarCuotas hasta la fecha efectiva y reversión de los tramos posteriores (RN-55)
+PE->>DB: cobros Electrónico con la transacción, medio PagoElectronico y comprobante
+PE->>CS: imputar(cobro, cuotas impagas de la orden) (RN-29, RN-36)
+PE->>DB: excedente o cuotas ya pagadas: saldos_a_favor (RN-57), incidencias y alerta al Gerente (RN-56)
+PE->>DB: orden Confirmada y auditoría
+end
+PE->>DB: COMMIT
+end
+PE->>DB: notificación Procesada
