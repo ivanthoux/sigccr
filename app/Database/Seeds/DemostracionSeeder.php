@@ -140,7 +140,7 @@ class DemostracionSeeder extends Seeder
                     'cuotas_minimas' => (string) $cuotasMin, 'cuotas_maximas' => (string) $cuotasMax, 'tna' => $tna, 'gasto_otorgamiento_pct' => $otorgamiento,
                     'tipo_gasto_administrativo' => $tipoGasto, $tipoGasto === 'Fijo' ? 'gasto_administrativo_cuota' : 'gasto_administrativo_pct' => $gasto,
                     'admite_persona_humana' => '1', 'edad_minima' => (string) $edadMin, 'edad_maxima' => (string) $edadMax, 'categorias' => $categorias,
-                    'requisitos' => ['RelacionDependencia' => ['RECIBO_SUELDO'], 'JubiladoPensionado' => ['RECIBO_HABERES'], 'Monotributista' => ['CONST_MONOTRIBUTO']],
+                    'requisitos' => ['RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO'], 'JubiladoPensionado' => ['DOC_IDENTIDAD', 'RECIBO_HABERES'], 'Monotributista' => ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO']],
                     'vigencia_inicio' => $hoy->format('Y-m-d'), 'vigencia_fin' => $hoy->addYears(2)->format('Y-m-d'),
                 ]), "línea {$codigo}");
                 CLI::write("Línea {$codigo} registrada.");
