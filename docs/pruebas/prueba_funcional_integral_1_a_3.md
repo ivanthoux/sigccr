@@ -16,7 +16,7 @@ Duración estimada: dos jornadas. Jornada 1: partes 0 a 2 (hasta la sección 14)
 
 ### 0.1 Instalación limpia (recomendada)
 
-Así también se prueban las 23 migraciones y las semillas desde cero. **Borra la base actual.**
+Así también se prueban las 25 migraciones y las semillas desde cero. **Borra la base actual.**
 
 ```bash
 git checkout develop && git pull
