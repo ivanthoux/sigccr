@@ -160,7 +160,7 @@ Como Analista Martín López.
 |---|---|---|---|---|
 | R-053 | Simular | Simular para Ana $ 500.000 en 12 cuotas en «Motos». | «Simulación registrada. Es preliminar…»; cuota, TEA, CFTEA, total, plan paginado y el recuadro con los datos del cliente. | |
 | R-054 | Validaciones | Importe vacío, `abc`, cuotas `6,5`, $ 100.000 (menor que el mínimo) y 30 cuotas. | Cada error junto a su campo con los límites de la línea. | |
-| R-055 | Línea no admitida | Simular para Ana en «Capital de trabajo Pyme». | El motivo de la línea seguido de «Seleccione otra línea.» | |
+| R-055 | Línea no admitida | Simular para Ana en «Capital de trabajo Pyme». | No permite simularla: figura en «Líneas que no admiten al cliente» con su motivo («La línea no admite personas humanas.»). | |
 | R-056 | Gasto porcentual | Simular para Bruno $ 800.000 en 12 cuotas en «Personal». | Cada cuota tiene $ 4.000,00 de gastos y su IVA (0,5 % del capital). | |
 | R-057 | Comparar líneas | Comparar para Ana con «Mayor monto prestable» y con «Menor costo (CFTEA)». | Líneas viables con su monto y CFTEA, las no viables con su motivo, y marcadas la de mayor monto y la de menor costo. | |
 

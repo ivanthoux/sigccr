@@ -38,7 +38,9 @@ test('R-054 Validaciones de la simulación', async ({ comoUsuario }) => {
 test('R-055 Línea que no admite al cliente', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   await page.goto(`/admin/simulaciones?cliente=${await f.idCliente(ana)}&linea=${await f.idLinea('PYME-CT')}`);
-  await expect(page.locator('main')).toContainText('Seleccione otra línea.');
+  // La pantalla no ofrece simular en la línea: la lista con su motivo (RN-13)
+  await expect(page.locator('#importe')).toHaveCount(0);
+  await expect(page.locator('main')).toContainText('Capital de trabajo Pyme: La línea no admite personas humanas.');
 });
 
 test('R-056 Gasto administrativo porcentual', async ({ comoUsuario }) => {
