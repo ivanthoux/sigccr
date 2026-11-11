@@ -227,7 +227,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 
 /* Tablas con DataTables: en pantallas angostas la tabla se desplaza dentro de su recuadro, sin ensanchar la página
    (RNF-08, 360 px). Los controles de búsqueda y paginación quedan fijos. */
-.dt-container .dt-layout-table > .dt-layout-cell { overflow-x: auto; }
+.dt-container .dt-layout-table > .dt-layout-cell { overflow-x: auto; min-width: 0; }
 
 @media print {
     .dt-container .dt-layout-table > .dt-layout-cell { overflow: visible !important; }
