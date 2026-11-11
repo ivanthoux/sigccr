@@ -7,6 +7,8 @@ services:
     image: sigccr/e2e:1.49.1
     # Comparte la red de Nginx: https://localhost es el SIG-CCR de esta pila, igual que app.baseURL
     network_mode: "service:web"
+    # root para usar el socket de Docker (docker exec en el contenedor app); la imagen usa pwuser por omisión
+    user: root
     depends_on: [web]
     volumes:
       - ./tests/e2e:/e2e/src

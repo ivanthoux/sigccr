@@ -7,3 +7,6 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 # Las pruebas se montan en /e2e/src: los módulos de /e2e/node_modules se resuelven desde ahí.
 WORKDIR /e2e/src
+# Usuario sin privilegios de la imagen de Playwright. El servicio de docker-compose.e2e.yml lo cambia por root a
+# propósito: necesita el socket de Docker para ejecutar spark en el contenedor app, y solo corre en la pila de pruebas.
+USER pwuser
