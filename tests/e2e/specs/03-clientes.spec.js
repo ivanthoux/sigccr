@@ -32,7 +32,6 @@ test('R-016 Validaciones del alta', async ({ comoUsuario }) => {
     [{ cambios: { ...valida, cuil: '27480000001' } }, 'cuit_cuil'],
     [{ cambios: valida, sinPolitica: true }, 'acepta_politica'],
     [{ cambios: valida, documentos: {} }, 'doc_DOC_IDENTIDAD'],
-    [{ cambios: valida, documentos: { DOC_IDENTIDAD: [grande()] } }, 'doc_DOC_IDENTIDAD'],
     [{ cambios: valida, documentos: { DOC_IDENTIDAD: [noAdmitido()] } }, 'doc_DOC_IDENTIDAD'],
     [{ cambios: { ...valida, dni: ana.dni, cuil: ana.cuil } }, 'nro_documento'],
     [{ cambios: { ...valida, correo: ana.correo } }, 'correo'],
@@ -41,6 +40,10 @@ test('R-016 Validaciones del alta', async ({ comoUsuario }) => {
     await registrarCliente(page, sofia, opciones);
     await expect(error(page, campo), `error en ${campo} con ${JSON.stringify(opciones.cambios)}`).toBeVisible();
   }
+  // Más de 5 MB: se avisa junto al campo al elegirlo y el formulario no se envía (sin el error 413 del servidor)
+  await registrarCliente(page, sofia, { cambios: valida, documentos: { DOC_IDENTIDAD: [grande()] } });
+  await expect(page).toHaveURL(/\/admin\/clientes\/nuevo/);
+  await expect(page.locator('#doc-DOC_IDENTIDAD ~ .aviso-adjunto')).toContainText('supera los 5 MB');
   expect(await cantidadClientes()).toBe(antes);
 });
 

@@ -27,7 +27,7 @@ echo view('refinanciaciones/_resumen', ['p' => $p, 'accion' => 'Cancelar']);
             <div class="row g-3 mb-3">
                 <div class="col-md-3">
                     <label for="fecha_desistimiento" class="form-label">Fecha de la constancia</label>
-                    <input type="date" class="form-control<?= campo_invalido('fecha_desistimiento') ?>" id="fecha_desistimiento" name="fecha_desistimiento" value="<?= esc((string) (old('fecha_desistimiento') ?? date('Y-m-d')), 'attr') ?>">
+                    <input type="date" class="form-control<?= campo_invalido('fecha_desistimiento') ?>" id="fecha_desistimiento" name="fecha_desistimiento" value="<?= esc((string) (old('fecha_desistimiento') ?? hoy_negocio()), 'attr') ?>">
                     <?= error_campo('fecha_desistimiento') ?>
                 </div>
                 <div class="col-md-5">

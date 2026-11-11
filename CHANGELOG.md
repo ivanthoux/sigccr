@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Corregido (prueba integral)
+- Impresión de comprobantes, constancias y contratos: se oculta el menú lateral y las tablas usan todo el ancho de la hoja, sin barra de desplazamiento que ocultara columnas.
+- Fechas propuestas en los formularios (conformidad, liquidación, contrato, revocación, parámetros, cajas, calendario): se calculaban en UTC y entre las 21:00 y las 24:00 proponían el día siguiente, que la validación rechaza por fecha futura. `hoy_negocio()` usa la zona de negocio.
+- R-016: un adjunto de más de 5 MB llevaba a la página de error 413 de Nginx. Ahora se avisa junto al campo al elegirlo («El archivo … supera los 5 MB.») y el formulario no se envía; Nginx y PHP admiten el total de varios adjuntos, y un archivo mayor que llegue igual se informa junto a su campo. Requiere reconstruir la imagen (`docker compose up -d --build`).
+
 ### Cambiado (D-40)
 - CU-04: «Activar o rehabilitar acceso» acepta el correo registrado aunque no esté verificado; usar el enlace lo verifica. Antes, un cliente que no abrió el enlace del alta, o que lo perdió al ser desactivado y reactivado, no podía activar el portal.
 

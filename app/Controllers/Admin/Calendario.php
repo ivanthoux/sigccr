@@ -16,7 +16,7 @@ class Calendario extends BaseController
     /** Paso 2: días no hábiles del año elegido. */
     public function index(): string
     {
-        $anio = (int) ($this->request->getGet('anio') ?: date('Y'));
+        $anio = (int) ($this->request->getGet('anio') ?: substr(hoy_negocio(), 0, 4));
         $anio = max(2000, min(2100, $anio));
 
         return view('calendario/index', ['titulo' => 'Calendario operativo', 'anio' => $anio, 'dias' => (new CalendarioService())->delAnio($anio)]);

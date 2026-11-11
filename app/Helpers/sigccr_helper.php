@@ -198,3 +198,14 @@ if (!function_exists('finalizar_sesion')) {
         $sesion->regenerate(true);
     }
 }
+
+if (!function_exists('hoy_negocio')) {
+    /**
+     * Fecha de hoy en la zona de negocio (Y-m-d). PHP corre en UTC (3.5.1): date('Y-m-d') da el día siguiente entre
+     * las 21:00 y las 24:00 de Argentina, y los formularios proponían una fecha futura que la validación rechaza.
+     */
+    function hoy_negocio(): string
+    {
+        return \CodeIgniter\I18n\Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d');
+    }
+}

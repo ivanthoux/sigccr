@@ -76,7 +76,7 @@ $this->section('contenido');
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small" for="desde-<?= $id ?>">Desde</label>
-                            <input type="text" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('desde') : '' ?>" id="desde-<?= $id ?>" name="desde" placeholder="dd/mm/aaaa" value="<?= esc(formato_fecha(date('Y-m-d')), 'attr') ?>">
+                            <input type="text" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('desde') : '' ?>" id="desde-<?= $id ?>" name="desde" placeholder="dd/mm/aaaa" value="<?= esc(formato_fecha(hoy_negocio()), 'attr') ?>">
                             <?= $abierto === "asignar-{$id}" ? error_campo('desde') : '' ?>
                         </div>
                         <div class="col-md-3">
