@@ -38,6 +38,10 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-32 | 07/11/2026 | Propuesta |
 | D-33 | 07/11/2026 | Propuesta |
 | D-34 | 07/11/2026 | Propuesta |
+| D-35 | 08/11/2026 | Propuesta |
+| D-36 | 08/11/2026 | Propuesta |
+| D-37 | 08/11/2026 | Propuesta |
+| D-38 | 08/11/2026 | Propuesta |
 | D-39 | 10/11/2026 | Propuesta |
 | D-40 | 10/11/2026 | Aceptada (10/11/2026) |
 
@@ -509,14 +513,14 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 **Contexto.** RN-67 define el importe de la cancelación anticipada pero no cómo se imputa la parte no devengada ni qué ocurre con el concepto no capitalizable de un crédito refinanciado. CU-92 depende de CU-93 y CU-94, que se construyen en la iteración 4.
 
 **Decisión.**
-1. **Importe.** Al cálculo de RN-67 se suma el concepto no capitalizable pendiente de las cuotas no vencidas de un crédito refinanciado: es deuda ya devengada que solo se difirió (RN-70). El IVA es el de la alícuota vigente de Estructuración.
+1. **Importe.** Al cálculo de RN-67 se suma el concepto no capitalizable pendiente de las cuotas no vencidas de un crédito refinanciado: es deuda ya devengada que solo se difirió (RN-70). El IVA es el de la alícuota vigente de Estructuración. Si la cuota en curso tiene un pago parcial previo (D-12), lo ya pagado de su interés cubre primero lo devengado: se cobra el interés proporcional, calculado sobre el interés original de la cuota, menos lo ya pagado, sin bajar de cero; el IVA del interés devengado se reduce del mismo modo por el IVA ya pagado de esa cuota.
 2. **Imputación y reducción.** El cobro imputa las cuotas vencidas por todos sus conceptos; la cuota en curso, por su capital, su no capitalizable, el interés proporcional y su IVA; las demás, por su capital y su no capitalizable. Todas las cuotas quedan Pagadas con sus saldos en cero y el crédito Cancelado; la reducción del interés, los gastos y el IVA no devengados queda en `cancelaciones_anticipadas` y se muestra en el comprobante. El importe debe ser igual al total: no hay cancelación parcial. No procede si alguna cuota integra una orden de pago electrónico pendiente o en conciliación, y deja Observada la propuesta de refinanciación vigente (RN-36).
 3. **Sin anulación.** El cobro de una cancelación anticipada no se anula con CU-37, porque la reducción aplicada no se reconstruye a partir de las imputaciones.
 4. **Proyección.** Ingresos esperados: saldo pendiente de las cuotas de créditos activos o en mora que vencen dentro del período, por el factor de cobrabilidad. Egresos comprometidos: reservas y compromisos vigentes más los egresos programados hasta el fin del período; los ingresos programados no se suponen. Proyectada = fondos + ingresos − egresos − reserva mínima. Se registra con su versión de parámetros, alerta al Gerente si es negativa y deja en la auditoría si corresponde activar o cerrar una campaña, hasta que CU-93 y CU-94 se construyan.
 5. **CU-89 completo.** Se agregan las órdenes de pago pendientes cuyo límite se alcanzó (las en conciliación no vencen y las vencidas se siguen consultando por CU-91), además de las propuestas y las autorizaciones de devolución de D-36 y D-37.
 6. **CU-81.** Ya estaba construido desde D05; solo se agrega la confirmación antes de cambiar el estado.
 
-**Consecuencias.** Migración 23 (`cancelaciones_anticipadas`). Componentes nuevos: `CancelacionAnticipada::distribuir()` (con 1 prueba nueva), `CancelacionAnticipadaService`, `Admin\CancelacionesAnticipadas`, `FondosService::proyectar()` y el comando `fondos:proyectar` (06:00, línea del crontab habilitada). `CobroService::asentarVentanilla()` concentra el registro del cobro en ventanilla con medios, movimientos de caja y comprobante.
+**Consecuencias.** Migración 23 (`cancelaciones_anticipadas`). Componentes nuevos: `CancelacionAnticipada::distribuir()` (con 1 prueba nueva; otra para el pago parcial previo), `CancelacionAnticipadaService`, `Admin\CancelacionesAnticipadas`, `FondosService::proyectar()` y el comando `fondos:proyectar` (06:00, línea del crontab habilitada). `CobroService::asentarVentanilla()` concentra el registro del cobro en ventanilla con medios, movimientos de caja y comprobante.
 
 ## D-39 · Pruebas de punta a punta automatizadas (RNF-15, plan de pruebas)
 

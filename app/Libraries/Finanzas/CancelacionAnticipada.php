@@ -14,17 +14,20 @@ use DomainException;
  *         + b) capital pendiente de las cuotas no vencidas y su concepto no capitalizable pendiente, si el crédito proviene
  *              de una refinanciación (es deuda ya devengada que solo se difirió, RN-70; D-38)
  *         + c) interés ordinario de la cuota en curso, proporcional a los días transcurridos desde el vencimiento anterior
- *              (o desde la liquidación) sobre 30 días, sin superar el interés pendiente de esa cuota
- *         + d) IVA del interés del punto c (el IVA de las cuotas vencidas ya integra su total).
+ *              (o desde la liquidación) sobre 30 días del interés de la cuota, sin superarlo y descontado lo que el
+ *              cliente ya pagó de ese interés con un pago parcial (D-12)
+ *         + d) IVA del interés devengado del punto c, descontado el IVA ya pagado de esa cuota (el IVA de las cuotas
+ *              vencidas ya integra su total).
  * No se cobran intereses ordinarios ni gastos de las demás cuotas no vencidas, ni comisión (art. 36, Ley 24.240).
  * Una cuota con vencimiento en la fecha de pago todavía no está vencida (3.5.1).
  */
 final class CancelacionAnticipada
 {
     /**
-     * @param list<array{numero: int, vencimiento: DateTimeImmutable, conceptos: array<string, Decimal>}> $cuotasNoPagadas
+     * @param list<array{numero: int, vencimiento: DateTimeImmutable, conceptos: array<string, Decimal>, nominal?: array{InteresOrdinario: Decimal, IVA: Decimal}}> $cuotasNoPagadas
      *        conceptos pendientes por cuota (claves de Imputador::PRELACION); para las vencidas, Punitorio e IVA incluyen
-     *        los punitorios exigibles y su IVA a la fecha de pago
+     *        los punitorios exigibles y su IVA a la fecha de pago. `nominal` son el interés y el IVA originales de la
+     *        cuota: permiten descontar lo ya pagado con un pago parcial; sin él, se considera que no hubo pagos
      *
      * @param DateTimeImmutable $fechaBasePlan fecha local de liquidación (o de aplicación, si el crédito proviene de una refinanciación)
      *
@@ -54,16 +57,24 @@ final class CancelacionAnticipada
         }
 
         $interes = Decimal::zero();
+        $ivaInteres = Decimal::zero();
         $dias = 0;
         if ($enCurso !== null) {
             // Vencimiento anterior según el calendario del plan (RN-52), aunque esa cuota ya esté pagada.
             $n = $enCurso['numero'];
             $anterior = $n > 1 ? CalendarioCuotas::vencimientos($fechaBasePlan, $n - 1)[$n - 2] : $fechaBasePlan->setTime(0, 0);
             $dias = max(0, (int) $anterior->diff($pago)->format('%r%a'));
-            $interesCuota = $enCurso['conceptos']['InteresOrdinario'] ?? Decimal::zero();
-            $interes = Decimal::min($interesCuota->mul($dias)->div(30)->round(2), $interesCuota);
+            $pendiente = $enCurso['conceptos']['InteresOrdinario'] ?? Decimal::zero();
+            $interesCuota = $enCurso['nominal']['InteresOrdinario'] ?? $pendiente;
+            $devengado = Decimal::min($interesCuota->mul($dias)->div(30)->round(2), $interesCuota);
+            // Lo ya pagado del interés de la cuota (pago parcial, D-12) cubre primero lo devengado
+            $interes = self::noNegativo($devengado->sub($interesCuota->sub($pendiente)));
+            $ivaInteres = $devengado->mul($alicuotaIva)->round(2);
+            if (isset($enCurso['nominal'])) {
+                $ivaPendiente = $enCurso['conceptos']['IVA'] ?? Decimal::zero();
+                $ivaInteres = Decimal::min(self::noNegativo($ivaInteres->sub($enCurso['nominal']['IVA']->sub($ivaPendiente))), $ivaPendiente);
+            }
         }
-        $ivaInteres = $interes->mul($alicuotaIva)->round(2);
         $total = $vencidas->add($capitalNoVencido)->add($noCapNoVencido)->add($interes)->add($ivaInteres);
 
         return [
@@ -76,6 +87,11 @@ final class CancelacionAnticipada
             'cuota_en_curso' => $enCurso['numero'] ?? null,
             'total' => $total,
         ];
+    }
+
+    private static function noNegativo(Decimal $v): Decimal
+    {
+        return $v->isPositive() ? $v : Decimal::zero();
     }
 
     /**

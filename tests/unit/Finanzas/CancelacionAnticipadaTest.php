@@ -71,4 +71,43 @@ final class CancelacionAnticipadaTest extends TestCase
         $this->assertSame($pendiente->toFixed(2), $imputado->add($d['interes_no_devengado'])->add($d['gastos_no_devengados'])->add($d['iva_no_devengado'])->toFixed(2));
         $this->assertSame('2000.00', $d['gastos_no_devengados']->toFixed(2));
     }
+
+    /** Pago parcial previo sobre la cuota en curso (D-12): lo ya pagado del interés cubre primero lo devengado. */
+    public function testPagoParcialPrevioEnLaCuotaEnCurso(): void
+    {
+        $base = new DateTimeImmutable('2026-10-01');
+        $iva = Decimal::of('0.21');
+        $pago = new DateTimeImmutable('2026-10-16'); // 15 días: devengado 5.000 de un interés de 10.000
+        $cuota = static fn (string $interesPendiente, string $ivaPendiente): array => [[
+            'id' => 1, 'numero' => 1, 'vencimiento' => new DateTimeImmutable('2026-10-31'),
+            'conceptos' => ['InteresOrdinario' => Decimal::of($interesPendiente), 'GastosCargos' => Decimal::zero(), 'IVA' => Decimal::of($ivaPendiente), 'Capital' => Decimal::of('50000')],
+            'nominal' => ['InteresOrdinario' => Decimal::of('10000'), 'IVA' => Decimal::of('2100')],
+        ]];
+
+        // Pagó 6.000 del interés: lo devengado ya está cubierto; queda el IVA del interés devengado
+        $c = $cuota('4000', '2100');
+        $r = CancelacionAnticipada::calcular($c, $pago, $base, $iva);
+        $this->assertSame('0.00', $r['interes_en_curso']->toFixed(2));
+        $this->assertSame('1050.00', $r['iva_interes_en_curso']->toFixed(2));
+        $this->assertSame('51050.00', $r['total']->toFixed(2));
+        $d = CancelacionAnticipada::distribuir($c, $pago, $r);
+        $this->assertSame('51050.00', Decimal::sum(array_map(static fn ($i) => $i['importe'], $d['imputaciones']))->toFixed(2));
+        $this->assertSame('4000.00', $d['interes_no_devengado']->toFixed(2));
+
+        // Pagó 2.000 del interés: se cobran los 3.000 que faltan de lo devengado
+        $r = CancelacionAnticipada::calcular($cuota('8000', '2100'), $pago, $base, $iva);
+        $this->assertSame('3000.00', $r['interes_en_curso']->toFixed(2));
+        $this->assertSame('54050.00', $r['total']->toFixed(2));
+
+        // Pagó todo el interés y 1.500 del IVA: no se cobra interés ni IVA
+        $r = CancelacionAnticipada::calcular($cuota('0', '600'), $pago, $base, $iva);
+        $this->assertSame('0.00', $r['interes_en_curso']->toFixed(2));
+        $this->assertSame('0.00', $r['iva_interes_en_curso']->toFixed(2));
+        $this->assertSame('50000.00', $r['total']->toFixed(2));
+
+        // Sin pagos previos el resultado no cambia
+        $r = CancelacionAnticipada::calcular($cuota('10000', '2100'), $pago, $base, $iva);
+        $this->assertSame('5000.00', $r['interes_en_curso']->toFixed(2));
+        $this->assertSame('1050.00', $r['iva_interes_en_curso']->toFixed(2));
+    }
 }
