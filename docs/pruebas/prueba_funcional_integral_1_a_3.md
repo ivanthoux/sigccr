@@ -187,7 +187,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 | R-067 | Excluyente | Hernán Ojeda (C-08). | Desfavorable por la situación 5 vigente (RN-69); la solicitud queda Rechazada. | |
 | R-068 | Contingencia | Inés Villalba (C-09); ejecutar `evaluacion:ejecutar`. | Pendiente de evaluación de contingencia; figura en Crédito → Contingencias. | |
 | R-069 | Registrar la contingencia | Probar los datos inválidos de A.9; registrar con los válidos. | Cada error junto a su campo; con los válidos: «Evaluación de contingencia registrada: la solicitud queda pendiente de resolución…» | |
-| R-070 | Sin capacidad | Lucía Martínez (C-11, ingresos $ 150.000), $ 1.000.000 en 6 cuotas en «Personal». | Sin alternativas viables: pasa a resolución del Gerente. | |
+| R-070 | Sin capacidad | Lucía Martínez (C-11, ingresos $ 100.000), $ 1.000.000 en 6 cuotas en «Personal». | Sin alternativas viables: pasa a resolución del Gerente. | |
 
 ### 12. Alternativas y resolución (CU-87, CU-64, CU-79 y CU-26)
 
@@ -377,7 +377,7 @@ Domicilio común: provincia **Misiones**, localidad **Apóstoles**, código post
 | C-08 | Hernán | Ojeda | 37888994 | 20378889945 | 23/04/1992 | Casado | `falla.transitoria@prueba.local` | 3758 41-1008 | 808 | Relación de dependencia | 1.500.000 | Chofer | Transporte Apóstoles S.R.L. | No | Situación 5 excluyente y reintentos |
 | C-09 | Inés | Villalba | 38999102 | 27389991029 | 11/09/1993 | Soltera | `incierto@prueba.local` | 3758 41-1009 | 909 | Relación de dependencia | 1.500.000 | Administrativa | Municipalidad de Apóstoles | No | Contingencia y resultado incierto |
 | C-10 | Julián | Ríos | 29111203 | 20291112030 | 28/02/1982 | Casado | `julian.rios@prueba.local` | 3758 41-1010 | 1010 | Relación de dependencia | 1.500.000 | Contador | Estudio Ríos y Asociados | No | Crédito E: cancelación anticipada |
-| C-11 | Lucía | Martínez | 40111304 | 27401113040 | 19/06/1996 | Soltera | `lucia.martinez@prueba.local` | 3758 41-1011 | 1111 | Relación de dependencia | 150.000 | Ayudante de cocina | Restaurante El Paso | No | Sin capacidad de pago |
+| C-11 | Lucía | Martínez | 40111304 | 27401113040 | 19/06/1996 | Soltera | `lucia.martinez@prueba.local` | 3758 41-1011 | 1111 | Relación de dependencia | 100.000 | Ayudante de cocina | Restaurante El Paso | No | Sin capacidad de pago |
 | C-12 | Marcos | Paredes | 27222403 | 20272224030 | 03/10/1979 | Casado | `marcos.paredes@prueba.local` | 3758 41-1012 | 1212 | Monotributista (categoría B) | 1.200.000 | Comerciante | Almacén propio | No | Monotributo |
 | C-13 | Nora | Kowalski | 25333502 | 27253335020 | 12/01/1976 | Viuda | `nora.kowalski@prueba.local` | 3758 41-1013 | 1313 | Relación de dependencia | 1.500.000 | Concejal | Concejo Deliberante de Apóstoles | **Sí** | Persona expuesta políticamente; nacionalidad «Paraguaya» |
 | C-14 | Sofía | Menor | 48000000 | 27480000000 | 15/05/2010 | Soltera | `sofia.menor@prueba.local` | 3758 41-1014 | 1414 | Relación de dependencia | 300.000 | Estudiante | — | No | Solo validaciones (menor de edad) |
