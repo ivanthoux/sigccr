@@ -1,0 +1,25 @@
+sequenceDiagram
+autonumber
+actor A as Cajero o Analista de Crédito
+participant C as Admin Refinanciaciones
+participant RS as RefinanciacionService
+participant R as DeudaRefinanciable y Refinanciacion
+participant PA as ParametroService
+participant DB as SQL Server
+A->>C: POST fecha y medio de la aceptación del cliente
+C->>RS: aplicar(usuario, propuesta, versión, fecha, medio, observaciones)
+RS->>DB: BEGIN y bloquea la propuesta con su versión (RN-24)
+RS->>RS: estado Aprobada pendiente de aceptación
+RS->>R: revalidar: vigencia de 7 días y composición de la deuda por cuota (RN-36)
+alt vencida (A1) o deuda distinta (A2)
+RS->>DB: propuesta Vencida u Observada, COMMIT
+C-->>A: no se aplicó, las obligaciones originales siguen vigentes
+else sin cambios
+RS->>RS: ninguna cuota en una orden de pago electrónico vigente
+RS->>R: plan francés: capital, no capitalizable con los punitorios posteriores al corte, sin gastos (RN-70)
+RS->>PA: vigente(Morosidad): tolerancia del nuevo crédito
+RS->>DB: creditos origen Refinanciación, Activo, y sus cuotas, sin desembolso (RN-37)
+RS->>DB: cuotas originales Sustituida y créditos originales Refinanciado
+RS->>DB: aceptaciones_refinanciacion, propuesta Aplicada, alerta resuelta, auditoría y COMMIT
+C-->>A: nuevo crédito con su plan
+end

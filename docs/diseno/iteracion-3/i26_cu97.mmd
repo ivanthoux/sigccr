@@ -1,0 +1,25 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin CancelacionesAnticipadas
+participant CN as CancelacionAnticipadaService
+participant PU as PunitorioService
+participant R as CancelacionAnticipada
+participant CS as CobroService
+participant RF as RefinanciacionService
+participant DB as SQL Server
+CA->>C: GET cancelaciones-anticipadas/{crédito}: importe a hoy con su detalle
+CA->>C: POST importe, medio y número de operación
+C->>CN: registrar(usuario, crédito, importe, medio, operación)
+CN->>DB: BEGIN, jornada operable (A1), bloquea el crédito Activo o En mora (A2)
+CN->>PU: devengarCuotas(cuotas impagas, hoy)
+CN->>DB: bloquea las cuotas, ninguna en una orden electrónica pendiente (A4, RN-30)
+CN->>R: calcular: vencidas, capital y no capitalizable no vencidos, interés proporcional menos lo ya pagado, e IVA (RN-67)
+CN->>CN: el importe es igual al total: no hay cancelación parcial (A3)
+CN->>CS: asentarVentanilla(tipo CancelacionAnticipada): cobro, medio, movimiento de caja y comprobante (RN-77)
+CN->>R: distribuir: imputaciones y reducción de lo no devengado
+CN->>DB: imputaciones, todas las cuotas Pagadas con saldo cero, crédito Cancelado
+CN->>DB: cancelaciones_anticipadas con los componentes y la reducción
+CN->>RF: observarPorCuotas (RN-36)
+CN->>DB: auditoría y COMMIT
+C-->>CA: comprobante con la reducción aplicada
