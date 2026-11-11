@@ -21,6 +21,11 @@ const cuota = async (creditoId, numero) => (await consulta('SELECT * FROM dbo.cu
  * hubiera pasado (el proceso usa la fecha de hoy).
  */
 async function atrasar(creditoId, dias) {
+  // Los días simulados necesitan parámetros de morosidad e IVA vigentes en esas fechas (versión 1 desde un año antes)
+  await consulta(
+    "UPDATE dbo.versiones_parametros SET vigente_desde = DATEADD(year, -1, vigente_desde) "
+      + "WHERE tipo IN ('Morosidad', 'Estructuracion') AND numero = 1 AND vigente_desde > DATEADD(month, -6, SYSDATETIMEOFFSET())",
+  );
   await consulta('UPDATE dbo.cuotas SET vencimiento = DATEADD(day, -@d, vencimiento) WHERE credito_id = @c', { d: dias, c: creditoId });
   // Los tramos ya calculados también se corren: el proceso calcula desde el último tramo registrado (RN-53)
   await consulta('UPDATE t SET t.fecha = DATEADD(day, -@d, t.fecha) FROM dbo.tramos_punitorios t JOIN dbo.cuotas q ON q.id = t.cuota_id WHERE q.credito_id = @c', { d: dias, c: creditoId });
