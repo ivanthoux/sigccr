@@ -1,0 +1,12 @@
+{
+  "name": "sigccr-e2e",
+  "private": true,
+  "description": "Pruebas de punta a punta del SIG-CCR (Playwright contra la pila Docker completa)",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.49.1",
+    "mssql": "11.0.1"
+  }
+}

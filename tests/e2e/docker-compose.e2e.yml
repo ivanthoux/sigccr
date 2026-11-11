@@ -1,0 +1,20 @@
+# Pila aislada para las pruebas de punta a punta (proyecto sigccr_e2e, con sus propios volúmenes y base de datos).
+# Se usa con tests/e2e/ejecutar.sh; no toca los contenedores ni los datos del entorno de desarrollo.
+services:
+  playwright:
+    build:
+      context: ./tests/e2e
+    image: sigccr/e2e:1.49.1
+    # Comparte la red de Nginx: https://localhost es el SIG-CCR de esta pila, igual que app.baseURL
+    network_mode: "service:web"
+    # root para usar el socket de Docker (docker exec en el contenedor app); la imagen usa pwuser por omisión
+    user: root
+    depends_on: [web]
+    volumes:
+      - ./tests/e2e:/e2e/src
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file: .env.docker               # MSSQL_SA_PASSWORD para las consultas de verificación
+    environment:
+      E2E_PROYECTO: ${COMPOSE_PROJECT_NAME:-sigccr_e2e}
+      CI: ${CI:-}
+    profiles: [pruebas]
