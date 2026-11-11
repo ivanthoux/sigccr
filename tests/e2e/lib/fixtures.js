@@ -7,7 +7,7 @@ const ocultarBarra = () => {
   const aplicar = () => {
     const s = document.createElement('style');
     s.textContent = '#debug-bar, #debug-icon, #toolbarContainer { display: none !important; }';
-    document.head && document.head.appendChild(s);
+    document.head?.appendChild(s);
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', aplicar);
   else aplicar();

@@ -32,7 +32,8 @@ function decodificar(texto) {
  */
 function ultimoCorreo(destino, { enviar = true } = {}) {
   if (enviar) spark('comunicaciones:enviar');
-  const archivo = enApp('sh', '-c', `ls -t writable/correos/*.html 2>/dev/null | xargs -r grep -l -i -F "Para: ${destino} |" | head -n 1`).trim();
+  // El destinatario va como argumento ($1), no dentro del texto del comando
+  const archivo = enApp('sh', '-c', 'ls -t writable/correos/*.html 2>/dev/null | xargs -r grep -l -i -F "Para: $1 |" | head -n 1', 'sh', destino).trim();
   if (!archivo) return null;
   const html = enApp('cat', archivo);
   const asunto = (html.match(/Asunto: (.*?) -->/) || [])[1] || '';
@@ -42,7 +43,7 @@ function ultimoCorreo(destino, { enviar = true } = {}) {
 
 /** Cantidad de correos simulados enviados a un destinatario. */
 function cantidadCorreos(destino) {
-  const salida = enApp('sh', '-c', `grep -l -i -F "Para: ${destino} |" writable/correos/*.html 2>/dev/null | wc -l`);
+  const salida = enApp('sh', '-c', 'grep -l -i -F "Para: $1 |" writable/correos/*.html 2>/dev/null | wc -l', 'sh', destino);
   return Number(salida.trim());
 }
 
