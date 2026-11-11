@@ -224,7 +224,7 @@ class DemostracionSeeder extends Seeder
         $datos = $liquidacion->datos($id);
         $r = $this->intentar(fn () => $liquidacion->liquidar($id, (int) $datos['version_fila'], [
             'documento_verificado' => $dni, 'conformidad' => '1', 'cbu' => self::cbu($n), 'cuit_titular' => $cuil,
-            'evidencia_titularidad' => 'Constancia de CBU presentada por el titular (demostración)', 'comprobante' => sprintf('DES-DEMO-%02d', $n + 1),
+            'evidencia_titularidad' => 'Constancia de CBU presentada por el titular (demostración)', 'comprobante' => sprintf('DES-SEED-%02d', $n + 1),
             'fecha_transferencia' => $hoy->format('d/m/Y'), 'importe_transferencia' => str_replace('.', ',', $datos['calculo']['neto']->toFixed(2)),
         ], $this->cajero), 'liquidación');
 
