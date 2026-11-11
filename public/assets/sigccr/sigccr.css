@@ -225,6 +225,14 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     .contrato { border: 0 !important; box-shadow: none !important; padding: 0 !important; }
 }
 
+/* Tablas con DataTables: en pantallas angostas la tabla se desplaza dentro de su recuadro, sin ensanchar la página
+   (RNF-08, 360 px). Los controles de búsqueda y paginación quedan fijos. */
+.dt-container .dt-layout-table > .dt-layout-cell { overflow-x: auto; }
+
+@media print {
+    .dt-container .dt-layout-table > .dt-layout-cell { overflow: visible !important; }
+}
+
 /* Impresión de comprobantes, constancias y contratos: solo el contenido, a todo el ancho de la hoja y sin barras de
    desplazamiento en las tablas (todas las columnas visibles). */
 @media print {

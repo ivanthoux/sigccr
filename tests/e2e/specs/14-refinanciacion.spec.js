@@ -126,7 +126,8 @@ let creditoA;
 test('R-126 Observación por un pago (RN-36)', async ({ comoUsuario }) => {
   const analista = await comoUsuario('analista');
   creditoA = await k.credito(ana);
-  await k.atrasar(creditoA.id, 40);
+  // Las cuotas 1 y 2 de Ana están pagas (R-100 y R-114): con 100 días la cuota 3 supera la tolerancia
+  await k.atrasar(creditoA.id, 100);
   const p = await registrarPropuesta(analista, await simular(analista, ana, [creditoA.id], 60, 12));
   expect(p).toBeTruthy();
   const cajero = await comoUsuario('cajero');

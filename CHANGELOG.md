@@ -5,6 +5,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 ## [Sin publicar]
 
 ### Corregido (prueba integral)
+- Listados con DataTables (clientes, solicitudes, usuarios, líneas, alertas, resoluciones y contingencias): en una pantalla de 360 px la tabla ensanchaba la página; ahora se desplaza dentro de su recuadro (R-145).
 - Alternativas de financiación: la pantalla las ordenaba solo por importe, así que la combinación pedida no aparecía primero como establece D-19 (R-071).
 - Prueba integral: Lucía (C-11) con $ 20.000 de ingresos para que R-070 no tenga alternativas viables; R-055 describe lo que muestra la pantalla.
 - Impresión de comprobantes, constancias y contratos: se oculta el menú lateral y las tablas usan todo el ancho de la hoja, sin barra de desplazamiento que ocultara columnas.
