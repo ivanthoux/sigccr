@@ -542,3 +542,10 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** `ReglasActivacion::evaluar()` deja de exigir la verificación (prueba nueva). `ActivacionService::definirContrasena()` marca el correo verificado. Hay que actualizar el texto de CU-04 (paso 4) en el documento.
 
+## D-41 · La batería de punta a punta se ejecuta al cierre de la iteración (D-39, plan de pruebas)
+
+**Contexto.** Con D-39 la batería E2E corría en cada *pull request* y en cada cambio de `develop`. Instala la pila desde cero y tarda unos 15 minutos, así que cada cambio intermedio de una iteración esperaba la batería completa, aunque la prueba de aceptación de cada Control se hace sobre el incremento cerrado.
+
+**Decisión.** El flujo `E2E` se ejecuta en el *pull request* de `develop` a `main` que publica la versión de cada iteración, y a pedido (*Run workflow*) cuando se quiere comprobar un estado intermedio. Durante la iteración, cada *pull request* se controla con el flujo `CI`: pruebas unitarias del motor financiero y de las reglas, autorización de cada ruta con cada rol, sintaxis y análisis estático (SonarCloud). Las pruebas E2E de los casos nuevos se escriben durante la iteración y se ejecutan juntas al cierre.
+
+**Consecuencias.** `.github/workflows/e2e.yml` cambia sus disparadores. La versión no se publica en `main` sin la batería aprobada, de modo que cada Control sigue respaldado por la batería completa y por la prueba funcional manual.
