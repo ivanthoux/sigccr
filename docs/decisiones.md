@@ -603,7 +603,7 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 **Decisión.**
 1. **Quién ejecuta.**
    - El panel solicita la copia (estado *Solicitada*) o la restauración. El comando `copias:procesar` del contenedor de procesos la ejecuta en el minuto siguiente; la copia automática diaria la ejecuta `copias:generar` a las 02:00 (CU-61 A5).
-   - Ambos comandos usan el inicio de sesión de mantenimiento `sigccr_copias`, que crea `inicializar.sh` con la contraseña `database.copias.password`. Tiene `db_backupoperator` en la base y `dbcreator` en el servidor, y se conecta a `master`.
+   - Ambos comandos usan el inicio de sesión de mantenimiento `sigccr_copias`, que crea `inicializar.sh` con la contraseña `database.copias.password` (si está vacía, el script genera una al azar y la guarda en `.env`). Tiene `db_backupoperator` en la base y `dbcreator` en el servidor, y se conecta a `master`.
    - El panel monta el volumen de solo lectura, solo para la descarga (CU-62).
    - El directorio de copias pertenece a `mssql` y al grupo `www-data`, con *setgid*; lo prepara `entrypoint.sh`.
    - Un bloqueo de aplicación impide dos copias o restauraciones a la vez (A1).
@@ -645,5 +645,5 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
   - el grupo `copias` en `Config\Database` y la configuración `directorioCopias`, `copiasConAdjuntos` y `diasConservacionCopias`;
   - el volumen `backups` en el contenedor app, de solo lectura;
   - el planificador, `crear_base.sql`, `inicializar.sh`, `env.sigccr.example` y el README.
-- En una instalación existente hay que agregar `database.copias.password` al `.env` y volver a ejecutar `docker/inicializar.sh`.
+- En una instalación existente basta con volver a ejecutar `docker/inicializar.sh`, que agrega la configuración `database.copias.*` al `.env` y crea el inicio de sesión.
 - Pruebas: `tests/unit/Copias/CopiasTest.php` y `tests/rutas/VistasCopiasTest.php`.

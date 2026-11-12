@@ -35,8 +35,8 @@ docker compose build
 
 # 3. Estructura de CodeIgniter 4, dependencias y .env
 docker compose run --rm --no-deps app bash docker/bootstrap.sh
-#    editar .env: database.default.password (sigccr_app), database.migraciones.password (sigccr_owner)
-#    y database.copias.password (sigccr_copias, copias de seguridad)
+#    editar .env: database.default.password (sigccr_app) y database.migraciones.password (sigccr_owner);
+#    database.copias.password (sigccr_copias, copias de seguridad) la genera inicializar.sh si queda vacía
 
 # 4. Levantar los servicios
 docker compose up -d

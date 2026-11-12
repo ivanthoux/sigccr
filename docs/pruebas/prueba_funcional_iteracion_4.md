@@ -201,26 +201,15 @@ Preparación del bloque C (D-44):
 ## 11. Copias de seguridad y restauración (CU-61 a CU-63)
 
 Preparación del bloque D (D-45):
-1. Agregar al `.env` el inicio de sesión de mantenimiento de las copias (ver `env.sigccr.example`) y elegir su contraseña:
-   ```ini
-   database.copias.hostname = db
-   database.copias.database = master
-   database.copias.username = sigccr_copias
-   database.copias.password = <contraseña nueva, sin comillas simples>
-   database.copias.DBDriver = SQLSRV
-   database.copias.port = 1433
-   database.copias.encrypt = false
-   database.copias.DBDebug = true
-   ```
-2. Recrear los contenedores (el app monta ahora el volumen de copias y el scheduler prepara sus permisos), aplicar la migración 29 y volver a ejecutar la inicialización, que crea `sigccr_copias`:
+1. Recrear los contenedores (el app monta ahora el volumen de copias y el scheduler prepara sus permisos), aplicar la migración 29 y volver a ejecutar la inicialización:
    ```bash
    git pull && docker compose up -d --force-recreate web app scheduler
    docker compose exec app composer migrar
    docker compose exec app bash docker/inicializar.sh
    ```
-   El script es repetible: como el Administrador ya existe, el paso 7 no pide datos. Debe terminar con «Arquitectura ejecutable verificada.».
-3. Para no esperar al minuto del planificador, el procesamiento se puede forzar con `docker compose exec -u www-data scheduler php spark copias:procesar`.
-4. Antes de I-87 conviene registrar alguna operación (por ejemplo, un cliente o un cobro) después de la copia que se va a restaurar.
+   La inicialización agrega al `.env` la configuración `database.copias.*` con una contraseña generada al azar («Se generó database.copias.password en .env») y crea el inicio de sesión `sigccr_copias`. Es repetible: como el Administrador ya existe, el paso 7 no pide datos. Debe terminar con «Arquitectura ejecutable verificada.».
+2. Para no esperar al minuto del planificador, el procesamiento se puede forzar con `docker compose exec -u www-data scheduler php spark copias:procesar`.
+3. Antes de I-87 conviene registrar alguna operación (por ejemplo, un cliente o un cobro) después de la copia que se va a restaurar.
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
