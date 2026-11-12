@@ -94,8 +94,9 @@ final class VistasCampanasTest extends CIUnitTestCase
         $html = view('portal/oferta', ['titulo' => 'Oferta', 'o' => self::oferta()]);
         $this->assertStringContainsString(site_url('portal/ofertas/5/aceptar'), $html);
         $this->assertStringContainsString(site_url('portal/ofertas/5/rechazar'), $html);
-        $this->assertStringContainsString('value="600000.00|12" checked', $html);
-        $this->assertStringContainsString('value="450000.00|6"', $html);
+        // El separador de la clave se escapa como atributo HTML
+        $this->assertMatchesRegularExpression('/value="600000\.00(\||&#x7C;)12" checked/', $html);
+        $this->assertMatchesRegularExpression('/value="450000\.00(\||&#x7C;)6"/', $html);
         $html = view('portal/oferta', ['titulo' => 'Oferta', 'o' => self::oferta('Aceptada')]);
         $this->assertStringContainsString('solicitud N.º 33', $html);
         $this->assertStringNotContainsString('/aceptar', $html);
