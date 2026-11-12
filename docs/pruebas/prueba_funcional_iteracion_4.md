@@ -3,7 +3,7 @@
 Recorrido manual de los casos de uso de la iteración 4. Se completa por bloques, a medida que se construyen:
 
 - **Bloque A, portal de autogestión (SS-07, D-42):** CU-45 a CU-49, CU-75, CU-98 y CU-104, con la bandeja de pre-registros del panel y la consulta del padrón de ARCA en el alta (CU-11 A9).
-- **Bloque B, campañas crediticias (SS-08):** pendiente.
+- **Bloque B, campañas crediticias (SS-08, D-43):** CU-50, CU-51, CU-52, CU-93 y CU-94, con la consulta de las propuestas de refinanciación desde el portal (CU-43 A5).
 - **Bloque C, reportes y auditoría (SS-09) y régimen informativo (CU-105):** pendiente.
 - **Bloque D, copias de seguridad (SS-11):** pendiente.
 
@@ -127,8 +127,48 @@ Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* co
 | I-43 | Pantalla angosta | Abrir el estado de cuenta, el plan, *Pagar una cuota*, el comprobante y el pre-registro con 360 px de ancho. | Sin desplazamiento horizontal de la página; las tablas se desplazan dentro de su recuadro. | |
 | I-44 | Auditoría | Revisar `registros_auditoria` de esta prueba. | Hay registros de `pre-registros.registrar`, `pre-registros.verificar`, `pre-registros.descartar`, `clientes.consultar-padron`, `clientes.consentimiento`, `clientes.cambio-correo.solicitud`, `clientes.cambio-correo.confirmacion`, `clientes.verificar_correo`, `portal.consultar-perfil`, `portal.consultar-estado-cuenta`, `portal.consultar-plan`, `portal.consultar-solicitud`, `pagos.generar-orden` y `portal.acceso-denegado`, con el cliente como responsable cuando opera desde el portal. | |
 
+## 9. Campañas crediticias (CU-51, CU-93, CU-50, CU-52, CU-94 y CU-43 A5)
+
+**Preparación del bloque B.**
+
+1. Aplicar la migración 27 y recrear el planificador, que ahora ejecuta `campanas:cerrar` cada 15 minutos:
+   ```bash
+   git pull && docker compose up -d --force-recreate web app scheduler
+   docker compose exec app composer migrar
+   ```
+2. Clientes que intervienen:
+   - **Joaquín Medina:** portal activado en la preparación, consentimiento comercial otorgado en el alta del seeder y crédito Motos con pocos días de atraso.
+   - **Sofía Benítez:** portal activado en I-29; otorgar el consentimiento comercial desde su portal (CU-98) antes de I-47.
+   - **Franco Molina:** queda fuera por su atraso de más de 45 días.
+3. La campaña se activa al ejecutar la proyección de fondos, que puede repetirse en el día:
+   ```bash
+   docker compose exec app php spark fondos:proyectar
+   ```
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| I-45 | Parámetros vigentes | Como Gerente (Laura Pérez), abrir *Gestión → Parámetros de campañas*. Como Analista, abrir `/admin/parametros/campanas`. | Formulario con activación (umbral $ 5.000.000, 30 días, 90 %, reserva $ 1.000.000), línea sin seleccionar, límites, elegibilidad, comunicación (solo correo) y vigencia (15 días). La versión 1 figura como vigente. El Analista recibe 403. | |
+| I-46 | Valores incoherentes | Registrar con el capital máximo en 0, el factor en 120, sin línea, sin categorías y con la fecha de ayer. | «El capital máximo de la campaña debe ser mayor que cero.», «El factor de cobrabilidad debe estar entre 0 % y 100 %.», «Seleccione una línea de crédito activa…», «Seleccione al menos una categoría…» y, con la fecha anterior, «…no se admite retroactividad.». No se registra ninguna versión (A1). | |
+| I-47 | Nueva versión | Registrar: umbral **$ 0**, período 30, factor 90, reserva mínima $ 0, línea **Electrodomésticos (ELECTRO)**, capital máximo **$ 3.000.000**, 200 ofertas, categoría *Relación de dependencia*, antigüedad 0, morosidad máxima **30 días**, admite créditos vigentes, correo, mensaje «Oferta especial de fin de año», duración 15 días, cierre por disponibilidad marcado, rige desde hoy, motivo «Prueba funcional de campañas». Aceptar la confirmación. | «Se registró la versión 2 de los parámetros de campañas…» con el aviso de RN-40. El historial muestra la versión 1 como antecedente. | |
+| I-48 | Activación | Ejecutar `fondos:proyectar`. | La consola informa «activada la campaña N.º 1 con … oferta(s)». El Gerente tiene la alerta «Se activó la campaña N.º 1…» con «Ver la campaña». `sigccr:correos` muestra un correo «tiene una oferta de crédito preaprobada» para Joaquín y para Sofía, con el mensaje adicional y el enlace a la oferta. No hay ofertas para Franco (atraso) ni para los clientes sin portal activado. | |
+| I-49 | Campaña activa única (RN-66) | Volver a ejecutar `fondos:proyectar`. | «la campaña activa continúa». No se crea otra campaña. | |
+| I-50 | Consulta de campañas (CU-50) | Como Analista, abrir *Cartera → Campañas*; filtrar por estado *Activa*, por línea y por un número inexistente; abrir la campaña y la oferta de Joaquín. | El listado muestra número, activación, línea, condiciones, vigencia, capital asignado (el menor entre $ 3.000.000 y la disponibilidad proyectada), comprometido $ 0 y estado. El número inexistente informa que no hay coincidencias (A1). El detalle muestra la proyección y el umbral, las versiones de parámetros y de condiciones, los resultados, las ofertas por cliente y los correos por estado. La oferta muestra importe, tasas, vigencia, respuesta y comunicaciones (A4). | |
+| I-51 | Ofertas en el portal | Ingresar como Joaquín y abrir *Refinanciaciones y ofertas* (ya no figura «Próximamente» en el inicio). | Su oferta vigente con línea, importe máximo, cuotas, TNA y vigencia. Al abrirla: TNA, TEA, CFTEA, cuota estimada, vigencia y la lista de alternativas que puede elegir hoy, ninguna mayor que el importe ofrecido, con la primera marcada. | |
+| I-52 | Aceptar | Elegir una alternativa menor que la máxima, presionar «Aceptar la oferta», cancelar el aviso del navegador y después aceptarlo. | Al cancelar no cambia nada (A5). Al aceptar se abre la solicitud generada: «Aceptó la oferta: se generó la solicitud N.º …». La solicitud queda *Pendiente de verificación* con la alternativa elegida. En el panel, la solicitud de Joaquín figura con origen oferta y sin Analista. La campaña muestra el capital comprometido y la oferta *Aceptada* con su solicitud. En *Fondos*, «Reservas y compromisos» aumentó en el importe aceptado (RN-41). | |
+| I-53 | Segunda aceptación (A3) | Volver a la oferta. Si se tiene la pantalla anterior abierta en otra pestaña, enviarla de nuevo. | La oferta muestra «Aceptó esta oferta…» con el enlace a la solicitud y sin botones. El reenvío responde «Ya aceptó esta oferta: generó la solicitud N.º … (A3, RN-42).». | |
+| I-54 | Compromiso convertido en reserva | En el panel, verificar la solicitud de I-52 con toda la documentación conforme, esperar la evaluación y confirmar la alternativa elegida por el cliente (CU-79), que queda primera. | La solicitud queda *Aprobada pendiente de liquidación*. En *Fondos*, «Reservas y compromisos» **no aumenta otra vez**: el compromiso se convirtió en reserva por el neto a desembolsar (RN-41). | |
+| I-55 | Rechazar (A1) | Como Sofía, abrir su oferta y presionar «Rechazar la oferta»; aceptar el aviso. | «Rechazó la oferta. No se generó ninguna solicitud.». La oferta figura *Rechazada* en el portal y en la campaña. | |
+| I-56 | Cierre por vigencia (CU-94) | Con una pestaña de la oferta de otro cliente abierta (o con la de Joaquín antes de I-52, si se repite), adelantar el cierre con SQL y ejecutar el temporizador:<br>`UPDATE dbo.campanas SET vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) WHERE estado = 'Activa';`<br>`docker compose exec app php spark campanas:cerrar` | «Campaña … cerrada (Vigencia).». La campaña queda *Finalizada* por vencimiento de la vigencia, con el aviso de RN-43. Las ofertas sin respuesta quedan *Vencidas* y sus correos pendientes, cancelados. La alerta al Gerente informa las aceptadas. La solicitud de I-52 sigue su trámite. Enviar la aceptación desde la pestaña abierta: «La oferta perdió vigencia porque la campaña finalizó…» (A2). | |
+| I-57 | Cierre por cupo | Registrar una versión de parámetros con capital máximo igual al importe que va a aceptar el cliente (por ejemplo, $ 100.000) y ejecutar `fondos:proyectar`. Aceptar la oferta de Sofía por $ 100.000. | Se activa la campaña N.º 2. Con la aceptación el comprometido alcanza el asignado y la campaña queda *Finalizada* por capital asignado alcanzado; las demás ofertas quedan vencidas. Otra aceptación posterior responde que la campaña ya no tiene cupo o que finalizó (A2). | |
+| I-58 | Cierre por disponibilidad | Con una campaña activa (repetir la activación), registrar una versión con un umbral de $ 999.999.999 y ejecutar `fondos:proyectar`. | «campaña cerrada por disponibilidad insuficiente». La campaña queda *Finalizada* por disponibilidad insuficiente (CU-92 A1). Sin el cierre por disponibilidad marcado, la campaña continúa. | |
+| I-59 | Sin clientes elegibles (A1) | Registrar una versión con umbral $ 0 y solo la categoría *Empresa*; ejecutar `fondos:proyectar`. | «no se activó: sin clientes elegibles». El Gerente recibe la alerta con «Configurar las campañas». No se crea campaña. | |
+| I-60 | Línea suspendida (A2) | Suspender la línea ELECTRO (CU-18), restablecer la categoría *Relación de dependencia* y ejecutar `fondos:proyectar`. Reactivar la línea al terminar. | «no se activó: La línea Electrodomésticos habilitada para campañas no está activa.» y la alerta al Gerente. | |
+| I-61 | Propuestas de refinanciación en el portal (CU-43 A5) | En el panel, simular y registrar una propuesta de refinanciación para Franco Molina. Ingresar al portal como Franco y abrir *Refinanciaciones y ofertas*; abrir la propuesta. Con su número, abrir `/portal/propuestas/refinanciaciones/<id de otra propuesta>`. | La propuesta figura con su estado. El detalle muestra la deuda incluida, el capital refinanciado, el concepto no capitalizable, la tasa, el plan si se aplicara hoy y el aviso del estado (pendiente de resolución). La propuesta ajena vuelve al listado con el mensaje genérico y el registro `portal.acceso-denegado`. | |
+| I-62 | Auditoría del bloque B | Revisar `registros_auditoria`. | Registros de `parametros.campanas`, `fondos.proyectar`, `campanas.activar` (exitoso y rechazado), `campanas.consultar`, `campanas.consultar-oferta`, `portal.consultar-oferta`, `campanas.aceptar-oferta`, `campanas.rechazar-oferta`, `campanas.cerrar` con sus resultados y `portal.consultar-propuesta`. | |
+
 ## Registro
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
 | | Iván Ezequiel Thoux | de 44 (bloque A) | | |
+| | Iván Ezequiel Thoux | de 18 (bloque B) | | |
