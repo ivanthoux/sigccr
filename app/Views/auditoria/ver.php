@@ -18,7 +18,7 @@ $this->section('contenido');
         <h1>Registro de auditoría N.º <?= (int) $a['id'] ?></h1>
         <p><?= esc(A::categoria((string) $a['accion'], $a['proceso'])) ?> · <code><?= esc((string) $a['accion']) ?></code></p>
     </div>
-    <a href="<?= url_to('auditoria.consultar') . ($volver !== '' ? '?' . esc($volver, 'attr') : '') ?>" class="btn btn-outline-secondary">Volver al listado</a>
+    <a href="<?= url_to('auditoria.consultar') . ($volver !== '' ? '?' . esc($volver) : '') ?>" class="btn btn-outline-secondary">Volver al listado</a>
 </div>
 <section class="hoja p-4 mb-3" style="max-width: 56rem">
     <dl class="row mb-0">

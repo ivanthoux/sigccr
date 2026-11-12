@@ -34,7 +34,7 @@
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
-                    <thead><tr><?php foreach ($s['columnas'] as [$col, $tipo]): ?><th<?= in_array($tipo, ['importe', 'entero', 'decimal', 'porcentaje'], true) ? ' class="importe"' : '' ?>><?= esc($col) ?></th><?php endforeach ?></tr></thead>
+                    <thead><tr><?php foreach ($s['columnas'] as [$col, $tipo]): ?><th scope="col" class="<?= in_array($tipo, ['importe', 'entero', 'decimal', 'porcentaje'], true) ? 'importe' : '' ?>"><?= esc($col) ?></th><?php endforeach ?></tr></thead>
                     <tbody>
                     <?php foreach ($s['filas'] as $fila): ?>
                         <tr><?php foreach (array_values($fila) as $i => $v): $tipo = $s['columnas'][$i][1] ?? 'texto'; ?><td<?= in_array($tipo, ['importe', 'entero', 'decimal', 'porcentaje'], true) ? ' class="importe"' : '' ?>><?= esc(valor_reporte($v, $tipo)) ?></td><?php endforeach ?></tr>

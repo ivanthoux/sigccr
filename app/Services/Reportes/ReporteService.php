@@ -74,7 +74,6 @@ class ReporteService extends BaseService
     private function cartera(array $p, array $f): array
     {
         [$filtro, $b] = $this->filtroCredito($f);
-        [$ini, $fin] = $this->limites($p);
         $creditos = $this->q(
             'SELECT c.id, c.numero, c.estado, c.capital, c.cantidad_cuotas, c.fecha_liquidacion, cl.denominacion, l.nombre AS linea, ' . self::RIESGO . ' AS riesgo, '
             . "COALESCE(x.capital, 0) AS capital_pendiente, COALESCE(x.interes, 0) AS interes_pendiente, COALESCE(x.punitorio, 0) AS punitorio_pendiente, COALESCE(x.gastos, 0) AS gastos_pendiente, COALESCE(x.vencido, 0) AS capital_vencido "
@@ -169,7 +168,7 @@ class ReporteService extends BaseService
             $g = array_filter($cuotas, static fn ($q) => Indicadores::tramo((int) $q['dias']) === $k);
             $tramos[] = [$t, count($g), count(array_unique(array_column($g, 'cliente_id'))), $suma($g, 'capital_pendiente'), $suma($g, 'punitorio')];
         }
-        $agrupar = static function (array $filas, string $clave, callable $fila) use ($suma): array {
+        $agrupar = static function (array $filas, string $clave, callable $fila): array {
             $g = [];
             foreach ($filas as $x) {
                 $g[(string) $x[$clave]][] = $x;

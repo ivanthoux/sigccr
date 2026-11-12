@@ -47,7 +47,7 @@ $this->section('contenido');
                 <tbody>
                 <?php foreach ($b['filas'] as $a): ?>
                     <tr>
-                        <td class="text-nowrap"><a href="<?= site_url('admin/auditoria/' . (int) $a['id']) . '?' . esc(http_build_query(['volver' => http_build_query(['pagina' => $b['pagina']] + $consulta)]), 'attr') ?>"><?= esc(formato_fecha_hora((string) $a['fecha_hora'])) ?></a></td>
+                        <td class="text-nowrap"><a href="<?= site_url('admin/auditoria/' . (int) $a['id']) . '?' . esc(http_build_query(['volver' => http_build_query(['pagina' => $b['pagina']] + $consulta)])) ?>"><?= esc(formato_fecha_hora((string) $a['fecha_hora'])) ?></a></td>
                         <td><?= esc((string) $a['responsable']) ?></td>
                         <td class="small"><?= esc(A::categoria((string) $a['accion'], $a['proceso'])) ?></td>
                         <td class="small"><code><?= esc((string) $a['accion']) ?></code></td>
