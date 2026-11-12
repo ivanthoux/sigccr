@@ -69,7 +69,7 @@ final class VistasCampanasTest extends CIUnitTestCase
         $this->assertStringContainsString(site_url('admin/campanas/2'), $html);
         $this->assertStringContainsString('capital asignado alcanzado', $html);
 
-        $detalle = $c + [
+        $detalle = array_diff_key($c, ['ofertas' => 0]) + [
             'version_parametros' => 2, 'version_condiciones' => 1, 'disponible_proyectado' => '7500000.00', 'periodo_dias' => 30, 'fecha_proyeccion' => '2026-11-12 09:00:00.000 +00:00',
             'parametros' => P::completar([]), 'ofertas' => [self::oferta('Aceptada') + ['liquidado' => null, 'solicitud_importe' => '600000.00']],
             'resultados' => ['emitidas' => 1, 'vigentes' => 0, 'aceptadas' => 1, 'rechazadas' => 0, 'vencidas' => 0, 'solicitudes' => 1, 'capital_solicitado' => '600000.00', 'capital_colocado' => '0.00', 'tasa_aceptacion' => '100.00'],
