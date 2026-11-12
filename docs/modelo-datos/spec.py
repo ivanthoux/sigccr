@@ -39,7 +39,7 @@ ENUMS = {
     'EstadoComunicacion': ['Pendiente', 'AceptadaProveedor', 'Entregada', 'ReintentoProgramado', 'Fallida', 'Cancelada',
                            'EnRevision'],
     'EstadoMovimientoFondos': ['Programado', 'Realizado', 'Anulado'],
-    'EstadoCopia': ['EnCurso', 'Verificada', 'Fallida', 'Corrupta'],
+    'EstadoCopia': ['Solicitada', 'EnCurso', 'Verificada', 'Fallida', 'Corrupta', 'Depurada'],
     'TipoCliente': ['PersonaHumana', 'PersonaJuridica'],
     'CategoriaIngresos': ['RelacionDependencia', 'JubiladoPensionado', 'Monotributista', 'ResponsableInscripto', 'Empresa'],
     'MedioPago': ['Efectivo', 'TarjetaDebito', 'TarjetaCredito', 'Transferencia', 'PagoElectronico'],
@@ -86,7 +86,7 @@ ENUMS = {
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
     'TipoComunicacion': ['Autorizacion', 'VerificacionCorreo', 'Oferta', 'AvisoObligacion', 'Notificacion'],
     'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas'],
-    'OrigenCopia': ['Manual', 'Automatica'],
+    'OrigenCopia': ['Manual', 'Automatica', 'PreviaRestauracion'],
     # técnicas (sin clase de dominio)
     'EstadoNotificacion': ['Pendiente', 'Procesada', 'Descartada', 'Error'],
     'ServicioExterno': ['InformacionCrediticia', 'Pasarela', 'Comunicaciones'],
@@ -1299,23 +1299,32 @@ add('ofertas', 'SS-08', 'Oferta', 'Propuestas de financiación dirigidas a un cl
    idx=[('IX_ofertas_cliente', ['cliente_id', 'estado'], None, None)])
 
 # ============================================================== SS-11
-add('copias_seguridad', 'SS-11', 'CopiaSeguridad', 'Respaldos de la base de datos, cifrados y con código de verificación (RNF-13).', [
+add('copias_seguridad', 'SS-11', 'CopiaSeguridad', 'Respaldos de la base de datos y de los adjuntos, cifrados y con código de verificación (RNF-13, D-45). El panel solicita la copia y el contenedor de procesos la genera.', [
     ID(),
-    C('archivo', 'VARCHAR(260)', uq=True, d='Nombre del archivo en el volumen de copias.'),
-    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    C('archivo', 'VARCHAR(260)', uq=True, d='Nombre del archivo cifrado en el volumen de copias.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()', d='Instante de la solicitud o del inicio de la copia automática.'),
     C('tamano_bytes', 'BIGINT', null=True),
     EN('origen', 'OrigenCopia'),
-    C('hash_verificacion', 'CHAR(64)', null=True, d='SHA-256 del archivo.'),
+    C('hash_verificacion', 'CHAR(64)', null=True, d='SHA-256 del archivo cifrado.'),
     EN('estado', 'EstadoCopia', default="'EnCurso'"),
     FK('usuario_id', 'usuarios_internos', null=True, d='Administrador; nulo en la copia automática.'),
-])
+    C('descripcion', 'NVARCHAR(300)', null=True, d='Descripción ingresada por el Administrador (CU-61 paso 3).'),
+    C('responsable', 'NVARCHAR(150)', null=True, d='Nombre del Administrador o del proceso, conservado aunque se restaure una copia anterior a su alta.'),
+    C('incluye_adjuntos', B, default='0', d='La copia contiene los archivos del legajo.'),
+    C('fecha_fin', TS, null=True, d='Fin de la generación, exitosa o fallida.'),
+    C('detalle', 'NVARCHAR(1000)', null=True, d='Causa de la falla o de la corrupción.'),
+], idx=[('IX_copias_seguridad_estado', ['estado', 'fecha_generacion'], None, None)])
 
 add('restauraciones', 'SS-11', 'Restauracion', 'Restauraciones de una copia. Se registran al finalizar, en la base ya restaurada, y además en el registro técnico del servidor (RN-45).', [
     ID(),
     FK('copia_seguridad_id', 'copias_seguridad'),
     C('fecha', TS, default='SYSDATETIMEOFFSET()'),
     C('resultado', 'NVARCHAR(300)'),
-    FK('usuario_id', 'usuarios_internos'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Administrador que la pidió; nulo si su cuenta no existía en la copia restaurada.'),
+    C('responsable', 'NVARCHAR(150)', null=True, d='Nombre del Administrador que la pidió.'),
+    FK('copia_previa_id', 'copias_seguridad', null=True, d='Copia del estado anterior generada antes de restaurar (CU-63 paso 7).'),
+    C('inicio', TS, null=True, d='Inicio del proceso de restauración.'),
+    C('exitosa', B, default='1'),
 ])
 
 SEQUENCES = {'seq_solicitudes': 'INT', 'seq_cobros': 'BIGINT', 'seq_comprobantes': 'BIGINT', 'seq_ordenes': 'BIGINT', 'seq_creditos': 'INT', 'seq_campanas': 'INT', 'seq_propuestas': 'INT'}

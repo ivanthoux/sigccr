@@ -16,4 +16,5 @@ APP=/var/www/html
 */15 * * * * www-data cd $APP && php spark campanas:cerrar           >> $APP/writable/logs/cron.log 2>&1   # CU-94, iteración 4
 0 7 * * *    www-data cd $APP && php spark regimen:generar          >> $APP/writable/logs/cron.log 2>&1   # CU-105, iteración 4
 * * * * *    www-data cd $APP && php spark comunicaciones:enviar     >> $APP/writable/logs/cron.log 2>&1   # CU-95, iteración 1
-# 0 2 * * *    root     cd $APP && php spark copias:generar            >> $APP/writable/logs/cron.log 2>&1   # CU-61, iteración 4
+0 2 * * *    www-data cd $APP && php spark copias:generar            >> $APP/writable/logs/cron.log 2>&1   # CU-61 A5, iteración 4
+* * * * *    www-data cd $APP && php spark copias:procesar           >> $APP/writable/logs/cron.log 2>&1   # CU-61 y CU-63, iteración 4 (D-45)

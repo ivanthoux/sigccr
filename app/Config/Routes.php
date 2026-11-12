@@ -13,6 +13,9 @@ $routes->get('/', 'Portada::index', ['as' => 'portada']);
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');
 
+// Estado de la restauración de una copia (CU-63, D-45): público y sin base de datos
+$routes->get('mantenimiento', 'Mantenimiento::index', ['as' => 'mantenimiento']);
+
 // Panel administrativo
 $routes->group('admin', static function (RouteCollection $routes): void {
     // SS-01: acceso sin sesión (CU-01, CU-02). El límite por dirección de origen se aplica en Config\Filters (RN-62).
@@ -233,6 +236,13 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
         });
 
+        // SS-11 Copias de seguridad (CU-61 a CU-63; D-45)
+        $routes->get('copias', 'Admin\Copias::index', ['as' => 'copias.generar', 'filter' => 'permiso:copias.generar']);
+        $routes->post('copias', 'Admin\Copias::generar', ['filter' => 'permiso:copias.generar']);
+        $routes->get('copias/(:num)', 'Admin\Copias::ver/$1', ['as' => 'copias.descargar', 'filter' => 'permiso:copias.descargar']);
+        $routes->post('copias/(:num)/descargar', 'Admin\Copias::descargar/$1', ['filter' => 'permiso:copias.descargar']);
+        $routes->get('copias/(:num)/restaurar', 'Admin\Copias::confirmarRestauracion/$1', ['as' => 'copias.restaurar', 'filter' => 'permiso:copias.restaurar']);
+        $routes->post('copias/(:num)/restaurar', 'Admin\Copias::restaurar/$1', ['filter' => 'permiso:copias.restaurar']);
         // SS-09 Reportes y auditoría (CU-55 a CU-57, CU-65 a CU-71; D-44)
         $routes->get('tablero', 'Admin\Tablero::index', ['as' => 'tablero.consultar', 'filter' => 'permiso:tablero.consultar']);
         $routes->get('caja-diaria', 'Admin\CajaDiaria::index', ['as' => 'cajas.informe-diario', 'filter' => 'permiso:cajas.informe-diario']);

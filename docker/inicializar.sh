@@ -51,13 +51,15 @@ titulo "2. Configuración"
 rm -f phpunit.dist.xml   # el del appstarter; el proyecto usa phpunit.xml.dist
 APP_PASSWORD="$(leer_env database.default.password)"
 OWNER_PASSWORD="$(leer_env database.migraciones.password)"
+COPIAS_PASSWORD="$(leer_env database.copias.password)"
 CLAVE_CIFRADO="$(leer_env encryption.key)"
 error=0
 [[ -n "${MSSQL_SA_PASSWORD:-}" ]] || { echo "MSSQL_SA_PASSWORD no está definida: revisar .env.docker" | tee -a "$LOG"; error=1; }
 [[ -n "$APP_PASSWORD" ]]          || { echo "Falta database.default.password en .env" | tee -a "$LOG"; error=1; }
 [[ -n "$OWNER_PASSWORD" ]]        || { echo "Falta database.migraciones.password en .env" | tee -a "$LOG"; error=1; }
+[[ -n "$COPIAS_PASSWORD" ]]       || { echo "Falta database.copias.password en .env (ver env.sigccr.example, D-45)" | tee -a "$LOG"; error=1; }
 [[ "$APP_PASSWORD" != "$OWNER_PASSWORD" ]] || { echo "Las contraseñas de default y migraciones deben ser distintas" | tee -a "$LOG"; error=1; }
-case "$APP_PASSWORD$OWNER_PASSWORD" in *"'"*) echo "Las contraseñas no pueden contener comillas simples" | tee -a "$LOG"; error=1 ;; esac
+case "$APP_PASSWORD$OWNER_PASSWORD$COPIAS_PASSWORD" in *"'"*) echo "Las contraseñas no pueden contener comillas simples" | tee -a "$LOG"; error=1 ;; esac
 if [[ -z "$CLAVE_CIFRADO" ]]; then
     php spark key:generate --force >> "$LOG" 2>&1 && echo "Se generó encryption.key en .env" | tee -a "$LOG"
 fi
@@ -79,7 +81,7 @@ fi
 
 titulo "4. Base de datos e inicios de sesión"
 paso "Base e inicios de sesión" si sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -b -i docker/db/crear_base.sql \
-    -v OWNER_PASSWORD="$OWNER_PASSWORD" APP_PASSWORD="$APP_PASSWORD"
+    -v OWNER_PASSWORD="$OWNER_PASSWORD" APP_PASSWORD="$APP_PASSWORD" COPIAS_PASSWORD="$COPIAS_PASSWORD"
 
 titulo "5. Esquema (migraciones)"
 # Con el propietario del esquema (SIGCCR_DB_GRUPO, ver app/Config/Database.php)

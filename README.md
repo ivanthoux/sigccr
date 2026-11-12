@@ -35,7 +35,8 @@ docker compose build
 
 # 3. Estructura de CodeIgniter 4, dependencias y .env
 docker compose run --rm --no-deps app bash docker/bootstrap.sh
-#    editar .env: database.default.password (sigccr_app) y database.migraciones.password (sigccr_owner)
+#    editar .env: database.default.password (sigccr_app), database.migraciones.password (sigccr_owner)
+#    y database.copias.password (sigccr_copias, copias de seguridad)
 
 # 4. Levantar los servicios
 docker compose up -d
@@ -59,6 +60,8 @@ curl -k https://localhost/estado
 ```
 
 Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCCR_DB_GRUPO=migraciones`): CodeIgniter guarda el historial de migraciones con el grupo por defecto y `sigccr_app` no tiene permiso para crear tablas.
+
+**Copias de seguridad (CU-61 a CU-63, D-45):** las genera y restaura el contenedor `scheduler` con el inicio de sesión `sigccr_copias` (BACKUP en la base y `dbcreator`), que crea `inicializar.sh`. El panel solo las solicita y las descarga, porque monta el volumen `backups` de solo lectura. La copia automática corre a las 02:00 (`copias:generar`) y las pedidas desde el panel, cada minuto (`copias:procesar`). Las copias se cifran con una clave derivada de `encryption.key`: **sin esa clave no se pueden descifrar**, así que hay que resguardarla en un lugar seguro, separada de las copias que se llevan fuera del servidor. Una copia descargada se descifra con `php spark copias:descifrar <copia.sccr> <destino.zip>`.
 
 **Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor. Para ver el último con su enlace: `docker compose exec app php spark sigccr:correos` (o `sigccr:correos 5` para los cinco últimos).
 

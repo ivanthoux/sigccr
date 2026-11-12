@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Commands;
 
+use App\Libraries\Copias\EstadoRestauracion;
 use App\Services\Comunes\AlertaService;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
@@ -43,6 +44,12 @@ abstract class BaseProcesoCommand extends BaseCommand
 
     public function run(array $params): void
     {
+        // CU-63 paso 8: durante una restauración los procesos programados no se ejecutan (D-45)
+        if (EstadoRestauracion::predeterminado()->activa()) {
+            CLI::write("{$this->name}: hay una restauración de copia en curso; se omite.", 'yellow');
+
+            return;
+        }
         $this->db = Database::connect();
         $bloqueo = $this->db->query(
             "DECLARE @r INT; EXEC @r = sp_getapplock @Resource = ?, @LockMode = 'Exclusive', @LockOwner = 'Session', @LockTimeout = 0; SELECT @r AS r;",

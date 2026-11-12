@@ -595,3 +595,55 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 8. **Régimen informativo (CU-105).** El temporizador `regimen:generar` corre todos los días a las 7 y, desde el primer día hábil del mes, genera el mes anterior una sola vez (A1). Si falla, el período queda sin archivo y se reintenta al día siguiente (A3). Los deudores son los clientes con créditos Activos o En mora liquidados hasta el cierre del mes. Sus días de atraso son los de la cuota impaga más antigua vencida hasta el cierre, y la situación sale de RN-84. Se usa el estado de las cuotas al generar, de modo que un pago registrado entre el cierre y la generación reduce el atraso informado. El archivo tiene un formato propio separado por punto y coma: una cabecera y una línea por deudor con CUIT/CUIL, denominación, situación, saldo, días de atraso y cantidad de créditos. Se guarda con su SHA-256. La adaptación al diseño de registro vigente de la Central de Deudores queda fuera del alcance. El Gerente puede generar un mes cerrado o rectificarlo con un motivo: se agrega una versión y la anterior queda *Rectificado*. Se agrega el permiso `regimen.consultar` (CU-105) al Gerente.
 
 **Consecuencias.** Migración 28 (`regimenes_informativos` y `situaciones_deudor`) y `spec.py`. Componentes nuevos: `ReporteService`, `AuditoriaConsultaService`, `RegimenService`, las bibliotecas `Periodo`, `Indicadores`, `Xlsx`, `Exportacion` y `ReglasRegimen`, el comando `regimen:generar` (habilitado en el planificador), los controladores `Admin\Tablero`, `Admin\Reportes`, `Admin\CajaDiaria`, `Admin\Auditoria` y `Admin\Regimen`, y el helper `valor_reporte()`. La matriz 3.6.2 del documento suma CU-105 al Gerente; hay que ejecutar `composer semillas` para actualizar los permisos. Pruebas `tests/unit/Reportes/ReportesTest.php` y `tests/rutas/VistasReportesTest.php`.
+
+## D-45 · Copias de seguridad y restauración: ejecución en el contenedor de procesos, cifrado propio y catálogo fuera de la base (SS-11; CU-61 a CU-63; RN-45, RNF-10, RNF-13, RNF-16)
+
+**Contexto.** SQL Server Express no tiene el Agente SQL Server ni el cifrado de copias. El volumen de copias lo comparten el contenedor de la base y el de procesos. El usuario de la aplicación (`sigccr_app`) no tiene permiso para hacer copias ni restaurar, y no conviene dárselo a PHP-FPM. Además, una restauración reemplaza la base que registra las copias, la auditoría y el propio pedido de restauración.
+
+**Decisión.**
+1. **Quién ejecuta.**
+   - El panel solicita la copia (estado *Solicitada*) o la restauración. El comando `copias:procesar` del contenedor de procesos la ejecuta en el minuto siguiente; la copia automática diaria la ejecuta `copias:generar` a las 02:00 (CU-61 A5).
+   - Ambos comandos usan el inicio de sesión de mantenimiento `sigccr_copias`, que crea `inicializar.sh` con la contraseña `database.copias.password`. Tiene `db_backupoperator` en la base y `dbcreator` en el servidor, y se conecta a `master`.
+   - El panel monta el volumen de solo lectura, solo para la descarga (CU-62).
+   - El directorio de copias pertenece a `mssql` y al grupo `www-data`, con *setgid*; lo prepara `entrypoint.sh`.
+   - Un bloqueo de aplicación impide dos copias o restauraciones a la vez (A1).
+2. **Generación (CU-61).**
+   - Se comprueba que el destino esté disponible y tenga espacio libre: el doble de los datos y los adjuntos, más un margen (A2).
+   - La base se copia con `BACKUP … WITH CHECKSUM, COPY_ONLY` y se verifica con `RESTORE VERIFYONLY`.
+   - La copia se empaqueta en un zip sin compresión junto con los archivos del legajo, si `sigccr.copiasConAdjuntos` lo indica.
+   - El paquete se cifra con AES-256-GCM por bloques de 1 MiB, autenticando el número de bloque y el indicador de último bloque. La clave se deriva de `encryption.key` con HKDF. Se registra el SHA-256 del archivo cifrado.
+   - Junto al archivo se guarda un manifiesto con sus datos.
+   - Si algo falla, la copia queda *Fallida* con su causa (A3). Las fallas de la copia automática y de la copia previa alertan al Administrador (A5, RNF-16).
+3. **Conservación.** Después de la copia automática se depuran las copias verificadas con más de 30 días, salvo la más reciente; quedan *Depuradas*. La copia que se mantiene fuera del servidor es la que descarga el Administrador.
+4. **Descarga (CU-62).** Antes de entregar el archivo se recalcula su SHA-256. Si no coincide, la copia queda *Corrupta* y no se descarga (A1). La pantalla informa el código para comprobarlo después de la descarga (A3). El comando `copias:descifrar` permite restaurar la copia fuera del sistema, por ejemplo en la prueba mensual de R2.
+5. **Restauración (CU-63).**
+   - La confirmación explícita consiste en escribir RESTAURAR (A2). No se restaura si hay copias o procesos programados en curso.
+   - El pedido se guarda en `writable/copias/restauracion.json`, fuera de la base. Desde ese momento el sistema queda en modo mantenimiento: un filtro global responde 503 con la página del estado, que se actualiza sola, y los procesos programados se omiten.
+   - El proceso:
+     - verifica el SHA-256 de la copia (A1);
+     - cuenta las operaciones posteriores a la copia;
+     - genera la copia previa del estado actual. Si falla, solo continúa si el Administrador marcó «restaurar sin copia previa»; si no, termina y se lo avisa (A3);
+     - cierra las sesiones y pone la base *OFFLINE*;
+     - restaura con `REPLACE, CHECKSUM` y verifica con `DBCC CHECKDB`;
+     - aplica las migraciones pendientes, por si la copia es anterior a alguna, y asegura el usuario de las copias.
+   - Si la restauración falla, intenta volver al estado anterior con la copia previa (A4).
+   - El catálogo de copias se rehace con los manifiestos, porque la base restaurada no tiene las copias posteriores a ella y tiene la propia en curso.
+   - La restauración queda registrada en la tabla `restauraciones` y en la auditoría de la base resultante, y también en `writable/logs/restauraciones.log`, fuera de la base (RN-45). El Administrador recibe una alerta con las operaciones que hay que reconstruir.
+   - Como la cuenta de quien pidió la restauración puede no existir en la copia restaurada, se conserva su nombre.
+6. **Riesgo aceptado.** Las copias no se pueden descifrar sin `encryption.key`, que debe resguardarse fuera del servidor y separada de las copias.
+
+**Consecuencias.**
+- Migración 29 y `spec.py`: estados *Solicitada* y *Depurada*, origen *PreviaRestauracion*, descripción, responsable, adjuntos, fin y detalle de la copia; en la restauración, la copia previa, el responsable, el inicio y el resultado.
+- Componentes nuevos:
+  - `CifradoCopia`, `PaqueteCopia`, `PoliticaCopias` y `EstadoRestauracion`;
+  - `CopiaService` (panel) y `MotorCopias` (procesos);
+  - los comandos `copias:generar`, `copias:procesar` y `copias:descifrar`;
+  - el filtro `RestauracionFilter` y la página `/mantenimiento`;
+  - el controlador `Admin\Copias`.
+- Cambios:
+  - `BaseProcesoCommand` omite los procesos durante una restauración;
+  - el grupo `copias` en `Config\Database` y la configuración `directorioCopias`, `copiasConAdjuntos` y `diasConservacionCopias`;
+  - el volumen `backups` en el contenedor app, de solo lectura;
+  - el planificador, `crear_base.sql`, `inicializar.sh`, `env.sigccr.example` y el README.
+- En una instalación existente hay que agregar `database.copias.password` al `.env` y volver a ejecutar `docker/inicializar.sh`.
+- Pruebas: `tests/unit/Copias/CopiasTest.php` y `tests/rutas/VistasCopiasTest.php`.

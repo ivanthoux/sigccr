@@ -30,6 +30,7 @@ services:
     volumes:
       - ./:/var/www/html
       - storage:/var/www/html/writable
+      - backups:/var/opt/sigccr/backups:ro   # descarga de copias (CU-62); las genera y restaura el scheduler (D-45)
     env_file: .env.docker               # MSSQL_SA_PASSWORD, solo para crear la base con sqlcmd
     environment:
       TZ: UTC                           # instantes en UTC; la zona de negocio la aplica la aplicación (3.5.1)
@@ -46,7 +47,7 @@ services:
     volumes:
       - ./:/var/www/html
       - storage:/var/www/html/writable
-      - backups:/var/opt/sigccr/backups
+      - backups:/var/opt/sigccr/backups     # copias de seguridad: copias:generar y copias:procesar (D-45)
     environment:
       TZ: America/Argentina/Buenos_Aires   # cron dispara en hora local de negocio (RNF-10 f)
     networks: [sigccr_net]
