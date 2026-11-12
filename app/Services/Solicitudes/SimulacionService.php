@@ -95,7 +95,7 @@ class SimulacionService extends BaseService
      *
      * @return int identificador de la simulación
      */
-    public function simular(int $clienteId, int $lineaId, string $importe, string $cuotas, int $usuarioId): int
+    public function simular(int $clienteId, int $lineaId, string $importe, string $cuotas, ?int $usuarioId): int
     {
         return $this->transaccion(function () use ($clienteId, $lineaId, $importe, $cuotas, $usuarioId): int {
             // El bloqueo de la línea serializa la simulación con una suspensión concurrente (A3, RN-16)
@@ -198,6 +198,16 @@ class SimulacionService extends BaseService
      *
      * @return list<array<string, mixed>>
      */
+    /**
+     * Versión de condiciones vigente de una línea, con sus categorías admitidas, o null (CU-93 y CU-52).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function versionVigente(int $lineaId): ?array
+    {
+        return $this->versionesVigentes($lineaId)[0] ?? null;
+    }
+
     private function versionesVigentes(?int $lineaId = null): array
     {
         $filas = $this->db->query(

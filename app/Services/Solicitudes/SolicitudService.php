@@ -193,7 +193,7 @@ class SolicitudService extends BaseService
      * @param list<array{codigo: string, nombre: string, temporal: string, tamano: int, reemplaza?: ?int}> $archivos
      * @return array{id: int, numero: int}
      */
-    public function registrar(int $simulacionId, array $archivos, int $usuarioId): array
+    public function registrar(int $simulacionId, array $archivos, ?int $usuarioId, string $origen = 'Independiente'): array
     {
         $legajo = new LegajoService($this->db);
         $errores = [];
@@ -203,7 +203,7 @@ class SolicitudService extends BaseService
         }
         $movidos = [];
         try {
-            return $this->transaccion(function () use ($simulacionId, $documentos, $usuarioId, $legajo, &$movidos): array {
+            return $this->transaccion(function () use ($simulacionId, $documentos, $usuarioId, $origen, $legajo, &$movidos): array {
                 $sim = $this->db->query(
                     'SELECT s.id, s.cliente_id, s.version_condiciones_id, s.importe, s.cantidad_cuotas, v.linea_credito_id, '
                     . "CASE WHEN s.estado = 'Vigente' AND s.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END AS vigente "
@@ -252,7 +252,9 @@ class SolicitudService extends BaseService
                 $exigidos = $this->exigidos((int) $sim['version_condiciones_id'], (string) $datos['categoria_ingresos']);
                 $presentes = array_merge(array_keys($legajo->vigentesPorTipo($clienteId)), array_column($documentos, 'codigo'));
                 $faltantes = RequisitosDocumentales::faltantes($exigidos, $presentes);
-                if ($faltantes !== []) {
+                // CU-52 paso 10: la solicitud originada en una oferta se registra igual y el cliente presenta la
+                // documentación faltante en la verificación (CU-23)
+                if ($faltantes !== [] && $origen !== 'Oferta') {
                     $errores = [];
                     foreach ($faltantes as $f) {
                         $errores['doc_' . $f] = 'La línea exige este documento y no está en el legajo: adjúntelo (RN-11).';
@@ -265,15 +267,15 @@ class SolicitudService extends BaseService
                 $ahora = $this->ahoraUtc();
                 $this->db->table('solicitudes_credito')->insert([
                     'cliente_id' => $clienteId, 'version_condiciones_id' => (int) $sim['version_condiciones_id'], 'simulacion_id' => $simulacionId,
-                    'origen' => 'Independiente', 'fecha_registro' => $ahora, 'importe' => $sim['importe'], 'cantidad_cuotas' => (int) $sim['cantidad_cuotas'],
+                    'origen' => $origen, 'fecha_registro' => $ahora, 'importe' => $sim['importe'], 'cantidad_cuotas' => (int) $sim['cantidad_cuotas'],
                     'estado' => 'PendienteVerificacion', 'ultimo_movimiento' => $ahora, 'usuario_id' => $usuarioId,
                 ]);
                 $id = (int) $this->db->insertID();
                 $numero = (int) $this->db->table('solicitudes_credito')->select('numero')->where('id', $id)->get()->getRow()->numero;
-                $this->registrarTransicion($id, null, 'PendienteVerificacion', $usuarioId, null);
+                $this->registrarTransicion($id, null, 'PendienteVerificacion', $usuarioId, $origen === 'Oferta' ? 'Aceptación de una oferta de campaña desde el portal (CU-52)' : null, $usuarioId === null ? 'portal' : null);
                 $this->nuevaRevision($id, (int) $sim['version_condiciones_id']);
                 (new AuditoriaService($this->db))->registrar('solicitudes.registrar', 'solicitudes_credito', $id, 'Exitoso', null, [
-                    'numero' => $numero, 'cliente' => $clienteId, 'linea' => $lineaId, 'simulacion' => $simulacionId,
+                    'numero' => $numero, 'cliente' => $clienteId, 'linea' => $lineaId, 'simulacion' => $simulacionId, 'origen' => $origen,
                     'importe' => $sim['importe'], 'cuotas' => (int) $sim['cantidad_cuotas'], 'documentos' => count($documentos),
                 ]);
 

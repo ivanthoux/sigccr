@@ -9,6 +9,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorParametrosEstructuracion as E;
+use App\Libraries\Validacion\ValidadorParametrosCampanas as C;
 use App\Libraries\Validacion\ValidadorParametrosMorosidad as M;
 use App\Libraries\Validacion\ValidadorParametrosEvaluacion as V;
 use App\Services\Comunes\ParametroService;
@@ -149,5 +150,59 @@ class Parametros extends BaseController
 
         return redirect()->route('parametros.morosidad')->with('exito', "Se registró la versión {$r['numero']} de los parámetros de morosidad, vigente desde el " . formato_fecha_hora($r['vigente_desde'])
             . '. La nueva tasa punitoria rige para todos los créditos desde esa fecha, sin modificar los días ya calculados; la tolerancia nueva se asigna solo a los créditos que se liquiden desde entonces (RN-35).');
+    }
+
+    // ── CU-51 Configurar Parámetros de Campañas Crediticias ────────────────────
+
+    /** Pasos 1 y 2 (A2). */
+    public function campanas(): string
+    {
+        $servicio = new ParametroService();
+        $vigente = $servicio->vigente('Campanas');
+
+        return view('parametros/campanas', [
+            'titulo' => 'Parámetros de campañas crediticias',
+            'vigente' => $vigente,
+            'f' => C::aFormulario($vigente['valores']),
+            'lineas' => $this->lineasParaCampanas(),
+            'historial' => $servicio->historial('Campanas'),
+        ]);
+    }
+
+    /** Pasos 3 a 8 (A1, A3). */
+    public function guardarCampanas(): RedirectResponse
+    {
+        $lineas = $this->lineasParaCampanas();
+        $p = C::normalizar((array) $this->request->getPost());
+        $errores = C::validar($p, array_map('intval', array_column($lineas, 'id')));
+        $fecha = Campos::fecha($this->request->getPost('fecha_vigencia'));
+        if ($fecha === null) {
+            $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
+        }
+        $motivo = Campos::texto($this->request->getPost('motivo'));
+        if (($m = Campos::motivo($motivo)) !== null) {
+            $errores['motivo'] = $m;
+        }
+        try {
+            if ($errores !== []) {
+                throw new ValidacionException($errores, 'RN-40');
+            }
+            $r = (new ParametroService())->registrarVersion('Campanas', $p, (string) $fecha, $motivo, (int) session('cuenta')['id']);
+        } catch (ReglaNegocioException $e) {
+            return $this->volverConError($e);
+        }
+
+        return redirect()->route('parametros.campanas')->with('exito', "Se registró la versión {$r['numero']} de los parámetros de campañas, vigente desde el " . formato_fecha_hora($r['vigente_desde'])
+            . '. Las campañas activas conservan los parámetros con los que se generaron; las nuevas usarán esta versión (RN-40).');
+    }
+
+    /**
+     * CU-51 A2: líneas activas que pueden habilitarse para las campañas.
+     *
+     * @return list<array{id: int|string, nombre: string, codigo: string}>
+     */
+    private function lineasParaCampanas(): array
+    {
+        return db_connect()->table('lineas_credito')->select('id, nombre, codigo')->where('estado', 'Activa')->orderBy('nombre')->get()->getResultArray();
     }
 }

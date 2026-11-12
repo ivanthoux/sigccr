@@ -31,6 +31,10 @@ class ComunicacionService extends BaseService
         'verificacion_correo' => 'SIG-CCR: confirmación de su correo electrónico',
         'verificacion_correo_cliente' => 'SIG-CCR: confirme su correo para usar el portal',
         'activacion_acceso' => 'SIG-CCR: activación de su acceso al portal',
+        'cambio_correo' => 'SIG-CCR: confirme el cambio de su correo electrónico',
+        'verificacion_correo_nuevo' => 'SIG-CCR: verifique su correo electrónico nuevo',
+        'verificacion_pre_registro' => 'SIG-CCR: verifique su correo para completar el pre-registro',
+        'oferta_crediticia' => 'SIG-CCR: tiene una oferta de crédito preaprobada',
     ];
 
     private ?ComunicacionesInterface $adaptador;
