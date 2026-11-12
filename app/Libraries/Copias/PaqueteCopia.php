@@ -5,23 +5,33 @@ declare(strict_types=1);
 namespace App\Libraries\Copias;
 
 use App\Exceptions\CopiaCorruptaException;
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
 use ZipArchive;
 
 /**
  * Contenido de una copia antes de cifrarla (CU-61 paso 5): la copia de la base (sigccr.bak) y, si está configurado,
  * los archivos del legajo bajo adjuntos/. Se empaqueta en un zip sin compresión, porque el cifrado lo hace ilegible.
+ *
+ * Los adjuntos se identifican por las rutas que registra la base (documentos_legajo.ruta_archivo, relativas a
+ * writable/), nunca por los nombres guardados en el paquete: al restaurar se escriben solo los que la base restaurada
+ * referencia, con rutas validadas, lo que impide escribir fuera de la carpeta del legajo («zip slip»).
  */
 final class PaqueteCopia
 {
     public const BASE = 'sigccr.bak';
     private const ADJUNTOS = 'adjuntos/';
 
-    /** @return int cantidad de adjuntos incluidos */
-    public static function armar(string $bak, ?string $dirAdjuntos, string $destino): int
+    /** Ruta de un archivo del legajo: legajos/<cliente>/<32 hexadecimales>.<extensión> (LegajoService, ArchivoLegajo). */
+    public static function rutaValida(string $ruta): bool
+    {
+        return preg_match('#^legajos/\d{1,10}/[0-9a-f]{32}\.[a-z0-9]{2,5}$#', $ruta) === 1;
+    }
+
+    /**
+     * @param list<string> $rutas rutas de los adjuntos relativas a $raiz
+     * @return int cantidad de adjuntos incluidos
+     */
+    public static function armar(string $bak, ?string $raiz, array $rutas, string $destino): int
     {
         $zip = new ZipArchive();
         if ($zip->open($destino, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -30,14 +40,12 @@ final class PaqueteCopia
         $zip->addFile($bak, self::BASE);
         $zip->setCompressionName(self::BASE, ZipArchive::CM_STORE);
         $n = 0;
-        if ($dirAdjuntos !== null && is_dir($dirAdjuntos)) {
-            $base = rtrim($dirAdjuntos, '/') . '/';
-            $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($base, FilesystemIterator::SKIP_DOTS));
-            foreach ($it as $f) {
-                if ($f->isFile()) {
-                    $nombre = self::ADJUNTOS . substr($f->getPathname(), strlen($base));
-                    $zip->addFile($f->getPathname(), $nombre);
-                    $zip->setCompressionName($nombre, ZipArchive::CM_STORE);
+        if ($raiz !== null) {
+            foreach (array_unique($rutas) as $ruta) {
+                $archivo = rtrim($raiz, '/') . '/' . $ruta;
+                if (self::rutaValida($ruta) && is_file($archivo)) {
+                    $zip->addFile($archivo, self::ADJUNTOS . $ruta);
+                    $zip->setCompressionName(self::ADJUNTOS . $ruta, ZipArchive::CM_STORE);
                     $n++;
                 }
             }
@@ -49,18 +57,10 @@ final class PaqueteCopia
         return $n;
     }
 
-    /**
-     * Extrae la base en $destinoBak y, si se indica la carpeta, agrega o reemplaza los adjuntos (no borra los
-     * posteriores a la copia).
-     *
-     * @return int cantidad de adjuntos restaurados
-     */
-    public static function extraer(string $paquete, string $destinoBak, ?string $dirAdjuntos): int
+    /** Extrae la copia de la base en $destinoBak. */
+    public static function extraerBase(string $paquete, string $destinoBak): void
     {
-        $zip = new ZipArchive();
-        if ($zip->open($paquete) !== true || $zip->locateName(self::BASE) === false) {
-            throw new CopiaCorruptaException('La copia no contiene la base de datos.');
-        }
+        $zip = self::abrir($paquete);
         $in = $zip->getStream(self::BASE);
         $out = fopen($destinoBak, 'wb');
         if ($in === false || $out === false) {
@@ -69,55 +69,50 @@ final class PaqueteCopia
         stream_copy_to_stream($in, $out);
         fclose($in);
         fclose($out);
+        $zip->close();
+    }
+
+    /**
+     * Restaura los adjuntos que referencia la base restaurada: agrega o reemplaza, sin borrar los posteriores.
+     *
+     * @param list<string> $rutas rutas registradas en la base, relativas a $raiz
+     * @return int cantidad de adjuntos restaurados
+     */
+    public static function extraerAdjuntos(string $paquete, string $raiz, array $rutas): int
+    {
+        $zip = self::abrir($paquete);
         $n = 0;
-        if ($dirAdjuntos !== null) {
-            if (!is_dir($dirAdjuntos)) {
-                mkdir($dirAdjuntos, 0750, true);
+        foreach (array_unique($rutas) as $ruta) {
+            if (!self::rutaValida($ruta) || $zip->locateName(self::ADJUNTOS . $ruta) === false) {
+                continue;
             }
-            $base = (string) realpath($dirAdjuntos);
-            for ($i = 0; $i < $zip->numFiles; $i++) {
-                $nombre = (string) $zip->getNameIndex($i);
-                if (!str_starts_with($nombre, self::ADJUNTOS) || str_ends_with($nombre, '/')) {
-                    continue;
-                }
-                $ruta = self::rutaSegura($base, substr($nombre, strlen(self::ADJUNTOS)));
-                $s = $zip->getStream($nombre);
-                $d = fopen($ruta, 'wb');
-                if ($s === false || $d === false) {
-                    throw new RuntimeException('No se pudo restaurar el adjunto ' . basename($ruta) . '.');
-                }
-                stream_copy_to_stream($s, $d);
-                fclose($s);
-                fclose($d);
-                $n++;
+            [, $cliente, $nombre] = explode('/', $ruta);
+            $carpeta = rtrim($raiz, '/') . '/legajos/' . (int) $cliente;
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0750, true);
             }
+            $s = $zip->getStream(self::ADJUNTOS . $ruta);
+            $d = fopen($carpeta . '/' . basename($nombre), 'wb');
+            if ($s === false || $d === false) {
+                throw new RuntimeException('No se pudo restaurar el adjunto ' . basename($nombre) . '.');
+            }
+            stream_copy_to_stream($s, $d);
+            fclose($s);
+            fclose($d);
+            $n++;
         }
         $zip->close();
 
         return $n;
     }
 
-    /**
-     * Ruta de destino de un adjunto dentro de la carpeta (protección contra «zip slip»): solo admite nombres simples
-     * separados por barras y comprueba que la carpeta resuelta quede dentro de la base.
-     */
-    private static function rutaSegura(string $base, string $relativo): string
+    private static function abrir(string $paquete): ZipArchive
     {
-        $partes = explode('/', $relativo);
-        foreach ($partes as $p) {
-            if ($p === '' || $p === '.' || $p === '..' || preg_match('/^[\w.\- ]+$/u', $p) !== 1) {
-                throw new CopiaCorruptaException('La copia contiene una ruta de adjunto inválida.');
-            }
-        }
-        $carpeta = $base . (count($partes) > 1 ? '/' . implode('/', array_slice($partes, 0, -1)) : '');
-        if (!is_dir($carpeta)) {
-            mkdir($carpeta, 0750, true);
-        }
-        $real = realpath($carpeta);
-        if ($real === false || ($real !== $base && !str_starts_with($real, $base . DIRECTORY_SEPARATOR))) {
-            throw new CopiaCorruptaException('La copia contiene una ruta de adjunto inválida.');
+        $zip = new ZipArchive();
+        if ($zip->open($paquete) !== true || $zip->locateName(self::BASE) === false) {
+            throw new CopiaCorruptaException('La copia no contiene la base de datos.');
         }
 
-        return $real . DIRECTORY_SEPARATOR . end($partes);
+        return $zip;
     }
 }

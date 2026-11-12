@@ -78,7 +78,7 @@ class CopiaService extends BaseService
         if (!$d['disponible']) {
             throw new ReglaNegocioException("El destino de las copias ({$d['ruta']}) no está disponible: verifique el volumen de copias antes de reintentar (A2).");
         }
-        $requerido = PoliticaCopias::espacioRequerido($this->tamanoBase(), $d['adjuntos'] ? MotorCopias::tamanoDirectorio(rtrim(WRITEPATH, '/') . '/uploads') : 0);
+        $requerido = PoliticaCopias::espacioRequerido($this->tamanoBase(), $d['adjuntos'] ? MotorCopias::tamanoDirectorio(rtrim(WRITEPATH, '/') . '/legajos') : 0);
         if ($d['libre'] !== null && $d['libre'] < $requerido) {
             throw new ReglaNegocioException('El destino no tiene espacio suficiente: se necesitan ' . PoliticaCopias::tamano($requerido) . ' y hay ' . PoliticaCopias::tamano($d['libre']) . ' libres. Libere espacio o verifique el destino antes de reintentar (A2).');
         }

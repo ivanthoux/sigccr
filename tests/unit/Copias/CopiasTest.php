@@ -99,36 +99,40 @@ final class CopiasTest extends TestCase
 
     public function testPaqueteConAdjuntos(): void
     {
-        mkdir("{$this->dir}/uploads/legajos/5", 0777, true);
-        file_put_contents("{$this->dir}/uploads/legajos/5/dni.pdf", 'PDF');
+        $doc = 'legajos/5/' . str_repeat('ab', 16) . '.pdf';
+        mkdir("{$this->dir}/origen/legajos/5", 0777, true);
+        file_put_contents("{$this->dir}/origen/{$doc}", 'PDF');
         file_put_contents("{$this->dir}/base.bak", 'BACKUP');
-        $this->assertSame(1, PaqueteCopia::armar("{$this->dir}/base.bak", "{$this->dir}/uploads", "{$this->dir}/p.zip"));
-        mkdir("{$this->dir}/restaurados");
-        $this->assertSame(1, PaqueteCopia::extraer("{$this->dir}/p.zip", "{$this->dir}/r.bak", "{$this->dir}/restaurados"));
+        // Solo se incluyen las rutas válidas que existen
+        $this->assertSame(1, PaqueteCopia::armar("{$this->dir}/base.bak", "{$this->dir}/origen", [$doc, $doc, 'legajos/5/no-existe.pdf', '../../etc/passwd'], "{$this->dir}/p.zip"));
+        PaqueteCopia::extraerBase("{$this->dir}/p.zip", "{$this->dir}/r.bak");
         $this->assertSame('BACKUP', file_get_contents("{$this->dir}/r.bak"));
-        $this->assertSame('PDF', file_get_contents("{$this->dir}/restaurados/legajos/5/dni.pdf"));
-        $this->assertSame(0, PaqueteCopia::armar("{$this->dir}/base.bak", null, "{$this->dir}/q.zip"));
-        $this->assertSame(0, PaqueteCopia::extraer("{$this->dir}/p.zip", "{$this->dir}/s.bak", null));
+        mkdir("{$this->dir}/destino");
+        $this->assertSame(1, PaqueteCopia::extraerAdjuntos("{$this->dir}/p.zip", "{$this->dir}/destino", [$doc, 'legajos/9/' . str_repeat('cd', 16) . '.pdf']));
+        $this->assertSame('PDF', file_get_contents("{$this->dir}/destino/{$doc}"));
+        $this->assertSame(0, PaqueteCopia::armar("{$this->dir}/base.bak", null, [$doc], "{$this->dir}/q.zip"));
+        $this->assertSame(0, PaqueteCopia::extraerAdjuntos("{$this->dir}/q.zip", "{$this->dir}/destino", [$doc]));
     }
 
     public function testPaqueteInvalido(): void
     {
+        // Los nombres del paquete nunca se usan como ruta: solo las rutas que registra la base restaurada
         $zip = new \ZipArchive();
         $zip->open("{$this->dir}/m.zip", \ZipArchive::CREATE);
         $zip->addFromString(PaqueteCopia::BASE, 'B');
         $zip->addFromString('adjuntos/../../fuera.txt', 'X');
         $zip->close();
-        try {
-            PaqueteCopia::extraer("{$this->dir}/m.zip", "{$this->dir}/m.bak", "{$this->dir}/adj");
-            $this->fail('Debía rechazar una ruta fuera de la carpeta de adjuntos.');
-        } catch (CopiaCorruptaException) {
-            $this->assertFalse(is_file(dirname($this->dir) . '/fuera.txt'));
-        }
+        mkdir("{$this->dir}/adj");
+        $this->assertSame(0, PaqueteCopia::extraerAdjuntos("{$this->dir}/m.zip", "{$this->dir}/adj", ['../../fuera.txt', 'adjuntos/../../fuera.txt']));
+        $this->assertFalse(is_file(dirname($this->dir) . '/fuera.txt'));
+        $this->assertTrue(PaqueteCopia::rutaValida('legajos/12/' . str_repeat('0f', 16) . '.jpeg'));
+        $this->assertFalse(PaqueteCopia::rutaValida('legajos/12/../x.pdf'));
+        $this->assertFalse(PaqueteCopia::rutaValida('/etc/legajos/1/' . str_repeat('0f', 16) . '.pdf'));
         $zip->open("{$this->dir}/n.zip", \ZipArchive::CREATE);
         $zip->addFromString('otra.txt', 'X');
         $zip->close();
         $this->expectException(CopiaCorruptaException::class);
-        PaqueteCopia::extraer("{$this->dir}/n.zip", "{$this->dir}/n.bak", null);
+        PaqueteCopia::extraerBase("{$this->dir}/n.zip", "{$this->dir}/n.bak");
     }
 
     public function testPoliticaDeCopias(): void

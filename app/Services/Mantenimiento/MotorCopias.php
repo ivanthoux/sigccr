@@ -84,8 +84,8 @@ class MotorCopias
         try {
             $this->app()->table('copias_seguridad')->where('id', $id)->update(['estado' => 'EnCurso']);
             $this->prepararDirectorio();
-            $adjuntos = config('Sigccr')->copiasConAdjuntos ? rtrim(WRITEPATH, '/') . '/uploads' : null;
-            $requerido = PoliticaCopias::espacioRequerido($this->tamanoBase(), $adjuntos === null ? 0 : self::tamanoDirectorio($adjuntos));
+            $adjuntos = config('Sigccr')->copiasConAdjuntos ? rtrim(WRITEPATH, '/') : null;
+            $requerido = PoliticaCopias::espacioRequerido($this->tamanoBase(), $adjuntos === null ? 0 : self::tamanoDirectorio($adjuntos . '/legajos'));
             $libre = @disk_free_space($this->dir);
             if ($libre === false || $libre < $requerido) {
                 throw new ReglaNegocioException('El volumen de copias no tiene espacio suficiente: se necesitan ' . PoliticaCopias::tamano($requerido) . ' y hay ' . PoliticaCopias::tamano((int) $libre) . ' libres. Libere espacio o verifique el destino (A2).');
@@ -98,7 +98,7 @@ class MotorCopias
             if (!is_readable($bak)) {
                 throw new RuntimeException("SQL Server generó la copia sin permiso de lectura para la aplicación: revisar los permisos del volumen {$this->dir} (docker/php/entrypoint.sh).");
             }
-            $cantidad = PaqueteCopia::armar($bak, $adjuntos, "{$temporal}.zip");
+            $cantidad = PaqueteCopia::armar($bak, $adjuntos, $adjuntos === null ? [] : $this->rutasLegajo(), "{$temporal}.zip");
             $destino = $this->dir . '/' . $c['archivo'];
             CifradoCopia::cifrar("{$temporal}.zip", $destino, $this->clave());
             $hash = (string) hash_file('sha256', $destino);
@@ -249,26 +249,37 @@ class MotorCopias
         return $this->terminar($pedido, $error === null, $resultado, $restaurada === null ? null : $archivo, $posteriores, $error === null ? 'Finalizada' : 'Fallida', $previaArchivo);
     }
 
-    /** Descifra, verifica y restaura una copia (pasos 9 y 10). @return int adjuntos restaurados */
+    /**
+     * Descifra, verifica y restaura una copia (pasos 9 y 10) y, con la base ya restaurada, los adjuntos que ella
+     * referencia.
+     *
+     * @return int adjuntos restaurados
+     */
     private function restaurarArchivo(string $ruta, bool $conAdjuntos = true): int
     {
         $temporal = $this->dir . '/restauracion_' . bin2hex(random_bytes(4));
         try {
             CifradoCopia::descifrar($ruta, "{$temporal}.zip", $this->clave());
-            $adjuntos = PaqueteCopia::extraer("{$temporal}.zip", "{$temporal}.bak", $conAdjuntos && config('Sigccr')->copiasConAdjuntos ? rtrim(WRITEPATH, '/') . '/uploads' : null);
-            @unlink("{$temporal}.zip");
+            PaqueteCopia::extraerBase("{$temporal}.zip", "{$temporal}.bak");
             @chmod("{$temporal}.bak", 0644);
             $m = $this->mantenimiento();
             $this->ejecutar($m, "RESTORE VERIFYONLY FROM DISK = N'{$temporal}.bak' WITH CHECKSUM");
             $this->ejecutar($m, "ALTER DATABASE [{$this->base}] SET OFFLINE WITH ROLLBACK IMMEDIATE");
             $this->ejecutar($m, "RESTORE DATABASE [{$this->base}] FROM DISK = N'{$temporal}.bak' WITH REPLACE, CHECKSUM, RECOVERY");
             $this->ejecutarSilencioso("IF DATABASEPROPERTYEX(N'{$this->base}', 'Status') <> 'ONLINE' ALTER DATABASE [{$this->base}] SET ONLINE");
+            @unlink("{$temporal}.bak");
 
-            return $adjuntos;
+            return $conAdjuntos && config('Sigccr')->copiasConAdjuntos ? PaqueteCopia::extraerAdjuntos("{$temporal}.zip", rtrim(WRITEPATH, '/'), $this->rutasLegajo()) : 0;
         } finally {
             @unlink("{$temporal}.zip");
             @unlink("{$temporal}.bak");
         }
+    }
+
+    /** @return list<string> rutas de los archivos del legajo registradas en la base (relativas a writable/) */
+    private function rutasLegajo(): array
+    {
+        return array_values(array_filter(array_map('strval', array_column($this->app()->query('SELECT ruta_archivo FROM dbo.documentos_legajo')->getResultArray(), 'ruta_archivo')), [PaqueteCopia::class, 'rutaValida']));
     }
 
     /** Paso 10: la base está en línea y es íntegra; luego se lleva su esquema a la versión de la aplicación. */

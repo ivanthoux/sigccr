@@ -610,7 +610,7 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 2. **Generación (CU-61).**
    - Se comprueba que el destino esté disponible y tenga espacio libre: el doble de los datos y los adjuntos, más un margen (A2).
    - La base se copia con `BACKUP … WITH CHECKSUM, COPY_ONLY` y se verifica con `RESTORE VERIFYONLY`.
-   - La copia se empaqueta en un zip sin compresión junto con los archivos del legajo, si `sigccr.copiasConAdjuntos` lo indica.
+   - La copia se empaqueta en un zip sin compresión junto con los archivos del legajo, si `sigccr.copiasConAdjuntos` lo indica. Se incluyen los que referencia `documentos_legajo`. Al restaurar se escriben solo los que referencia la base restaurada, con rutas validadas, y nunca se usan los nombres guardados en el paquete; esto evita escribir fuera de la carpeta del legajo (*zip slip*).
    - El paquete se cifra con AES-256-GCM por bloques de 1 MiB, autenticando el número de bloque y el indicador de último bloque. La clave se deriva de `encryption.key` con HKDF. Se registra el SHA-256 del archivo cifrado.
    - Junto al archivo se guarda un manifiesto con sus datos.
    - Si algo falla, la copia queda *Fallida* con su causa (A3). Las fallas de la copia automática y de la copia previa alertan al Administrador (A5, RNF-16).
