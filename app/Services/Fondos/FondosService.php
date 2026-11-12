@@ -10,6 +10,7 @@ use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
+use App\Services\Campanas\CampanaService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
@@ -58,7 +59,25 @@ class FondosService extends BaseService
      */
     public function reservarParaSolicitud(int $solicitudId, string $importe): ?int
     {
-        $this->db->query("DECLARE @r INT; EXEC @r = sp_getapplock @Resource = 'sigccr:fondos', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @r AS r;");
+        $this->bloquearFondos();
+        // RN-41: el compromiso temporal de una oferta aceptada se convierte en reserva sin un segundo descuento; solo
+        // la diferencia, si el importe aprobado es mayor, debe estar libre
+        $compromiso = $this->db->query(
+            "SELECT id, importe FROM dbo.afectaciones_fondos WITH (UPDLOCK, ROWLOCK) WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND tipo = 'Compromiso' AND estado = 'Vigente'",
+            [$solicitudId],
+        )->getRowArray();
+        if ($compromiso !== null) {
+            $diferencia = Decimal::of($importe)->sub((string) $compromiso['importe']);
+            if ($diferencia->isPositive() && Decimal::of($this->disponibilidad()['libre'])->compare($diferencia) < 0) {
+                return null;
+            }
+            $this->db->query(
+                "UPDATE dbo.afectaciones_fondos SET tipo = 'Reserva', importe = ?, fecha = ?, version_fila = version_fila + 1 WHERE id = ?",
+                [Decimal::of($importe)->toFixed(2), $this->ahoraUtc(), $compromiso['id']],
+            );
+
+            return (int) $compromiso['id'];
+        }
         if (Decimal::of($this->disponibilidad()['libre'])->compare($importe) < 0) {
             return null;
         }
@@ -68,6 +87,30 @@ class FondosService extends BaseService
         ]);
 
         return (int) $this->db->insertID();
+    }
+
+    /**
+     * CU-52 paso 9: compromiso temporal de fondos por la solicitud originada en una oferta aceptada (RN-41), si el
+     * disponible libre alcanza. Dentro de la transacción de la aceptación.
+     */
+    public function comprometerParaSolicitud(int $solicitudId, string $importe): ?int
+    {
+        $this->bloquearFondos();
+        if (Decimal::of($this->disponibilidad()['libre'])->compare($importe) < 0) {
+            return null;
+        }
+        $this->db->table('afectaciones_fondos')->insert([
+            'tipo' => 'Compromiso', 'importe' => Decimal::of($importe)->toFixed(2), 'fecha' => $this->ahoraUtc(), 'estado' => 'Vigente',
+            'referencia_tipo' => 'Solicitud', 'referencia_id' => $solicitudId,
+        ]);
+
+        return (int) $this->db->insertID();
+    }
+
+    /** Serializa las operaciones que leen y afectan el disponible libre, hasta el fin de la transacción. */
+    private function bloquearFondos(): void
+    {
+        $this->db->query("DECLARE @r INT; EXEC @r = sp_getapplock @Resource = 'sigccr:fondos', @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @r AS r;");
     }
 
     /** Reserva o compromiso vigente de una solicitud (RN-41), o null. */
@@ -151,10 +194,20 @@ class FondosService extends BaseService
         $r = [
             'id' => $id, 'periodo' => $periodo, 'hasta' => $fin, 'fondos' => $d['fondos'], 'cuotas_a_vencer' => $aVencer->toFixed(2), 'factor' => $factor->toFixed(4),
             'ingresos' => $ingresos->toFixed(2), 'egresos' => $egresos->toFixed(2), 'reserva_minima' => $minima->toFixed(2), 'proyectado' => $proyectado->toFixed(2),
-            'umbral' => $umbral->toFixed(2), 'campana_activa' => $activa,
-            'campana' => $activa ? ($condicion ? 'continúa' : 'corresponde cerrar (CU-94)') : ($condicion ? 'corresponde activar (CU-93)' : 'sin cambios'),
+            'umbral' => $umbral->toFixed(2), 'campana_activa' => $activa, 'campana' => 'sin cambios',
         ];
         (new AuditoriaService($this->db))->registrar('fondos.proyectar', 'proyecciones_fondos', $id, 'Exitoso', null, $r, $proceso);
+        $campanas = new CampanaService($this->db);
+        if (!$activa && $condicion) {
+            // Paso 7: punto de extensión «Disponibilidad suficiente» (CU-93)
+            $r['campana'] = $campanas->activar(['id' => $id, 'proyectado' => $proyectado->toFixed(2)], $proceso);
+        } elseif ($activa && !$condicion && ($v['cierre_por_disponibilidad'] ?? true)) {
+            // A1: la disponibilidad dejó de superar el umbral (CU-94)
+            $campana = (int) $this->db->table('campanas')->select('id')->where('estado', 'Activa')->get()->getRow()->id;
+            $r['campana'] = $campanas->cerrar($campana, 'Disponibilidad', $proceso) ? 'campaña cerrada por disponibilidad insuficiente' : 'sin cambios';
+        } elseif ($activa) {
+            $r['campana'] = 'la campaña activa continúa';
+        }
 
         return $r;
     }

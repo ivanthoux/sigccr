@@ -94,6 +94,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        // SS-08 Campañas crediticias (CU-50); los parámetros (CU-51) están en el grupo parametros
+        $routes->get('campanas', 'Admin\Campanas::index', ['as' => 'campanas.consultar', 'filter' => 'permiso:campanas.consultar']);
+        $routes->get('campanas/(:num)', 'Admin\Campanas::ver/$1', ['filter' => 'permiso:campanas.consultar']);
+        $routes->get('campanas/ofertas/(:num)', 'Admin\Campanas::oferta/$1', ['filter' => 'permiso:campanas.consultar']);
         // SS-06 Refinanciaciones (CU-39 a CU-43, CU-74, CU-96) y condonación de punitorios (CU-44)
         $routes->get('refinanciaciones', 'Admin\Refinanciaciones::index', ['as' => 'refinanciaciones.localizar', 'filter' => 'permiso:refinanciaciones.localizar']);
         $routes->get('refinanciaciones/simular', 'Admin\Refinanciaciones::simular', ['as' => 'refinanciaciones.simular', 'filter' => 'permiso:refinanciaciones.simular']);
@@ -225,6 +229,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
             $routes->get('morosidad', 'Admin\Parametros::morosidad', ['as' => 'parametros.morosidad', 'filter' => 'permiso:parametros.morosidad']);
             $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
+            $routes->get('campanas', 'Admin\Parametros::campanas', ['as' => 'parametros.campanas', 'filter' => 'permiso:parametros.campanas']);
+            $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
         });
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
@@ -285,7 +291,12 @@ $routes->group('portal', static function (RouteCollection $routes): void {
         $routes->get('pagar', 'Portal\Pagos::index', ['as' => 'portal.pagar']);
         $routes->post('pagar', 'Portal\Pagos::generar');
         $routes->get('pagar/ordenes/(:num)', 'Portal\Pagos::orden/$1');
-        // Iteración 4, bloque B: CU-43 y CU-52 (portal.propuestas)
+        // CU-43 (A5) y CU-52
+        $routes->get('propuestas', 'Portal\Propuestas::index', ['as' => 'portal.propuestas']);
+        $routes->get('propuestas/refinanciaciones/(:num)', 'Portal\Propuestas::propuesta/$1');
+        $routes->get('ofertas/(:num)', 'Portal\Propuestas::oferta/$1');
+        $routes->post('ofertas/(:num)/aceptar', 'Portal\Propuestas::aceptar/$1');
+        $routes->post('ofertas/(:num)/rechazar', 'Portal\Propuestas::rechazar/$1');
     });
 });
 

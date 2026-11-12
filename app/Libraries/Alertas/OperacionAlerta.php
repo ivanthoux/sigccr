@@ -20,6 +20,8 @@ final class OperacionAlerta
         'propuestas_refinanciacion' => ['texto' => 'Ver la propuesta', 'ruta' => 'admin/refinanciaciones/{id}', 'permiso' => 'refinanciaciones.consultar'],
         'cobros' => ['texto' => 'Ver el cobro', 'ruta' => 'admin/cobros/{id}', 'permiso' => 'cobros.emitir-comprobante'],
         'pre_registros' => ['texto' => 'Ver el pre-registro', 'ruta' => 'admin/pre-registros/{id}', 'permiso' => 'clientes.registrar'],
+        'campanas' => ['texto' => 'Ver la campaña', 'ruta' => 'admin/campanas/{id}', 'permiso' => 'campanas.consultar'],
+        'proyecciones_fondos' => ['texto' => 'Configurar las campañas', 'ruta' => 'admin/parametros/campanas', 'permiso' => 'parametros.campanas'],
     ];
 
     /** Nombres para mostrar el objeto relacionado de una alerta. */
@@ -31,6 +33,8 @@ final class OperacionAlerta
         'propuestas_refinanciacion' => 'Propuesta de refinanciación',
         'cobros' => 'Cobro',
         'pre_registros' => 'Pre-registro del portal',
+        'campanas' => 'Campaña crediticia',
+        'proyecciones_fondos' => 'Proyección de fondos',
         'comunicaciones' => 'Comunicación',
         'ejecuciones_proceso' => 'Proceso automático',
     ];
