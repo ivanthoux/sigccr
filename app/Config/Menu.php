@@ -49,10 +49,11 @@ class Menu extends BaseConfig
             ['texto' => 'Simular refinanciación', 'ruta' => 'refinanciaciones.simular', 'permiso' => 'refinanciaciones.simular'],
             ['texto' => 'Condonar punitorios', 'ruta' => 'punitorios.condonar', 'permiso' => 'punitorios.condonar'],
             ['texto' => 'Campañas', 'ruta' => 'campanas.consultar', 'permiso' => 'campanas.consultar'],
+            ['texto' => 'Régimen informativo', 'ruta' => 'regimen.consultar', 'permiso' => 'regimen.consultar'],
         ]],
         ['titulo' => 'Gestión', 'icono' => 'bi-graph-up', 'opciones' => [
             ['texto' => 'Tablero gerencial', 'ruta' => 'tablero.consultar', 'permiso' => 'tablero.consultar'],
-            ['texto' => 'Reportes', 'ruta' => 'reportes.cartera', 'permiso' => 'reportes.cartera'],
+            ['texto' => 'Reportes', 'ruta' => 'reportes.index', 'permiso' => 'reportes.cartera'],
             ['texto' => 'Fondos', 'ruta' => 'fondos.movimientos', 'permiso' => 'fondos.registrar-movimiento'],
             ['texto' => 'Parámetros de evaluación', 'ruta' => 'parametros.evaluacion', 'permiso' => 'parametros.evaluacion'],
             ['texto' => 'Parámetros de estructuración', 'ruta' => 'parametros.estructuracion', 'permiso' => 'parametros.estructuracion'],

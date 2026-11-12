@@ -209,3 +209,26 @@ if (!function_exists('hoy_negocio')) {
         return \CodeIgniter\I18n\Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d');
     }
 }
+
+if (!function_exists('valor_reporte')) {
+    /**
+     * Valor de un indicador o una celda de los reportes (SS-09, D-44) según su tipo: importe, entero, decimal,
+     * porcentaje (ya expresado en %), fecha, fechahora o texto. Los vacíos se muestran con una raya.
+     */
+    function valor_reporte(mixed $valor, string $tipo, bool $conSigno = false): string
+    {
+        if ($valor === null || $valor === '') {
+            return '—';
+        }
+
+        return match ($tipo) {
+            'importe' => formato_importe((string) $valor, $conSigno),
+            'entero' => number_format((int) $valor, 0, ',', '.'),
+            'decimal' => number_format((float) $valor, 1, ',', '.'),
+            'porcentaje' => number_format((float) $valor, 2, ',', '.') . ' %',
+            'fecha' => formato_fecha((string) $valor),
+            'fechahora' => formato_fecha_hora((string) $valor),
+            default => (string) $valor,
+        };
+    }
+}

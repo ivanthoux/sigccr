@@ -60,6 +60,7 @@ ENUMS = {
                               'CambioCorreo', 'VerificacionCorreo'],
     'TipoConsentimiento': ['PoliticaDatos', 'ComunicacionesComerciales'],
     'MedioConsentimiento': ['Portal', 'Sucursal'],
+    'EstadoRegimen': ['Vigente', 'Rectificado'],
     'EstadoPreRegistro': ['PendienteVerificacion', 'PendienteValidacion', 'Completado', 'Descartado'],
     'OrigenSolicitud': ['Independiente', 'Oferta'],
     'ResultadoVerificacion': ['Conforme', 'Observado', 'Rechazado'],
@@ -1226,6 +1227,40 @@ add('aceptaciones_refinanciacion', 'SS-06', 'AceptacionRefinanciacion', 'Constan
     C('fecha_constancia', D, d='Fecha en que el cliente manifestó su aceptación.'),
     C('punitorios_incorporados', M2, default='0', d='Punitorios devengados desde la fecha de corte incorporados al concepto no capitalizable (RN-70).'),
 ])
+
+
+add('regimenes_informativos', 'SS-06', 'RegimenInformativo', 'Archivo mensual del régimen informativo de la Central de Deudores del BCRA con la clasificación de los deudores al cierre del mes (CU-105, RN-84, D-44). Una rectificación agrega una versión y conserva la anterior.', [
+    ID(),
+    C('periodo', 'CHAR(7)', d='Mes informado (aaaa-mm).'),
+    C('version', 'SMALLINT', default='1'),
+    C('fecha_cierre', D, d='Último día del mes informado: base de los días de atraso.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    C('cantidad_deudores', 'INT'),
+    C('saldo_total', M2),
+    C('archivo', 'VARBINARY(MAX)', d='Contenido del archivo generado (texto separado por punto y coma).'),
+    C('hash_archivo', 'CHAR(64)', d='SHA-256 del archivo.'),
+    EN('estado', 'EstadoRegimen', default="'Vigente'"),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Gerente que pidió la generación o la rectificación; nulo si la generó el Temporizador.'),
+    C('proceso', 'VARCHAR(60)', null=True, d='Proceso programado que lo generó.'),
+    C('motivo', 'NVARCHAR(500)', null=True, d='Motivo de la rectificación.'),
+], uq=[('UQ_regimenes_periodo_version', ['periodo', 'version'], None),
+       ('UQ_regimenes_vigente', ['periodo'], "estado = 'Vigente'")],
+   ck=[('CK_regimenes_responsable', 'usuario_id IS NOT NULL OR proceso IS NOT NULL'),
+       ('CK_regimenes_rectificacion', 'version = 1 OR motivo IS NOT NULL'),
+       ('CK_regimenes_totales', 'cantidad_deudores >= 0 AND saldo_total >= 0')])
+
+add('situaciones_deudor', 'SS-06', 'SituacionDeudor', 'Clasificación de cada deudor con financiaciones vigentes al cierre del período informado (RN-84).', [
+    ID(),
+    FK('regimen_informativo_id', 'regimenes_informativos'),
+    FK('cliente_id', 'clientes'),
+    C('cuit_cuil', 'CHAR(11)'),
+    C('denominacion', 'NVARCHAR(200)'),
+    C('dias_atraso', 'INT', d='Atraso de la obligación más atrasada al cierre.'),
+    C('situacion', 'TINYINT', d='1 hasta 31 días, 2 hasta 90, 3 hasta 180, 4 hasta 365 y 5 más de 365 (RN-84).'),
+    C('saldo', M2, d='Saldo de sus financiaciones vigentes.'),
+    C('creditos', 'SMALLINT', d='Cantidad de créditos vigentes.'),
+], uq=[('UQ_situaciones_deudor', ['regimen_informativo_id', 'cliente_id'], None)],
+   ck=[('CK_situaciones_deudor_situacion', 'situacion BETWEEN 1 AND 5'), ('CK_situaciones_deudor_atraso', 'dias_atraso >= 0')])
 
 # ============================================================== SS-08
 add('campanas', 'SS-08', 'Campaña', 'Campañas crediticias; como máximo una activa (RN-66), garantizado por un índice único filtrado.', [
