@@ -42,7 +42,7 @@ $this->section('contenido');
                     <?php endforeach ?>
                 </dl>
                 <?php if (tiene_permiso($permiso)): ?>
-                    <a class="small d-print-none" href="<?= esc(url_to($permiso) . '?' . http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1]), 'attr') ?>">Ver el reporte <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a class="small d-print-none" href="<?= url_to($permiso) . '?' . esc(http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1]), 'attr') ?>">Ver el reporte <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 <?php endif ?>
             </section>
         </div>

@@ -82,7 +82,7 @@ final class VistasReportesTest extends CIUnitTestCase
     public function testReporteGenerado(): void
     {
         $html = view('reportes/reporte', ['titulo' => 'Cartera', 'clave' => 'cartera', 'f' => ['linea' => '4', 'tipo' => 'mes'], 'opciones' => self::opciones(), 'r' => self::reporte()]);
-        $this->assertStringContainsString('Noviembre', $html);
+        $this->assertStringContainsString('del 01/11/2026 al 30/11/2026', $html);
         $this->assertStringContainsString('Criterios: Línea: Personal', $html);
         $this->assertStringContainsString('1.234', $html);
         $this->assertStringContainsString('$ 1.500.000,50', $html);

@@ -86,7 +86,7 @@ $this->section('contenido');
 </form>
 <?php if ($r !== null): ?>
     <?php $acciones = '<span class="d-flex gap-2 d-print-none"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir o PDF</button>'
-        . '<a class="btn btn-sm btn-outline-success" href="' . esc($ruta . '?' . http_build_query(array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1, 'formato' => 'xlsx']), 'attr') . '"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Exportar a Excel</a></span>'; ?>
+        . '<a class="btn btn-sm btn-outline-success" href="' . $ruta . '?' . esc(http_build_query(array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1, 'formato' => 'xlsx']), 'attr') . '"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Exportar a Excel</a></span>'; ?>
     <?= view('reportes/_resultado', ['r' => $r, 'acciones' => $acciones]) ?>
 <?php endif ?>
 <?php $this->endSection() ?>

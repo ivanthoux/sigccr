@@ -47,7 +47,7 @@ $this->section('contenido');
                 <tbody>
                 <?php foreach ($b['filas'] as $a): ?>
                     <tr>
-                        <td class="text-nowrap"><a href="<?= esc(site_url('admin/auditoria/' . (int) $a['id']) . '?' . http_build_query(['volver' => http_build_query(['pagina' => $b['pagina']] + $consulta)]), 'attr') ?>"><?= esc(formato_fecha_hora((string) $a['fecha_hora'])) ?></a></td>
+                        <td class="text-nowrap"><a href="<?= site_url('admin/auditoria/' . (int) $a['id']) . '?' . esc(http_build_query(['volver' => http_build_query(['pagina' => $b['pagina']] + $consulta)]), 'attr') ?>"><?= esc(formato_fecha_hora((string) $a['fecha_hora'])) ?></a></td>
                         <td><?= esc((string) $a['responsable']) ?></td>
                         <td class="small"><?= esc(A::categoria((string) $a['accion'], $a['proceso'])) ?></td>
                         <td class="small"><code><?= esc((string) $a['accion']) ?></code></td>
@@ -63,8 +63,8 @@ $this->section('contenido');
     <div class="d-flex justify-content-between align-items-center mt-2 small">
         <span class="text-body-secondary"><?= number_format($b['total'], 0, ',', '.') ?> registros · página <?= $b['pagina'] ?> de <?= $b['paginas'] ?></span>
         <span class="d-flex gap-2">
-            <?php if ($b['pagina'] > 1): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] - 1), 'attr') ?>">Anterior</a><?php endif ?>
-            <?php if ($b['pagina'] < $b['paginas']): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] + 1), 'attr') ?>">Siguiente</a><?php endif ?>
+            <?php if ($b['pagina'] > 1): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] - 1)) ?>">Anterior</a><?php endif ?>
+            <?php if ($b['pagina'] < $b['paginas']): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] + 1)) ?>">Siguiente</a><?php endif ?>
         </span>
     </div>
 <?php endif ?>
