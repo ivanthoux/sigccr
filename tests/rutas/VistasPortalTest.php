@@ -157,7 +157,7 @@ final class VistasPortalTest extends CIUnitTestCase
 
         $o = ['numero' => 8, 'importe' => '62673.83', 'vence' => '2099-01-01 03:00:00.000 +00:00', 'estado' => 'PendienteConfirmacion', 'referencia_externa' => 'SIM-8', 'url_pago' => 'https://pasarela/8',
             'cuotas' => [['credito' => 21, 'numero' => 1, 'vencimiento' => '2026-10-29', 'importe' => '62673.83']]];
-        $this->assertStringContainsString('https://pasarela/8', view('portal/orden', ['titulo' => 'Orden', 'o' => $o]));
+        $this->assertStringContainsString('Pagar en la pasarela', view('portal/orden', ['titulo' => 'Orden', 'o' => $o]));
         $this->assertStringContainsString('venció sin pago', view('portal/orden', ['titulo' => 'Orden', 'o' => ['estado' => 'Vencida'] + $o]));
     }
 
