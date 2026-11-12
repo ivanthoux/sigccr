@@ -20,6 +20,8 @@ final class SimuladorPadron implements PadronInterface
     public const CONOCIDOS = [
         '27394445520' => ['Martina', 'Díaz', 'Av. San Martín 2020, Apóstoles, Misiones'],
         '27394445660' => ['Martina', 'Díaz', 'Av. San Martín 2020, Apóstoles, Misiones'],
+        '27415551040' => ['Sofía', 'Benítez', 'Belgrano 845, Apóstoles, Misiones'],
+        '20402223090' => ['Mateo', 'Acosta', 'Sarmiento 312, Apóstoles, Misiones'],
     ];
 
     private const NOMBRES = ['Sofía', 'Mateo', 'Valeria', 'Benjamín', 'Julieta', 'Santiago', 'Carolina', 'Facundo'];
