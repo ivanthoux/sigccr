@@ -22,6 +22,7 @@ final class OperacionAlerta
         'pre_registros' => ['texto' => 'Ver el pre-registro', 'ruta' => 'admin/pre-registros/{id}', 'permiso' => 'clientes.registrar'],
         'campanas' => ['texto' => 'Ver la campaña', 'ruta' => 'admin/campanas/{id}', 'permiso' => 'campanas.consultar'],
         'proyecciones_fondos' => ['texto' => 'Configurar las campañas', 'ruta' => 'admin/parametros/campanas', 'permiso' => 'parametros.campanas'],
+        'regimenes_informativos' => ['texto' => 'Ver el régimen informativo', 'ruta' => 'admin/regimen/{id}', 'permiso' => 'regimen.consultar'],
     ];
 
     /** Nombres para mostrar el objeto relacionado de una alerta. */
@@ -35,6 +36,7 @@ final class OperacionAlerta
         'pre_registros' => 'Pre-registro del portal',
         'campanas' => 'Campaña crediticia',
         'proyecciones_fondos' => 'Proyección de fondos',
+        'regimenes_informativos' => 'Régimen informativo de deudores',
         'comunicaciones' => 'Comunicación',
         'ejecuciones_proceso' => 'Proceso automático',
     ];

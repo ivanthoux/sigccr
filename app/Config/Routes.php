@@ -233,6 +233,21 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
         });
 
+        // SS-09 Reportes y auditoría (CU-55 a CU-57, CU-65 a CU-71; D-44)
+        $routes->get('tablero', 'Admin\Tablero::index', ['as' => 'tablero.consultar', 'filter' => 'permiso:tablero.consultar']);
+        $routes->get('caja-diaria', 'Admin\CajaDiaria::index', ['as' => 'cajas.informe-diario', 'filter' => 'permiso:cajas.informe-diario']);
+        $routes->get('auditoria', 'Admin\Auditoria::index', ['as' => 'auditoria.consultar', 'filter' => 'permiso:auditoria.consultar']);
+        $routes->get('auditoria/(:num)', 'Admin\Auditoria::ver/$1', ['filter' => 'permiso:auditoria.consultar']);
+        $routes->get('reportes', 'Admin\Reportes::index', ['as' => 'reportes.index', 'filter' => 'permiso:reportes.cartera']);
+        foreach (\App\Services\Reportes\ReporteService::REPORTES as $clave => [, , $permiso]) {
+            $routes->get('reportes/' . $clave, 'Admin\Reportes::ver/' . $clave, ['as' => $permiso, 'filter' => 'permiso:' . $permiso]);
+        }
+        // SS-06 Régimen informativo de deudores (CU-105)
+        $routes->get('regimen', 'Admin\Regimen::index', ['as' => 'regimen.consultar', 'filter' => 'permiso:regimen.consultar']);
+        $routes->get('regimen/(:num)', 'Admin\Regimen::ver/$1', ['as' => 'regimen.ver', 'filter' => 'permiso:regimen.consultar']);
+        $routes->get('regimen/(:num)/archivo', 'Admin\Regimen::descargar/$1', ['filter' => 'permiso:regimen.consultar']);
+        $routes->post('regimen', 'Admin\Regimen::generar', ['filter' => 'permiso:regimen.consultar']);
+
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
         // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
     });
