@@ -28,7 +28,7 @@ $this->section('contenido');
     <div class="hoja p-0">
         <div class="table-responsive">
             <table class="table align-middle mb-0">
-                <thead><tr><th>Período</th><th>Versión</th><th>Generado</th><th>Responsable</th><th class="importe">Deudores</th><th class="importe">Saldo informado</th><th>Estado</th><th></th></tr></thead>
+                <thead><tr><th>Período</th><th>Versión</th><th>Generado</th><th>Responsable</th><th class="importe">Deudores</th><th class="importe">Saldo informado</th><th>Estado</th><th><span class="visually-hidden">Archivo</span></th></tr></thead>
                 <tbody>
                 <?php foreach ($regimenes as $r): ?>
                     <tr<?= $r['estado'] === 'Rectificado' ? ' class="text-body-secondary"' : '' ?>>

@@ -51,8 +51,9 @@ class RegimenService extends BaseService
         $motivo = trim((string) $motivo);
 
         $r = $this->transaccion(function () use ($periodo, $usuarioId, $motivo, $proceso): array {
-            $this->db->query('SELECT id FROM dbo.regimenes_informativos WITH (UPDLOCK, HOLDLOCK) WHERE periodo = ?', [$periodo])->getResultArray();
-            $anterior = $this->db->table('regimenes_informativos')->where('periodo', $periodo)->where('estado', 'Vigente')->get()->getRowArray();
+            // Las generaciones simultáneas del mismo período las resuelve UQ_regimenes_periodo_version
+            $vigentes = array_values(array_filter($this->bloquear('regimenes_informativos', [$periodo], 'periodo'), static fn ($x) => $x['estado'] === 'Vigente'));
+            $anterior = $vigentes[0] ?? null;
             if ($anterior !== null) {
                 if ($usuarioId === null) {
                     return ['omitido' => true];
