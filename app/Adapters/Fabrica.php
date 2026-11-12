@@ -10,6 +10,8 @@ use App\Adapters\Comunicaciones\SmtpComunicaciones;
 use App\Adapters\InformacionCrediticia\BcraInformacionCrediticia;
 use App\Adapters\InformacionCrediticia\InformacionCrediticiaInterface;
 use App\Adapters\InformacionCrediticia\SimuladorInformacionCrediticia;
+use App\Adapters\Padron\PadronInterface;
+use App\Adapters\Padron\SimuladorPadron;
 use App\Adapters\Pasarela\PasarelaInterface;
 use App\Adapters\Pasarela\SimuladorPasarela;
 use RuntimeException;
@@ -49,6 +51,14 @@ final class Fabrica
             'simulador' => new SimuladorComunicaciones(),
             'real' => new SmtpComunicaciones(),
             default => throw new RuntimeException('Adaptador de comunicaciones desconocido: use simulador o real.'),
+        };
+    }
+
+    public static function padron(): PadronInterface
+    {
+        return match (config('Sigccr')->adaptadorPadron) {
+            'simulador' => new SimuladorPadron(),
+            default => throw new RuntimeException('Adaptador del padrón desconocido: use simulador (el servicio real requiere el convenio con ARCA).'),
         };
     }
 }

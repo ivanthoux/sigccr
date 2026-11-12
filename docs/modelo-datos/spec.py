@@ -60,6 +60,7 @@ ENUMS = {
                               'CambioCorreo', 'VerificacionCorreo'],
     'TipoConsentimiento': ['PoliticaDatos', 'ComunicacionesComerciales'],
     'MedioConsentimiento': ['Portal', 'Sucursal'],
+    'EstadoPreRegistro': ['PendienteVerificacion', 'PendienteValidacion', 'Completado', 'Descartado'],
     'OrigenSolicitud': ['Independiente', 'Oferta'],
     'ResultadoVerificacion': ['Conforme', 'Observado', 'Rechazado'],
     'MotivoObservacion': ['Faltante', 'Ilegible', 'Vencido', 'Inconsistente', 'NoCorresponde'],
@@ -456,6 +457,33 @@ add('consentimientos', 'SS-02', 'Consentimiento', 'Historial de aceptaciones y r
     C('fecha', TS, default='SYSDATETIMEOFFSET()'),
     EN('medio', 'MedioConsentimiento'),
 ], idx=[('IX_consentimientos_cliente', ['cliente_id', 'tipo', 'fecha'], None, None)])
+
+add('pre_registros', 'SS-02', 'PreRegistro', 'Datos que una persona que todavía no es cliente registra en el portal para que el Analista complete su alta (CU-104, D-42). No crea un cliente ni habilita el portal.', [
+    ID(),
+    EN('tipo_documento', 'TipoDocumento'),
+    C('nro_documento', 'VARCHAR(15)'),
+    C('cuit_cuil', 'CHAR(11)', d='CUIL sin guiones, con su dígito verificador.'),
+    C('nombre', 'NVARCHAR(80)'),
+    C('apellido', 'NVARCHAR(80)'),
+    C('correo', 'NVARCHAR(254)', d='Correo de contacto; se verifica con el enlace enviado (RN-03).'),
+    C('telefono', 'VARCHAR(30)', null=True),
+    C('hash_codigo', 'CHAR(64)', null=True, d='Hash SHA-256 del enlace de verificación vigente; nulo una vez verificado.'),
+    C('vence', TS, d='Vencimiento del enlace de verificación (30 minutos, RN-03).'),
+    C('fecha_verificacion', TS, null=True),
+    C('fecha_politica', TS, d='Aceptación de la política de tratamiento de datos personales (RN-64).'),
+    EN('estado', 'EstadoPreRegistro', default="'PendienteVerificacion'"),
+    FK('cliente_id', 'clientes', null=True, d='Cliente registrado al completar el alta (CU-11).'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Analista que completó el alta o descartó el pre-registro.'),
+    C('motivo_descarte', 'NVARCHAR(500)', null=True),
+    C('ip_origen', 'VARCHAR(45)', null=True),
+    CREADO(),
+    ACT(),
+    VF(),
+], uq=[('UQ_pre_registros_hash_codigo', ['hash_codigo'], 'hash_codigo IS NOT NULL')],
+   ck=[('CK_pre_registros_completado', "estado <> 'Completado' OR cliente_id IS NOT NULL"),
+       ('CK_pre_registros_descarte', "estado <> 'Descartado' OR motivo_descarte IS NOT NULL")],
+   idx=[('IX_pre_registros_documento', ['tipo_documento', 'nro_documento'], ['estado'], None),
+        ('IX_pre_registros_estado', ['estado', 'creado_en'], None, None)])
 
 # ============================================================== SS-03
 add('lineas_credito', 'SS-03', 'LineaCredito', 'Productos crediticios ofrecidos por la entidad.', [

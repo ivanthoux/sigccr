@@ -38,6 +38,7 @@ class Sigccr extends BaseConfig
     public string $adaptadorInformacionCrediticia = 'simulador';
     public string $adaptadorPasarela = 'simulador';
     public string $adaptadorComunicaciones = 'simulador';
+    public string $adaptadorPadron = 'simulador';
 
     /** Integraciones (RNF-08, RNF-09). Las credenciales se cargan solo desde .env. */
     public int $tiempoEsperaExterno = 10;

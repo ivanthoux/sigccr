@@ -98,6 +98,7 @@ final class AutorizacionRutasTest extends CIUnitTestCase
     private const PUBLICAS_PORTAL = [
         'portal/login', 'portal/recuperar', 'portal/restablecer/([^/]+)', 'portal/activar', 'portal/activar/([^/]+)',
         'portal/verificar-correo/([^/]+)',
+        'portal/pre-registro', 'portal/pre-registro/verificar/([^/]+)', 'portal/cambio-correo/([^/]+)',
     ];
 
     public function testCadaRutaDelPortalConSesionExigeUnaCuentaDeCliente(): void

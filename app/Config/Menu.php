@@ -19,6 +19,7 @@ class Menu extends BaseConfig
     public array $secciones = [
         ['titulo' => 'Crédito', 'icono' => 'bi-cash-coin', 'opciones' => [
             ['texto' => 'Clientes', 'ruta' => 'clientes.localizar', 'permiso' => 'clientes.localizar'],
+            ['texto' => 'Pre-registros del portal', 'ruta' => 'pre-registros.consultar', 'permiso' => 'clientes.registrar'],
             ['texto' => 'Solicitudes', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
             ['texto' => 'Contingencias', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
             ['texto' => 'Resolver solicitudes', 'ruta' => 'solicitudes.resolver', 'permiso' => 'solicitudes.resolver'],
