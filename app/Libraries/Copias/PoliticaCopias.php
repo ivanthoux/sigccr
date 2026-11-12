@@ -82,12 +82,12 @@ final class PoliticaCopias
     public static function leerManifiesto(string $json): ?array
     {
         $m = json_decode($json, true);
-        if (!is_array($m) || !isset($m['archivo'], $m['fecha_generacion'], $m['origen'], $m['hash_verificacion']) || !self::nombreValido((string) $m['archivo'])
-            || !isset(self::ORIGENES[$m['origen']]) || preg_match('/^[0-9a-f]{64}$/', (string) $m['hash_verificacion']) !== 1) {
+        if (!is_array($m) || !isset($m['archivo'], $m['fecha_generacion'], $m['origen'], $m['hash_verificacion'])) {
             return null;
         }
+        $valido = self::nombreValido((string) $m['archivo']) && isset(self::ORIGENES[$m['origen']]) && preg_match('/^[0-9a-f]{64}$/', (string) $m['hash_verificacion']) === 1;
 
-        return $m;
+        return $valido ? $m : null;
     }
 
     /** CU-63 paso 5 (A2): la confirmación explícita es escribir RESTAURAR. */

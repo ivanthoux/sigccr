@@ -198,6 +198,44 @@ Preparación del bloque C (D-44):
 | I-79 | Sin deudores (A2) | Opcional, en una base sin créditos vigentes (o generando un mes cerrado anterior a la primera liquidación, por ejemplo 2025-12). | El período se registra con 0 deudores, el archivo solo tiene la cabecera y la alerta informa «no hay financiaciones vigentes; se registró el período sin deudores (A2)». | |
 | I-80 | Auditoría del bloque C | Revisar `registros_auditoria` o la pantalla de I-75. | Registros de `tablero.consultar`, `reportes.cartera` y los demás reportes (con el formato pantalla o xlsx), `cajas.informe-diario`, `auditoria.consultar`, `regimen.generar`, `regimen.rectificar` y `regimen.descargar`. Ninguna consulta modificó el estado de las operaciones (RN-47). | |
 
+## 11. Copias de seguridad y restauración (CU-61 a CU-63)
+
+Preparación del bloque D (D-45):
+1. Agregar al `.env` el inicio de sesión de mantenimiento de las copias (ver `env.sigccr.example`) y elegir su contraseña:
+   ```ini
+   database.copias.hostname = db
+   database.copias.database = master
+   database.copias.username = sigccr_copias
+   database.copias.password = <contraseña nueva, sin comillas simples>
+   database.copias.DBDriver = SQLSRV
+   database.copias.port = 1433
+   database.copias.encrypt = false
+   database.copias.DBDebug = true
+   ```
+2. Recrear los contenedores (el app monta ahora el volumen de copias y el scheduler prepara sus permisos), aplicar la migración 29 y volver a ejecutar la inicialización, que crea `sigccr_copias`:
+   ```bash
+   git pull && docker compose up -d --force-recreate web app scheduler
+   docker compose exec app composer migrar
+   docker compose exec app bash docker/inicializar.sh
+   ```
+   El script es repetible: como el Administrador ya existe, el paso 7 no pide datos. Debe terminar con «Arquitectura ejecutable verificada.».
+3. Para no esperar al minuto del planificador, el procesamiento se puede forzar con `docker compose exec -u www-data scheduler php spark copias:procesar`.
+4. Antes de I-87 conviene registrar alguna operación (por ejemplo, un cliente o un cobro) después de la copia que se va a restaurar.
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| I-81 | Acceso y destino (CU-61 paso 2) | Como Administrador, abrir *Administración → Copias de seguridad*. Como Gerente, abrir `/admin/copias`. | Destino `/var/opt/sigccr/backups` disponible con su espacio libre, el campo de descripción y el listado vacío. El Gerente recibe el acceso denegado (`acceso.denegado`). | |
+| I-82 | Generar una copia manual | Ingresar la descripción «Prueba funcional del bloque D», presionar «Generar copia», cancelar el aviso y después aceptarlo. | Al cancelar no se solicita nada (A4). Al aceptar se abre la copia como *Solicitada* con el aviso de que se genera en el próximo minuto; la pantalla se actualiza sola. Al minuto (o con `copias:procesar`) queda *Verificada* con su tamaño, «Base de datos y archivos del legajo, cifrada», la fecha de fin y el código SHA-256. En el volumen: `docker compose exec scheduler ls -l /var/opt/sigccr/backups` muestra el `.sccr` y su `.json`, sin ningún `.bak` ni `.zip` sin cifrar. | |
+| I-83 | Copia en curso (A1) | Generar otra copia y, antes de que se procese, volver al listado e intentar una nueva. | El botón «Generar copia» queda deshabilitado con el aviso «Hay una copia en curso…». Si se envía el formulario desde otra pestaña abierta antes: «Ya hay una copia de seguridad en curso: espere a que finalice… (A1).». | |
+| I-84 | Copia automática (A5) y depuración | Ejecutar `docker compose exec -u www-data scheduler php spark copias:generar`. Luego, con SQL, envejecer una copia: `UPDATE dbo.copias_seguridad SET fecha_generacion = DATEADD(day, -40, fecha_generacion) WHERE id = <id de I-82>;` y volver a ejecutar el comando. | «Copia N generada y verificada.»; la copia figura con origen *Automática* y responsable *Proceso copias:generar*. En la segunda ejecución, «Copias depuradas: 1.»: la copia envejecida queda *Depurada* y su archivo ya no está en el volumen. La copia más reciente nunca se depura. | |
+| I-85 | Descargar y verificar (CU-62) | Abrir una copia verificada, presionar «Descargar copia», cancelar y luego aceptar. En la carpeta de descargas ejecutar `certutil -hashfile <archivo> SHA256` (Windows). | Al cancelar no descarga (A4). Al aceptar se descarga `sigccr_…_manual_….sccr` y el código calculado coincide con el que muestra la pantalla. Registro `copias.descargar` exitoso. | |
+| I-86 | Copia corrupta (A1) | Alterar el archivo de una copia: `docker compose exec scheduler sh -c 'echo x >> /var/opt/sigccr/backups/<archivo>.sccr'`. Intentar descargarla y luego restaurarla. | «La copia está corrupta: su archivo no coincide con el código de verificación…» (A1). La copia queda *Corrupta* y ya no ofrece descarga ni restauración. | |
+| I-87 | Confirmación de la restauración (A2) | En una copia verificada presionar «Restaurar esta copia». Escribir «si» y enviar. | La advertencia indica que se reemplaza la información actual, que se pierden las operaciones posteriores a la fecha de la copia y que se cierran las sesiones. Con «si»: «Para confirmar, escriba RESTAURAR (A2).» y no pasa nada. | |
+| I-88 | Restaurar (CU-63) | Escribir RESTAURAR y enviar. Esperar con la página abierta; en otra ventana intentar abrir el panel y el portal. | Se abre *Sistema en mantenimiento* con la etapa en curso (copia del estado actual, sesiones, restauración, verificación), que se actualiza sola. El panel y el portal responden la misma página (503) y los procesos programados se omiten. Al terminar: «Restauración finalizada… Base restaurada al … desde …». Hay que volver a iniciar sesión: la operación registrada después de la copia ya no está. | |
+| I-89 | Resultado y trazabilidad | Ingresar como Administrador y abrir *Copias de seguridad*; abrir la copia restaurada y la *Previa a una restauración*. Ver `docker compose exec app tail -n 1 writable/logs/restauraciones.log`. | El aviso de la última restauración muestra el resultado y las operaciones posteriores que deben reconstruirse (por ejemplo, «1 cliente registrado…, N registros de auditoría»), que quedan en la copia previa. El listado incluye todas las copias generadas, también las posteriores a la restaurada (catálogo rehecho). La copia restaurada muestra su restauración con el responsable y la copia previa. El Administrador tiene la alerta de la restauración. El registro técnico tiene una línea JSON con la copia, la copia previa, el responsable y el resultado. En la auditoría: `copias.solicitar-restauracion` y `copias.restaurar` (este en la base restaurada). | |
+| I-90 | Sin copia previa (A3) | Opcional: llenar el volumen o quitar temporalmente el permiso de escritura (`docker compose exec scheduler chmod 0555 /var/opt/sigccr/backups`) y pedir una restauración sin marcar la opción. Restablecer con `docker compose up -d --force-recreate scheduler`. | La copia previa falla y la restauración no se realiza: «No se pudo generar la copia del estado actual (…). No se restauró…» (A3) y el sistema sale del modo mantenimiento. Marcando «Restaurar aunque no se pueda generar la copia del estado actual» la restauración sigue sin respaldo previo. | |
+| I-91 | Descifrar fuera del sistema | Copiar una copia descargada al contenedor y descifrarla: `docker compose exec app php spark copias:descifrar writable/<archivo>.sccr writable/copia.zip`. | Muestra el SHA-256 y «Copia descifrada…». El zip tiene `sigccr.bak` y la carpeta `adjuntos/`. Con un archivo alterado: «La copia fue alterada o se cifró con otra clave.». | |
+
 ## Registro
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
@@ -205,3 +243,4 @@ Preparación del bloque C (D-44):
 | | Iván Ezequiel Thoux | de 44 (bloque A) | | |
 | | Iván Ezequiel Thoux | de 18 (bloque B) | | |
 | | Iván Ezequiel Thoux | de 18 (bloque C) | | |
+| | Iván Ezequiel Thoux | de 11 (bloque D) | | |

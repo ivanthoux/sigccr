@@ -71,23 +71,20 @@ final class PaqueteCopia
         fclose($out);
         $n = 0;
         if ($dirAdjuntos !== null) {
+            if (!is_dir($dirAdjuntos)) {
+                mkdir($dirAdjuntos, 0750, true);
+            }
+            $base = (string) realpath($dirAdjuntos);
             for ($i = 0; $i < $zip->numFiles; $i++) {
                 $nombre = (string) $zip->getNameIndex($i);
                 if (!str_starts_with($nombre, self::ADJUNTOS) || str_ends_with($nombre, '/')) {
                     continue;
                 }
-                $relativo = substr($nombre, strlen(self::ADJUNTOS));
-                if ($relativo === '' || str_contains($relativo, '..') || str_starts_with($relativo, '/')) {
-                    throw new CopiaCorruptaException('La copia contiene una ruta de adjunto inválida.');
-                }
-                $ruta = rtrim($dirAdjuntos, '/') . '/' . $relativo;
-                if (!is_dir(dirname($ruta))) {
-                    mkdir(dirname($ruta), 0750, true);
-                }
+                $ruta = self::rutaSegura($base, substr($nombre, strlen(self::ADJUNTOS)));
                 $s = $zip->getStream($nombre);
                 $d = fopen($ruta, 'wb');
                 if ($s === false || $d === false) {
-                    throw new RuntimeException("No se pudo restaurar el adjunto {$relativo}.");
+                    throw new RuntimeException('No se pudo restaurar el adjunto ' . basename($ruta) . '.');
                 }
                 stream_copy_to_stream($s, $d);
                 fclose($s);
@@ -98,5 +95,29 @@ final class PaqueteCopia
         $zip->close();
 
         return $n;
+    }
+
+    /**
+     * Ruta de destino de un adjunto dentro de la carpeta (protección contra «zip slip»): solo admite nombres simples
+     * separados por barras y comprueba que la carpeta resuelta quede dentro de la base.
+     */
+    private static function rutaSegura(string $base, string $relativo): string
+    {
+        $partes = explode('/', $relativo);
+        foreach ($partes as $p) {
+            if ($p === '' || $p === '.' || $p === '..' || preg_match('/^[\w.\- ]+$/u', $p) !== 1) {
+                throw new CopiaCorruptaException('La copia contiene una ruta de adjunto inválida.');
+            }
+        }
+        $carpeta = $base . (count($partes) > 1 ? '/' . implode('/', array_slice($partes, 0, -1)) : '');
+        if (!is_dir($carpeta)) {
+            mkdir($carpeta, 0750, true);
+        }
+        $real = realpath($carpeta);
+        if ($real === false || ($real !== $base && !str_starts_with($real, $base . DIRECTORY_SEPARATOR))) {
+            throw new CopiaCorruptaException('La copia contiene una ruta de adjunto inválida.');
+        }
+
+        return $real . DIRECTORY_SEPARATOR . end($partes);
     }
 }
