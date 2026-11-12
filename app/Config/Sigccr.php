@@ -23,6 +23,14 @@ class Sigccr extends BaseConfig
     /** Modo de mantenimiento del portal de clientes (RNF-13, plan correctivo de R7). */
     public bool $portalEnMantenimiento = false;
 
+    /**
+     * Copias de seguridad (CU-61 a CU-63, RNF-13, D-45). El volumen se monta con la misma ruta en los contenedores
+     * db y scheduler (lectura y escritura) y en app (solo lectura, para la descarga).
+     */
+    public string $directorioCopias = '/var/opt/sigccr/backups';
+    public bool $copiasConAdjuntos = true;
+    public int $diasConservacionCopias = 30;
+
     /** Sesiones (RNF-11), en segundos. */
     public int $inactividadPanel = 1800;
     public int $inactividadPortal = 900;
