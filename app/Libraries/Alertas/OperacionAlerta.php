@@ -19,6 +19,7 @@ final class OperacionAlerta
         'solicitudes_credito' => ['texto' => 'Ver la solicitud', 'ruta' => 'admin/solicitudes/{id}', 'permiso' => 'solicitudes.consultar'],
         'propuestas_refinanciacion' => ['texto' => 'Ver la propuesta', 'ruta' => 'admin/refinanciaciones/{id}', 'permiso' => 'refinanciaciones.consultar'],
         'cobros' => ['texto' => 'Ver el cobro', 'ruta' => 'admin/cobros/{id}', 'permiso' => 'cobros.emitir-comprobante'],
+        'pre_registros' => ['texto' => 'Ver el pre-registro', 'ruta' => 'admin/pre-registros/{id}', 'permiso' => 'clientes.registrar'],
     ];
 
     /** Nombres para mostrar el objeto relacionado de una alerta. */
@@ -29,6 +30,7 @@ final class OperacionAlerta
         'solicitudes_credito' => 'Solicitud',
         'propuestas_refinanciacion' => 'Propuesta de refinanciación',
         'cobros' => 'Cobro',
+        'pre_registros' => 'Pre-registro del portal',
         'comunicaciones' => 'Comunicación',
         'ejecuciones_proceso' => 'Proceso automático',
     ];

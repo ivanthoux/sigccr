@@ -8,14 +8,16 @@
  * @var list<array{id: int, nombre: string}> $provincias
  * @var list<array{id: int, nombre: string}> $localidades de la provincia elegida (D-18)
  * @var array<string, array{tope: string, vigente_desde: string}> $escalaMonotributo categorías vigentes (D-26)
+ * @var array<string, string>|null $pre datos de un pre-registro verificado del portal (CU-104), propuestos en el alta
  */
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorCliente;
 
 $alta = $c === null;
-$v = static function (string $k) use ($c): string {
-    $valor = old($k, $c[$k] ?? '');
+$pre ??= null;
+$v = static function (string $k) use ($c, $pre): string {
+    $valor = old($k, $c[$k] ?? $pre[$k] ?? '');
     if ($k === 'ingresos_declarados' && old($k) === null && $valor !== '') {
         return str_replace('$ ', '', formato_importe((string) $valor));
     }
@@ -43,6 +45,10 @@ $this->section('contenido');
 <form method="post" action="<?= $alta ? site_url('admin/clientes') : site_url('admin/clientes/' . $c['id'] . '/editar') ?>" enctype="multipart/form-data" class="formulario-cliente" style="max-width: 60rem" novalidate data-tipo="<?= esc($tipo, 'attr') ?>">
     <?= csrf_field() ?>
     <?php if (!$alta): ?><input type="hidden" name="version_fila" value="<?= (int) $c['version_fila'] ?>"><?php endif ?>
+    <?php if ($alta && ($pre !== null || old('pre_registro_id') !== null)): ?>
+        <input type="hidden" name="pre_registro_id" value="<?= esc((string) old('pre_registro_id', $pre['pre_registro_id'] ?? ''), 'attr') ?>">
+        <div class="alert alert-info">Alta desde un pre-registro del portal: los datos los ingresó la persona y su correo ya está verificado. Antes de registrar, verifique su identidad con el documento original y complete el resto de los datos (CU-104).</div>
+    <?php endif ?>
 
     <?php if ($alta): ?>
         <fieldset class="hoja p-4 mb-3">
@@ -92,6 +98,12 @@ $this->section('contenido');
         </div>
         <div class="row g-3 mt-0">
             <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta; obligatorio para solicitar crédito)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, 'inputmode="numeric"'), '11 dígitos, con o sin guiones.', 'col-md-6') ?>
+            <?php if ($alta): ?>
+                <div class="col-md-6 d-flex flex-column justify-content-end" data-solo="PersonaHumana">
+                    <button type="button" class="btn btn-outline-secondary align-self-start" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
+                    <div class="form-text" data-padron-resultado role="status">Propone el nombre, el documento y el domicilio fiscal del CUIL para que los confirme (A9).</div>
+                </div>
+            <?php endif ?>
         </div>
     </fieldset>
 

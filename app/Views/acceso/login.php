@@ -37,6 +37,7 @@ $this->section('contenido');
     <div class="border-top mt-4 pt-3 small text-body-secondary">
         ¿Es la primera vez que ingresa, o la entidad reactivó su ficha?
         <a href="<?= url_to('portal.activar') ?>">Activar o rehabilitar acceso</a>
+        <div class="mt-2">¿Todavía no es cliente? <a href="<?= url_to('portal.pre-registro') ?>">Pre-registrarse</a></div>
     </div>
 <?php endif ?>
 <?php $this->endSection() ?>

@@ -22,6 +22,7 @@ class AutorizacionService extends BaseService
         'VerificacionCorreo' => 30,
         'Activacion' => 1440,
         'Rehabilitacion' => 1440,
+        'CambioCorreo' => 30,
     ];
 
     /** Plantilla de correo por propósito (app/Views/correos). */
@@ -32,28 +33,32 @@ class AutorizacionService extends BaseService
         'VerificacionCorreo' => 'verificacion_correo',
         'Activacion' => 'activacion_acceso',
         'Rehabilitacion' => 'activacion_acceso',
+        'CambioCorreo' => 'cambio_correo',
     ];
 
     /**
      * Emite la autorización y encola su correo. Debe llamarse dentro de la transacción de la operación; el envío
      * inmediato se hace después con ComunicacionService::enviar() sobre el identificador devuelto.
+     * $enviarA indica otro destinatario del mensaje: en CambioCorreo la autorización guarda el correo nuevo y se envía
+     * al correo actual del cliente (CU-75 paso 5, RN-58).
      *
      * @return int identificador de la comunicación encolada
      */
-    public function emitir(int $cuentaId, string $proposito, string $correoDestino, string $nombre, string $rutaEnlace, ?string $plantilla = null): int
+    public function emitir(int $cuentaId, string $proposito, string $correoDestino, string $nombre, string $rutaEnlace, ?string $plantilla = null, ?string $enviarA = null): int
     {
         ['codigo' => $codigo, 'id' => $autorizacionId, 'vence' => $vence] = $this->crear($cuentaId, $proposito, $correoDestino);
         $minutos = self::VIGENCIA_MINUTOS[$proposito];
 
         return (new ComunicacionService())->encolar(
             $proposito === 'VerificacionCorreo' ? 'VerificacionCorreo' : 'Autorizacion',
-            $correoDestino,
+            $enviarA ?? $correoDestino,
             $plantilla ?? self::PLANTILLAS[$proposito],
             [
                 'nombre' => $nombre,
                 'enlace' => site_url($rutaEnlace . '/' . $codigo),
                 'vence' => $vence->setTimezone(config('Sigccr')->zonaNegocio)->format('d/m/Y H:i'),
                 'vigencia' => $minutos >= 60 ? intdiv($minutos, 60) . ' horas' : $minutos . ' minutos',
+                'correo_nuevo' => $enviarA !== null ? $correoDestino : null,
             ],
             'autorizaciones_temporales',
             $autorizacionId,

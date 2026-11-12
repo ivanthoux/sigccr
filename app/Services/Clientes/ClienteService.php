@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ReglasClientes;
 use App\Libraries\Clientes\RequisitosDocumentales;
+use App\Libraries\Portal\ReglasPortal;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorCliente;
 use App\Services\Acceso\AutorizacionService;
@@ -29,6 +30,7 @@ use Throwable;
 class ClienteService extends BaseService
 {
     private const RUTA_VERIFICACION = 'portal/verificar-correo';
+    private const RUTA_CAMBIO_CORREO = 'portal/cambio-correo';
     /** Clientes que muestra la pantalla inicial de CU-54 antes de buscar. */
     public const CANTIDAD_RECIENTES = 50;
 
@@ -176,7 +178,8 @@ class ClienteService extends BaseService
 
         $movidos = [];
         try {
-            [$id, $comunicacionId] = $this->transaccion(function () use ($d, $documentos, $usuarioId, &$movidos): array {
+            $preRegistroId = ctype_digit((string) ($datos['pre_registro_id'] ?? '')) ? (int) $datos['pre_registro_id'] : null;
+            [$id, $comunicacionId] = $this->transaccion(function () use ($d, $documentos, $usuarioId, $preRegistroId, &$movidos): array {
                 $this->verificarUnicidad($d, null, null);
                 $ahora = $this->ahoraUtc();
                 $this->db->table('clientes')->insert([
@@ -209,7 +212,11 @@ class ClienteService extends BaseService
                 if ($d['persona_expuesta']) {
                     $this->alertarPersonaExpuesta($id, ValidadorCliente::denominacion($d));
                 }
-                (new AuditoriaService($this->db))->registrar('clientes.registrar', 'clientes', $id, 'Exitoso', null, [
+                // CU-104 paso 7: el alta completa el pre-registro verificado desde el que se inició
+                if ($preRegistroId !== null) {
+                    (new PreRegistroService($this->db))->completar($preRegistroId, $id, $usuarioId);
+                }
+                (new AuditoriaService($this->db))->registrar('clientes.registrar', 'clientes', $id, 'Exitoso', null, ['pre_registro' => $preRegistroId] + [
                     'tipo' => $d['tipo_cliente'], 'denominacion' => ValidadorCliente::denominacion($d), 'categoria' => $d['categoria_ingresos'],
                     'documentos' => count($documentos), 'comunicaciones_comerciales' => $d['acepta_comunicaciones'], 'persona_expuesta' => $d['persona_expuesta'],
                 ]);
@@ -341,6 +348,10 @@ class ClienteService extends BaseService
             if ($repetido) {
                 throw new ReglaNegocioException('Ese correo ya está registrado para otro cliente.', 'RN-08');
             }
+            if ($correo !== (string) $cliente['correo']) {
+                // RN-58: se invalidan las autorizaciones pendientes asociadas al correo sustituido
+                $autorizaciones->sustituirVigentes($cuentaId);
+            }
             $this->db->query('UPDATE dbo.cuentas_acceso SET correo = ?, correo_verificado = 1, actualizado_en = ?, version_fila = version_fila + 1 WHERE id = ?', [$correo, $this->ahoraUtc(), $cuentaId]);
             $this->db->query('UPDATE dbo.clientes SET correo = ?, actualizado_en = ?, version_fila = version_fila + 1 WHERE id = ?', [$correo, $this->ahoraUtc(), $cliente['id']]);
             $autorizaciones->marcarUtilizada((int) $a['id']);
@@ -348,6 +359,102 @@ class ClienteService extends BaseService
 
             return $cuentaId;
         });
+    }
+
+    /**
+     * CU-98 pasos 3 a 7 (A1, A2): el cliente otorga o revoca desde el portal su consentimiento para comunicaciones
+     * comerciales. La revocación cancela sus comunicaciones comerciales pendientes y lo excluye de nuevas campañas;
+     * las comunicaciones necesarias para la operatoria no requieren consentimiento (RN-64).
+     *
+     * @return array{otorgado: bool, ofertas_vigentes: int}
+     */
+    public function cambiarConsentimiento(int $clienteId, bool $otorgar): array
+    {
+        return $this->transaccion(function () use ($clienteId, $otorgar): array {
+            $this->bloquear('clientes', [$clienteId]);
+            $vigente = $this->db->query(
+                "SELECT TOP 1 otorgado FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY fecha DESC, id DESC",
+                [$clienteId],
+            )->getRowArray();
+            ReglasPortal::validarCambioConsentimiento($vigente === null ? null : (int) $vigente['otorgado'] === 1, $otorgar);
+            $this->registrarConsentimiento($clienteId, 'ComunicacionesComerciales', $otorgar, 'Portal');
+            $ofertas = 0;
+            if (!$otorgar) {
+                $this->cancelarComunicacionesComerciales($clienteId);
+                $ofertas = $this->db->table('ofertas')->where('cliente_id', $clienteId)->where('estado', 'Vigente')->where('vence >', $this->ahoraUtc())->countAllResults();
+            }
+            (new AuditoriaService($this->db))->registrar('clientes.consentimiento', 'clientes', $clienteId, 'Exitoso', null, ['comunicaciones_comerciales' => $otorgar, 'medio' => 'Portal']);
+
+            return ['otorgado' => $otorgar, 'ofertas_vigentes' => $ofertas];
+        });
+    }
+
+    /**
+     * CU-75 pasos 2 a 5 (A1): el cliente pide cambiar su correo. La autorización guarda el correo nuevo y se envía al
+     * correo actual, que confirma la operación; el nuevo todavía no se usa para el acceso ni la recuperación (RN-58).
+     */
+    public function solicitarCambioCorreo(int $clienteId, string $nuevoTexto): void
+    {
+        $c = $this->obtener($clienteId);
+        $nuevo = Campos::correo($nuevoTexto);
+        $actual = (string) ($c['correo_cuenta'] ?? $c['correo']);
+        $error = ReglasPortal::validarCorreoNuevo($nuevo, $actual);
+        if ($error !== null) {
+            throw new ValidacionException(['correo_nuevo' => $error], 'RN-58');
+        }
+        $comunicacionId = $this->transaccion(function () use ($c, $clienteId, $nuevo, $actual): int {
+            $this->correoDisponible($nuevo, $clienteId);
+            $cuentaId = (int) $c['cuenta_cliente_id'];
+            $id = (new AutorizacionService($this->db))->emitir($cuentaId, 'CambioCorreo', $nuevo, (string) ($c['nombre'] ?? $c['representante_nombre'] ?? $c['denominacion']), self::RUTA_CAMBIO_CORREO, null, $actual);
+            (new AuditoriaService($this->db))->registrar('clientes.cambio-correo.solicitud', 'clientes', $clienteId, 'Exitoso', null, ['correo_actual' => $actual, 'correo_nuevo' => $nuevo]);
+
+            return $id;
+        });
+        (new ComunicacionService())->enviar($comunicacionId);
+    }
+
+    /**
+     * CU-75 pasos 6 y 7 (A2): el cliente confirma desde su correo actual. Se envía la verificación al correo nuevo,
+     * que completa el cambio con verificarCorreo() (pasos 8 y 9).
+     *
+     * @return string correo nuevo al que se envió la verificación
+     */
+    public function confirmarCambioCorreo(string $codigo): string
+    {
+        [$nuevo, $comunicacionId] = $this->transaccion(function () use ($codigo): array {
+            $autorizaciones = new AutorizacionService($this->db);
+            $a = $autorizaciones->buscarVigente($codigo, ['CambioCorreo'], true);
+            $c = $a === null ? null : $this->db->query(
+                'SELECT c.id, c.denominacion, ph.nombre, pj.representante_nombre FROM dbo.clientes c LEFT JOIN dbo.personas_humanas ph ON ph.cliente_id = c.id '
+                . "LEFT JOIN dbo.personas_juridicas pj ON pj.cliente_id = c.id WHERE c.cuenta_cliente_id = ? AND c.estado = 'Activo'",
+                [$a['cuenta_acceso_id']],
+            )->getRowArray();
+            if ($a === null || $c === null) {
+                throw new ReglaNegocioException('El enlace para confirmar el cambio de correo expiró o ya no es válido: el correo no se modificó. Puede volver a pedir el cambio desde el portal.', 'RN-03');
+            }
+            $nuevo = (string) $a['correo_destino'];
+            $this->correoDisponible($nuevo, (int) $c['id']);
+            $autorizaciones->marcarUtilizada((int) $a['id']);
+            $id = $autorizaciones->emitir((int) $a['cuenta_acceso_id'], 'VerificacionCorreo', $nuevo, (string) ($c['nombre'] ?? $c['representante_nombre'] ?? $c['denominacion']), self::RUTA_VERIFICACION, 'verificacion_correo_nuevo');
+            (new AuditoriaService($this->db))->registrar('clientes.cambio-correo.confirmacion', 'clientes', (int) $c['id'], 'Exitoso', 'Confirmado desde el correo actual', ['correo_nuevo' => $nuevo], null, (int) $a['cuenta_acceso_id'], (string) $c['denominacion']);
+
+            return [$nuevo, $id];
+        });
+        (new ComunicacionService())->enviar($comunicacionId);
+
+        return $nuevo;
+    }
+
+    /** CU-75 paso 4 (A1) y RN-08: el correo no puede estar asociado a otro cliente ni a otra cuenta del portal. */
+    private function correoDisponible(string $correo, int $clienteId): void
+    {
+        $enClientes = $this->db->table('clientes')->where('correo', $correo)->where('id !=', $clienteId)->countAllResults() > 0;
+        $enCuentas = $this->db->table('cuentas_acceso ca')->join('clientes c', 'c.cuenta_cliente_id = ca.id', 'left')
+            ->where('ca.tipo_cuenta', 'Cliente')->where('ca.correo', $correo)
+            ->groupStart()->where('c.id IS NULL', null, false)->orWhere('c.id !=', $clienteId)->groupEnd()->countAllResults() > 0;
+        if ($enClientes || $enCuentas) {
+            throw new ValidacionException(['correo_nuevo' => 'Ese correo ya está registrado para otro cliente: ingrese otro.'], 'RN-08');
+        }
     }
 
     /** CU-13 Desactivar Cliente (RN-09). */
@@ -549,9 +656,9 @@ class ClienteService extends BaseService
         }
     }
 
-    private function registrarConsentimiento(int $clienteId, string $tipo, bool $otorgado): void
+    private function registrarConsentimiento(int $clienteId, string $tipo, bool $otorgado, string $medio = 'Sucursal'): void
     {
-        $this->db->table('consentimientos')->insert(['cliente_id' => $clienteId, 'tipo' => $tipo, 'otorgado' => $otorgado ? 1 : 0, 'fecha' => $this->ahoraUtc(), 'medio' => 'Sucursal']);
+        $this->db->table('consentimientos')->insert(['cliente_id' => $clienteId, 'tipo' => $tipo, 'otorgado' => $otorgado ? 1 : 0, 'fecha' => $this->ahoraUtc(), 'medio' => $medio]);
     }
 
     /** RN-64: la revocación cancela de inmediato las comunicaciones comerciales pendientes del cliente. */

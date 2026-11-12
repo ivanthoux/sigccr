@@ -49,6 +49,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/rol', 'Admin\Usuarios::asignarRol/$1', ['filter' => 'permiso:usuarios.asignar-rol']);
         });
 
+        // CU-104 paso 7: pre-registros del portal, que el Analista completa con CU-11 o descarta
+        $routes->get('pre-registros', 'Admin\PreRegistros::index', ['as' => 'pre-registros.consultar', 'filter' => 'permiso:clientes.registrar']);
+        $routes->get('pre-registros/(:num)', 'Admin\PreRegistros::ver/$1', ['filter' => 'permiso:clientes.registrar']);
+        $routes->post('pre-registros/(:num)/descartar', 'Admin\PreRegistros::descartar/$1', ['filter' => 'permiso:clientes.registrar']);
+
         // SS-02 Clientes (CU-11 a CU-15, CU-54)
         $routes->group('clientes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
@@ -56,6 +61,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
             // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
             $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
+            // CU-11 A9: consulta del padrón de ARCA por CUIL
+            $routes->get('padron', 'Admin\Clientes::padron', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);
@@ -242,6 +249,14 @@ $routes->group('portal', static function (RouteCollection $routes): void {
     $routes->post('recuperar', 'Portal\Acceso::solicitarRecuperacion');
     $routes->get('restablecer/(:segment)', 'Portal\Acceso::restablecer/$1');
     $routes->post('restablecer/(:segment)', 'Portal\Acceso::guardarContrasena/$1');
+    // CU-104 Pre-registrarse en el Portal (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('pre-registro', 'Portal\PreRegistro::nuevo', ['as' => 'portal.pre-registro']);
+    $routes->post('pre-registro', 'Portal\PreRegistro::registrar');
+    $routes->get('pre-registro/verificar/(:segment)', 'Portal\PreRegistro::mostrarVerificacion/$1');
+    $routes->post('pre-registro/verificar/(:segment)', 'Portal\PreRegistro::verificar/$1');
+    // CU-75 pasos 6 y 7: confirmación desde el correo actual (sin sesión, RN-58)
+    $routes->get('cambio-correo/(:segment)', 'Portal\CambioCorreo::mostrar/$1');
+    $routes->post('cambio-correo/(:segment)', 'Portal\CambioCorreo::confirmar/$1');
 
     // Con sesión de cliente (RN-08): 15 minutos de inactividad (RNF-11)
     $routes->group('', ['filter' => 'auth:portal'], static function (RouteCollection $routes): void {
@@ -249,7 +264,28 @@ $routes->group('portal', static function (RouteCollection $routes): void {
         // CU-03 del Cliente
         $routes->get('salir', 'Portal\Acceso::confirmarCierre', ['as' => 'portal.salir']);
         $routes->post('salir', 'Portal\Acceso::cerrar');
-        // Iteración 4: CU-45 a CU-49 con sus nombres de ruta de Config\Menu::$portal
+        // CU-45, CU-98 y CU-75 (pasos 1 a 5)
+        $routes->get('perfil', 'Portal\Perfil::index', ['as' => 'portal.perfil']);
+        $routes->get('perfil/preferencias', 'Portal\Perfil::preferencias', ['as' => 'portal.preferencias']);
+        $routes->post('perfil/preferencias', 'Portal\Perfil::guardarPreferencias');
+        $routes->get('perfil/correo', 'Portal\Perfil::correo', ['as' => 'portal.cambiar-correo']);
+        $routes->post('perfil/correo', 'Portal\Perfil::solicitarCorreo');
+        // CU-46
+        $routes->get('solicitudes', 'Portal\Solicitudes::index', ['as' => 'portal.solicitudes']);
+        $routes->get('solicitudes/(:num)', 'Portal\Solicitudes::ver/$1');
+        // CU-47
+        $routes->get('estado-cuenta', 'Portal\EstadoCuenta::index', ['as' => 'portal.estado-cuenta']);
+        $routes->get('estado-cuenta/creditos/(:num)', 'Portal\EstadoCuenta::credito/$1');
+        $routes->get('estado-cuenta/creditos/(:num)/cuotas/(:num)', 'Portal\EstadoCuenta::cuota/$1/$2');
+        // CU-48: la descarga o reemisión es POST porque cuenta la reemisión (RN-31)
+        $routes->get('comprobantes', 'Portal\Comprobantes::index', ['as' => 'portal.comprobantes']);
+        $routes->get('comprobantes/(:num)', 'Portal\Comprobantes::ver/$1');
+        $routes->post('comprobantes/(:num)/descargar', 'Portal\Comprobantes::descargar/$1');
+        // CU-49
+        $routes->get('pagar', 'Portal\Pagos::index', ['as' => 'portal.pagar']);
+        $routes->post('pagar', 'Portal\Pagos::generar');
+        $routes->get('pagar/ordenes/(:num)', 'Portal\Pagos::orden/$1');
+        // Iteración 4, bloque B: CU-43 y CU-52 (portal.propuestas)
     });
 });
 
