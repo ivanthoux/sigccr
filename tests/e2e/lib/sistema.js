@@ -90,4 +90,17 @@ async function cerrarBase() {
   pool = undefined;
 }
 
-module.exports = { spark, sembrar, enApp, ultimoCorreo, cantidadCorreos, consulta, valor, cerrarBase };
+/**
+ * Simula la inactividad de una sesión (R-144): retrocede su última actividad en el archivo de sesión de CodeIgniter
+ * (writable/session/sigccr_sesion<id>), sin esperar 30 minutos.
+ */
+async function vencerSesion(contexto, segundos) {
+  const cookie = (await contexto.cookies()).find((c) => c.name === 'sigccr_sesion');
+  if (!cookie) throw new Error('El contexto no tiene la cookie de sesión.');
+  const archivo = `writable/session/sigccr_sesion${cookie.value}`;
+  const momento = Math.floor(Date.now() / 1000) - segundos;
+  // El identificador de la sesión y el instante van como argumentos ($1 y $2), no dentro del texto del comando
+  enApp('sh', '-c', 'sed -i -E "s/(s:16:\\"ultima_actividad\\";i:)[0-9]+/\\\\1$2/" "$1"', 'sh', archivo, String(momento));
+}
+
+module.exports = { spark, sembrar, enApp, ultimoCorreo, cantidadCorreos, consulta, valor, cerrarBase, vencerSesion };
