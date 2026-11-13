@@ -6,7 +6,7 @@ const { demo, activarPortal, entrarPortal, comoCliente, anchoDocumento, CLAVE_DE
 
 const { franco, joaquin } = demo;
 const exito = (page) => page.locator('.alert-success[role="status"]');
-const alerta = (page) => page.locator('.alert-danger');
+const alerta = (page) => page.locator('.alert-danger').first();
 const error = (page, campo) => page.locator(`#error-${campo}`);
 const AJENO = 'No encontramos la información solicitada entre sus operaciones.';
 const accesosAjenos = () => valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion = 'portal.acceso-denegado'");
