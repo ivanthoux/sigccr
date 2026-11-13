@@ -1,6 +1,11 @@
 # Pila aislada para las pruebas de punta a punta (proyecto sigccr_e2e, con sus propios volúmenes y base de datos).
 # Se usa con tests/e2e/ejecutar.sh; no toca los contenedores ni los datos del entorno de desarrollo.
 services:
+  # Sin scheduler: las copias (CU-61 a CU-63) las procesa app con copias:procesar, así que el volumen es de escritura
+  app:
+    volumes:
+      - backups:/var/opt/sigccr/backups
+
   playwright:
     build:
       context: ./tests/e2e

@@ -1,8 +1,8 @@
 // Parte 3, secciones 20 a 23. Revocación, cancelación anticipada, cierre de caja, proyección, vencimientos y
 // generales (CU-102, CU-97, CU-36, CU-92, CU-89): R-129 a R-147.
-const { test, expect } = require('../lib/fixtures');
-const { clientes, fecha } = require('../lib/datos');
-const { consulta, valor, spark, cerrarBase } = require('../lib/sistema');
+const { test, expect, olvidarSesion } = require('../lib/fixtures');
+const { clientes, fecha, usuarios, portal } = require('../lib/datos');
+const { consulta, valor, spark, cerrarBase, vencerSesion } = require('../lib/sistema');
 const k = require('../lib/cartera');
 
 const { C04: diego, C06: federico, C10: julian } = clientes;
@@ -208,9 +208,31 @@ test('R-143 Registros inexistentes', async ({ comoUsuario }) => {
   }
 });
 
-// R-144 exige 30 minutos sin uso (15 en el portal): queda para la prueba manual. El mensaje de fin de sesión se
-// corrigió en #148 (finalizar_sesion) y R-007 verifica el mismo mecanismo.
-test.fixme('R-144 Fin de la sesión por inactividad', async () => {});
+// R-144: en lugar de esperar 30 minutos (15 en el portal), se retrocede la última actividad del archivo de sesión
+test('R-144 Fin de la sesión por inactividad', async ({ comoUsuario, browser }) => {
+  const page = await comoUsuario('cajero');
+  await vencerSesion(page.context(), 31 * 60);
+  await page.goto('/admin/clientes');
+  await expect(page).toHaveURL(/\/admin\/login/);
+  await expect(page.locator('body')).toContainText('La sesión finalizó por inactividad.');
+  olvidarSesion(usuarios.cajero);
+  // En el portal el límite es de 15 minutos: 14 sin uso todavía no lo vencen
+  const contexto = await browser.newContext();
+  const portalPage = await contexto.newPage();
+  await portalPage.goto('/portal/login');
+  await portalPage.locator('#correo').fill('ana.gomez2@prueba.local');
+  await portalPage.locator('#contrasena').fill(portal.C01);
+  await portalPage.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(portalPage).toHaveURL(/\/portal\/?$/);
+  await vencerSesion(contexto, 14 * 60);
+  await portalPage.goto('/portal/estado-cuenta');
+  await expect(portalPage).toHaveURL(/\/portal\/estado-cuenta/);
+  await vencerSesion(contexto, 16 * 60);
+  await portalPage.goto('/portal/estado-cuenta');
+  await expect(portalPage).toHaveURL(/\/portal\/login/);
+  await expect(portalPage.locator('body')).toContainText('La sesión finalizó por inactividad.');
+  await contexto.close();
+});
 
 test('R-145 Pantalla angosta (360 px)', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');

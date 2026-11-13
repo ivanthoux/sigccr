@@ -72,8 +72,9 @@
     });
 
     // CU-11 A9: el padrón de ARCA propone los datos del CUIL; el Analista los confirma o corrige
-    const padron = form.querySelector('[data-padron]');
-    const resultado = form.querySelector('[data-padron-resultado]');
+    const form = document.querySelector('form.formulario-cliente');
+    const padron = form?.querySelector('[data-padron]');
+    const resultado = form?.querySelector('[data-padron-resultado]');
     if (padron && resultado) {
         padron.addEventListener('click', async () => {
             const cuil = (form.querySelector('#cuit_cuil')?.value || '').trim();
