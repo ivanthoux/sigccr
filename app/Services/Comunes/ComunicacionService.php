@@ -164,6 +164,12 @@ class ComunicacionService extends BaseService
      */
     private function autorizacionDeOrigen(array $c): ?array
     {
+        // CU-104: el enlace de verificación del pre-registro vale mientras siga pendiente de verificación y no venza
+        if ($c['origen_tipo'] === 'pre_registros') {
+            $p = $this->db->query('SELECT estado, vence FROM dbo.pre_registros WHERE id = ?', [(int) $c['origen_id']])->getRowArray();
+
+            return $p === null ? null : ['estado' => $p['estado'] === 'PendienteVerificacion' ? 'Vigente' : 'Utilizada', 'vence' => (string) $p['vence']];
+        }
         if ($c['origen_tipo'] !== 'autorizaciones_temporales') {
             return null;
         }

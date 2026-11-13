@@ -80,8 +80,9 @@ class ReporteService extends BaseService
             . 'FROM dbo.creditos c ' . self::LINEA . ' JOIN dbo.clientes cl ON cl.id = c.cliente_id '
             . 'OUTER APPLY (SELECT SUM(q.capital_pendiente) AS capital, SUM(q.interes_pendiente) AS interes, SUM(q.punitorio_pendiente + q.iva_punitorio_pendiente) AS punitorio, '
             . 'SUM(q.gastos_pendiente + q.iva_pendiente + q.no_capitalizable_pendiente) AS gastos, '
-            . 'SUM(CASE WHEN DATEDIFF(day, q.vencimiento, CAST(? AS date)) > c.tolerancia_dias THEN q.capital_pendiente ELSE 0 END) AS vencido '
-            . "FROM dbo.cuotas q WHERE q.credito_id = c.id AND q.estado IN ('Pendiente', 'Vencida')) x WHERE 1 = 1" . $filtro . ' ORDER BY c.numero',
+            . 'SUM(CASE WHEN DATEDIFF(day, q.vencimiento, CAST(? AS date)) > t.tolerancia THEN q.capital_pendiente ELSE 0 END) AS vencido '
+            // SQL Server no admite una referencia externa junto con columnas de q dentro de un agregado (error 8124)
+            . "FROM dbo.cuotas q CROSS APPLY (SELECT c.tolerancia_dias AS tolerancia) t WHERE q.credito_id = c.id AND q.estado IN ('Pendiente', 'Vencida')) x WHERE 1 = 1" . $filtro . ' ORDER BY c.numero',
             [$this->hoy, ...$b],
         );
         $estadosFiltro = (string) ($f['estado'] ?? '');

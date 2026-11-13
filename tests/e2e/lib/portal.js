@@ -47,7 +47,6 @@ async function comoCliente(browser, correo, clave = CLAVE_DEMO) {
   const contexto = await browser.newContext();
   contexto.on('page', (p) => p.on('dialog', (d) => d.accept()));
   const page = await contexto.newPage();
-  page.on('dialog', (d) => d.accept());
   await entrarPortal(page, correo, clave);
   return page;
 }

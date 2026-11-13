@@ -131,7 +131,7 @@ test('I-88 e I-89 Restaurar la copia (CU-63)', async ({ comoUsuario, browser }) 
   await page.locator('#confirmacion').fill('RESTAURAR');
   await page.getByRole('button', { name: 'Restaurar la copia' }).click();
   await expect(page).toHaveURL(/\/mantenimiento$/);
-  await expect(page.locator('h1')).toHaveText('Sistema en mantenimiento');
+  await expect(page.locator('main h1')).toHaveText('Sistema en mantenimiento');
   // Paso 8: el panel y el portal responden el modo mantenimiento
   const otro = await browser.newPage();
   expect((await otro.goto('/admin/login')).status()).toBe(503);
@@ -142,7 +142,7 @@ test('I-88 e I-89 Restaurar la copia (CU-63)', async ({ comoUsuario, browser }) 
   const salida = spark('copias:procesar');
   console.log(salida);
   await page.goto('/mantenimiento');
-  await expect(page.locator('h1')).toHaveText('Restauración finalizada');
+  await expect(page.locator('main h1')).toHaveText('Restauración finalizada');
   await expect(page.locator('main')).toContainText(`desde ${restaurada.archivo}`);
   // Las sesiones se cerraron (también la del Administrador)
   await page.goto('/admin');

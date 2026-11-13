@@ -56,10 +56,13 @@ test('I-45 Parámetros vigentes y acceso (CU-51)', async ({ comoUsuario }) => {
 test('I-46 Valores incoherentes', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
   const versiones = await valor("SELECT COUNT(*) FROM dbo.versiones_parametros WHERE tipo = 'Campanas'");
-  await registrarParametros(page, { capital_maximo: '0', factor_cobrabilidad: '120', linea: '', categorias: [], fecha_vigencia: fecha(-1) });
-  for (const campo of ['capital_maximo', 'factor_cobrabilidad', 'linea_id', 'categorias_admitidas', 'fecha_vigencia']) {
+  await registrarParametros(page, { capital_maximo: '0', factor_cobrabilidad: '120', linea: '', categorias: [] });
+  for (const campo of ['capital_maximo', 'factor_cobrabilidad', 'linea_id', 'categorias_admitidas']) {
     await expect(error(page, campo), campo).toBeVisible();
   }
+  // Con los datos válidos, la fecha anterior se rechaza por retroactividad
+  await registrarParametros(page, { fecha_vigencia: fecha(-1) });
+  await expect(page.locator('.alert-danger')).toContainText('no se admite retroactividad');
   expect(await valor("SELECT COUNT(*) FROM dbo.versiones_parametros WHERE tipo = 'Campanas'")).toBe(versiones);
 });
 
