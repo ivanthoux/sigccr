@@ -173,6 +173,11 @@ class MotorCopias
         $this->bloquear();
         try {
             return $this->restaurar($pedido);
+        } catch (Throwable $e) {
+            // Un error no previsto no puede dejar el sistema en modo mantenimiento: la restauración se da por fallida
+            log_message('critical', 'Restauración de copia: ' . $e->getMessage());
+
+            return $this->terminar($pedido, false, 'La restauración falló por un error inesperado; la base no se modificó si el error ocurrió antes de reemplazarla. Revise el registro técnico.', null, []);
         } finally {
             $this->liberar();
         }

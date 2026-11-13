@@ -76,7 +76,7 @@ let enlaceSofia;
 
 test('I-05 Pre-registro válido', async ({ page }) => {
   await preRegistrar(page, sofia);
-  await expect(page.locator('h1')).toHaveText('Verifique su correo');
+  await expect(page.locator('main h1')).toHaveText('Verifique su correo');
   await expect(page.locator('main')).toContainText(sofia.correo);
   const correo = ultimoCorreo(sofia.correo);
   expect(correo.enlace).toContain('/portal/pre-registro/verificar/');

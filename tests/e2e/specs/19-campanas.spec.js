@@ -2,7 +2,7 @@
 // docs/pruebas/prueba_funcional_iteracion_4.md.
 const { test, expect } = require('../lib/fixtures');
 const { consulta, valor, spark, cerrarBase, ultimoCorreo } = require('../lib/sistema');
-const { fecha, portal } = require('../lib/datos');
+const { fecha, ddmmaaaa, portal } = require('../lib/datos');
 const { demo, comoCliente } = require('../lib/portal');
 
 const { joaquin } = demo;
@@ -68,6 +68,16 @@ test('I-46 Valores incoherentes', async ({ comoUsuario }) => {
 
 test('I-47 Nueva versión de los parámetros', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
+  // Los créditos de demostración consumieron los fondos: un aporte deja la proyección por encima del umbral (CU-93)
+  await page.goto('/admin/fondos');
+  await page.locator('#tipo').selectOption('AporteCapital');
+  await page.locator('#caracter-Ingreso').check();
+  await page.locator('#programado').setChecked(false);
+  await page.locator('#importe').fill('40000000');
+  await page.locator('#fecha').fill(ddmmaaaa(fecha()));
+  await page.locator('#concepto').fill('Aporte para la campaña de la iteración 4');
+  await page.getByRole('button', { name: 'Registrar movimiento' }).click();
+  await expect(exito(page)).toContainText('Movimiento registrado.');
   await registrarParametros(page);
   await expect(exito(page)).toContainText('de los parámetros de campañas');
 });

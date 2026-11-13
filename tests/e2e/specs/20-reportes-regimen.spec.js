@@ -96,7 +96,7 @@ test('I-73 Informe de caja diaria como Gerente (CU-56)', async ({ comoUsuario })
   const page = await comoUsuario('gerente');
   await page.goto('/admin/caja-diaria');
   await sinErrores(page, 'caja diaria');
-  await expect(page.locator('h1')).toHaveText('Informe de caja diaria');
+  await expect(page.locator('main h1')).toHaveText('Informe de caja diaria');
   await expect(page.locator('#cajero')).toBeVisible();
   await page.goto('/admin/caja-diaria?desde=2020-01-06');
   await expect(page.locator('main')).toContainText('No se registraron jornadas');

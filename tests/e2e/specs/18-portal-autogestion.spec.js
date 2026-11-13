@@ -99,8 +99,8 @@ test('I-17 e I-18 Solicitar y confirmar desde el correo actual (CU-75)', async (
   await page.goto(confirmacion.enlace);
   await page.getByRole('button', { name: 'Confirmar el cambio' }).click();
   await expect(page.locator('main')).toContainText(`Cambio confirmado. Enviamos un enlace a ${franco.correoNuevo}`);
+  // Un enlace ya usado se informa como no válido sin ofrecer confirmar
   await page.goto(confirmacion.enlace);
-  await page.getByRole('button', { name: 'Confirmar el cambio' }).click();
   await expect(page.locator('main')).toContainText('expiró o ya no es válido');
   await portal.context().close();
 });
