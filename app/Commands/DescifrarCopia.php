@@ -26,7 +26,7 @@ class DescifrarCopia extends BaseCommand
     public function run(array $params): void
     {
         // spark cambia el directorio de trabajo a public/: las rutas relativas se toman desde la raíz del proyecto
-        $absoluta = static fn (string $r): string => $r === '' || str_starts_with($r, '/') || preg_match('/^[A-Za-z]:[\\\/]/', $r) === 1 ? $r : ROOTPATH . $r;
+        $absoluta = static fn (string $r): string => $r === '' || preg_match('#^([A-Za-z]:)?[\\\\/]#', $r) === 1 ? $r : ROOTPATH . $r;
         [$origen, $destino] = [$absoluta($params[0] ?? ''), $absoluta($params[1] ?? '')];
         if ($origen === '' || $destino === '' || !is_file($origen)) {
             CLI::error('Uso: php spark ' . $this->usage);
