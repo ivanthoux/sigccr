@@ -1,0 +1,16 @@
+digraph orden { rankdir=TB; graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+f1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f3 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+ini -> PendienteConfirmacion [label="generación (CU-34, CU-49)\n/ vence = 00:00 del día siguiente"];
+PendienteConfirmacion -> Confirmada [label="transacción aprobada (CU-90, CU-91)\n/ cobro; las diferencias generan\nincidencias (RN-56)"];
+PendienteConfirmacion -> Rechazada [label="transacción rechazada\n(CU-90)"];
+PendienteConfirmacion -> EnConciliacion [label="estado no definitivo\nde la pasarela (CU-90)"];
+PendienteConfirmacion -> Vencida [label="límite alcanzado sin\ntransacciones (CU-89, CU-91)"];
+EnConciliacion -> Confirmada [label="estado definitivo\naprobado (CU-90, CU-91)"];
+EnConciliacion -> Rechazada [label="estado definitivo\nrechazado (CU-90, CU-91)"];
+Vencida -> Confirmada [label="pago informado después del\nvencimiento (CU-91) / incidencia\nFueraDePlazo (RN-54, RN-56)"];
+Vencida -> Rechazada [label="transacción rechazada\n(CU-91)"];
+Confirmada -> f1; Rechazada -> f2; Vencida -> f3 [label="sin pagos\ninformados"];
+}

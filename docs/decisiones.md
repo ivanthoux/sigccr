@@ -542,3 +542,108 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** `ReglasActivacion::evaluar()` deja de exigir la verificación (prueba nueva). `ActivacionService::definirContrasena()` marca el correo verificado. Hay que actualizar el texto de CU-04 (paso 4) en el documento.
 
+## D-41 · La batería de punta a punta se ejecuta al cierre de la iteración (D-39, plan de pruebas)
+
+**Contexto.** Con D-39 la batería E2E corría en cada *pull request* y en cada cambio de `develop`. Instala la pila desde cero y tarda unos 15 minutos, así que cada cambio intermedio de una iteración esperaba la batería completa, aunque la prueba de aceptación de cada Control se hace sobre el incremento cerrado.
+
+**Decisión.** El flujo `E2E` se ejecuta en el *pull request* de `develop` a `main` que publica la versión de cada iteración, y a pedido (*Run workflow*) cuando se quiere comprobar un estado intermedio. Durante la iteración, cada *pull request* se controla con el flujo `CI`: pruebas unitarias del motor financiero y de las reglas, autorización de cada ruta con cada rol, sintaxis y análisis estático (SonarCloud). Las pruebas E2E de los casos nuevos se escriben durante la iteración y se ejecutan juntas al cierre.
+
+**Consecuencias.** `.github/workflows/e2e.yml` cambia sus disparadores. La versión no se publica en `main` sin la batería aprobada, de modo que cada Control sigue respaldado por la batería completa y por la prueba funcional manual.
+
+## D-42 · Portal de autogestión: acceso a la información propia, cambio de correo y pre-registro (SS-07; CU-45 a CU-49, CU-75, CU-98, CU-104; RN-01, RN-58, RN-64)
+
+**Contexto.** El portal no tiene reglas de negocio propias (3.7.1): muestra la información de los demás subsistemas restringida al cliente autenticado. Faltaba definir cómo se garantiza esa restricción, cómo se guarda el correo nuevo entre las dos verificaciones de RN-58 y dónde queda un pre-registro, que todavía no tiene cliente ni cuenta de acceso.
+
+**Decisión.**
+1. **Información propia.** Las pantallas del portal toman el cliente de la sesión, nunca de la petición. `PortalService` reutiliza las operaciones de SS-04, SS-05 y SS-06 y comprueba que cada solicitud, crédito, cobro u orden pertenezca al cliente; si no existe o es de otro, responde el mismo mensaje genérico y registra `portal.acceso-denegado` en la auditoría (CU-46 A3, CU-47 A4, CU-48 A3). Las consultas del perfil, el estado de cuenta, el plan, la solicitud y los comprobantes también se auditan.
+2. **Estado de cuenta.** La deuda se calcula con los punitorios hasta hoy, igual que en el cobro (D-33), y se muestra por concepto, separada del saldo a favor (RN-57). El importe de la cancelación anticipada (CU-47 A7) usa el cálculo de CU-97 sin registrar nada.
+3. **Comprobante.** La descarga es una reemisión: incrementa el contador y abre la impresión del navegador, desde la que el cliente lo guarda en PDF (RN-31).
+4. **Pago electrónico.** CU-49 usa la operación de CU-34 sin usuario interno y con el medio «Portal»; si una cuota ya integra una orden vigente se muestra esa orden (A8).
+5. **Cambio de correo (CU-75).** La autorización `CambioCorreo` guarda en `correo_destino` el correo nuevo y se envía al correo actual. Al confirmarla se emite la verificación del correo nuevo, que completa el cambio con la misma operación que CU-11 y CU-12. Cuando el correo cambia se invalidan las demás autorizaciones de la cuenta (RN-58).
+6. **Preferencias (CU-98).** El consentimiento se registra con medio «Portal». La revocación cancela las comunicaciones comerciales pendientes; las ofertas vigentes siguen pudiendo responderse (A2).
+7. **Pre-registro (CU-104).** Tabla `pre_registros` (migración 26), con su propio enlace de verificación de 30 minutos (hash SHA-256, RN-03), porque todavía no hay cuenta de acceso. Verificado el correo, queda *Pendiente de validación* con una alerta para los Analistas. El Analista lo abre desde *Pre-registros del portal* y completa el alta con el formulario de CU-11 prellenado; el alta lo marca *Completado*. También puede descartarlo con su motivo. Un pre-registro sin verificar se reinicia con los mismos datos (A3).
+8. **Padrón de ARCA (CU-11 A9).** `PadronInterface` con un simulador determinista (`SimuladorPadron`): CUIL conocidos de los datos de prueba, un DNI que empieza con 99 simula el servicio caído y uno con 98, sin datos. El Analista confirma o corrige lo propuesto.
+
+**Consecuencias.** Migración 26 y `spec.py`. Componentes nuevos: `PortalService`, `PreRegistroService`, `ReglasPortal`, `ValidadorPreRegistro`, `AccesoAjenoException`, `PadronInterface` y `SimuladorPadron`; controladores `Portal\Perfil`, `Solicitudes`, `EstadoCuenta`, `Comprobantes`, `Pagos`, `CambioCorreo`, `PreRegistro` y `Admin\PreRegistros`; plantillas de correo `cambio_correo`, `verificacion_correo_nuevo` y `verificacion_pre_registro`. `ClienteService` suma `cambiarConsentimiento()`, `solicitarCambioCorreo()` y `confirmarCambioCorreo()`. Pruebas `tests/unit/Portal/PortalTest.php` y `tests/rutas/VistasPortalTest.php`.
+
+## D-43 · Campañas crediticias: activación por proyección, ofertas desde la capacidad de pago y aceptación desde el portal (SS-08; CU-43 A5, CU-50 a CU-52, CU-92 a CU-94; RN-18, RN-39 a RN-43, RN-64, RN-66)
+
+**Contexto.** El esquema de SS-08 (campañas y ofertas) y la proyección de fondos (CU-92) existían desde la iteración 3, pero la proyección solo registraba si correspondía activar o cerrar. Faltaba definir los parámetros que rigen las campañas, cómo se calcula cada oferta, cómo se registra la solicitud que origina un cliente sin un Analista y cómo se integra el compromiso de fondos con la reserva de la aprobación.
+
+**Decisión.**
+1. **Parámetros (CU-51).** La versión de parámetros de tipo Campanas suma a los de la proyección: la línea habilitada, la cantidad máxima de ofertas, las categorías de ingresos admitidas, la antigüedad mínima, la morosidad máxima (días de atraso), si se admiten clientes con créditos vigentes, los canales (solo correo, el único que ofrece el servicio de comunicaciones), un mensaje opcional, la duración y si se cierra por disponibilidad. Las claves que la carga inicial no tiene toman valores sugeridos; sin línea configurada la campaña no se activa.
+2. **Activación (CU-93).** La ejecuta `fondos:proyectar` cuando la disponibilidad proyectada supera el umbral y no hay campaña activa (RN-66, con bloqueo de aplicación). El capital asignado es el menor entre el capital máximo y la disponibilidad proyectada, que ya descuenta la reserva mínima. Son elegibles los clientes activos con portal habilitado, consentimiento comercial vigente (RN-64), categoría y antigüedad admitidas, atraso dentro del máximo, sin solicitud en trámite en la línea (RN-18) y que cumplan las condiciones de la línea. La oferta es la alternativa viable de mayor importe, y entre iguales la de menos cuotas, calculada con CU-87 sobre la versión vigente de la línea. Sin elegibles no se activa y se alerta al Gerente (A1); con la línea suspendida tampoco (A2). Las ofertas vencen con la campaña y su correo queda en la cola de comunicaciones (A3).
+3. **Respuesta (CU-52).** El cliente ve sus ofertas en *Refinanciaciones y ofertas*. Al abrir una oferta vigente se recalculan sus alternativas con los ingresos y las obligaciones de hoy, y puede elegir cualquiera cuyo importe no supere el ofrecido (A4). Al aceptar se revalidan pertenencia, vigencia, cupo y versión de condiciones. Si la oferta ya no es válida queda *Vencida* y la aceptación no se registra (A2). Si es válida se genera una simulación y una solicitud con origen *Oferta* y sin Analista (migración 27: `usuario_id` nulo solo con ese origen). La solicitud se registra aunque falte documentación, que se presenta en la verificación (paso 10). Se constituye un **compromiso** de fondos y se suma el importe al capital comprometido de la campaña; si llega al asignado, la campaña se cierra por cupo (CU-94). El rechazo no genera solicitud (A1).
+4. **Compromiso y reserva (RN-41).** La aprobación convierte el compromiso de la solicitud en reserva en la misma fila, sin un segundo descuento; solo la diferencia, si el importe aprobado es mayor, debe estar libre. El rechazo, la cancelación o el vencimiento lo liberan como a cualquier reserva.
+5. **Cierre (CU-94).** El temporizador `campanas:cerrar` (cada 15 minutos) cierra por vigencia o por cupo. `fondos:proyectar` cierra por disponibilidad insuficiente si así se configuró. El cierre deja vencidas las ofertas no respondidas, cancela sus correos pendientes, audita los resultados y alerta al Gerente. Las solicitudes ya generadas siguen su trámite (RN-43).
+6. **Consulta (CU-50 y CU-43 A5).** El Gerente y el Analista consultan las campañas con sus condiciones, ofertas, comunicaciones, respuestas, solicitudes y resultados (aceptación, capital solicitado y colocado). El cliente consulta desde el portal sus propuestas de refinanciación, sin acceso a las de otros clientes.
+
+**Consecuencias.** Migración 27 y `spec.py`. Componentes nuevos: `CampanaService`, `ReglasCampanas`, `ValidadorParametrosCampanas`, el comando `campanas:cerrar` (habilitado en el planificador), los controladores `Admin\Campanas` y `Portal\Propuestas`, `Admin\Parametros::campanas` y la plantilla `oferta_crediticia`. Cambios: `FondosService` (activación y cierre desde la proyección, compromiso y su conversión), `SolicitudService::registrar()` (origen y usuario opcional) y `SimulacionService` (usuario opcional y versión vigente de una línea). Pruebas `tests/unit/Campanas/CampanasTest.php` y `tests/rutas/VistasCampanasTest.php`.
+
+## D-44 · Reportes, auditoría y régimen informativo: estructura común, exportación y aproximaciones (SS-09; CU-55 a CU-57, CU-65 a CU-71; SS-06: CU-105; RN-45, RN-47, RN-74, RN-84)
+
+**Contexto.** Los casos de uso de SS-09 piden, para cada reporte, un período, criterios opcionales, indicadores, distribuciones, evolución, impresión y exportación. El documento no fija el diseño de registro del archivo del BCRA (CU-105) ni cómo se reconstruye el estado de la cartera a una fecha pasada. Hacía falta resolver ambas cosas sin agregar dependencias ni tablas de historia.
+
+**Decisión.**
+1. **Estructura común.** `ReporteService` devuelve, para los siete reportes, la misma estructura: título, período, fecha de generación, criterios aplicados, aviso, indicadores (`[etiqueta, valor, tipo]`) y secciones (título, columnas tipadas, filas y nota). Una sola vista la presenta e imprime, y `Exportacion` la convierte en hojas de Excel. El tablero (CU-55) reutiliza los mismos cálculos y enlaza cada grupo con su reporte.
+2. **Período (`Periodo`).** El período puede ser día, semana, mes o trimestre (los que contienen la fecha de referencia) o un rango de hasta dos años. Un rango incoherente se rechaza (A2). La proyección (CU-70) solo admite períodos futuros y, sin fechas, toma el período de los parámetros de campañas. La evolución agrupa por día hasta 31 días, por semana hasta 186 y por mes en adelante.
+3. **Saldos y movimientos.** Los saldos (deuda, capital vencido, punitorios, morosidad) son a la fecha de generación, porque el modelo no conserva el estado diario de las cuotas. El período rige los movimientos: otorgamientos, cobros, solicitudes, propuestas, condonaciones y campañas, y su evolución. La pantalla lo aclara.
+4. **Indicadores de RN-74.** El índice de morosidad es el capital de las cuotas con atraso mayor a la tolerancia sobre el capital pendiente de la cartera vigente. La efectividad es lo cobrado de las cuotas que vencieron en el período sobre su exigible. El recupero son las imputaciones de cobros confirmados en el período a cuotas pagadas con atraso mayor a la tolerancia. La conversión de campañas son las ofertas cuya solicitud se liquidó sobre las ofertas emitidas. Las tasas de aprobación se calculan sobre las resueltas.
+5. **Exportación e impresión.** Excel (.xlsx) se genera con la extensión zip de PHP, sin bibliotecas: una hoja «Resumen» y una por sección, con los números como números. La impresión y el PDF usan la vista de impresión del navegador, que oculta el menú y los formularios. El detalle en pantalla se limita a 1.000 filas; los totales consideran todas.
+6. **Auditoría (CU-57).** El tipo de operación agrupa las acciones por su prefijo (acceso, administración, créditos, cobranzas, refinanciaciones, saldos a favor, parámetros, copias, reportes, portal). Las «decisiones automáticas» son las que registró un proceso programado; su detalle muestra el proceso y los datos registrados, sin usuario responsable (A4). La consulta de un registro y la generación de cada reporte, del tablero y del informe de caja quedan auditadas.
+7. **Caja diaria (CU-56).** El Cajero ve solo sus jornadas. Si elige otro Cajero, el informe se restringe y se le avisa (A2). Las jornadas abiertas se muestran con sus totales parciales y sin conciliación (A3). Cada jornada enlaza con su detalle de movimientos (CU-32).
+8. **Régimen informativo (CU-105).** El temporizador `regimen:generar` corre todos los días a las 7 y, desde el primer día hábil del mes, genera el mes anterior una sola vez (A1). Si falla, el período queda sin archivo y se reintenta al día siguiente (A3). Los deudores son los clientes con créditos Activos o En mora liquidados hasta el cierre del mes. Sus días de atraso son los de la cuota impaga más antigua vencida hasta el cierre, y la situación sale de RN-84. Se usa el estado de las cuotas al generar, de modo que un pago registrado entre el cierre y la generación reduce el atraso informado. El archivo tiene un formato propio separado por punto y coma: una cabecera y una línea por deudor con CUIT/CUIL, denominación, situación, saldo, días de atraso y cantidad de créditos. Se guarda con su SHA-256. La adaptación al diseño de registro vigente de la Central de Deudores queda fuera del alcance. El Gerente puede generar un mes cerrado o rectificarlo con un motivo: se agrega una versión y la anterior queda *Rectificado*. Se agrega el permiso `regimen.consultar` (CU-105) al Gerente.
+
+**Consecuencias.** Migración 28 (`regimenes_informativos` y `situaciones_deudor`) y `spec.py`. Componentes nuevos: `ReporteService`, `AuditoriaConsultaService`, `RegimenService`, las bibliotecas `Periodo`, `Indicadores`, `Xlsx`, `Exportacion` y `ReglasRegimen`, el comando `regimen:generar` (habilitado en el planificador), los controladores `Admin\Tablero`, `Admin\Reportes`, `Admin\CajaDiaria`, `Admin\Auditoria` y `Admin\Regimen`, y el helper `valor_reporte()`. La matriz 3.6.2 del documento suma CU-105 al Gerente; hay que ejecutar `composer semillas` para actualizar los permisos. Pruebas `tests/unit/Reportes/ReportesTest.php` y `tests/rutas/VistasReportesTest.php`.
+
+## D-45 · Copias de seguridad y restauración: ejecución en el contenedor de procesos, cifrado propio y catálogo fuera de la base (SS-11; CU-61 a CU-63; RN-45, RNF-10, RNF-13, RNF-16)
+
+**Contexto.** SQL Server Express no tiene el Agente SQL Server ni el cifrado de copias. El volumen de copias lo comparten el contenedor de la base y el de procesos. El usuario de la aplicación (`sigccr_app`) no tiene permiso para hacer copias ni restaurar, y no conviene dárselo a PHP-FPM. Además, una restauración reemplaza la base que registra las copias, la auditoría y el propio pedido de restauración.
+
+**Decisión.**
+1. **Quién ejecuta.**
+   - El panel solicita la copia (estado *Solicitada*) o la restauración. El comando `copias:procesar` del contenedor de procesos la ejecuta en el minuto siguiente; la copia automática diaria la ejecuta `copias:generar` a las 02:00 (CU-61 A5).
+   - Ambos comandos usan el inicio de sesión de mantenimiento `sigccr_copias`, que crea `inicializar.sh` con la contraseña `database.copias.password` (si está vacía, el script genera una al azar y la guarda en `.env`). Tiene `db_backupoperator` en la base y `dbcreator` en el servidor, y se conecta a `master`.
+   - El panel monta el volumen de solo lectura, solo para la descarga (CU-62).
+   - El directorio de copias pertenece a `mssql` y al grupo `www-data`, con *setgid*; lo prepara `entrypoint.sh`.
+   - Un bloqueo de aplicación impide dos copias o restauraciones a la vez (A1).
+2. **Generación (CU-61).**
+   - Se comprueba que el destino esté disponible y tenga espacio libre: el doble de los datos y los adjuntos, más un margen (A2).
+   - La base se copia con `BACKUP … WITH CHECKSUM, COPY_ONLY` y se verifica con `RESTORE VERIFYONLY`.
+   - La copia se empaqueta en un zip sin compresión junto con los archivos del legajo, si `sigccr.copiasConAdjuntos` lo indica. Se incluyen los que referencia `documentos_legajo`. Al restaurar se escriben solo los que referencia la base restaurada, con rutas validadas, y nunca se usan los nombres guardados en el paquete; esto evita escribir fuera de la carpeta del legajo (*zip slip*).
+   - El paquete se cifra con AES-256-GCM por bloques de 1 MiB, autenticando el número de bloque y el indicador de último bloque. La clave se deriva de `encryption.key` con HKDF. Se registra el SHA-256 del archivo cifrado.
+   - Junto al archivo se guarda un manifiesto con sus datos.
+   - Si algo falla, la copia queda *Fallida* con su causa (A3). Las fallas de la copia automática y de la copia previa alertan al Administrador (A5, RNF-16).
+3. **Conservación.** Después de la copia automática se depuran las copias verificadas con más de 30 días, salvo la más reciente; quedan *Depuradas*. La copia que se mantiene fuera del servidor es la que descarga el Administrador.
+4. **Descarga (CU-62).** Antes de entregar el archivo se recalcula su SHA-256. Si no coincide, la copia queda *Corrupta* y no se descarga (A1). La pantalla informa el código para comprobarlo después de la descarga (A3). El comando `copias:descifrar` permite restaurar la copia fuera del sistema, por ejemplo en la prueba mensual de R2.
+5. **Restauración (CU-63).**
+   - La confirmación explícita consiste en escribir RESTAURAR (A2). No se restaura si hay copias o procesos programados en curso.
+   - El pedido se guarda en `writable/copias/restauracion.json`, fuera de la base. Desde ese momento el sistema queda en modo mantenimiento: un filtro global responde 503 con la página del estado, que se actualiza sola, y los procesos programados se omiten.
+   - El proceso:
+     - verifica el SHA-256 de la copia (A1);
+     - cuenta las operaciones posteriores a la copia;
+     - genera la copia previa del estado actual. Si falla, solo continúa si el Administrador marcó «restaurar sin copia previa»; si no, termina y se lo avisa (A3);
+     - cierra las sesiones y pone la base *OFFLINE*;
+     - restaura con `REPLACE, CHECKSUM` y verifica con `DBCC CHECKDB`;
+     - aplica las migraciones pendientes, por si la copia es anterior a alguna, y asegura el usuario de las copias.
+   - Si la restauración falla, intenta volver al estado anterior con la copia previa (A4).
+   - El catálogo de copias se rehace con los manifiestos, porque la base restaurada no tiene las copias posteriores a ella y tiene la propia en curso.
+   - La restauración queda registrada en la tabla `restauraciones` y en la auditoría de la base resultante, y también en `writable/logs/restauraciones.log`, fuera de la base (RN-45). El Administrador recibe una alerta con las operaciones que hay que reconstruir.
+   - Como la cuenta de quien pidió la restauración puede no existir en la copia restaurada, se conserva su nombre.
+6. **Riesgo aceptado.** Las copias no se pueden descifrar sin `encryption.key`, que debe resguardarse fuera del servidor y separada de las copias.
+
+**Consecuencias.**
+- Migración 29 y `spec.py`: estados *Solicitada* y *Depurada*, origen *PreviaRestauracion*, descripción, responsable, adjuntos, fin y detalle de la copia; en la restauración, la copia previa, el responsable, el inicio y el resultado.
+- Componentes nuevos:
+  - `CifradoCopia`, `PaqueteCopia`, `PoliticaCopias` y `EstadoRestauracion`;
+  - `CopiaService` (panel) y `MotorCopias` (procesos);
+  - los comandos `copias:generar`, `copias:procesar` y `copias:descifrar`;
+  - el filtro `RestauracionFilter` y la página `/mantenimiento`;
+  - el controlador `Admin\Copias`.
+- Cambios:
+  - `BaseProcesoCommand` omite los procesos durante una restauración;
+  - el grupo `copias` en `Config\Database` y la configuración `directorioCopias`, `copiasConAdjuntos` y `diasConservacionCopias`;
+  - el volumen `backups` en el contenedor app, de solo lectura;
+  - el planificador, `crear_base.sql`, `inicializar.sh`, `env.sigccr.example` y el README.
+- En una instalación existente basta con volver a ejecutar `docker/inicializar.sh`, que agrega la configuración `database.copias.*` al `.env` y crea el inicio de sesión.
+- Pruebas: `tests/unit/Copias/CopiasTest.php` y `tests/rutas/VistasCopiasTest.php`.

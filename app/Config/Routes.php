@@ -13,6 +13,9 @@ $routes->get('/', 'Portada::index', ['as' => 'portada']);
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');
 
+// Estado de la restauración de una copia (CU-63, D-45): público y sin base de datos
+$routes->get('mantenimiento', 'Mantenimiento::index', ['as' => 'mantenimiento']);
+
 // Panel administrativo
 $routes->group('admin', static function (RouteCollection $routes): void {
     // SS-01: acceso sin sesión (CU-01, CU-02). El límite por dirección de origen se aplica en Config\Filters (RN-62).
@@ -49,6 +52,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('(:num)/rol', 'Admin\Usuarios::asignarRol/$1', ['filter' => 'permiso:usuarios.asignar-rol']);
         });
 
+        // CU-104 paso 7: pre-registros del portal, que el Analista completa con CU-11 o descarta
+        $routes->get('pre-registros', 'Admin\PreRegistros::index', ['as' => 'pre-registros.consultar', 'filter' => 'permiso:clientes.registrar']);
+        $routes->get('pre-registros/(:num)', 'Admin\PreRegistros::ver/$1', ['filter' => 'permiso:clientes.registrar']);
+        $routes->post('pre-registros/(:num)/descartar', 'Admin\PreRegistros::descartar/$1', ['filter' => 'permiso:clientes.registrar']);
+
         // SS-02 Clientes (CU-11 a CU-15, CU-54)
         $routes->group('clientes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
@@ -56,6 +64,8 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
             // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
             $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
+            // CU-11 A9: consulta del padrón de ARCA por CUIL
+            $routes->get('padron', 'Admin\Clientes::padron', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/documentos/(:num)', 'Admin\Clientes::descargarDocumento/$1/$2', ['filter' => 'permiso:clientes.consultar-perfil']);
@@ -87,6 +97,10 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
+        // SS-08 Campañas crediticias (CU-50); los parámetros (CU-51) están en el grupo parametros
+        $routes->get('campanas', 'Admin\Campanas::index', ['as' => 'campanas.consultar', 'filter' => 'permiso:campanas.consultar']);
+        $routes->get('campanas/(:num)', 'Admin\Campanas::ver/$1', ['filter' => 'permiso:campanas.consultar']);
+        $routes->get('campanas/ofertas/(:num)', 'Admin\Campanas::oferta/$1', ['filter' => 'permiso:campanas.consultar']);
         // SS-06 Refinanciaciones (CU-39 a CU-43, CU-74, CU-96) y condonación de punitorios (CU-44)
         $routes->get('refinanciaciones', 'Admin\Refinanciaciones::index', ['as' => 'refinanciaciones.localizar', 'filter' => 'permiso:refinanciaciones.localizar']);
         $routes->get('refinanciaciones/simular', 'Admin\Refinanciaciones::simular', ['as' => 'refinanciaciones.simular', 'filter' => 'permiso:refinanciaciones.simular']);
@@ -218,7 +232,31 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('estructuracion', 'Admin\Parametros::guardarEstructuracion', ['filter' => 'permiso:parametros.estructuracion']);
             $routes->get('morosidad', 'Admin\Parametros::morosidad', ['as' => 'parametros.morosidad', 'filter' => 'permiso:parametros.morosidad']);
             $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
+            $routes->get('campanas', 'Admin\Parametros::campanas', ['as' => 'parametros.campanas', 'filter' => 'permiso:parametros.campanas']);
+            $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
         });
+
+        // SS-11 Copias de seguridad (CU-61 a CU-63; D-45)
+        $routes->get('copias', 'Admin\Copias::index', ['as' => 'copias.generar', 'filter' => 'permiso:copias.generar']);
+        $routes->post('copias', 'Admin\Copias::generar', ['filter' => 'permiso:copias.generar']);
+        $routes->get('copias/(:num)', 'Admin\Copias::ver/$1', ['as' => 'copias.descargar', 'filter' => 'permiso:copias.descargar']);
+        $routes->post('copias/(:num)/descargar', 'Admin\Copias::descargar/$1', ['filter' => 'permiso:copias.descargar']);
+        $routes->get('copias/(:num)/restaurar', 'Admin\Copias::confirmarRestauracion/$1', ['as' => 'copias.restaurar', 'filter' => 'permiso:copias.restaurar']);
+        $routes->post('copias/(:num)/restaurar', 'Admin\Copias::restaurar/$1', ['filter' => 'permiso:copias.restaurar']);
+        // SS-09 Reportes y auditoría (CU-55 a CU-57, CU-65 a CU-71; D-44)
+        $routes->get('tablero', 'Admin\Tablero::index', ['as' => 'tablero.consultar', 'filter' => 'permiso:tablero.consultar']);
+        $routes->get('caja-diaria', 'Admin\CajaDiaria::index', ['as' => 'cajas.informe-diario', 'filter' => 'permiso:cajas.informe-diario']);
+        $routes->get('auditoria', 'Admin\Auditoria::index', ['as' => 'auditoria.consultar', 'filter' => 'permiso:auditoria.consultar']);
+        $routes->get('auditoria/(:num)', 'Admin\Auditoria::ver/$1', ['filter' => 'permiso:auditoria.consultar']);
+        $routes->get('reportes', 'Admin\Reportes::index', ['as' => 'reportes.index', 'filter' => 'permiso:reportes.cartera']);
+        foreach (\App\Services\Reportes\ReporteService::REPORTES as $clave => [, , $permiso]) {
+            $routes->get('reportes/' . $clave, 'Admin\Reportes::ver/' . $clave, ['as' => $permiso, 'filter' => 'permiso:' . $permiso]);
+        }
+        // SS-06 Régimen informativo de deudores (CU-105)
+        $routes->get('regimen', 'Admin\Regimen::index', ['as' => 'regimen.consultar', 'filter' => 'permiso:regimen.consultar']);
+        $routes->get('regimen/(:num)', 'Admin\Regimen::ver/$1', ['as' => 'regimen.ver', 'filter' => 'permiso:regimen.consultar']);
+        $routes->get('regimen/(:num)/archivo', 'Admin\Regimen::descargar/$1', ['filter' => 'permiso:regimen.consultar']);
+        $routes->post('regimen', 'Admin\Regimen::generar', ['filter' => 'permiso:regimen.consultar']);
 
         // Cada caso de uso declara su permiso y el nombre de ruta que usa el menú (Config\Menu), por ejemplo:
         // $routes->get('clientes', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
@@ -242,6 +280,14 @@ $routes->group('portal', static function (RouteCollection $routes): void {
     $routes->post('recuperar', 'Portal\Acceso::solicitarRecuperacion');
     $routes->get('restablecer/(:segment)', 'Portal\Acceso::restablecer/$1');
     $routes->post('restablecer/(:segment)', 'Portal\Acceso::guardarContrasena/$1');
+    // CU-104 Pre-registrarse en el Portal (sin sesión; límite de intentos por dirección en Config\Filters)
+    $routes->get('pre-registro', 'Portal\PreRegistro::nuevo', ['as' => 'portal.pre-registro']);
+    $routes->post('pre-registro', 'Portal\PreRegistro::registrar');
+    $routes->get('pre-registro/verificar/(:segment)', 'Portal\PreRegistro::mostrarVerificacion/$1');
+    $routes->post('pre-registro/verificar/(:segment)', 'Portal\PreRegistro::verificar/$1');
+    // CU-75 pasos 6 y 7: confirmación desde el correo actual (sin sesión, RN-58)
+    $routes->get('cambio-correo/(:segment)', 'Portal\CambioCorreo::mostrar/$1');
+    $routes->post('cambio-correo/(:segment)', 'Portal\CambioCorreo::confirmar/$1');
 
     // Con sesión de cliente (RN-08): 15 minutos de inactividad (RNF-11)
     $routes->group('', ['filter' => 'auth:portal'], static function (RouteCollection $routes): void {
@@ -249,7 +295,33 @@ $routes->group('portal', static function (RouteCollection $routes): void {
         // CU-03 del Cliente
         $routes->get('salir', 'Portal\Acceso::confirmarCierre', ['as' => 'portal.salir']);
         $routes->post('salir', 'Portal\Acceso::cerrar');
-        // Iteración 4: CU-45 a CU-49 con sus nombres de ruta de Config\Menu::$portal
+        // CU-45, CU-98 y CU-75 (pasos 1 a 5)
+        $routes->get('perfil', 'Portal\Perfil::index', ['as' => 'portal.perfil']);
+        $routes->get('perfil/preferencias', 'Portal\Perfil::preferencias', ['as' => 'portal.preferencias']);
+        $routes->post('perfil/preferencias', 'Portal\Perfil::guardarPreferencias');
+        $routes->get('perfil/correo', 'Portal\Perfil::correo', ['as' => 'portal.cambiar-correo']);
+        $routes->post('perfil/correo', 'Portal\Perfil::solicitarCorreo');
+        // CU-46
+        $routes->get('solicitudes', 'Portal\Solicitudes::index', ['as' => 'portal.solicitudes']);
+        $routes->get('solicitudes/(:num)', 'Portal\Solicitudes::ver/$1');
+        // CU-47
+        $routes->get('estado-cuenta', 'Portal\EstadoCuenta::index', ['as' => 'portal.estado-cuenta']);
+        $routes->get('estado-cuenta/creditos/(:num)', 'Portal\EstadoCuenta::credito/$1');
+        $routes->get('estado-cuenta/creditos/(:num)/cuotas/(:num)', 'Portal\EstadoCuenta::cuota/$1/$2');
+        // CU-48: la descarga o reemisión es POST porque cuenta la reemisión (RN-31)
+        $routes->get('comprobantes', 'Portal\Comprobantes::index', ['as' => 'portal.comprobantes']);
+        $routes->get('comprobantes/(:num)', 'Portal\Comprobantes::ver/$1');
+        $routes->post('comprobantes/(:num)/descargar', 'Portal\Comprobantes::descargar/$1');
+        // CU-49
+        $routes->get('pagar', 'Portal\Pagos::index', ['as' => 'portal.pagar']);
+        $routes->post('pagar', 'Portal\Pagos::generar');
+        $routes->get('pagar/ordenes/(:num)', 'Portal\Pagos::orden/$1');
+        // CU-43 (A5) y CU-52
+        $routes->get('propuestas', 'Portal\Propuestas::index', ['as' => 'portal.propuestas']);
+        $routes->get('propuestas/refinanciaciones/(:num)', 'Portal\Propuestas::propuesta/$1');
+        $routes->get('ofertas/(:num)', 'Portal\Propuestas::oferta/$1');
+        $routes->post('ofertas/(:num)/aceptar', 'Portal\Propuestas::aceptar/$1');
+        $routes->post('ofertas/(:num)/rechazar', 'Portal\Propuestas::rechazar/$1');
     });
 });
 

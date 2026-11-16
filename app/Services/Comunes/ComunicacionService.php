@@ -31,6 +31,10 @@ class ComunicacionService extends BaseService
         'verificacion_correo' => 'SIG-CCR: confirmación de su correo electrónico',
         'verificacion_correo_cliente' => 'SIG-CCR: confirme su correo para usar el portal',
         'activacion_acceso' => 'SIG-CCR: activación de su acceso al portal',
+        'cambio_correo' => 'SIG-CCR: confirme el cambio de su correo electrónico',
+        'verificacion_correo_nuevo' => 'SIG-CCR: verifique su correo electrónico nuevo',
+        'verificacion_pre_registro' => 'SIG-CCR: verifique su correo para completar el pre-registro',
+        'oferta_crediticia' => 'SIG-CCR: tiene una oferta de crédito preaprobada',
     ];
 
     private ?ComunicacionesInterface $adaptador;
@@ -160,6 +164,16 @@ class ComunicacionService extends BaseService
      */
     private function autorizacionDeOrigen(array $c): ?array
     {
+        // CU-104: el enlace de verificación del pre-registro vale mientras siga pendiente de verificación y no venza
+        if ($c['origen_tipo'] === 'pre_registros') {
+            $p = $this->db->query('SELECT estado, vence FROM dbo.pre_registros WHERE id = ?', [(int) $c['origen_id']])->getRowArray();
+
+            if ($p === null) {
+                return null;
+            }
+
+            return ['estado' => $p['estado'] === 'PendienteVerificacion' ? 'Vigente' : 'Utilizada', 'vence' => (string) $p['vence']];
+        }
         if ($c['origen_tipo'] !== 'autorizaciones_temporales') {
             return null;
         }

@@ -14,5 +14,6 @@ dec -> Activo [label="[sin cuotas\nvencidas]"];
 dec -> EnMora [label="[con cuotas\nvencidas]"];
 EnMora -> Refinanciado [label="refinanciación aplicada\n(CU-74, RN-70)"];
 Activo -> Revocado [label="restitución confirmada\n[dentro de 10 días hábiles]\n(CU-102, RN-79)"];
+EnMora -> Revocado [label="restitución confirmada\n(CU-102, RN-79)"];
 Refinanciado -> fin; Revocado -> fin;
 }

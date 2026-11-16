@@ -12,5 +12,9 @@ chmod -R ug+rwX "$W"
 # puede volver a montarlo ("error mounting ... /etc/cron.d/sigccr: no such file or directory").
 if [ "${1:-}" = "cron" ]; then
     install -m 0644 -o root -g root /var/www/html/docker/scheduler/crontab /etc/cron.d/sigccr
+    # Volumen de copias (D-45): SQL Server escribe con su usuario (mssql, uid 10001) y PHP-FPM lee con www-data
+    mkdir -p /var/opt/sigccr/backups "$W"/copias
+    chown 10001:www-data /var/opt/sigccr/backups && chmod 2775 /var/opt/sigccr/backups
+    chown www-data:www-data "$W"/copias && chmod 0770 "$W"/copias
 fi
 exec docker-php-entrypoint "$@"

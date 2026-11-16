@@ -39,7 +39,7 @@ ENUMS = {
     'EstadoComunicacion': ['Pendiente', 'AceptadaProveedor', 'Entregada', 'ReintentoProgramado', 'Fallida', 'Cancelada',
                            'EnRevision'],
     'EstadoMovimientoFondos': ['Programado', 'Realizado', 'Anulado'],
-    'EstadoCopia': ['EnCurso', 'Verificada', 'Fallida', 'Corrupta'],
+    'EstadoCopia': ['Solicitada', 'EnCurso', 'Verificada', 'Fallida', 'Corrupta', 'Depurada'],
     'TipoCliente': ['PersonaHumana', 'PersonaJuridica'],
     'CategoriaIngresos': ['RelacionDependencia', 'JubiladoPensionado', 'Monotributista', 'ResponsableInscripto', 'Empresa'],
     'MedioPago': ['Efectivo', 'TarjetaDebito', 'TarjetaCredito', 'Transferencia', 'PagoElectronico'],
@@ -60,6 +60,8 @@ ENUMS = {
                               'CambioCorreo', 'VerificacionCorreo'],
     'TipoConsentimiento': ['PoliticaDatos', 'ComunicacionesComerciales'],
     'MedioConsentimiento': ['Portal', 'Sucursal'],
+    'EstadoRegimen': ['Vigente', 'Rectificado'],
+    'EstadoPreRegistro': ['PendienteVerificacion', 'PendienteValidacion', 'Completado', 'Descartado'],
     'OrigenSolicitud': ['Independiente', 'Oferta'],
     'ResultadoVerificacion': ['Conforme', 'Observado', 'Rechazado'],
     'MotivoObservacion': ['Faltante', 'Ilegible', 'Vencido', 'Inconsistente', 'NoCorresponde'],
@@ -84,7 +86,7 @@ ENUMS = {
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
     'TipoComunicacion': ['Autorizacion', 'VerificacionCorreo', 'Oferta', 'AvisoObligacion', 'Notificacion'],
     'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas'],
-    'OrigenCopia': ['Manual', 'Automatica'],
+    'OrigenCopia': ['Manual', 'Automatica', 'PreviaRestauracion'],
     # técnicas (sin clase de dominio)
     'EstadoNotificacion': ['Pendiente', 'Procesada', 'Descartada', 'Error'],
     'ServicioExterno': ['InformacionCrediticia', 'Pasarela', 'Comunicaciones'],
@@ -457,6 +459,33 @@ add('consentimientos', 'SS-02', 'Consentimiento', 'Historial de aceptaciones y r
     EN('medio', 'MedioConsentimiento'),
 ], idx=[('IX_consentimientos_cliente', ['cliente_id', 'tipo', 'fecha'], None, None)])
 
+add('pre_registros', 'SS-02', 'PreRegistro', 'Datos que una persona que todavía no es cliente registra en el portal para que el Analista complete su alta (CU-104, D-42). No crea un cliente ni habilita el portal.', [
+    ID(),
+    EN('tipo_documento', 'TipoDocumento'),
+    C('nro_documento', 'VARCHAR(15)'),
+    C('cuit_cuil', 'CHAR(11)', d='CUIL sin guiones, con su dígito verificador.'),
+    C('nombre', 'NVARCHAR(80)'),
+    C('apellido', 'NVARCHAR(80)'),
+    C('correo', 'NVARCHAR(254)', d='Correo de contacto; se verifica con el enlace enviado (RN-03).'),
+    C('telefono', 'VARCHAR(30)', null=True),
+    C('hash_codigo', 'CHAR(64)', null=True, d='Hash SHA-256 del enlace de verificación vigente; nulo una vez verificado.'),
+    C('vence', TS, d='Vencimiento del enlace de verificación (30 minutos, RN-03).'),
+    C('fecha_verificacion', TS, null=True),
+    C('fecha_politica', TS, d='Aceptación de la política de tratamiento de datos personales (RN-64).'),
+    EN('estado', 'EstadoPreRegistro', default="'PendienteVerificacion'"),
+    FK('cliente_id', 'clientes', null=True, d='Cliente registrado al completar el alta (CU-11).'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Analista que completó el alta o descartó el pre-registro.'),
+    C('motivo_descarte', 'NVARCHAR(500)', null=True),
+    C('ip_origen', 'VARCHAR(45)', null=True),
+    CREADO(),
+    ACT(),
+    VF(),
+], uq=[('UQ_pre_registros_hash_codigo', ['hash_codigo'], 'hash_codigo IS NOT NULL')],
+   ck=[('CK_pre_registros_completado', "estado <> 'Completado' OR cliente_id IS NOT NULL"),
+       ('CK_pre_registros_descarte', "estado <> 'Descartado' OR motivo_descarte IS NOT NULL")],
+   idx=[('IX_pre_registros_documento', ['tipo_documento', 'nro_documento'], ['estado'], None),
+        ('IX_pre_registros_estado', ['estado', 'creado_en'], None, None)])
+
 # ============================================================== SS-03
 add('lineas_credito', 'SS-03', 'LineaCredito', 'Productos crediticios ofrecidos por la entidad.', [
     ID(),
@@ -560,9 +589,10 @@ add('solicitudes_credito', 'SS-04', 'SolicitudCredito', 'Peticiones formales de 
     EN('tipo_rechazo', 'TipoRechazo', null=True),
     C('motivo_cancelacion', 'NVARCHAR(500)', null=True),
     C('ultimo_movimiento', TS, default='SYSDATETIMEOFFSET()', d='Base del control de inactividad de 30 días (RN-72).'),
-    FK('usuario_id', 'usuarios_internos', d='Analista que la registró.'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Analista que la registró; nulo si la originó el cliente al aceptar una oferta (CU-52, D-43).'),
     VF(),
-], ck=[('CK_solicitudes_rechazo', "(estado = 'Rechazada' AND tipo_rechazo IS NOT NULL) OR (estado <> 'Rechazada' AND tipo_rechazo IS NULL)"),
+], ck=[('CK_solicitudes_responsable', "origen = 'Oferta' OR usuario_id IS NOT NULL"),
+       ('CK_solicitudes_rechazo', "(estado = 'Rechazada' AND tipo_rechazo IS NOT NULL) OR (estado <> 'Rechazada' AND tipo_rechazo IS NULL)"),
        ('CK_solicitudes_cancelacion', "estado <> 'Cancelada' OR motivo_cancelacion IS NOT NULL"),
        ('CK_solicitudes_importe', 'importe > 0 AND cantidad_cuotas > 0')],
    idx=[('IX_solicitudes_cliente', ['cliente_id', 'estado'], None, None),
@@ -1198,6 +1228,40 @@ add('aceptaciones_refinanciacion', 'SS-06', 'AceptacionRefinanciacion', 'Constan
     C('punitorios_incorporados', M2, default='0', d='Punitorios devengados desde la fecha de corte incorporados al concepto no capitalizable (RN-70).'),
 ])
 
+
+add('regimenes_informativos', 'SS-06', 'RegimenInformativo', 'Archivo mensual del régimen informativo de la Central de Deudores del BCRA con la clasificación de los deudores al cierre del mes (CU-105, RN-84, D-44). Una rectificación agrega una versión y conserva la anterior.', [
+    ID(),
+    C('periodo', 'CHAR(7)', d='Mes informado (aaaa-mm).'),
+    C('version', 'SMALLINT', default='1'),
+    C('fecha_cierre', D, d='Último día del mes informado: base de los días de atraso.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    C('cantidad_deudores', 'INT'),
+    C('saldo_total', M2),
+    C('archivo', 'VARBINARY(MAX)', d='Contenido del archivo generado (texto separado por punto y coma).'),
+    C('hash_archivo', 'CHAR(64)', d='SHA-256 del archivo.'),
+    EN('estado', 'EstadoRegimen', default="'Vigente'"),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Gerente que pidió la generación o la rectificación; nulo si la generó el Temporizador.'),
+    C('proceso', 'VARCHAR(60)', null=True, d='Proceso programado que lo generó.'),
+    C('motivo', 'NVARCHAR(500)', null=True, d='Motivo de la rectificación.'),
+], uq=[('UQ_regimenes_periodo_version', ['periodo', 'version'], None),
+       ('UQ_regimenes_vigente', ['periodo'], "estado = 'Vigente'")],
+   ck=[('CK_regimenes_responsable', 'usuario_id IS NOT NULL OR proceso IS NOT NULL'),
+       ('CK_regimenes_rectificacion', 'version = 1 OR motivo IS NOT NULL'),
+       ('CK_regimenes_totales', 'cantidad_deudores >= 0 AND saldo_total >= 0')])
+
+add('situaciones_deudor', 'SS-06', 'SituacionDeudor', 'Clasificación de cada deudor con financiaciones vigentes al cierre del período informado (RN-84).', [
+    ID(),
+    FK('regimen_informativo_id', 'regimenes_informativos'),
+    FK('cliente_id', 'clientes'),
+    C('cuit_cuil', 'CHAR(11)'),
+    C('denominacion', 'NVARCHAR(200)'),
+    C('dias_atraso', 'INT', d='Atraso de la obligación más atrasada al cierre.'),
+    C('situacion', 'TINYINT', d='1 hasta 31 días, 2 hasta 90, 3 hasta 180, 4 hasta 365 y 5 más de 365 (RN-84).'),
+    C('saldo', M2, d='Saldo de sus financiaciones vigentes.'),
+    C('creditos', 'SMALLINT', d='Cantidad de créditos vigentes.'),
+], uq=[('UQ_situaciones_deudor', ['regimen_informativo_id', 'cliente_id'], None)],
+   ck=[('CK_situaciones_deudor_situacion', 'situacion BETWEEN 1 AND 5'), ('CK_situaciones_deudor_atraso', 'dias_atraso >= 0')])
+
 # ============================================================== SS-08
 add('campanas', 'SS-08', 'Campaña', 'Campañas crediticias; como máximo una activa (RN-66), garantizado por un índice único filtrado.', [
     ID(),
@@ -1235,23 +1299,32 @@ add('ofertas', 'SS-08', 'Oferta', 'Propuestas de financiación dirigidas a un cl
    idx=[('IX_ofertas_cliente', ['cliente_id', 'estado'], None, None)])
 
 # ============================================================== SS-11
-add('copias_seguridad', 'SS-11', 'CopiaSeguridad', 'Respaldos de la base de datos, cifrados y con código de verificación (RNF-13).', [
+add('copias_seguridad', 'SS-11', 'CopiaSeguridad', 'Respaldos de la base de datos y de los adjuntos, cifrados y con código de verificación (RNF-13, D-45). El panel solicita la copia y el contenedor de procesos la genera.', [
     ID(),
-    C('archivo', 'VARCHAR(260)', uq=True, d='Nombre del archivo en el volumen de copias.'),
-    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()'),
+    C('archivo', 'VARCHAR(260)', uq=True, d='Nombre del archivo cifrado en el volumen de copias.'),
+    C('fecha_generacion', TS, default='SYSDATETIMEOFFSET()', d='Instante de la solicitud o del inicio de la copia automática.'),
     C('tamano_bytes', 'BIGINT', null=True),
     EN('origen', 'OrigenCopia'),
-    C('hash_verificacion', 'CHAR(64)', null=True, d='SHA-256 del archivo.'),
+    C('hash_verificacion', 'CHAR(64)', null=True, d='SHA-256 del archivo cifrado.'),
     EN('estado', 'EstadoCopia', default="'EnCurso'"),
     FK('usuario_id', 'usuarios_internos', null=True, d='Administrador; nulo en la copia automática.'),
-])
+    C('descripcion', 'NVARCHAR(300)', null=True, d='Descripción ingresada por el Administrador (CU-61 paso 3).'),
+    C('responsable', 'NVARCHAR(150)', null=True, d='Nombre del Administrador o del proceso, conservado aunque se restaure una copia anterior a su alta.'),
+    C('incluye_adjuntos', B, default='0', d='La copia contiene los archivos del legajo.'),
+    C('fecha_fin', TS, null=True, d='Fin de la generación, exitosa o fallida.'),
+    C('detalle', 'NVARCHAR(1000)', null=True, d='Causa de la falla o de la corrupción.'),
+], idx=[('IX_copias_seguridad_estado', ['estado', 'fecha_generacion'], None, None)])
 
 add('restauraciones', 'SS-11', 'Restauracion', 'Restauraciones de una copia. Se registran al finalizar, en la base ya restaurada, y además en el registro técnico del servidor (RN-45).', [
     ID(),
     FK('copia_seguridad_id', 'copias_seguridad'),
     C('fecha', TS, default='SYSDATETIMEOFFSET()'),
     C('resultado', 'NVARCHAR(300)'),
-    FK('usuario_id', 'usuarios_internos'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Administrador que la pidió; nulo si su cuenta no existía en la copia restaurada.'),
+    C('responsable', 'NVARCHAR(150)', null=True, d='Nombre del Administrador que la pidió.'),
+    FK('copia_previa_id', 'copias_seguridad', null=True, d='Copia del estado anterior generada antes de restaurar (CU-63 paso 7).'),
+    C('inicio', TS, null=True, d='Inicio del proceso de restauración.'),
+    C('exitosa', B, default='1'),
 ])
 
 SEQUENCES = {'seq_solicitudes': 'INT', 'seq_cobros': 'BIGINT', 'seq_comprobantes': 'BIGINT', 'seq_ordenes': 'BIGINT', 'seq_creditos': 'INT', 'seq_campanas': 'INT', 'seq_propuestas': 'INT'}

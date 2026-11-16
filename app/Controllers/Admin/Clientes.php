@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
+use App\Adapters\Fabrica;
+use App\Adapters\ServicioNoDisponibleException;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
+use App\Services\Clientes\PreRegistroService;
+use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\DocumentacionService;
 use App\Services\Comunes\GeografiaService;
 use App\Services\Comunes\MonotributoService;
@@ -42,9 +47,46 @@ class Clientes extends BaseController
     }
 
     /** CU-11 pasos 1 y 2. */
-    public function nuevo(): string
+    public function nuevo(): string|RedirectResponse
     {
-        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'tipos' => $this->servicio->tiposDocumentacion()] + $this->geografia(null));
+        // CU-104 paso 7: el alta puede partir de un pre-registro verificado, con sus datos propuestos
+        $pre = null;
+        $preId = (string) $this->request->getGet('pre');
+        if (ctype_digit($preId)) {
+            try {
+                $pre = (new PreRegistroService())->datosParaAlta((int) $preId);
+            } catch (ReglaNegocioException $e) {
+                return redirect()->route('pre-registros.consultar')->with('error', $e->getMessage());
+            }
+        }
+
+        return view('clientes/formulario', ['titulo' => 'Registrar cliente', 'c' => null, 'pre' => $pre, 'tipos' => $this->servicio->tiposDocumentacion()] + $this->geografia(null));
+    }
+
+    /**
+     * CU-11 A9: datos del padrón de ARCA para el CUIL ingresado, que el Analista confirma o corrige. Si el servicio no
+     * responde, se informa y los datos se cargan a mano (ACT-10, RNF-08).
+     */
+    public function padron(): ResponseInterface
+    {
+        $cuil = str_replace(['-', ' ', '.'], '', (string) $this->request->getGet('cuil'));
+        $error = Campos::obligatorio($cuil, 'el CUIL') ?? Campos::cuit($cuil, 'PersonaHumana');
+        if ($error !== null) {
+            return $this->response->setStatusCode(422)->setJSON(['mensaje' => $error]);
+        }
+        try {
+            $datos = Fabrica::padron()->consultar($cuil);
+        } catch (ServicioNoDisponibleException) {
+            (new AuditoriaService())->registrar('clientes.consultar-padron', 'clientes', null, 'Fallido', 'El padrón de ARCA no respondió');
+
+            return $this->response->setStatusCode(503)->setJSON(['mensaje' => 'El padrón de ARCA no responde: complete los datos manualmente.']);
+        }
+        (new AuditoriaService())->registrar('clientes.consultar-padron', 'clientes', null, $datos === null ? 'Sin datos' : 'Exitoso', null, ['cuil' => $cuil]);
+        if ($datos === null) {
+            return $this->response->setStatusCode(404)->setJSON(['mensaje' => 'El padrón no tiene datos para ese CUIL: complete los datos manualmente.']);
+        }
+
+        return $this->response->setJSON(['datos' => $datos, 'mensaje' => 'Datos propuestos por el padrón de ARCA: confírmelos o corríjalos antes de registrar.']);
     }
 
     /** CU-11 pasos 3 a 9. */

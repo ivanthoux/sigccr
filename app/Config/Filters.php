@@ -5,6 +5,7 @@ namespace Config;
 use App\Filters\AuthFilter;
 use App\Filters\LimiteIntentosFilter;
 use App\Filters\MantenimientoPortalFilter;
+use App\Filters\RestauracionFilter;
 use App\Filters\PermisoFilter;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -40,6 +41,7 @@ class Filters extends BaseFilters
         'auth'          => AuthFilter::class,
         'permiso'       => PermisoFilter::class,
         'mantenimiento' => MantenimientoPortalFilter::class,
+        'restauracion'  => RestauracionFilter::class,
         'limiteintentos' => LimiteIntentosFilter::class,
     ];
 
@@ -63,6 +65,8 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
+            // CU-63 paso 8: modo mantenimiento mientras se restaura una copia (D-45)
+            'restauracion' => ['except' => ['mantenimiento']],
             'invalidchars',
             // CSRF en formularios y AJAX (RNF-12 b); las notificaciones de la pasarela se validan por firma
             'csrf' => ['except' => ['api/*']],
@@ -84,6 +88,6 @@ class Filters extends BaseFilters
      */
     public array $filters = [
         'mantenimiento'  => ['before' => ['portal', 'portal/*']],
-        'limiteintentos' => ['before' => ['admin/login', 'admin/recuperar', 'portal/login', 'portal/recuperar', 'portal/activar']],
+        'limiteintentos' => ['before' => ['admin/login', 'admin/recuperar', 'portal/login', 'portal/recuperar', 'portal/activar', 'portal/pre-registro']],
     ];
 }

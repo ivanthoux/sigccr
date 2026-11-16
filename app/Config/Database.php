@@ -71,6 +71,36 @@ class Database extends Config
     ];
 
     /**
+     * Inicio de sesión de mantenimiento de las copias (CU-61 a CU-63, D-45): BACKUP DATABASE en sigccr
+     * (db_backupoperator) y dbcreator para verificar y restaurar. Se conecta a master porque la restauración reemplaza
+     * la base sigccr. Lo usa solo el contenedor de procesos.
+     *
+     * @var array<string, mixed>
+     */
+    public array $copias = [
+        'DSN'        => '',
+        'hostname'   => 'db',
+        'username'   => '',
+        'password'   => '',
+        'database'   => 'master',
+        'schema'     => 'dbo',
+        'DBDriver'   => 'SQLSRV',
+        'DBPrefix'   => '',
+        'pConnect'   => false,
+        'DBDebug'    => true,
+        'charset'    => 'utf8',
+        'swapPre'    => '',
+        'encrypt'    => false,
+        'failover'   => [],
+        'port'       => 1433,
+        'dateFormat' => [
+            'date'     => 'Y-m-d',
+            'datetime' => 'Y-m-d H:i:s',
+            'time'     => 'H:i:s',
+        ],
+    ];
+
+    /**
      * @var array<string, mixed>
      */
     public array $tests = [

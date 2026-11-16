@@ -70,4 +70,41 @@
             localidad.replaceChildren(opcion('', 'No se pudieron cargar las localidades; intente de nuevo'));
         }
     });
+
+    // CU-11 A9: el padrón de ARCA propone los datos del CUIL; el Analista los confirma o corrige
+    const form = document.querySelector('form.formulario-cliente');
+    const padron = form?.querySelector('[data-padron]');
+    const resultado = form?.querySelector('[data-padron-resultado]');
+    if (padron && resultado) {
+        padron.addEventListener('click', async () => {
+            const cuil = (form.querySelector('#cuit_cuil')?.value || '').trim();
+            resultado.classList.remove('text-danger');
+            resultado.textContent = 'Consultando el padrón…';
+            padron.disabled = true;
+            try {
+                const r = await fetch(padron.dataset.padron + '?cuil=' + encodeURIComponent(cuil), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const j = await r.json();
+                if (!r.ok) {
+                    resultado.classList.add('text-danger');
+                    resultado.textContent = j.mensaje;
+                    return;
+                }
+                const poner = (id, valor) => { const el = form.querySelector('#' + id); if (el && valor) { el.value = valor; el.dispatchEvent(new Event('change')); } };
+                poner('nombre', j.datos.nombre);
+                poner('apellido', j.datos.apellido);
+                poner('tipo_documento', j.datos.tipo_documento);
+                poner('nro_documento', j.datos.nro_documento);
+                const domicilio = form.querySelector('#domicilio');
+                if (domicilio && domicilio.value.trim() === '') {
+                    domicilio.value = j.datos.domicilio_fiscal.split(',')[0];
+                }
+                resultado.textContent = j.mensaje + ' Domicilio fiscal: ' + j.datos.domicilio_fiscal + '.';
+            } catch (e) {
+                resultado.classList.add('text-danger');
+                resultado.textContent = 'No se pudo consultar el padrón: complete los datos manualmente.';
+            } finally {
+                padron.disabled = false;
+            }
+        });
+    }
 })();

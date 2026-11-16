@@ -1,9 +1,11 @@
 name: E2E
 
+# La batería tarda unos 15 minutos: se ejecuta al cierre de cada iteración, en el pull request de develop a main
+# que publica la versión, o a pedido desde Actions → E2E → Run workflow (D-41). Los cambios intermedios se
+# controlan con el flujo CI (pruebas unitarias, rutas por rol y análisis estático).
 on:
-  push:
-    branches: [develop]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:

@@ -1,0 +1,24 @@
+sequenceDiagram
+autonumber
+actor CA as Cajero
+participant C as Admin Revocaciones
+participant RV as RevocacionService
+participant R as Revocacion y CalendarioHabil
+participant CJ as CajaService
+participant DB as SQL Server
+CA->>C: POST fecha y medio de la comunicación del cliente
+C->>RV: registrar(crédito, fecha, medio, usuario)
+RV->>DB: BEGIN y bloquea el crédito: Activo o En mora, sin revocación previa
+RV->>R: plazo: 10 días hábiles desde la recepción del contrato o el desembolso, lo último (RN-79)
+RV->>R: calcular: neto desembolsado, interés simple por los días corridos y su IVA, menos lo pagado
+RV->>DB: revocaciones Pendiente de restitución con el importe, auditoría y COMMIT
+C-->>CA: importe a restituir
+CA->>C: POST número de operación e importe de la transferencia recibida
+C->>RV: confirmar(crédito, operación, importe, usuario)
+RV->>DB: BEGIN
+RV->>CJ: jornadaOperable(usuario) (RN-28)
+RV->>DB: bloquea el crédito y la revocación, el importe es el fijado
+RV->>DB: cobros tipo Revocación, cobros_medios Transferencia, movimientos_caja y comprobante
+RV->>DB: revocación Confirmada, crédito Revocado, cuotas no pagadas sin efecto, saldo a favor si pagó de más (RN-57)
+RV->>DB: auditoría y COMMIT
+C-->>CA: crédito revocado
