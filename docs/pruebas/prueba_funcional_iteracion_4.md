@@ -4,8 +4,8 @@ Recorrido manual de los casos de uso de la iteración 4. Se completa por bloques
 
 - **Bloque A, portal de autogestión (SS-07, D-42):** CU-45 a CU-49, CU-75, CU-98 y CU-104, con la bandeja de pre-registros del panel y la consulta del padrón de ARCA en el alta (CU-11 A9).
 - **Bloque B, campañas crediticias (SS-08, D-43):** CU-50, CU-51, CU-52, CU-93 y CU-94, con la consulta de las propuestas de refinanciación desde el portal (CU-43 A5).
-- **Bloque C, reportes y auditoría (SS-09) y régimen informativo (CU-105):** pendiente.
-- **Bloque D, copias de seguridad (SS-11):** pendiente.
+- **Bloque C, reportes y auditoría (SS-09) y régimen informativo (CU-105):** CU-55 a CU-57, CU-65 a CU-71 y CU-105.
+- **Bloque D, copias de seguridad (SS-11):** CU-61 a CU-63.
 
 Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* con la etiqueta `bug`, el identificador del caso y lo observado. La batería de punta a punta se ejecuta una sola vez, al cierre de la iteración (D-41). Con la prueba aprobada se publica la etiqueta `v0.5.0`.
 
@@ -229,7 +229,5 @@ Preparación del bloque D (D-45):
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | Iván Ezequiel Thoux | de 44 (bloque A) | | |
-| | Iván Ezequiel Thoux | de 18 (bloque B) | | |
-| | Iván Ezequiel Thoux | de 18 (bloque C) | | |
-| | Iván Ezequiel Thoux | de 11 (bloque D) | | |
+| 13/11/2026 | Batería de punta a punta | 208 de 208 | 6, corregidas en el PR #165 | Correo del pre-registro, tablero y cartera (error 8124), consulta al padrón, copia previa a la restauración (migración 30), modo mantenimiento ante un error y rutas de `copias:descifrar`. |
+| 16/11/2026 | Iván Ezequiel Thoux | 91 de 91 | Ninguna | Verificación manual de los bloques A a D. Iteración 4 aprobada (v0.5.0). |
