@@ -22,4 +22,5 @@ services:
     environment:
       E2E_PROYECTO: ${COMPOSE_PROJECT_NAME:-sigccr_e2e}
       CI: ${CI:-}
+      E2E_CAPTURAS: ${E2E_CAPTURAS:-}
     profiles: [pruebas]
