@@ -22,7 +22,7 @@ dc --profile pruebas build playwright || exit 1
 dc exec -T app bash tests/e2e/preparar.sh || { echo "Falló la preparación de la base"; dc logs --tail 80 app db; exit 1; }
 
 echo "== Playwright"
-dc --profile pruebas run --rm playwright sh -c 'npx playwright test "$@"; rc=$?; chown -R "$(stat -c %u:%g /e2e/src)" /e2e/src/informe /e2e/src/resultados 2>/dev/null; exit $rc' -- "$@"
+dc --profile pruebas run --rm playwright sh -c 'npx playwright test "$@"; rc=$?; chown -R "$(stat -c %u:%g /e2e/src)" /e2e/src/informe /e2e/src/resultados /e2e/src/capturas 2>/dev/null; exit $rc' -- "$@"
 rc=$?
 
 if [[ -z "${E2E_CONSERVAR:-}" ]]; then dc --profile pruebas down -v >/dev/null 2>&1; fi
