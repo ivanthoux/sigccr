@@ -4,6 +4,43 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.5.0] - 2026-11-16
+
+Fin de Construcción (previsto para el 30/11/2026): iteración 4 completa (SS-07, SS-08, SS-09, SS-11 y el régimen informativo de SS-06). Prueba funcional de la iteración 4 aprobada y batería de punta a punta completa (208 casos) aprobada sobre SQL Server.
+
+### Agregado (bloque A, portal de autogestión, D-42)
+- CU-45 perfil del cliente; CU-98 preferencias de comunicación; CU-75 cambio de correo con confirmación desde el correo actual y verificación del nuevo.
+- CU-46 solicitudes del cliente con su acción pendiente y el detalle completo.
+- CU-47 estado de cuenta: deuda por concepto con punitorios a hoy, vencimientos, saldo a favor, órdenes en curso, plan de cada crédito y cancelación anticipada a hoy.
+- CU-48 comprobantes con descarga y reemisión auditada; CU-49 pago electrónico desde el portal.
+- CU-104 pre-registro con verificación del correo, alerta a los Analistas y bandeja del panel; el alta (CU-11) se prellena desde el pre-registro. CU-11 A9: consulta simulada del padrón de ARCA. Migración 26.
+- El acceso a objetos de otro cliente responde un mensaje genérico y se audita (`portal.acceso-denegado`).
+
+### Agregado (bloque B, campañas crediticias, D-43)
+- CU-51 parámetros de campañas versionados; CU-93 activación automática desde `fondos:proyectar` con ofertas según la capacidad de pago, correo y alerta; CU-94 cierre por vigencia, cupo o disponibilidad (`campanas:cerrar`).
+- CU-50 consulta de campañas y ofertas; CU-52 respuesta a la oferta desde el portal, con solicitud de origen Oferta y compromiso de fondos (RN-41); CU-43 A5 propuestas de refinanciación en el portal. Migración 27.
+
+### Agregado (bloque C, reportes y régimen informativo, D-44)
+- CU-55 tablero gerencial; CU-65 a CU-71 reportes de cartera, morosidad, cobranzas, solicitudes, refinanciaciones, proyección de fondos y campañas, con impresión y exportación a Excel.
+- CU-56 informe de caja diaria; CU-57 consulta del registro de auditoría.
+- CU-105 régimen informativo de deudores: `regimen:generar` desde el primer día hábil del mes, clasificación por RN-84, archivo con SHA-256, rectificación con versiones. Migración 28 y permiso `regimen.consultar`.
+
+### Agregado (bloque D, copias de seguridad, D-45)
+- CU-61 copias verificadas (`CHECKSUM`, `VERIFYONLY`) con los adjuntos del legajo, cifradas con AES-256-GCM; copia automática a las 02:00 con conservación de 30 días.
+- CU-62 descarga con verificación del SHA-256 (copia corrupta si no coincide) y `copias:descifrar` para restaurar fuera del sistema.
+- CU-63 restauración con modo mantenimiento, copia previa del estado actual, `DBCC CHECKDB`, migraciones, recuperación ante falla y catálogo rehecho. Migración 29 e inicio de sesión de mantenimiento `sigccr_copias`.
+
+### Agregado (pruebas)
+- Batería de punta a punta de la iteración 4 (I-01 a I-91) y R-144 (cierre de sesión por inactividad del panel y del portal). La batería se ejecuta al cierre de la iteración (D-41).
+
+### Corregido (batería de punta a punta de la iteración 4)
+- CU-104: el correo de verificación del pre-registro se cancelaba siempre, porque la política de envío no reconocía el pre-registro como autorización de origen.
+- CU-55 y CU-65: el tablero y el reporte de cartera fallaban en SQL Server (error 8124) por una referencia externa dentro de un agregado.
+- CU-11 A9: el botón «Consultar el padrón de ARCA» no hacía nada; el script usaba un formulario de otro ámbito.
+- CU-63: la copia previa a la restauración no se podía registrar porque `copias_seguridad.origen` seguía en VARCHAR(10). Migración 30 la lleva a VARCHAR(20), como en el modelo de datos.
+- CU-63: un error inesperado durante la restauración dejaba el sistema en modo mantenimiento; ahora la restauración se da por fallida y el sistema vuelve a operar.
+- `copias:descifrar` toma las rutas relativas desde la raíz del proyecto (spark trabaja desde `public/`).
+
 ## [0.4.0] - 2026-11-11
 
 Control 3 (previsto para el 23/11/2026): iteración 3 completa (SS-05 y SS-06: caja sin efectivo, cobranza, punitorios, pagos electrónicos, saldos a favor, refinanciación, condonación, cancelación anticipada, contrato, revocación y procesos automáticos). Prueba funcional integral de las iteraciones 1 a 3 aprobada, con su batería de punta a punta en la integración continua.
@@ -224,7 +261,8 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.4.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.5.0...develop
+[0.5.0]: https://github.com/ivanthoux/sigccr/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ivanthoux/sigccr/compare/v0.1.0...v0.2.0
