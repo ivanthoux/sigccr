@@ -1,0 +1,64 @@
+# Pruebas de rendimiento (RNF-03, RNF-06, RNF-07 y RNF-10) con Apache JMeter sobre el volumen de referencia.
+# Se ejecutan a pedido (Actions → Rendimiento → Run workflow) y publican los resultados en la rama rendimiento-resultados.
+name: Rendimiento
+
+# También corre en los pull requests que modifican las pruebas de rendimiento o el volumen de referencia.
+on:
+  pull_request:
+    paths:
+      - "tests/rendimiento/**"
+      - ".github/workflows/rendimiento.yml"
+      - "app/Database/Seeds/RendimientoSeeder.php"
+  workflow_dispatch:
+    inputs:
+      duracion:
+        description: "Duración de la carga mixta en segundos"
+        default: "600"
+
+permissions:
+  contents: write   # para publicar los resultados en su rama
+
+jobs:
+  rendimiento:
+    name: Pruebas de rendimiento (JMeter y SQL Server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      RENDIMIENTO_DURACION: ${{ inputs.duracion || '600' }}
+      JMETER: ${{ github.workspace }}/jmeter/bin/jmeter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Apache JMeter 5.6.3
+        run: |
+          base=https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          curl --proto '=https' --tlsv1.2 -fsSL -o jmeter.tgz "$base"
+          curl --proto '=https' --tlsv1.2 -fsSL -o jmeter.tgz.sha512 "$base.sha512"
+          echo "$(cut -d' ' -f1 jmeter.tgz.sha512)  jmeter.tgz" | sha512sum -c -
+          tar xzf jmeter.tgz && mv apache-jmeter-5.6.3 jmeter && rm jmeter.tgz jmeter.tgz.sha512
+          ./jmeter/bin/jmeter --version | tail -3
+
+      - name: Volumen de referencia, carga, concurrencia y procesos
+        run: bash tests/rendimiento/ejecutar.sh
+
+      - name: Publicar los resultados (rama rendimiento-resultados)
+        if: always()
+        run: |
+          cd tests/rendimiento/resultados || exit 0
+          rm -f clientes.csv cobros.csv
+          gzip -f carga.jtl 2>/dev/null || true
+          git init -q -b rendimiento-resultados
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" add .
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Resultados de rendimiento (${GITHUB_SHA::7}, ${{ github.run_id }})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" rendimiento-resultados
+
+      - name: Registros de la aplicación ante una falla
+        if: failure()
+        run: |
+          docker compose -p sigccr_e2e logs --tail 200 app db || true
+          docker compose -p sigccr_e2e exec -T app sh -c 'tail -n 200 writable/logs/*.log' || true
