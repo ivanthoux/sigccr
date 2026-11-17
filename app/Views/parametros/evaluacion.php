@@ -16,7 +16,9 @@ if (old('motivo') !== null) {
     }
     $f['situaciones_excluyentes'] = (array) (old('situaciones_excluyentes') ?? []);
 }
-$valor = static fn (string $nombre, $v, string $extra = '') => '<input type="text" inputmode="decimal" class="form-control form-control-sm text-end' . campo_invalido(str_replace(['[', ']'], ['.', ''], $nombre)) . '" name="' . $nombre . '" value="' . esc((string) $v, 'attr') . '" ' . $extra . '>';
+// Cada campo lleva un id derivado de su nombre (pesos[bcra] → param-pesos-bcra) para que su etiqueta lo nombre (WCAG 1.3.1)
+$idCampo = static fn (string $nombre): string => 'param-' . trim((string) preg_replace('/[^a-z0-9]+/i', '-', $nombre), '-');
+$valor = static fn (string $nombre, $v, string $extra = '') => '<input type="text" inputmode="decimal" class="form-control form-control-sm text-end' . campo_invalido(str_replace(['[', ']'], ['.', ''], $nombre)) . '" id="' . $idCampo($nombre) . '" name="' . $nombre . '" value="' . esc((string) $v, 'attr') . '" ' . $extra . '>';
 $tramos = static function (string $grupo, array $filas, string $etiquetaLimite, string $sufijo) use ($valor): string {
     $html = '<table class="table table-sm align-middle mb-2"><thead><tr><th>' . $etiquetaLimite . '</th><th class="text-end" style="width:7rem">Valor</th></tr></thead><tbody>';
     $filas = array_pad($filas, 4, ['limite' => '', 'valor' => '']);
@@ -49,7 +51,7 @@ $this->section('contenido');
         <div class="row g-3">
             <?php foreach (V::INDICADORES as $k => $nombre): ?>
                 <div class="col-6 col-md-3">
-                    <label class="form-label small"><?= esc($nombre) ?></label>
+                    <label class="form-label small" for="<?= $idCampo("pesos[{$k}]") ?>"><?= esc($nombre) ?></label>
                     <div class="input-group input-group-sm"><?= $valor("pesos[{$k}]", $f['pesos'][$k]) ?><span class="input-group-text">%</span></div>
                     <?= error_campo("pesos.{$k}") ?>
                 </div>
@@ -65,7 +67,7 @@ $this->section('contenido');
                 <p class="small text-body-secondary">Valor según la peor situación informada en los últimos 12 meses.</p>
                 <div class="row g-2">
                     <?php foreach (['1' => 'Situación 1 (normal)', '2' => 'Situación 2', '3' => 'Situación 3', '4' => 'Situación 4', '5' => 'Situación 5', '6' => 'Situación 6', 'sin_deudas' => 'Sin deudas informadas'] as $k => $t): ?>
-                        <div class="col-6"><label class="form-label small mb-0"><?= $t ?></label><?= $valor("bcra[{$k}]", $f['bcra'][$k]) ?><?= error_campo("bcra.{$k}") ?></div>
+                        <div class="col-6"><label class="form-label small mb-0" for="<?= $idCampo("bcra[{$k}]") ?>"><?= $t ?></label><?= $valor("bcra[{$k}]", $f['bcra'][$k]) ?><?= error_campo("bcra.{$k}") ?></div>
                     <?php endforeach ?>
                 </div>
                 <fieldset class="mt-3">
@@ -85,8 +87,8 @@ $this->section('contenido');
                 <p class="small text-body-secondary">Máximo atraso de los últimos 12 meses, hasta el límite inclusive.</p>
                 <?= $tramos('comportamiento', $f['comportamiento']['tramos'], 'Atraso hasta', 'días') ?>
                 <div class="row g-2">
-                    <div class="col-6"><label class="form-label small mb-0">Más atraso</label><?= $valor('comportamiento[resto]', $f['comportamiento']['resto']) ?><?= error_campo('comportamiento.resto') ?></div>
-                    <div class="col-6"><label class="form-label small mb-0">Sin antecedentes</label><?= $valor('comportamiento[sin_antecedentes]', $f['comportamiento']['sin_antecedentes']) ?><?= error_campo('comportamiento.sin_antecedentes') ?></div>
+                    <div class="col-6"><label class="form-label small mb-0" for="<?= $idCampo('comportamiento[resto]') ?>">Más atraso</label><?= $valor('comportamiento[resto]', $f['comportamiento']['resto']) ?><?= error_campo('comportamiento.resto') ?></div>
+                    <div class="col-6"><label class="form-label small mb-0" for="<?= $idCampo('comportamiento[sin_antecedentes]') ?>">Sin antecedentes</label><?= $valor('comportamiento[sin_antecedentes]', $f['comportamiento']['sin_antecedentes']) ?><?= error_campo('comportamiento.sin_antecedentes') ?></div>
                 </div>
             </section>
         </div>
@@ -95,7 +97,7 @@ $this->section('contenido');
                 <h2 class="h5">Endeudamiento</h2>
                 <p class="small text-body-secondary">Cuotas vigentes y comprometidas sobre ingresos declarados.</p>
                 <?= $tramos('endeudamiento', $f['endeudamiento']['tramos'], 'Relación hasta', '%') ?>
-                <label class="form-label small mb-0">Relación mayor</label><?= $valor('endeudamiento[resto]', $f['endeudamiento']['resto']) ?><?= error_campo('endeudamiento.resto') ?>
+                <label class="form-label small mb-0" for="<?= $idCampo('endeudamiento[resto]') ?>">Relación mayor</label><?= $valor('endeudamiento[resto]', $f['endeudamiento']['resto']) ?><?= error_campo('endeudamiento.resto') ?>
             </section>
         </div>
         <div class="col-lg-6">
@@ -103,7 +105,7 @@ $this->section('contenido');
                 <h2 class="h5">Antigüedad como cliente</h2>
                 <p class="small text-body-secondary">De mayor a menor: desde esa cantidad de meses inclusive.</p>
                 <?= $tramos('antiguedad', $f['antiguedad']['tramos'], 'Desde', 'meses') ?>
-                <label class="form-label small mb-0">Menor antigüedad</label><?= $valor('antiguedad[resto]', $f['antiguedad']['resto']) ?><?= error_campo('antiguedad.resto') ?>
+                <label class="form-label small mb-0" for="<?= $idCampo('antiguedad[resto]') ?>">Menor antigüedad</label><?= $valor('antiguedad[resto]', $f['antiguedad']['resto']) ?><?= error_campo('antiguedad.resto') ?>
             </section>
         </div>
     </div>
@@ -118,7 +120,7 @@ $this->section('contenido');
                 <?php foreach (V::CATEGORIAS as $c): ?>
                     <tr>
                         <th scope="row"><?= $c ?></th>
-                        <td><?= $valor("categorias[{$c}]", $f['categorias'][$c]) ?><?= error_campo("categorias.{$c}") ?></td>
+                        <td><?= $valor("categorias[{$c}]", $f['categorias'][$c], 'aria-label="Puntaje mínimo de la categoría ' . $c . '"') ?><?= error_campo("categorias.{$c}") ?></td>
                         <td>
                             <select class="form-select form-select-sm<?= campo_invalido("resultados.{$c}") ?>" name="resultados[<?= $c ?>]" aria-label="Resultado de la categoría <?= $c ?>">
                                 <?php foreach (V::RESULTADOS as $k => $t): ?><option value="<?= $k ?>"<?= ($f['resultados'][$c] ?? '') === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?>
