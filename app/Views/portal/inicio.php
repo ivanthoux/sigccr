@@ -9,6 +9,7 @@
  * @var array<string, mixed>|null $resumen estado de cuenta (CU-47) para el resumen del encabezado; null si no se pudo obtener
  */
 $cuenta = session('cuenta');
+$resumen ??= null;
 $this->extend('layouts/portal');
 $this->section('contenido');
 ?>

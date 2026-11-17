@@ -109,7 +109,8 @@ final class VistasCampanasTest extends CIUnitTestCase
             'plan' => null, 'resoluciones' => [['fecha' => '2026-11-10 13:00:00.000 +00:00', 'decision' => 'Aprobada', 'fundamento' => 'Capacidad de pago suficiente.']],
         ];
         $html = view('portal/propuesta', ['titulo' => 'Propuesta', 'p' => $p]);
-        $this->assertStringContainsString('RN-37', $html);
+        $this->assertStringContainsString('quedaron sustituidas por el nuevo crédito', $html);
+        $this->assertStringNotContainsString('RN-37', $html, 'El portal no muestra al cliente los códigos internos de las reglas');
         $this->assertStringContainsString('Plan aplicado', $html);
         $this->assertStringContainsString('Capacidad de pago suficiente.', $html);
     }
