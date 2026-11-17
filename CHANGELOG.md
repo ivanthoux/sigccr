@@ -11,6 +11,7 @@ Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
 ### Cambiado
 - Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
+- Registrar cliente: el CUIT/CUIL va primero, con «Consultar el padrón de ARCA» a su altura, para completar los datos desde el padrón antes de escribirlos.
 - Etiquetas de advertencia e información con los colores de la identidad; todos los colores del CSS como variables.
 - Mi caja: «Registrar cobro» es la acción principal y «Cerrar caja», la secundaria.
 - Inicio del portal: resumen «Su cuenta hoy», con el próximo vencimiento, el saldo deudor, las cuotas vencidas y «Pagar cuotas».
