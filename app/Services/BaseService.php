@@ -20,6 +20,12 @@ use Throwable;
  */
 abstract class BaseService
 {
+    /** Intentos de una transacción elegida como víctima de un bloqueo mutuo, incluido el primero. */
+    private const INTENTOS_BLOQUEO_MUTUO = 3;
+
+    /** Transacciones abiertas por los servicios en esta petición: solo la externa se reintenta. */
+    private static int $profundidad = 0;
+
     /** @var BaseConnection<mixed, mixed> */
     protected BaseConnection $db;
 
@@ -36,16 +42,40 @@ abstract class BaseService
      */
     protected function transaccion(callable $operacion): mixed
     {
-        $this->db->transException(true)->transBegin();
-        try {
-            $resultado = $operacion();
-            $this->db->transCommit();
+        // Solo la transacción externa se reintenta: SQL Server revierte toda la transacción del proceso elegido como
+        // víctima de un bloqueo mutuo (error 1205), así que repetirla completa es seguro (RNF-06, D-46)
+        $externa = self::$profundidad === 0;
+        for ($intento = 1;; $intento++) {
+            self::$profundidad++;
+            $this->db->transException(true)->transBegin();
+            try {
+                $resultado = $operacion();
+                $this->db->transCommit();
 
-            return $resultado;
-        } catch (Throwable $e) {
-            $this->db->transRollback();
-            throw $e;
+                return $resultado;
+            } catch (Throwable $e) {
+                $this->db->transRollback();
+                if (!$externa || $intento >= self::INTENTOS_BLOQUEO_MUTUO || !self::esBloqueoMutuo($e)) {
+                    throw $e;
+                }
+                log_message('warning', 'Bloqueo mutuo en la base: se reintenta la transacción ({intento} de {total}).', ['intento' => $intento + 1, 'total' => self::INTENTOS_BLOQUEO_MUTUO]);
+                usleep(random_int(20, 120) * 1000 * $intento);
+            } finally {
+                self::$profundidad--;
+            }
         }
+    }
+
+    /** Error 1205 de SQL Server: la transacción fue elegida como víctima de un bloqueo mutuo y ya se revirtió. */
+    private static function esBloqueoMutuo(Throwable $e): bool
+    {
+        for ($x = $e; $x !== null; $x = $x->getPrevious()) {
+            if ($x->getCode() === 1205 || str_contains($x->getMessage(), 'deadlocked') || str_contains($x->getMessage(), 'SQLSTATE: 40001')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

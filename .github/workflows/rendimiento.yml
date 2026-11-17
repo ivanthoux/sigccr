@@ -2,9 +2,13 @@
 # Se ejecutan a pedido (Actions → Rendimiento → Run workflow) y publican los resultados en la rama rendimiento-resultados.
 name: Rendimiento
 
+# También corre en los pull requests que modifican las pruebas de rendimiento o el volumen de referencia.
 on:
-  push:
-    branches: [feature/pruebas-rendimiento]   # TEMPORAL: hasta que el flujo esté en main
+  pull_request:
+    paths:
+      - "tests/rendimiento/**"
+      - ".github/workflows/rendimiento.yml"
+      - "app/Database/Seeds/RendimientoSeeder.php"
   workflow_dispatch:
     inputs:
       duracion:
