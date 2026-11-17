@@ -61,4 +61,4 @@ Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* co
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | | | | |
+| 17/11/2026 | Reauditoría con *impeccable* (Claude) | 22 de 22 | Ninguna nueva de severidad P1 o P2. Una P3 (H-36, nivel de título en el alta de cliente), corregida en esta misma rama | Entorno Docker con `develop` (PR #171 y #172), en escritorio y a 375 px, con los roles Administrador, Gerente, Analista, Cajero y Cliente. U-19 verificado en la auditoría: el inicio del portal no registra `portal.consultar-estado-cuenta`. |
