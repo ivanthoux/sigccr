@@ -233,6 +233,12 @@ code { color: var(--tinta-2); }
 .list-group { --bs-list-group-active-bg: var(--tinta); --bs-list-group-active-border-color: var(--tinta); }
 .resumen-plan .importe { text-align: left; }
 
+/* Tablero gerencial: indicadores clave sobre los bloques de detalle, con la cifra como protagonista */
+.indicadores-clave { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .75rem 1.5rem; }
+.indicadores-clave > div { border-left: 3px solid var(--linea); padding-left: .75rem; }
+.indicadores-clave dt { font-size: .8125rem; font-weight: 500; color: var(--texto-2); }
+.indicadores-clave dd { margin: 0; font-size: 1.5rem; font-weight: 600; color: var(--tinta); font-variant-numeric: tabular-nums; line-height: 1.2; }
+
 /* ── Evaluación crediticia (D02) ─────────────────────────────────────────── */
 .dimensiones-evaluacion { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
 .dimensiones-evaluacion > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
