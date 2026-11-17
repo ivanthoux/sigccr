@@ -21,7 +21,7 @@ if (!function_exists('menu_panel')) {
     /**
      * Secciones y opciones visibles para la cuenta: con permiso y con la ruta ya construida.
      *
-     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, url: string}>}>
+     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, icono: string, url: string}>}>
      */
     function menu_panel(): array
     {
@@ -31,7 +31,7 @@ if (!function_exists('menu_panel')) {
             foreach ($s['opciones'] as $o) {
                 $url = route_to($o['ruta']);
                 if ($url !== false && ($o['permiso'] === null || tiene_permiso($o['permiso']))) {
-                    $opciones[] = ['texto' => $o['texto'], 'url' => site_url(ltrim($url, '/'))];
+                    $opciones[] = ['texto' => $o['texto'], 'icono' => $o['icono'] ?? $s['icono'], 'url' => site_url(ltrim($url, '/'))];
                 }
             }
             if ($opciones !== []) {

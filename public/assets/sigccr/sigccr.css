@@ -35,6 +35,13 @@
     --bs-primary-rgb: 31, 122, 87;
     --bs-border-radius: .375rem;
     --bs-focus-ring-color: rgba(31, 122, 87, .35);
+    /* Estados con los colores de la identidad (etiquetas, textos y bordes de error), no los de Bootstrap */
+    --bs-success: #1f7a57;
+    --bs-success-rgb: 31, 122, 87;
+    --bs-danger: #b42318;
+    --bs-danger-rgb: 180, 35, 24;
+    --bs-form-invalid-color: #b42318;
+    --bs-form-invalid-border-color: #b42318;
 }
 
 body { -webkit-font-smoothing: antialiased; }

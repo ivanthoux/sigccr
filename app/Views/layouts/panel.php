@@ -56,7 +56,7 @@ $actual = current_url();
                     <div class="menu-seccion"><?= esc($seccion['titulo']) ?></div>
                     <?php foreach ($seccion['opciones'] as $o): $activa = str_starts_with($actual, $o['url']); ?>
                         <a class="menu-opcion<?= $activa ? ' activa' : '' ?>" href="<?= esc($o['url'], 'attr') ?>"<?= $activa ? ' aria-current="page"' : '' ?>>
-                            <i class="bi <?= esc($seccion['icono'], 'attr') ?>" aria-hidden="true"></i><?= esc($o['texto']) ?>
+                            <i class="bi <?= esc($o['icono'], 'attr') ?>" aria-hidden="true"></i><?= esc($o['texto']) ?>
                         </a>
                     <?php endforeach ?>
                 <?php endforeach ?>

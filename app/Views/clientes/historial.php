@@ -8,7 +8,8 @@
  */
 $id = (int) $c['id'];
 $vacio = array_sum(array_map('count', $h)) === 0;
-$etiquetas = ['Automatica' => 'Automática', 'EnMora' => 'En mora', 'EnEvaluacion' => 'En evaluación', 'Liquidacion' => 'Liquidación'];
+$etiquetas = ['Automatica' => 'Automática', 'EnMora' => 'En mora', 'EnEvaluacion' => 'En evaluación', 'Liquidacion' => 'Liquidación'] + \App\Libraries\Evaluacion\DimensionesEvaluacion::RESULTADO;
+$verSolicitud = tiene_permiso('solicitudes.consultar');
 $estado = static fn (string $e): string => esc($etiquetas[$e] ?? ucfirst(mb_strtolower(trim((string) preg_replace('/(?<!^)([A-Z])/', ' $1', $e)))));
 $this->extend('layouts/panel');
 $this->section('contenido');
@@ -26,12 +27,13 @@ $this->section('contenido');
 <?php else: ?>
     <?php
     $secciones = [
-        'solicitudes' => ['Solicitudes de crédito', ['Número', 'Fecha', 'Importe', 'Cuotas', 'Estado'], static fn ($r) => [esc($r['numero']), esc(formato_fecha_hora($r['fecha_registro'])), '<span class="importe d-block">' . esc(formato_importe($r['importe'])) . '</span>', (int) $r['cantidad_cuotas'], $estado($r['estado'])]],
+        'solicitudes' => ['Solicitudes de crédito', ['Número', 'Fecha', 'Importe', 'Cuotas', 'Estado'], static fn ($r) => [$verSolicitud ? '<a href="' . site_url('admin/solicitudes/' . (int) $r['id']) . '">' . esc($r['numero']) . '</a>' : esc($r['numero']), esc(formato_fecha_hora($r['fecha_registro'])), '<span class="importe d-block">' . esc(formato_importe($r['importe'])) . '</span>', (int) $r['cantidad_cuotas'], $estado($r['estado'])]],
         'creditos' => ['Créditos otorgados', ['Número', 'Liquidación', 'Capital', 'Cuotas pagadas', 'Cuotas vencidas', 'Estado'], static fn ($r) => [esc($r['numero']) . ($r['origen'] === 'Refinanciacion' ? ' <span class="badge text-bg-light border">Refinanciación</span>' : ''), esc(formato_fecha($r['fecha_liquidacion'])), '<span class="importe d-block">' . esc(formato_importe($r['capital'])) . '</span>', (int) $r['cuotas_pagadas'] . ' de ' . (int) $r['cantidad_cuotas'], (int) $r['cuotas_vencidas'], $estado($r['estado'])]],
         'refinanciaciones' => ['Refinanciaciones aplicadas', ['Propuesta', 'Fecha', 'Capital refinanciado', 'Cuotas', 'TNA'], static fn ($r) => [esc($r['numero']), esc(formato_fecha_hora($r['fecha_registro'])), '<span class="importe d-block">' . esc(formato_importe($r['capital_refinanciado'])) . '</span>', (int) $r['cantidad_cuotas'], esc(str_replace('.', ',', rtrim(rtrim((string) $r['tasa'], '0'), '.'))) . ' %']],
-        'evaluaciones' => ['Evaluaciones crediticias', ['Solicitud', 'Modalidad', 'Resultado', 'Puntaje', 'Categoría', 'Finalizada', 'Vigencia'], static fn ($r) => [esc($r['solicitud']), $estado($r['modalidad']), $estado((string) $r['resultado']), esc((string) $r['puntaje']), esc((string) $r['categoria_riesgo']), esc(formato_fecha($r['fecha_finalizacion'])), $estado((string) $r['vigencia'])]],
+        'evaluaciones' => ['Evaluaciones crediticias', ['Solicitud', 'Modalidad', 'Resultado', 'Puntaje', 'Categoría', 'Finalizada', 'Vigencia'], static fn ($r) => [esc($r['solicitud']), $estado($r['modalidad']), $estado((string) $r['resultado']), esc(str_replace('.', ',', (string) $r['puntaje'])), esc((string) $r['categoria_riesgo']), esc(formato_fecha($r['fecha_finalizacion'])), $estado((string) $r['vigencia'])]],
         'mora' => ['Cuotas vencidas impagas', ['Crédito', 'Cuota', 'Vencimiento', 'Estado'], static fn ($r) => [esc($r['credito']), (int) $r['cuota'], esc(formato_fecha($r['vencimiento'])), $estado($r['estado'])]],
     ];
+    $columnasImporte = ['Importe', 'Capital', 'Capital refinanciado'];
     foreach ($secciones as $clave => [$titulo, $columnas, $celdas]): ?>
         <section class="hoja p-4 mb-3" aria-labelledby="titulo-<?= $clave ?>">
             <h2 class="h5" id="titulo-<?= $clave ?>"><?= $titulo ?> <span class="badge rounded-pill text-bg-light border"><?= count($h[$clave]) ?></span></h2>
@@ -40,7 +42,7 @@ $this->section('contenido');
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
-                        <thead><tr><?php foreach ($columnas as $col): ?><th><?= $col ?></th><?php endforeach ?></tr></thead>
+                        <thead><tr><?php foreach ($columnas as $col): ?><th<?= in_array($col, $columnasImporte, true) ? ' class="importe"' : '' ?>><?= $col ?></th><?php endforeach ?></tr></thead>
                         <tbody><?php foreach ($h[$clave] as $r): ?><tr><?php foreach ($celdas($r) as $celda): ?><td><?= $celda ?></td><?php endforeach ?></tr><?php endforeach ?></tbody>
                     </table>
                 </div>

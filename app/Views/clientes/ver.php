@@ -112,7 +112,7 @@ $this->section('contenido');
                             <td class="text-break"><?= esc($d['nombre_original']) ?></td>
                             <td class="importe"><?= number_format((int) $d['tamano_bytes'] / 1024, 0, ',', '.') ?> KB</td>
                             <td><?= esc(formato_fecha_hora($d['fecha_incorporacion'])) ?></td>
-                            <td class="text-end"><a href="<?= site_url("admin/clientes/{$id}/documentos/{$d['id']}") ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar</a></td>
+                            <td class="text-end"><a href="<?= site_url("admin/clientes/{$id}/documentos/{$d['id']}") ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar<span class="visually-hidden"> <?= esc($d['nombre_original']) ?></span></a></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>
