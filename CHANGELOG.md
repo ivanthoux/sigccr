@@ -7,11 +7,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
 ### Agregado
-- Tema oscuro: sigue al sistema operativo o se elige con «Tema oscuro» en la barra lateral y en el portal; se imprime siempre en claro (D-49).
+- Tema oscuro: sigue al sistema operativo o se elige con «Tema oscuro» en la barra lateral y en el portal; se imprime siempre en claro (D-50).
 - Inicio del panel: «Trabajo pendiente» con las colas que el rol puede atender y el aviso de caja sin abrir.
 
 ### Cambiado
-- jQuery y DataTables se cargan solo en las pantallas con tablas paginadas (D-49).
+- jQuery y DataTables se cargan solo en las pantallas con tablas paginadas (D-50).
 - Bordes de los campos con contraste de al menos 3:1 en los dos temas (WCAG 1.4.11).
 - Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
 - Registrar cliente: el CUIT/CUIL va primero, con «Consultar el padrón de ARCA» a su altura, para completar los datos desde el padrón antes de escribirlos.

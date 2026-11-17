@@ -4,7 +4,7 @@
 
     const esteScript = document.currentScript;
 
-    // Tema claro u oscuro (D-49): partials/tema.php lo aplica antes de los estilos; acá se atiende el selector, se
+    // Tema claro u oscuro (D-50): partials/tema.php lo aplica antes de los estilos; acá se atiende el selector, se
     // sigue al sistema operativo mientras la persona no elija uno y se imprime siempre en claro.
     const raiz = document.documentElement;
     const temaGuardado = () => { try { return localStorage.getItem('sigccr-tema'); } catch (e) { return null; } };
@@ -109,7 +109,7 @@
     });
 
     // Tablas: <table data-tabla> se convierte en DataTable con textos en español. jQuery y DataTables se cargan solo
-    // en las pantallas del panel que tienen una tabla así o un plan de más de 12 cuotas (D-49): el resto no las
+    // en las pantallas del panel que tienen una tabla así o un plan de más de 12 cuotas (D-50): el resto no las
     // descarga ni las ejecuta.
     const iniciarTablas = () => {
         Object.assign(window.DataTable.defaults, {

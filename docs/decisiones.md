@@ -53,6 +53,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-47 | 17/11/2026 | Propuesta |
 | D-48 | 17/11/2026 | Propuesta |
 | D-49 | 17/11/2026 | Propuesta |
+| D-50 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -758,7 +759,19 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
   - I-75 verifica que el detalle muestra la tabla.
 - Hay que actualizar la redacción de RN-45 y de CU-57, paso 6, en el documento del Trabajo Final.
 
-## D-49 · Tema oscuro y carga de las tablas solo donde se usan (RNF-02, RNF-07, RNF-13)
+## D-49 · Correo de desarrollo con Mailpit (RNF-09; CU-95)
+
+**Contexto.** En desarrollo, el simulador de comunicaciones guarda cada correo en `writable/correos` y para verlo hay que ejecutar `php spark sigccr:correos`, que muestra el asunto y el enlace pero no el correo como lo recibe el destinatario. El adaptador SMTP real ya existía (`SmtpComunicaciones`), pero solo se podía usar con un proveedor externo, que exige una cuenta y credenciales y entrega los correos de prueba a direcciones reales o a un servicio de terceros.
+
+**Decisión.**
+1. **Servidor local.** El entorno de desarrollo incorpora Mailpit, un servidor SMTP de pruebas que recibe los correos sin entregarlos y los muestra en una página web (`http://localhost:8025`). Es el servicio `mailpit` del `docker-compose.yml`, con el perfil `correo`: se levanta una vez con `docker compose --profile correo up -d` y no forma parte de la instalación de producción. La página solo se publica para el propio equipo (127.0.0.1); el SMTP (puerto 1025) queda en la red interna de Docker. Los correos se conservan en el volumen `correos` hasta un máximo de 1.000.
+2. **Configuración.** El `.env` de desarrollo usa el adaptador real con `sigccr.smtpHost = mailpit`, el puerto 1025 y sin cifrado (`env.sigccr.example`). Así se prueba el mismo envío por SMTP que en producción, con las plantillas y los enlaces reales; en producción cambian solo el servidor y las credenciales del proveedor.
+3. **Simulador.** Se conserva para la batería de punta a punta y para probar los errores de envío (direcciones `falla.transitoria@`, `falla.definitiva@` e `incierto@`). Si el `.env` está en SMTP, `tests/e2e/ejecutar.sh` usa el simulador mientras corre y restaura el `.env` al terminar.
+4. **Identificador del mensaje.** La prueba con Mailpit mostró que CodeIgniter reemplazaba el `Message-ID` con uno propio, de modo que el identificador de la operación no llegaba al proveedor y un reintento podía entregarse dos veces. `CorreoConIdentificador` conserva el identificador de la operación como `Message-ID`, como prevé RNF-09.
+
+**Consecuencias.** Cambian `docker-compose.yml` (servicio `mailpit` y volumen `correos`), `env.sigccr.example`, el README, `tests/e2e/ejecutar.sh` y el comando `sigccr:correos`, que indica dónde ver los correos cuando el envío es por SMTP. Componente nuevo: `CorreoConIdentificador`, con su prueba en `SmtpComunicacionesTest`. Sin cambios de esquema ni de casos de uso.
+
+## D-50 · Tema oscuro y carga de las tablas solo donde se usan (RNF-02, RNF-07, RNF-13)
 
 **Contexto.** Después de la auditoría de diseño (D-47) quedaron dos mejoras fuera del alcance de la entrega: un tema oscuro y no cargar jQuery y DataTables en las pantallas que no tienen tablas con paginación. WCAG 2.2 AA no exige un tema oscuro; es una preferencia de comodidad para quien trabaja con poca luz o es sensible al brillo. jQuery (85 KB) y DataTables con sus estilos (117 KB) se descargaban y ejecutaban en todas las pantallas del panel, aunque solo siete listados y el plan de cuotas largo los usan.
 

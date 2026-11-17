@@ -40,7 +40,7 @@
     --superficie-hover: #e9edf1;
     --blanco: #fff;
     /* Papeles del tema: superficie de las hojas, títulos, acento y versiones de los estados para usar como texto.
-       En el tema oscuro (D-49) se redefinen abajo; el resto de la hoja de estilos solo usa estas variables. */
+       En el tema oscuro (D-50) se redefinen abajo; el resto de la hoja de estilos solo usa estas variables. */
     --superficie: var(--blanco);
     --titulo: var(--tinta);
     --acento: var(--tinta-2);
@@ -320,11 +320,11 @@ code { color: var(--acento); }
 .pendientes i.cantidad { background: var(--ambar-suave); color: var(--ambar-texto); font-size: 1.05rem; }
 .pendientes .bi-chevron-right { color: var(--texto-2); }
 
-/* Selector del tema en la barra lateral y en la barra del portal (D-49) */
+/* Selector del tema en la barra lateral y en la barra del portal (D-50) */
 .cambiar-tema { padding: 0; border: 0; background: none; color: var(--tinta-texto); font-size: inherit; text-decoration: underline; }
 .cambiar-tema:hover { color: var(--blanco); }
 
-/* ── Tema oscuro (D-49) ──────────────────────────────────────────────────────
+/* ── Tema oscuro (D-50) ──────────────────────────────────────────────────────
    Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el selector. Los mismos papeles
    que el tema claro, con superficies de tinta muy oscura; textos, enlaces y estados en tonos claros para mantener el
    contraste ≥ 4,5:1 (WCAG 1.4.3) y bordes de campo ≥ 3:1 (1.4.11). Al imprimir se vuelve siempre al tema claro. */

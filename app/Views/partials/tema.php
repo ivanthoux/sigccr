@@ -1,6 +1,6 @@
 <?php
 /**
- * Tema claro u oscuro (D-49), antes de cargar los estilos para que la página no aparezca un instante con el otro tema:
+ * Tema claro u oscuro (D-50), antes de cargar los estilos para que la página no aparezca un instante con el otro tema:
  * el elegido con el selector (guardado en este navegador) o, si no eligió ninguno, el del sistema operativo.
  */
 ?>
