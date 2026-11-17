@@ -769,6 +769,7 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
    - El tema se aplica antes de cargar los estilos, para que la página no aparezca un instante con el otro.
    - Los colores salen de las mismas variables de `sigccr.css`: superficies de tinta muy oscura, textos, enlaces y estados en tonos claros. Todos los textos miden al menos 4,5:1 y los bordes de los campos al menos 3:1 (WCAG 1.4.3 y 1.4.11).
    - Las etiquetas de estado conservan el verde, el rojo, el ámbar y la tinta con texto blanco.
+   - El borde de los campos pasa a un gris más oscuro en los dos temas (3,1:1 o más sobre la hoja y el papel): con el anterior medía 1,3:1 en el claro, por debajo del mínimo de WCAG 1.4.11 que la auditoría de D-47 no había detectado.
    - Al imprimir (contratos, comprobantes, informes) se usa siempre el tema claro.
 2. **jQuery y DataTables solo donde se usan.** `sigccr.js` los carga cuando el panel tiene una tabla `data-tabla` o un plan de más de 12 cuotas. Si no se pudieran cargar, la tabla se muestra completa, sin paginar, dentro de su recuadro desplazable.
 
@@ -777,5 +778,5 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
 - La pantalla de acceso sigue el tema elegido, sin botón propio.
 - El portal no carga DataTables, como antes.
 - Las vistas no deben usar jQuery: el único uso (el encabezado CSRF de `$.ajax`) se configura al cargarlo.
-- Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad.
+- Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad. Se ejecutaron en Docker el 17/11/2026 con Analista, Gerente y Cliente, sin fallas de contraste en las pantallas medidas.
 - El manual de usuario debe mencionar el botón del tema.

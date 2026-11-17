@@ -35,7 +35,7 @@
     --tinta-suave: #e8eef5;
     --tinta-tenue: #8fa6bd;
     --tinta-clara: #e8eef4;
-    --borde-control: #b9c3ce;
+    --borde-control: #7f8d9c;
     --borde-encabezado: #c5ced8;
     --superficie-hover: #e9edf1;
     --blanco: #fff;
@@ -224,6 +224,9 @@ code { color: var(--acento); }
 
 /* Campos blancos sobre las hojas; paginación con el verde de la acción principal */
 .form-control, .form-select { background-color: var(--superficie); }
+/* Borde de los campos con contraste ≥ 3:1 sobre la hoja y el papel, en los dos temas (WCAG 1.4.11); el foco y los
+   estados de validación conservan su color. */
+:is(.form-control, .form-select):not(:focus, .is-invalid, .is-valid) { border-color: var(--borde-control); }
 .pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde-enlace); --bs-pagination-hover-color: var(--verde-enlace); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
 .btn-check:checked + .btn-outline-secondary { background-color: var(--verde-suave); border-color: var(--verde); color: var(--texto); font-weight: 600; }
 .btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }

@@ -12,6 +12,7 @@ Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
 ### Cambiado
 - jQuery y DataTables se cargan solo en las pantallas con tablas paginadas (D-49).
+- Bordes de los campos con contraste de al menos 3:1 en los dos temas (WCAG 1.4.11).
 - Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
 - Registrar cliente: el CUIT/CUIL va primero, con «Consultar el padrón de ARCA» a su altura, para completar los datos desde el padrón antes de escribirlos.
 - Etiquetas de advertencia e información con los colores de la identidad; todos los colores del CSS como variables.
