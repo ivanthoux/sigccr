@@ -102,6 +102,7 @@ $this->section('contenido');
             <?php if ($c['documentos'] === []): ?>
                 <p class="text-body-secondary">El legajo no tiene documentos.</p>
             <?php else: ?>
+                <div class="table-responsive">
                 <table class="table align-middle">
                     <thead><tr><th>Documento</th><th>Archivo</th><th class="importe">Tamaño</th><th>Incorporado</th><th><span class="visually-hidden">Descargar</span></th></tr></thead>
                     <tbody>
@@ -116,6 +117,7 @@ $this->section('contenido');
                     <?php endforeach ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif ?>
             <?php if ($activo && tiene_permiso('clientes.modificar')): ?>
                 <form method="post" action="<?= site_url("admin/clientes/{$id}/documentos") ?>" enctype="multipart/form-data" class="row g-2 align-items-end mt-1">

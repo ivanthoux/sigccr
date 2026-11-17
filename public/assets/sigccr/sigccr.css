@@ -41,6 +41,9 @@ body { -webkit-font-smoothing: antialiased; }
 h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--tinta); font-weight: 600; letter-spacing: -.01em; }
 h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 :focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+/* Sobre la tinta el verde no llega a 3:1 (WCAG 1.4.11): el foco es claro en la barra lateral, la barra superior
+   y la marca del acceso. */
+.lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: #fff; }
 
 /* Botones: el verde es la acción principal; el resto, contorno sobrio */
 .btn { font-weight: 500; }
