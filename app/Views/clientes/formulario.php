@@ -240,5 +240,5 @@ $this->section('contenido');
 
 <?php $this->section('scripts') ?>
 <script type="application/json" id="requisitos-documentales"><?= json_encode($requisitos, JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
-<script src="<?= base_url('assets/sigccr/clientes.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/clientes.js') ?>"></script>
 <?php $this->endSection() ?>

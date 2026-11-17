@@ -16,7 +16,7 @@
     <link rel="icon" href="<?= base_url('favicon.ico') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/sigccr/sigccr.css') ?>">
+    <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
 </head>
 <body>
 <div class="acceso">
@@ -35,6 +35,6 @@
 </main>
 </div>
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= base_url('assets/sigccr/sigccr.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/sigccr.js') ?>"></script>
 </body>
 </html>

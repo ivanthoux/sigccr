@@ -132,6 +132,9 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
 
 .hoja { background: #fff; border: 1px solid var(--linea); border-radius: .5rem; }
+/* Los textos ocultos para lectores de pantalla (position: absolute) dentro de una tabla desplazable deben quedar
+   recortados por su marco: si no, ensanchan la página en el celular aunque la tabla se desplace. */
+.table-responsive { position: relative; }
 
 /* Pantalla principal: índice de funciones por área */
 .indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }

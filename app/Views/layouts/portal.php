@@ -20,7 +20,7 @@ $cuenta = session('cuenta') ?? [];
     <link rel="icon" href="<?= base_url('favicon.ico') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/sigccr/sigccr.css') ?>">
+    <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
 </head>
 <body class="portal">
 <a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-white" href="#contenido">Ir al contenido</a>
@@ -38,6 +38,6 @@ $cuenta = session('cuenta') ?? [];
     <?= $this->renderSection('contenido') ?>
 </main>
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= base_url('assets/sigccr/sigccr.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/sigccr.js') ?>"></script>
 </body>
 </html>

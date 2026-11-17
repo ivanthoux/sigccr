@@ -96,5 +96,5 @@ $this->section('contenido');
         </table>
     </section>
 <?php endif ?>
-<script src="<?= base_url('assets/sigccr/cobros.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/cobros.js') ?>"></script>
 <?php $this->endSection() ?>

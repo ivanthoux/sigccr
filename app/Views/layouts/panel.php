@@ -23,7 +23,7 @@ $actual = current_url();
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/sigccr/sigccr.css') ?>">
+    <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
 </head>
 <body class="panel d-lg-flex">
 <a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-white" href="#contenido">Ir al contenido</a>
@@ -79,7 +79,7 @@ $actual = current_url();
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 <script src="<?= base_url('assets/vendor/datatables/dataTables.min.js') ?>"></script>
 <script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
-<script src="<?= base_url('assets/sigccr/sigccr.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/sigccr.js') ?>"></script>
 <?= $this->renderSection('scripts') ?>
 </body>
 </html>

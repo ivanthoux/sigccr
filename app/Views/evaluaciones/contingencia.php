@@ -110,5 +110,5 @@ $this->section('contenido');
         <button type="submit" class="btn btn-primary">Registrar evaluación de contingencia</button>
     </div>
 </form>
-<script src="<?= base_url('assets/sigccr/solicitudes.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/solicitudes.js') ?>"></script>
 <?php $this->endSection() ?>

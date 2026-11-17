@@ -43,6 +43,19 @@ if (!function_exists('menu_panel')) {
     }
 }
 
+if (!function_exists('recurso')) {
+    /**
+     * URL de un recurso propio de public/ (CSS o JS del sistema) con su fecha de modificación como versión: al publicar
+     * un cambio, el navegador descarga el archivo nuevo en lugar de seguir usando la copia de su caché.
+     */
+    function recurso(string $ruta): string
+    {
+        $archivo = FCPATH . ltrim($ruta, '/');
+
+        return base_url($ruta) . (is_file($archivo) ? '?v=' . filemtime($archivo) : '');
+    }
+}
+
 if (!function_exists('alertas_pendientes')) {
     /** Alertas pendientes del usuario o de su rol, para el indicador del panel (CU-83 paso 1); una consulta por pedido. */
     function alertas_pendientes(): int
