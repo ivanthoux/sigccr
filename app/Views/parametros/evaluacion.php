@@ -18,7 +18,7 @@ if (old('motivo') !== null) {
 }
 // Cada campo lleva un id derivado de su nombre (pesos[bcra] → param-pesos-bcra) para que su etiqueta lo nombre (WCAG 1.3.1)
 $idCampo = static fn (string $nombre): string => 'param-' . trim((string) preg_replace('/[^a-z0-9]+/i', '-', $nombre), '-');
-$valor = static fn (string $nombre, $v, string $extra = '') => '<input type="text" inputmode="decimal" class="form-control form-control-sm text-end' . campo_invalido(str_replace(['[', ']'], ['.', ''], $nombre)) . '" id="' . $idCampo($nombre) . '" name="' . $nombre . '" value="' . esc((string) $v, 'attr') . '" ' . $extra . '>';
+$valor = static fn (string $nombre, $v, string $extra = '') => '<input type="text" inputmode="decimal" class="form-control form-control-sm text-end' . campo_invalido(str_replace(['[', ']'], ['.', ''], $nombre)) . '"' . (str_contains($extra, 'id="') ? '' : ' id="' . $idCampo($nombre) . '"') . ' name="' . $nombre . '" value="' . esc((string) $v, 'attr') . '" ' . $extra . '>';
 $tramos = static function (string $grupo, array $filas, string $etiquetaLimite, string $sufijo) use ($valor): string {
     $html = '<table class="table table-sm align-middle mb-2"><thead><tr><th>' . $etiquetaLimite . '</th><th class="text-end" style="width:7rem">Valor</th></tr></thead><tbody>';
     $filas = array_pad($filas, 4, ['limite' => '', 'valor' => '']);
