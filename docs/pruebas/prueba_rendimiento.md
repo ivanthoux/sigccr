@@ -69,7 +69,7 @@ Criterio de aceptación: percentil 95 menor que 2.000 ms y a lo sumo 1 % de erro
 
 Se registraron 471 cobros en 10 minutos. El tablero y el reporte de cartera recorren toda la cartera (30.000 créditos) en cada consulta. Ningún requisito fija su tiempo, y con 2,4 y 3,3 segundos siguen siendo usables para un Gerente. Si la cartera crece, se los puede acelerar con un resumen precalculado por el proceso nocturno.
 
-Consumo máximo durante la carga, muestreado cada 15 segundos:
+Consumo máximo durante la carga, muestreado cada 15 segundos (RP-04, recursos del servidor de referencia):
 
 | Contenedor | CPU | Memoria |
 |---|---|---|
@@ -117,7 +117,7 @@ Además, la medición se hace en modo producción. En modo desarrollo, la barra 
 
 | Requisito | Casos | Evidencia |
 |---|---|---|
-| RNF-03 | RP-01, RP-02, RP-03 | Carga mixta, `resumen.md` e informe HTML de JMeter |
+| RNF-03 | RP-01 a RP-04 | Carga mixta, `resumen.md`, informe HTML de JMeter y `recursos_durante_la_carga.csv` |
 | RNF-06 | RP-06a, RP-06b | `concurrencia.txt` y `concurrencia.jtl` |
 | RNF-07 | RP-05 | Carga mixta |
 | RNF-10 | RP-07 | `procesos.txt` |
