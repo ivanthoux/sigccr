@@ -6,7 +6,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado
+- Inicio del panel: «Trabajo pendiente» con las colas que el rol puede atender y el aviso de caja sin abrir.
+
 ### Cambiado
+- Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
+- Etiquetas de advertencia e información con los colores de la identidad; todos los colores del CSS como variables.
 - Mi caja: «Registrar cobro» es la acción principal y «Cerrar caja», la secundaria.
 - Inicio del portal: resumen «Su cuenta hoy», con el próximo vencimiento, el saldo deudor, las cuotas vencidas y «Pagar cuotas».
 - Tablero gerencial: cuatro indicadores clave destacados. La efectividad de cobranza indica su base de cálculo.

@@ -1,6 +1,6 @@
 # Prueba de usabilidad y accesibilidad de la interfaz (D-47)
 
-Recorrido manual que verifica las correcciones de la auditoría de diseño y accesibilidad del 17/11/2026 (D-47, PR #171 y #172). Complementa las pruebas funcionales: no repite los casos de uso, sino que comprueba lo que la interfaz debe cumplir en todas las pantallas:
+Recorrido manual que verifica las correcciones de la auditoría de diseño y accesibilidad del 17/11/2026 (D-47, PR #171 a #174). Complementa las pruebas funcionales: no repite los casos de uso, sino que comprueba lo que la interfaz debe cumplir en todas las pantallas:
 
 - accesibilidad WCAG 2.2 nivel AA;
 - adaptación al celular;
@@ -56,6 +56,9 @@ Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* co
 | U-20 | Indicadores clave del tablero | Como Gerente, abrir el *Tablero gerencial*. | Arriba, el índice de morosidad, el saldo deudor total, los cobros confirmados y el disponible para nuevas colocaciones, en 2 × 2 o en 4 columnas; la efectividad dice «sobre lo vencido en el período». | |
 | U-21 | Acceso no autorizado | Como Gerente, abrir `/admin/refinanciaciones/simular`. | La pestaña dice «Acceso no autorizado \| SIG-CCR». | |
 | U-22 | Recursos actualizados | Después de un `git pull` que cambie el CSS o el JS, recargar una pantalla sin forzar la recarga. | Se ve el cambio: los archivos se piden con `?v=` y su fecha de modificación. | |
+| U-23 | Trabajo pendiente del rol | Como Gerente, con al menos una solicitud pendiente de resolución, abrir el inicio del panel. Repetir como Cajero sin la caja abierta y como Administrador. | El Gerente ve «Trabajo pendiente» con la cantidad y el enlace a *Resolver solicitudes*; el Cajero ve «Su caja todavía no está abierta hoy», que lleva a *Mi caja*; un rol sin colas ve «No tiene trabajo pendiente en este momento.». Ningún rol ve colas que no puede atender. | |
+| U-24 | Etiquetas de estado con la identidad | Abrir *Refinanciaciones* y *Órdenes de pago* con propuestas u órdenes en distintos estados. | «Pendiente» en ámbar y «Aprobada, pendiente de aceptación» o «En conciliación» en tinta, las dos con texto blanco y contraste ≥ 4,5:1; ninguna en amarillo o celeste de Bootstrap. | |
+| U-25 | Búsqueda de cliente única | Abrir *Simulador*, *Cobro en ventanilla* y *Condonar punitorios* y buscar el mismo cliente. | Las tres muestran la misma búsqueda (campo, ayuda, tabla y botón «Seleccionar a …»); el simulador no lista clientes inactivos. | |
 
 ## Registro
 

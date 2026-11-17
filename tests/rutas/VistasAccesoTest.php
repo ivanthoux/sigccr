@@ -96,4 +96,22 @@ final class VistasAccesoTest extends CIUnitTestCase
         $this->assertStringContainsString(site_url('portal/pagar'), $html);
         $this->assertStringNotContainsString('Saldo a favor', $html);
     }
+
+    public function testInicioDelPanelMuestraElTrabajoPendienteDelRol(): void
+    {
+        session()->set('cuenta', ['id' => 3, 'tipo' => 'Interna', 'nombre' => 'Laura Gómez', 'rol' => 'Gerente', 'rol_nombre' => 'Gerente', 'permisos' => []]);
+        $menu = [['titulo' => 'Crédito', 'icono' => 'bi-cash-coin', 'opciones' => [['texto' => 'Resolver solicitudes', 'icono' => 'bi-check2-square', 'url' => 'https://x/admin/resoluciones']]]];
+        $html = view('admin/inicio', ['titulo' => 'Inicio', 'menu' => $menu, 'alertasPendientes' => 0, 'pendientes' => [
+            ['texto' => 'solicitudes para resolver', 'cantidad' => 3, 'url' => 'https://x/admin/resoluciones'],
+            ['texto' => 'Su caja todavía no está abierta hoy', 'cantidad' => null, 'url' => 'https://x/admin/caja'],
+        ]]);
+        $this->assertStringContainsString('Trabajo pendiente', $html);
+        $this->assertStringContainsString('<span class="cantidad">3</span>', $html);
+        $this->assertStringContainsString('solicitudes para resolver', $html);
+        $this->assertStringContainsString('href="' . esc('https://x/admin/caja', 'attr') . '"', $html);
+        $this->assertStringNotContainsString('No tiene trabajo pendiente', $html);
+
+        $vacio = view('admin/inicio', ['titulo' => 'Inicio', 'menu' => $menu, 'alertasPendientes' => 0, 'pendientes' => []]);
+        $this->assertStringContainsString('No tiene trabajo pendiente en este momento.', $vacio);
+    }
 }

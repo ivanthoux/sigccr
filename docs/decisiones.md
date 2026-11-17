@@ -672,17 +672,17 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Componentes nuevos: `RendimientoSeeder` y `DatosDePruebaException`, `tests/rendimiento/` (`generar_planes.py`, `carga.jmx`, `concurrencia.jmx`, `ejecutar.sh`, `evaluar.py`) y el flujo `.github/workflows/rendimiento.yml`. Cambian `ReporteService::cartera`, `BaseService::transaccion`, `docker/php/php.ini`, RNF-07 (descripción y verificación) y el plan de pruebas (nivel Rendimiento y carga, casos RP-01 a RP-07). Los resultados se documentan en `docs/pruebas/prueba_rendimiento.md`.
 
-## D-47 · Ajustes de la interfaz según la auditoría de diseño y accesibilidad (RNF-02, RNF-07; CU-31, CU-47, CU-55, CU-64)
+## D-47 · Ajustes de la interfaz según la auditoría de diseño y accesibilidad (RNF-02, RNF-07; CU-01, CU-31, CU-47, CU-54, CU-55, CU-64)
 
 **Contexto.** El 17/11/2026 se auditó la interfaz completa con la herramienta de diseño *impeccable*, en escritorio y a 375 px. Se recorrieron más de 80 pantallas de las cuatro iteraciones, con los roles Administrador, Gerente, Analista, Cajero y Cliente. La auditoría registró 35 hallazgos, todos documentados con su evidencia en `hallazgos_frontend_impeccable.md`:
 - 4 incumplían WCAG 2.2 AA: el foco poco visible sobre la barra lateral, tablas que ensanchaban la página en el celular, campos sin etiqueta y botones con contraste insuficiente;
 - otros mostraban al cliente códigos internos o dejaban sin una acción principal clara las pantallas de uso diario.
 
-La mayoría se corrigió sin cambiar el comportamiento (PR #171 y #172). Algunas correcciones cambian la organización de pantallas que el tribunal ya vio, y se registran aquí.
+La mayoría se corrigió sin cambiar el comportamiento (PR #171 a #174). Algunas correcciones cambian la organización de pantallas que el tribunal ya vio, y se registran aquí.
 
 **Decisión.**
 1. **Una sola regla común para las tablas.** Toda tabla del contenido se desplaza dentro de su recuadro en pantallas angostas. Si una vista no la envolvió en `.table-responsive`, `sigccr.js` la envuelve al cargar. Las celdas numéricas no se cortan, y los textos ocultos para lectores de pantalla quedan dentro del recuadro.
-2. **Los colores de Bootstrap pasan por la identidad.** Los botones contorneados, los estados, los textos de error y los códigos usan el verde, el rojo y la tinta del sistema. Ningún color de interfaz queda con contraste menor a 4,5:1.
+2. **Los colores de Bootstrap pasan por la identidad.** Los botones contorneados, los estados, los textos de error y los códigos usan el verde, el rojo y la tinta del sistema. Ningún color de interfaz queda con contraste menor a 4,5:1. Todos los colores de `sigccr.css` se declaran como variables de la paleta; las etiquetas de advertencia e información usan el ámbar y la tinta con texto blanco.
 3. **Los listados con filtros del servidor no repiten el buscador de DataTables.** Respetan el orden del servidor cuando muestran «los más recientes», y en el celular pliegan los filtros detrás de «Filtrar». Lo aplican clientes, usuarios, solicitudes y líneas.
 4. **Una sola acción principal por zona de trabajo.**
    - En las alternativas de financiación, solo la alternativa pedida tiene botón principal. La TNA, la TEA y la vigencia, iguales para todas, se informan una vez.
@@ -691,7 +691,8 @@ La mayoría se corrigió sin cambiar el comportamiento (PR #171 y #172). Algunas
 6. **Los procesos automáticos se muestran con un nombre legible.** Por ejemplo, «Proceso automático: Evaluación automática». El registro de auditoría conserva el nombre técnico del comando.
 7. **El inicio del portal resume la cuenta.** El cliente ve primero el próximo vencimiento y su importe, el saldo deudor, las cuotas vencidas si las tiene y el botón «Pagar cuotas»; los accesos quedan debajo. El resumen usa la misma consulta del estado de cuenta (CU-47), pero no registra una consulta de auditoría, porque el cliente no la pidió. Si falla, el inicio se muestra sin el resumen.
 8. **El tablero gerencial destaca cuatro indicadores clave** sobre los bloques de detalle: índice de morosidad, saldo deudor, cobros confirmados y disponible para nuevas colocaciones. La efectividad de cobranza aclara su base (lo vencido en el período, RN-74 b).
-9. **El inicio del panel por rol queda para después de la entrega.** Mostrar el trabajo pendiente de cada rol (solicitudes por resolver, pre-registros, jornada de caja) requiere consultas nuevas por rol. El inicio ya muestra las alertas pendientes.
+9. **El inicio del panel muestra el trabajo pendiente del rol** antes del índice de funciones. Cada cola aparece solo si la cuenta tiene el permiso para atenderla y tiene al menos un caso: solicitudes para resolver, créditos para liquidar, evaluaciones en contingencia, legajos por verificar, solicitudes devueltas, pre-registros por validar, propuestas de refinanciación y devoluciones por ejecutar. Al cajero se le avisa si su caja no está abierta o si sigue abierta la jornada de un día anterior. Cada línea lleva al listado ya filtrado. Es una consulta: no cambia estados ni registra auditoría.
+10. **Una sola búsqueda de cliente (CU-54).** Todas las operaciones que parten de un cliente (simulación, comparativa, solicitud, cobro, revocación, cancelación, condonación, saldos, refinanciación, orden de pago) usan la misma pantalla y el mismo método del controlador base, `busquedaCliente()`. La simulación, la comparativa y la solicitud muestran solo clientes activos.
 
 **Consecuencias.**
 - Cambian `sigccr.css` y `sigccr.js`.
@@ -704,9 +705,11 @@ La mayoría se corrigió sin cambiar el comportamiento (PR #171 y #172). Algunas
   - las de listados, alternativas, Mi caja, parámetros de evaluación, búsqueda de cliente, cancelación anticipada, cobro en ventanilla, historiales, estado de cuenta e inicio del portal, y tablero.
 - Servicios y controladores:
   - `PortalService::estadoCuenta()` admite no registrar la auditoría;
+  - `PendientesService` (nuevo) arma el trabajo pendiente del inicio del panel;
+  - `BaseController::busquedaCliente()` reemplaza las búsquedas de cliente repetidas en seis controladores;
   - el controlador `Portal\Inicio` pasa el resumen a la vista.
 - Los CSS y JS del sistema se sirven con su fecha de modificación como versión, para que el navegador no use copias viejas.
-- Las pruebas de vistas (`tests/rutas`) verifican el resumen del portal, los indicadores del tablero y los textos sin códigos internos.
+- Las pruebas de vistas (`tests/rutas`) verifican el trabajo pendiente del inicio del panel, el resumen del portal, los indicadores del tablero y los textos sin códigos internos.
 - Cambian textos que las pruebas funcionales esperan:
   - «Cuotas pendientes» en lugar de «Impagas»;
   - el responsable de los procesos automáticos;
