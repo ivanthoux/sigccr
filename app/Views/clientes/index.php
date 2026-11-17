@@ -9,6 +9,8 @@
  */
 $c = static fn (string $k): string => $criterios[$k] ?? '';
 $puedeVer = tiene_permiso('clientes.consultar-perfil');
+// En el celular los filtros se pliegan para que la lista quede a la vista; se muestran abiertos si hay criterios
+$hayCriterios = array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -22,7 +24,10 @@ $this->section('contenido');
     <?php endif ?>
 </div>
 
-<form method="get" action="<?= url_to('clientes.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar clientes">
+<button class="btn btn-outline-secondary w-100 mb-3 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-clientes" aria-expanded="<?= $hayCriterios ? 'true' : 'false' ?>" aria-controls="filtros-clientes">
+    <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar clientes<?= $hayCriterios ? ' (con criterios aplicados)' : '' ?>
+</button>
+<form method="get" action="<?= url_to('clientes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-clientes" role="search" aria-label="Buscar clientes">
     <div class="row g-2 align-items-end">
         <div class="col-md-6 col-lg-4">
             <label for="texto" class="form-label small">Nombre, apellido o razón social</label>
@@ -66,15 +71,15 @@ $this->section('contenido');
         <?php if (!$buscado): ?>
             <p class="small text-body-secondary mb-2">Clientes registrados más recientemente<?= count($clientes) >= \App\Services\Clientes\ClienteService::CANTIDAD_RECIENTES ? ' (los últimos ' . count($clientes) . '). Use los filtros para buscar en todo el padrón' : '' ?>.</p>
         <?php endif ?>
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda<?= $buscado ? '' : ' data-orden-servidor' ?>>
             <thead><tr><th>Cliente</th><th>Tipo</th><th>Documento</th><th>CUIT/CUIL</th><th>Correo electrónico</th><th>Estado</th></tr></thead>
             <tbody>
             <?php foreach ($clientes as $cl): ?>
                 <tr>
                     <td><?= $puedeVer ? '<a class="fw-medium" href="' . site_url('admin/clientes/' . $cl['id']) . '">' . esc($cl['denominacion']) . '</a>' : esc($cl['denominacion']) ?></td>
                     <td><?= $cl['tipo_cliente'] === 'PersonaJuridica' ? 'Jurídica' : 'Humana' ?></td>
-                    <td><?= $cl['nro_documento'] ? esc($cl['tipo_documento'] . ' ' . $cl['nro_documento']) : '' ?></td>
-                    <td><?= esc(formato_cuit($cl['cuit_cuil'])) ?></td>
+                    <td class="text-nowrap"><?= $cl['nro_documento'] ? esc($cl['tipo_documento'] . ' ' . $cl['nro_documento']) : '' ?></td>
+                    <td class="text-nowrap"><?= esc(formato_cuit($cl['cuit_cuil'])) ?></td>
                     <td><?= esc((string) $cl['correo']) ?></td>
                     <td><span class="badge rounded-pill <?= $cl['estado'] === 'Activo' ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= $cl['estado'] === 'Activo' ? 'Activo' : 'Desactivado' ?></span></td>
                 </tr>

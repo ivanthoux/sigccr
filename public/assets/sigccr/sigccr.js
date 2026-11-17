@@ -90,8 +90,18 @@
                 aria: { orderable: 'Ordenar por esta columna', orderableReverse: 'Invertir el orden' },
             },
         });
+        // data-orden-servidor: conserva el orden en que llegan las filas (por ejemplo, los registrados más recientemente)
+        // data-sin-busqueda: la pantalla ya tiene filtros del servidor; un segundo buscador solo filtraría las filas
+        // cargadas y podría decir «sin coincidencias» de un registro que existe
         document.querySelectorAll('table[data-tabla]').forEach((t) => {
-            new window.DataTable(t);
+            const opciones = {};
+            if (t.hasAttribute('data-orden-servidor')) {
+                opciones.order = [];
+            }
+            if (t.hasAttribute('data-sin-busqueda')) {
+                opciones.searching = false;
+            }
+            new window.DataTable(t, opciones);
             // En pantallas angostas la tabla se desplaza dentro de su recuadro, sin ensanchar la página (360 px)
             const marco = document.createElement('div');
             marco.className = 'table-responsive';

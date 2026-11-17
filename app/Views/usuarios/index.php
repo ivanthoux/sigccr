@@ -12,6 +12,8 @@ use App\Services\Usuarios\UsuarioService;
 $this->extend('layouts/panel');
 $this->section('contenido');
 $c = static fn (string $k): string => $criterios[$k] ?? '';
+// En el celular los filtros se pliegan para que la lista quede a la vista; se muestran abiertos si hay criterios
+$hayCriterios = array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
 ?>
 <div class="encabezado">
     <div>
@@ -23,7 +25,10 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
     <?php endif ?>
 </div>
 
-<form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar usuarios">
+<button class="btn btn-outline-secondary w-100 mb-3 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-usuarios" aria-expanded="<?= $hayCriterios ? 'true' : 'false' ?>" aria-controls="filtros-usuarios">
+    <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar usuarios<?= $hayCriterios ? ' (con criterios aplicados)' : '' ?>
+</button>
+<form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-usuarios" role="search" aria-label="Buscar usuarios">
     <div class="row g-2 align-items-end">
         <div class="col-md-4 col-lg-3">
             <label for="texto" class="form-label small">Nombre o apellido</label>
@@ -68,7 +73,7 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
     </div>
 <?php else: ?>
     <div class="hoja p-3">
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda>
             <thead>
             <tr><th>Apellido y nombre</th><th>Documento</th><th>Correo electrónico</th><th>Rol</th><th>Estado</th></tr>
             </thead>
@@ -76,7 +81,7 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
             <?php foreach ($usuarios as $u): ?>
                 <tr>
                     <td><a href="<?= site_url('admin/usuarios/' . $u['id']) ?>" class="fw-medium"><?= esc($u['apellido'] . ', ' . $u['nombre']) ?></a></td>
-                    <td><?= esc($u['tipo_documento'] . ' ' . $u['nro_documento']) ?></td>
+                    <td class="text-nowrap"><?= esc($u['tipo_documento'] . ' ' . $u['nro_documento']) ?></td>
                     <td><?= esc($u['correo']) ?></td>
                     <td><?= esc($u['rol_nombre']) ?></td>
                     <td><?= etiqueta_estado_cuenta($u['estado']) ?></td>
