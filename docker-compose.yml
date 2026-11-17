@@ -53,6 +53,25 @@ services:
     networks: [sigccr_net]
     restart: unless-stopped
 
+  # Correo de desarrollo (D-49): recibe los correos del SIG-CCR sin entregarlos a nadie y los muestra en
+  # http://localhost:8025. Se levanta una vez con «docker compose --profile correo up -d» y el .env apunta el SMTP a
+  # mailpit:1025 (env.sigccr.example). No se usa en producción, donde el SMTP es el del proveedor.
+  mailpit:
+    image: axllent/mailpit:v1.27.10
+    profiles: [correo]
+    ports:
+      - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"   # solo desde el propio equipo; el SMTP (1025) queda en la red interna
+    environment:
+      MP_DATABASE: /data/mailpit.db              # los correos se conservan al reiniciar el contenedor
+      MP_MAX_MESSAGES: "1000"
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"            # acepta el envío con o sin usuario, como un proveedor de pruebas
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      TZ: America/Argentina/Buenos_Aires
+    volumes:
+      - correos:/data
+    networks: [sigccr_net]
+    restart: unless-stopped
+
   db:
     # Fijar una versión acumulativa concreta (por ejemplo 2022-CU16-ubuntu-22.04) antes de producción.
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -80,6 +99,7 @@ volumes:
   sqldata:      # datos de SQL Server, independientes del contenedor (plan correctivo de R4)
   storage:      # writable/: adjuntos, sesiones, caché y registros técnicos
   backups:      # copias de seguridad cifradas (RNF-13)
+  correos:      # buzón de Mailpit, solo en desarrollo (D-49)
 
 networks:
   sigccr_net:
