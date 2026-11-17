@@ -44,6 +44,12 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-38 | 08/11/2026 | Propuesta |
 | D-39 | 10/11/2026 | Propuesta |
 | D-40 | 10/11/2026 | Aceptada (10/11/2026) |
+| D-41 | 12/11/2026 | Propuesta |
+| D-42 | 12/11/2026 | Propuesta |
+| D-43 | 12/11/2026 | Propuesta |
+| D-44 | 12/11/2026 | Propuesta |
+| D-45 | 12/11/2026 | Propuesta |
+| D-46 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -647,3 +653,20 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
   - el planificador, `crear_base.sql`, `inicializar.sh`, `env.sigccr.example` y el README.
 - En una instalación existente basta con volver a ejecutar `docker/inicializar.sh`, que agrega la configuración `database.copias.*` al `.env` y crea el inicio de sesión.
 - Pruebas: `tests/unit/Copias/CopiasTest.php` y `tests/rutas/VistasCopiasTest.php`.
+
+## D-46 · Pruebas de rendimiento y redacción de RNF-07 según lo construido (RNF-03, RNF-06, RNF-07, RNF-10)
+
+**Contexto.** RNF-03 exige que las búsquedas de clientes y el registro de cobros respondan en menos de dos segundos en el percentil 95, con 20.000 clientes, 30.000 créditos, 300.000 cuotas, 10 usuarios concurrentes y un servidor de 4 vCPU y 8 GB, y prevé verificarlo con Apache JMeter. RNF-06 pide pruebas de concurrencia que intenten dos resoluciones simultáneas sobre un mismo objeto. RNF-07 indicaba que los listados de volumen creciente usarían DataTables con procesamiento del lado del servidor (búsqueda, paginación y ordenamiento por AJAX). Lo construido resuelve la búsqueda y el filtrado en el servidor, pero entrega un conjunto acotado de resultados que DataTables pagina y ordena en el navegador.
+
+**Decisión.**
+1. **RNF-07 se ajusta a lo construido.** Los listados de volumen creciente resuelven la búsqueda y los filtros en el servidor, con consultas parametrizadas, y devuelven un conjunto acotado: hasta 500 clientes, y hasta 200 solicitudes, cobros u órdenes de pago, ordenados por relevancia o fecha. El registro de auditoría se pagina en el servidor de a 50 registros. Sin criterios, cada listado muestra los registros más recientes. DataTables ordena y pagina en el navegador el conjunto recibido, sin nuevas peticiones. Los listados de volumen acotado (parámetros, cajas, líneas) se presentan completos. Se verifica con la prueba de carga RP-05: percentil 95 menor a dos segundos con el volumen de RNF-03. El procesamiento por AJAX no mejora el tiempo de respuesta con estos topes y agrega una interfaz de datos que proteger y probar.
+2. **Volumen de referencia.** `RendimientoSeeder` carga con SQL masivo 20.000 clientes, 30.000 créditos liquidados de 10 cuotas (300.000 cuotas, con uno de cada siete créditos en mora) y los usuarios de la carga. No pasa por los servicios: son datos de prueba con dígitos verificadores válidos, no operaciones reales, y solo se cargan en la pila de pruebas.
+3. **Escenarios (JMeter).** Una carga mixta de 10 usuarios durante 10 minutos: 3 Analistas que buscan clientes por apellido, documento y CUIL y consultan las solicitudes (RP-01, RP-05); 6 Cajeros que buscan al cliente, abren su deuda y registran el cobro de la cuota más antigua (RP-02, RP-03, RP-05); y un Gerente con el tablero y los reportes de cartera y morosidad. Cada usuario hace una pausa de 2 a 7 segundos entre operaciones. RP-06 envía al mismo tiempo dos cobros de la misma cuota y dos anulaciones del mismo cobro. RP-07 mide los procesos automáticos con todo el volumen.
+4. **Entorno.** El flujo *Rendimiento* de GitHub Actions (a pedido, y en los cambios de las pruebas) levanta la pila con la batería de punta a punta (datos base), pasa la aplicación a modo producción, limita los contenedores a 4 vCPU y 8 GB en total (base 2 vCPU y 4 GB, aplicación 1,5 y 3 GB, web 0,5 y 1 GB) y ejecuta JMeter en el mismo equipo, que le resta capacidad: un resultado favorable ahí lo es con margen en un servidor dedicado. Los resultados se publican en la rama `rendimiento-resultados`.
+5. **Criterios.** Percentil 95 menor a 2.000 ms y a lo sumo 1 % de errores en las operaciones de RNF-03 y RNF-07; en RP-06, un solo cobro y una sola anulación registrados. El tablero y los reportes se miden y se informan sin criterio, porque ningún requisito fija su tiempo; RP-07 se informa como referencia de RNF-10.
+6. **Correcciones que surgieron de las mediciones.**
+   - *Reporte de cartera.* Traía a PHP todos los créditos para agruparlos y superaba el búfer de 10 MB del controlador `sqlsrv` (error 500). Ahora agrupa en SQL Server por estado, línea y pertenencia al período, el detalle se limita a 1.000 créditos y la evolución se consulta aparte. El búfer de consultas sube a 50 MB (`sqlsrv.ClientBufferMaxKBSize`) como margen para las exportaciones.
+   - *Bloqueos mutuos.* Con seis Cajeros simultáneos, SQL Server eligió como víctima, en algunos casos, la actualización de los tramos punitorios que hace la consulta de deuda (0,4 % de errores). `BaseService::transaccion` reintenta hasta tres veces la transacción más externa cuando el motor informa un bloqueo mutuo (error 1205, SQLSTATE 40001), con una espera breve y creciente, y lo registra como advertencia. Las transacciones anidadas no se reintentan: el reintento corresponde a la que abrió la unidad de trabajo.
+   - *Prueba E2E del calendario (R-044).* Usaba fechas fijas a 45 días que podían coincidir con las de la carga anual; ahora elige días libres.
+
+**Consecuencias.** Componentes nuevos: `RendimientoSeeder` y `DatosDePruebaException`, `tests/rendimiento/` (`generar_planes.py`, `carga.jmx`, `concurrencia.jmx`, `ejecutar.sh`, `evaluar.py`) y el flujo `.github/workflows/rendimiento.yml`. Cambian `ReporteService::cartera`, `BaseService::transaccion`, `docker/php/php.ini`, RNF-07 (descripción y verificación) y el plan de pruebas (nivel Rendimiento y carga, casos RP-01 a RP-07). Los resultados se documentan en `docs/pruebas/prueba_rendimiento.md`.
