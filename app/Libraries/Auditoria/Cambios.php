@@ -171,7 +171,9 @@ final class Cambios
             return (string) json_encode(array_map(static fn ($x) => self::normal($x), $v), JSON_UNESCAPED_UNICODE);
         }
         $s = trim((string) $v);
-        if (preg_match('/^-?\d+(\.\d+)?$/', $s) === 1) {
+        if (preg_match('/^-?(\d+(\.\d*)?|\.\d+)$/', $s) === 1) {
+            // SQL Server devuelve los decimales menores que 1 sin el cero inicial («.020000»)
+            $s = (string) preg_replace('/^(-?)\./', '${1}0.', $s);
             if (str_contains($s, '.')) {
                 $s = rtrim(rtrim($s, '0'), '.');
             }

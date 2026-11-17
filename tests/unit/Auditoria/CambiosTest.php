@@ -39,8 +39,9 @@ final class CambiosTest extends TestCase
     public function testEquivalenciasQueNoSonCambios(): void
     {
         // Números con distinta escala, lógicos como 1 y 0, y vacío como null: el valor es el mismo
-        $antes = ['tna' => '0.600000', 'monto_minimo' => '300000.00', 'activo' => 1, 'admite_persona_humana' => '1', 'empleador' => null, 'cero' => '0.00'];
-        $despues = ['tna' => '0.6', 'monto_minimo' => '300000', 'activo' => true, 'admite_persona_humana' => true, 'empleador' => '', 'cero' => '0'];
+        // (SQL Server devuelve los decimales menores que 1 sin el cero inicial: «.020000», «.00»)
+        $antes = ['tna' => '0.600000', 'monto_minimo' => '300000.00', 'activo' => 1, 'admite_persona_humana' => '1', 'empleador' => null, 'cero' => '0.00', 'pct' => '.020000', 'gasto' => '.00', 'neg' => '-.5'];
+        $despues = ['tna' => '0.6', 'monto_minimo' => '300000', 'activo' => true, 'admite_persona_humana' => true, 'empleador' => '', 'cero' => '0', 'pct' => '0.02', 'gasto' => '0.00', 'neg' => '-0.50'];
         $this->assertSame([], Cambios::entre($antes, $despues));
 
         // Un documento o un código postal se comparan como texto: los ceros a la izquierda cuentan
