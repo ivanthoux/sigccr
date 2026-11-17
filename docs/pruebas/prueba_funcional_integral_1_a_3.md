@@ -193,7 +193,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| R-071 | Alternativas | Abrir las alternativas de Ana. | Capacidad de pago, monto máximo, la combinación pedida primero y las descartadas con su motivo. | |
+| R-071 | Alternativas | Abrir las alternativas de Ana. | Capacidad de pago, monto máximo, la combinación pedida primero (la única con el botón principal), la TNA, la TEA y la vigencia sobre la tabla, y las descartadas con su motivo (D-47). | |
 | R-072 | Validaciones de la conformidad | Confirmar sin fecha, con fecha futura y sin medio. | Cada error junto a su campo. | |
 | R-073 | Aprobación automática | Confirmar la alternativa pedida con la fecha de hoy y «Presencial, con firma del cliente». | «Alternativa confirmada y solicitud aprobada automáticamente. La aprobación vence el …»; el vencimiento salta feriados y fines de semana (RN-49); Fondos muestra la reserva. | |
 | R-074 | Confirmación simultánea | En otra solicitud, abrir la misma alternativa en dos pestañas y confirmar en ambas. | La segunda informa que la solicitud cambió; hay una sola reserva. | |
@@ -223,7 +223,7 @@ En esta sección se liquidan los cinco créditos de la iteración 3. Para cada c
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
 | R-088 | Buscar solicitudes | Buscar por número, DNI, estado, línea y fechas; probar un rango invertido. | Resultados filtrados; el rango invertido se rechaza (A2). | |
-| R-089 | Ficha completa | Abrir la ficha de la solicitud de Ana. | Datos, historial de estados, evaluación, alternativas, afectaciones de fondos, contrato y liquidación. | |
+| R-089 | Ficha completa | Abrir la ficha de la solicitud de Ana. | Datos, historial de estados (los pasos automáticos como «Proceso automático: Evaluación automática»), evaluación, alternativas, afectaciones de fondos, contrato y liquidación (D-47). | |
 | R-090 | Búsqueda del Cajero | Como Paula, buscar solicitudes y hacer clic en una aprobada y en otra. | La aprobada abre la liquidación; la otra no ofrece un enlace sin permiso. | |
 | R-091 | Confirmación de cambios | Simular y registrar una solicitud de Marcos en «Motos» ($ 500.000, 12 cuotas) y dejarla en trámite; modificar la TNA de «Motos» a 62 % sin y con la confirmación. | «Hay N solicitud(es) en trámite… confirme el cambio…»; confirmado se registra y la solicitud conserva su versión. | |
 
@@ -313,7 +313,7 @@ Con el crédito E de Julián, sin modificar sus vencimientos.
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| R-132 | Cálculo | Como Paula, en Cancelación anticipada, buscar a Julián y calcular. | Cuotas vencidas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) y su IVA, total y la reducción de lo no devengado; sin comisión. | |
+| R-132 | Cálculo | Como Paula, en Cancelación anticipada, buscar a Julián y calcular. | Cuotas vencidas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) y su IVA, total y la reducción de lo no devengado; sin comisión. El importe a cobrar se propone con el formato del sistema (D-47). | |
 | R-133 | Parcial y orden pendiente | Registrar con $ 1.000 menos; generar una orden electrónica de la cuota 1 y volver a calcular. | «El importe debe ser igual al total de la cancelación…»; con la orden, aviso y registro deshabilitado (A4). | |
 | R-134 | Registrar | Vencer la orden (C.2 y `vencimientos:controlar`) y registrar por el total por transferencia (A.16). | «Crédito cancelado anticipadamente con el cobro N.º …»; el comprobante incluye la reducción; cuotas Pagadas y crédito Cancelado. | |
 | R-135 | No se anula y crédito refinanciado | Como Gerente, intentar anular ese cobro; como Paula, calcular la cancelación del crédito F (refinanciado). | «El cobro de una cancelación anticipada no se anula…»; el cálculo del F incluye el no capitalizable de las cuotas no vencidas. | |
