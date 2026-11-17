@@ -8,7 +8,6 @@ use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Caja\CajaService;
 use App\Services\Cartera\RevocacionService;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -27,12 +26,7 @@ class Revocaciones extends BaseController
     {
         $clienteId = (int) $this->request->getGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Revocación del préstamo', 'texto' => $texto, 'destino' => 'creditos.revocar',
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
+            return $this->busquedaCliente('creditos.revocar', 'Revocación del préstamo');
         }
         try {
             $cliente = (new SimulacionService())->cliente($clienteId);

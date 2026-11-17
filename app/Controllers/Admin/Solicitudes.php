@@ -8,7 +8,6 @@ use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Validacion\Campos;
-use App\Services\Clientes\ClienteService;
 use App\Services\Clientes\LegajoService;
 use App\Services\Solicitudes\EvaluacionService;
 use App\Services\Solicitudes\SimulacionService;
@@ -60,14 +59,8 @@ class Solicitudes extends BaseController
     public function nueva(): string|RedirectResponse
     {
         $clienteId = (int) $this->request->getGet('cliente');
-        $texto = trim((string) $this->request->getGet('texto'));
         if ($clienteId === 0) {
-            return view('simulaciones/cliente', [
-                'titulo' => 'Registrar solicitud',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : array_values(array_filter((new ClienteService())->buscar(['texto' => $texto]), static fn ($c) => $c['estado'] === 'Activo')),
-                'destino' => 'solicitudes.registrar',
-            ]);
+            return $this->busquedaCliente('solicitudes.registrar', 'Registrar solicitud', true);
         }
         $sim = new SimulacionService();
         try {

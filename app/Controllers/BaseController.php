@@ -55,10 +55,6 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
-     * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
-     */
-    /**
      * Búsqueda y selección del cliente (CU-54) para las operaciones que parten de él: sin ?cliente= presenta la
      * búsqueda; con él, devuelve los datos del cliente o vuelve a la búsqueda si no existe.
      *
@@ -68,12 +64,7 @@ abstract class BaseController extends Controller
     {
         $clienteId = (int) $this->request->getGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => $titulo, 'texto' => $texto, 'destino' => $destino,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
+            return $this->busquedaCliente($destino, $titulo);
         }
         try {
             return (new SimulacionService())->cliente($clienteId);
@@ -82,6 +73,28 @@ abstract class BaseController extends Controller
         }
     }
 
+    /**
+     * Pantalla única de búsqueda del cliente (CU-54) con la que empiezan las operaciones sobre un cliente: el mismo
+     * campo, la misma tabla de resultados y la misma forma de elegirlo en todas. $soloActivos deja fuera a los
+     * clientes que no pueden iniciar un crédito (simulación y solicitud); $datos agrega lo propio de la pantalla.
+     *
+     * @param array<string, mixed> $datos
+     */
+    protected function busquedaCliente(string $destino, string $titulo, bool $soloActivos = false, array $datos = []): string
+    {
+        $texto = trim((string) $this->request->getGet('texto'));
+        $clientes = $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]);
+        if ($soloActivos) {
+            $clientes = array_values(array_filter($clientes, static fn ($c) => $c['estado'] === 'Activo'));
+        }
+
+        return view('simulaciones/cliente', ['titulo' => $titulo, 'texto' => $texto, 'destino' => $destino, 'clientes' => $clientes] + $datos);
+    }
+
+    /**
+     * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
+     * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
+     */
     protected function volverConError(ReglaNegocioException $e): RedirectResponse
     {
         return redirect()->back()->withInput()

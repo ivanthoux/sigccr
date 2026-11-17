@@ -9,7 +9,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Validacion\Campos;
 use App\Services\Caja\CajaService;
 use App\Services\Caja\CobroService;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -30,15 +29,7 @@ class Cobros extends BaseController
         $jornada = (new CajaService())->jornadaOperable($usuario);
         $clienteId = (int) $this->request->getGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Cobro en ventanilla',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-                'destino' => 'cobros.registrar',
-                'jornada' => $jornada,
-            ]);
+            return $this->busquedaCliente('cobros.registrar', 'Cobro en ventanilla', false, ['jornada' => $jornada]);
         }
         try {
             $cliente = (new SimulacionService())->cliente($clienteId);

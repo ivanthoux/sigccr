@@ -23,6 +23,22 @@
     --verde-oscuro: #17603f;
     --rojo: #b42318;
     --ambar: #b54708;
+    /* Derivados de la paleta: fondos suaves y textos oscuros de los avisos, bordes y acentos sobre la tinta */
+    --verde-suave: #e7f3ee;
+    --verde-texto: #134e37;
+    --verde-acento: #5fc49b;
+    --rojo-suave: #fbecea;
+    --rojo-texto: #7a1810;
+    --rojo-oscuro: #912018;
+    --ambar-suave: #fdf1e5;
+    --ambar-texto: #7a3005;
+    --tinta-suave: #e8eef5;
+    --tinta-tenue: #8fa6bd;
+    --tinta-clara: #e8eef4;
+    --borde-control: #b9c3ce;
+    --borde-encabezado: #c5ced8;
+    --superficie-hover: #e9edf1;
+    --blanco: #fff;
 
     --bs-body-font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --bs-body-font-size: .9375rem;
@@ -36,12 +52,18 @@
     --bs-border-radius: .375rem;
     --bs-focus-ring-color: rgba(31, 122, 87, .35);
     /* Estados con los colores de la identidad (etiquetas, textos y bordes de error), no los de Bootstrap */
-    --bs-success: #1f7a57;
+    --bs-success: var(--verde);
     --bs-success-rgb: 31, 122, 87;
-    --bs-danger: #b42318;
+    --bs-danger: var(--rojo);
     --bs-danger-rgb: 180, 35, 24;
-    --bs-form-invalid-color: #b42318;
-    --bs-form-invalid-border-color: #b42318;
+    --bs-warning: var(--ambar);
+    --bs-warning-rgb: 181, 71, 8;
+    --bs-warning-text-emphasis: var(--ambar-texto);
+    --bs-info: var(--tinta-2);
+    --bs-info-rgb: 35, 71, 107;
+    --bs-secondary-rgb: 83, 98, 113;
+    --bs-form-invalid-color: var(--rojo);
+    --bs-form-invalid-border-color: var(--rojo);
 }
 
 body { -webkit-font-smoothing: antialiased; }
@@ -50,7 +72,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 :focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
 /* Sobre la tinta el verde no llega a 3:1 (WCAG 1.4.11): el foco es claro en la barra lateral, la barra superior
    y la marca del acceso. */
-.lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: #fff; }
+.lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: var(--blanco); }
 
 /* Botones: el verde es la acción principal; el resto, contorno sobrio */
 .btn { font-weight: 500; }
@@ -63,28 +85,28 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 }
 .btn-outline-primary, .btn-outline-success {
     --bs-btn-color: var(--verde); --bs-btn-border-color: var(--verde);
-    --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--verde); --bs-btn-hover-border-color: var(--verde);
-    --bs-btn-active-color: #fff; --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
+    --bs-btn-hover-color: var(--blanco); --bs-btn-hover-bg: var(--verde); --bs-btn-hover-border-color: var(--verde);
+    --bs-btn-active-color: var(--blanco); --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
     --bs-btn-disabled-color: var(--verde); --bs-btn-disabled-border-color: var(--verde);
     --bs-btn-focus-shadow-rgb: 31, 122, 87;
 }
 /* Códigos (de línea, de documento, de evento): en tinta y no en el rosa de Bootstrap, que no llega a 4,5:1 sobre el papel */
 code { color: var(--tinta-2); }
-.btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: #b9c3ce; --bs-btn-hover-bg: #e9edf1; --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: #b9c3ce; }
+.btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: var(--borde-control); --bs-btn-hover-bg: var(--superficie-hover); --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: var(--borde-control); }
 .form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
 .form-label { font-weight: 500; }
 .alert { border-width: 0 0 0 4px; border-radius: .25rem; }
-.alert-success { --bs-alert-bg: #e7f3ee; --bs-alert-color: #134e37; --bs-alert-border-color: var(--verde); }
-.alert-danger { --bs-alert-bg: #fbecea; --bs-alert-color: #7a1810; --bs-alert-border-color: var(--rojo); }
-.alert-warning { --bs-alert-bg: #fdf1e5; --bs-alert-color: #7a3005; --bs-alert-border-color: var(--ambar); }
-.alert-info { --bs-alert-bg: #e8eef5; --bs-alert-color: var(--tinta); --bs-alert-border-color: var(--tinta-2); }
+.alert-success { --bs-alert-bg: var(--verde-suave); --bs-alert-color: var(--verde-texto); --bs-alert-border-color: var(--verde); }
+.alert-danger { --bs-alert-bg: var(--rojo-suave); --bs-alert-color: var(--rojo-texto); --bs-alert-border-color: var(--rojo); }
+.alert-warning { --bs-alert-bg: var(--ambar-suave); --bs-alert-color: var(--ambar-texto); --bs-alert-border-color: var(--ambar); }
+.alert-info { --bs-alert-bg: var(--tinta-suave); --bs-alert-color: var(--tinta); --bs-alert-border-color: var(--tinta-2); }
 
 /* Importes y tablas con cifras tabulares (RNF-02) */
 .importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* Celdas alineadas a la derecha (porcentajes, cantidades, acciones): un valor como «60,00 %» no se parte en dos renglones */
 .table td.text-end, .table th.text-end { white-space: nowrap; }
-.table { --bs-table-bg: #fff; font-variant-numeric: tabular-nums; }
-.table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: #c5ced8; }
+.table { --bs-table-bg: var(--blanco); font-variant-numeric: tabular-nums; }
+.table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: var(--borde-encabezado); }
 
 /* ── Panel: barra lateral de tinta a toda altura ─────────────────────────── */
 .panel { min-height: 100vh; }
@@ -102,25 +124,25 @@ code { color: var(--tinta-2); }
 .marca {
     display: block;
     padding: 1.5rem 1.5rem 1.25rem;
-    color: #fff;
+    color: var(--blanco);
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
-.marca:hover { color: #fff; }
+.marca:hover { color: var(--blanco); }
 .marca strong { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
 .marca span { display: block; margin-top: .4rem; font-size: .75rem; line-height: 1.35; color: var(--tinta-texto); }
 
 .menu-lateral { padding: .75rem 0; flex: 1; }
-.menu-seccion { padding: 1.1rem 1.5rem .3rem; font-size: .8125rem; font-weight: 500; color: #8fa6bd; }
+.menu-seccion { padding: 1.1rem 1.5rem .3rem; font-size: .8125rem; font-weight: 500; color: var(--tinta-tenue); }
 .menu-opcion {
     display: block;
     padding: .45rem 1.5rem;
-    color: #e8eef4;
+    color: var(--tinta-clara);
     text-decoration: none;
     border-left: 3px solid transparent;
 }
-.menu-opcion:hover { background: var(--tinta-2); color: #fff; }
-.menu-opcion.activa { background: var(--tinta-2); border-left-color: #5fc49b; color: #fff; font-weight: 500; }
+.menu-opcion:hover { background: var(--tinta-2); color: var(--blanco); }
+.menu-opcion.activa { background: var(--tinta-2); border-left-color: var(--verde-acento); color: var(--blanco); font-weight: 500; }
 .menu-opcion .bi { width: 1.25rem; display: inline-block; }
 
 .cuenta {
@@ -128,12 +150,12 @@ code { color: var(--tinta-2); }
     border-top: 1px solid rgba(255, 255, 255, .08);
     font-size: .8125rem;
 }
-.cuenta .nombre { color: #fff; font-weight: 500; font-size: .875rem; }
+.cuenta .nombre { color: var(--blanco); font-weight: 500; font-size: .875rem; }
 .cuenta a { color: var(--tinta-texto); }
-.cuenta a:hover { color: #fff; }
+.cuenta a:hover { color: var(--blanco); }
 
-.barra-movil { background: var(--tinta); color: #fff; }
-.barra-movil .btn-link { color: #fff; }
+.barra-movil { background: var(--tinta); color: var(--blanco); }
+.barra-movil .btn-link { color: var(--blanco); }
 
 .contenido { flex: 1; min-width: 0; padding: 2rem 2.5rem 3rem; max-width: 84rem; }
 @media (max-width: 991.98px) { .contenido { padding: 1.25rem 1rem 2.5rem; } }
@@ -142,14 +164,14 @@ code { color: var(--tinta-2); }
 .encabezado h1 { font-size: 1.625rem; margin: 0; }
 .encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
 
-.hoja { background: #fff; border: 1px solid var(--linea); border-radius: .5rem; }
+.hoja { background: var(--blanco); border: 1px solid var(--linea); border-radius: .5rem; }
 /* Los textos ocultos para lectores de pantalla (position: absolute) dentro de una tabla desplazable deben quedar
    recortados por su marco: si no, ensanchan la página en el celular aunque la tabla se desplace. */
 .table-responsive { position: relative; }
 
 /* Pantalla principal: índice de funciones por área */
 .indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }
-.indice section { padding: 1.25rem 1.5rem; background: #fff; }
+.indice section { padding: 1.25rem 1.5rem; background: var(--blanco); }
 .indice h2 { font-size: 1rem; margin-bottom: .6rem; }
 .indice ul { list-style: none; padding: 0; margin: 0; }
 .indice li + li { margin-top: .3rem; }
@@ -157,7 +179,7 @@ code { color: var(--tinta-2); }
 .indice a:hover { text-decoration: underline; }
 
 /* ── Acceso: tinta a la izquierda, formulario a la derecha ───────────────── */
-.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: #fff; }
+.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: var(--blanco); }
 @media (min-width: 992px) { .acceso { grid-template-columns: minmax(22rem, 5fr) 7fr; } }
 .acceso-marca {
     background: var(--tinta);
@@ -167,9 +189,9 @@ code { color: var(--tinta-2); }
     flex-direction: column;
     justify-content: space-between;
 }
-.acceso-marca strong { display: block; color: #fff; font-size: clamp(3rem, 6vw, 5.25rem); font-weight: 600; letter-spacing: -.035em; line-height: .95; }
+.acceso-marca strong { display: block; color: var(--blanco); font-size: clamp(3rem, 6vw, 5.25rem); font-weight: 600; letter-spacing: -.035em; line-height: .95; }
 .acceso-marca p { max-width: 26rem; margin: 1.25rem 0 0; font-size: 1.0625rem; line-height: 1.5; }
-.acceso-marca small { color: #8fa6bd; }
+.acceso-marca small { color: var(--tinta-tenue); }
 @media (max-width: 991.98px) {
     .acceso-marca { padding: 2rem 1.5rem 1.75rem; }
     .acceso-marca strong { font-size: 2.5rem; }
@@ -183,7 +205,7 @@ code { color: var(--tinta-2); }
 
 /* ── Portada pública ─────────────────────────────────────────────────────── */
 .acceso-inicio { text-decoration: none; }
-.acceso-inicio:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px; }
+.acceso-inicio:focus-visible { outline: 2px solid var(--blanco); outline-offset: 4px; border-radius: 2px; }
 .portada-activar { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--linea); }
 .portada-activar h2 { font-size: 1rem; font-weight: 600; margin-bottom: .35rem; }
 .portada-activar p { color: var(--texto-2); font-size: .9375rem; margin-bottom: .9rem; }
@@ -194,26 +216,26 @@ code { color: var(--tinta-2); }
 }
 
 /* Campos blancos sobre las hojas; paginación con el verde de la acción principal */
-.form-control, .form-select { background-color: #fff; }
+.form-control, .form-select { background-color: var(--blanco); }
 .pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde); --bs-pagination-hover-color: var(--verde-oscuro); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
-.btn-check:checked + .btn-outline-secondary { background-color: #e7f3ee; border-color: var(--verde); color: var(--texto); font-weight: 600; }
+.btn-check:checked + .btn-outline-secondary { background-color: var(--verde-suave); border-color: var(--verde); color: var(--texto); font-weight: 600; }
 .btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }
-.btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #912018; --bs-btn-hover-border-color: #912018; --bs-btn-active-bg: #912018; }
+.btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo-oscuro); --bs-btn-hover-border-color: var(--rojo-oscuro); --bs-btn-active-bg: var(--rojo-oscuro); }
 .btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
 
 /* Portal de autogestión del cliente: la misma identidad, con una barra superior en lugar del menú lateral. */
 .portal-ancho { max-width: 960px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
 .portal-barra { background: var(--tinta); color: var(--tinta-texto); padding: .75rem 0; }
-.portal-marca { color: #fff; text-decoration: none; display: flex; align-items: baseline; gap: .6rem; }
-.portal-marca:hover { color: #fff; }
+.portal-marca { color: var(--blanco); text-decoration: none; display: flex; align-items: baseline; gap: .6rem; }
+.portal-marca:hover { color: var(--blanco); }
 .portal-marca strong { font-size: 1.15rem; letter-spacing: .02em; }
 .portal-marca span { color: var(--tinta-texto); font-size: .875rem; }
 .portal-cuenta { font-size: .875rem; }
-.portal-salir { color: #fff; font-size: .875rem; text-decoration: none; white-space: nowrap; }
-.portal-salir:hover { color: #fff; text-decoration: underline; }
+.portal-salir { color: var(--blanco); font-size: .875rem; text-decoration: none; white-space: nowrap; }
+.portal-salir:hover { color: var(--blanco); text-decoration: underline; }
 .portal-contenido { padding-top: 2rem; padding-bottom: 3rem; }
 .funciones-portal { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); list-style: none; padding: 0; margin: 0; }
-.funciones-portal li { background: #fff; border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
+.funciones-portal li { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
 .funciones-portal .bi { color: var(--tinta-2); font-size: 1.25rem; }
 .funciones-portal h3 { font-size: 1rem; margin: .5rem 0 .25rem; }
 .funciones-portal p { color: var(--texto-2); font-size: .875rem; margin: 0; }
@@ -245,7 +267,7 @@ code { color: var(--tinta-2); }
 .dimensiones-evaluacion > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
 .dimensiones-evaluacion dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); }
 .dimensiones-evaluacion dd { margin: 0; font-weight: 600; }
-.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: #fff; background: var(--texto-2); }
+.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: var(--blanco); background: var(--texto-2); }
 .categoria-a, .categoria-b { background: var(--verde); }
 .categoria-c { background: var(--ambar); }
 .categoria-d, .categoria-e { background: var(--rojo); }
@@ -270,3 +292,16 @@ code { color: var(--tinta-2); }
     .table th { white-space: normal; }
 }
 
+
+/* Etiquetas de estado con texto blanco sobre los tonos de la identidad (contraste ≥ 4,5:1): Bootstrap pone texto
+   negro en las de advertencia e información, que sobre el ámbar y la tinta no se leería. */
+.text-bg-warning { color: var(--blanco) !important; background-color: var(--ambar) !important; }
+.text-bg-info { color: var(--blanco) !important; background-color: var(--tinta-2) !important; }
+
+/* Trabajo pendiente en la pantalla principal del panel (CU-01 paso 6) */
+.pendientes li + li { border-top: 1px solid var(--linea); }
+.pendientes a { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; color: var(--texto); text-decoration: none; }
+.pendientes a:hover span:not(.cantidad) { text-decoration: underline; }
+.pendientes .cantidad { min-width: 2.25rem; padding: .1rem .5rem; border-radius: var(--bs-border-radius); background: var(--tinta-suave); color: var(--tinta); font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.pendientes i.cantidad { background: var(--ambar-suave); color: var(--ambar-texto); font-size: 1.05rem; }
+.pendientes .bi-chevron-right { color: var(--texto-2); }

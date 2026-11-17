@@ -6,7 +6,6 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -24,14 +23,8 @@ class Simulaciones extends BaseController
     public function index(): string|RedirectResponse
     {
         $clienteId = (int) $this->request->getGet('cliente');
-        $texto = trim((string) $this->request->getGet('texto'));
         if ($clienteId === 0) {
-            return view('simulaciones/cliente', [
-                'titulo' => 'Simular crédito',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : array_values(array_filter((new ClienteService())->buscar(['texto' => $texto]), static fn ($c) => $c['estado'] === 'Activo')),
-                'destino' => 'solicitudes.simular',
-            ]);
+            return $this->busquedaCliente('solicitudes.simular', 'Simular crédito', true);
         }
         try {
             $cliente = $this->servicio->cliente($clienteId);
