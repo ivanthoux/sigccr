@@ -52,6 +52,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-46 | 17/11/2026 | Propuesta |
 | D-47 | 17/11/2026 | Propuesta |
 | D-48 | 17/11/2026 | Propuesta |
+| D-49 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -756,3 +757,25 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
   - R-034 verifica que la nueva versión de la línea Personal registra solo el cambio de la TNA (70,00 % a 72,00 %);
   - I-75 verifica que el detalle muestra la tabla.
 - Hay que actualizar la redacción de RN-45 y de CU-57, paso 6, en el documento del Trabajo Final.
+
+## D-49 · Tema oscuro y carga de las tablas solo donde se usan (RNF-02, RNF-07, RNF-13)
+
+**Contexto.** Después de la auditoría de diseño (D-47) quedaron dos mejoras fuera del alcance de la entrega: un tema oscuro y no cargar jQuery y DataTables en las pantallas que no tienen tablas con paginación. WCAG 2.2 AA no exige un tema oscuro; es una preferencia de comodidad para quien trabaja con poca luz o es sensible al brillo. jQuery (85 KB) y DataTables con sus estilos (117 KB) se descargaban y ejecutaban en todas las pantallas del panel, aunque solo siete listados y el plan de cuotas largo los usan.
+
+**Decisión.**
+
+1. **Tema oscuro con la misma identidad.**
+   - Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el botón «Tema oscuro» (barra lateral del panel y barra del portal); la elección se guarda en el navegador.
+   - El tema se aplica antes de cargar los estilos, para que la página no aparezca un instante con el otro.
+   - Los colores salen de las mismas variables de `sigccr.css`: superficies de tinta muy oscura, textos, enlaces y estados en tonos claros. Todos los textos miden al menos 4,5:1 y los bordes de los campos al menos 3:1 (WCAG 1.4.3 y 1.4.11).
+   - Las etiquetas de estado conservan el verde, el rojo, el ámbar y la tinta con texto blanco.
+   - Al imprimir (contratos, comprobantes, informes) se usa siempre el tema claro.
+2. **jQuery y DataTables solo donde se usan.** `sigccr.js` los carga cuando el panel tiene una tabla `data-tabla` o un plan de más de 12 cuotas. Si no se pudieran cargar, la tabla se muestra completa, sin paginar, dentro de su recuadro desplazable.
+
+**Consecuencias.**
+- Nuevos: la vista parcial `partials/tema.php` y el botón del tema en las plantillas del panel y del portal.
+- La pantalla de acceso sigue el tema elegido, sin botón propio.
+- El portal no carga DataTables, como antes.
+- Las vistas no deben usar jQuery: el único uso (el encabezado CSRF de `$.ajax`) se configura al cargarlo.
+- Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad.
+- El manual de usuario debe mencionar el botón del tema.
