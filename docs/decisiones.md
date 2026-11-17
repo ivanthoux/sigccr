@@ -50,6 +50,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-44 | 12/11/2026 | Propuesta |
 | D-45 | 12/11/2026 | Propuesta |
 | D-46 | 17/11/2026 | Propuesta |
+| D-47 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -670,3 +671,46 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
    - *Prueba E2E del calendario (R-044).* Usaba fechas fijas a 45 días que podían coincidir con las de la carga anual; ahora elige días libres.
 
 **Consecuencias.** Componentes nuevos: `RendimientoSeeder` y `DatosDePruebaException`, `tests/rendimiento/` (`generar_planes.py`, `carga.jmx`, `concurrencia.jmx`, `ejecutar.sh`, `evaluar.py`) y el flujo `.github/workflows/rendimiento.yml`. Cambian `ReporteService::cartera`, `BaseService::transaccion`, `docker/php/php.ini`, RNF-07 (descripción y verificación) y el plan de pruebas (nivel Rendimiento y carga, casos RP-01 a RP-07). Los resultados se documentan en `docs/pruebas/prueba_rendimiento.md`.
+
+## D-47 · Ajustes de la interfaz según la auditoría de diseño y accesibilidad (RNF-02, RNF-07; CU-31, CU-47, CU-55, CU-64)
+
+**Contexto.** El 17/11/2026 se auditó la interfaz completa con la herramienta de diseño *impeccable*, en escritorio y a 375 px. Se recorrieron más de 80 pantallas de las cuatro iteraciones, con los roles Administrador, Gerente, Analista, Cajero y Cliente. La auditoría registró 35 hallazgos, todos documentados con su evidencia en `hallazgos_frontend_impeccable.md`:
+- 4 incumplían WCAG 2.2 AA: el foco poco visible sobre la barra lateral, tablas que ensanchaban la página en el celular, campos sin etiqueta y botones con contraste insuficiente;
+- otros mostraban al cliente códigos internos o dejaban sin una acción principal clara las pantallas de uso diario.
+
+La mayoría se corrigió sin cambiar el comportamiento (PR #171 y #172). Algunas correcciones cambian la organización de pantallas que el tribunal ya vio, y se registran aquí.
+
+**Decisión.**
+1. **Una sola regla común para las tablas.** Toda tabla del contenido se desplaza dentro de su recuadro en pantallas angostas. Si una vista no la envolvió en `.table-responsive`, `sigccr.js` la envuelve al cargar. Las celdas numéricas no se cortan, y los textos ocultos para lectores de pantalla quedan dentro del recuadro.
+2. **Los colores de Bootstrap pasan por la identidad.** Los botones contorneados, los estados, los textos de error y los códigos usan el verde, el rojo y la tinta del sistema. Ningún color de interfaz queda con contraste menor a 4,5:1.
+3. **Los listados con filtros del servidor no repiten el buscador de DataTables.** Respetan el orden del servidor cuando muestran «los más recientes», y en el celular pliegan los filtros detrás de «Filtrar». Lo aplican clientes, usuarios, solicitudes y líneas.
+4. **Una sola acción principal por zona de trabajo.**
+   - En las alternativas de financiación, solo la alternativa pedida tiene botón principal. La TNA, la TEA y la vigencia, iguales para todas, se informan una vez.
+   - En Mi caja, la acción principal pasa a ser «Registrar cobro», la tarea del turno; «Cerrar caja» queda como secundaria.
+5. **El portal no muestra códigos internos.** Las referencias a casos de uso, reglas y flujos alternativos («CU-47», «RN-36», «A1») se quitan de los textos del portal y quedan en los comentarios del código. En el panel se conservan como ayuda para el personal y para la trazabilidad del trabajo.
+6. **Los procesos automáticos se muestran con un nombre legible.** Por ejemplo, «Proceso automático: Evaluación automática». El registro de auditoría conserva el nombre técnico del comando.
+7. **El inicio del portal resume la cuenta.** El cliente ve primero el próximo vencimiento y su importe, el saldo deudor, las cuotas vencidas si las tiene y el botón «Pagar cuotas»; los accesos quedan debajo. El resumen usa la misma consulta del estado de cuenta (CU-47), pero no registra una consulta de auditoría, porque el cliente no la pidió. Si falla, el inicio se muestra sin el resumen.
+8. **El tablero gerencial destaca cuatro indicadores clave** sobre los bloques de detalle: índice de morosidad, saldo deudor, cobros confirmados y disponible para nuevas colocaciones. La efectividad de cobranza aclara su base (lo vencido en el período, RN-74 b).
+9. **El inicio del panel por rol queda para después de la entrega.** Mostrar el trabajo pendiente de cada rol (solicitudes por resolver, pre-registros, jornada de caja) requiere consultas nuevas por rol. El inicio ya muestra las alertas pendientes.
+
+**Consecuencias.**
+- Cambian `sigccr.css` y `sigccr.js`.
+- Helpers nuevos o modificados:
+  - `campo_invalido()`, que ahora recibe el id de la ayuda;
+  - `grupo_invalido()`, `hay_criterios()`, `recurso()` y `etiqueta_proceso()`;
+  - `menu_panel()`, con un ícono por opción.
+- Vistas nuevas o modificadas:
+  - la vista parcial `partials/boton_filtros.php`;
+  - las de listados, alternativas, Mi caja, parámetros de evaluación, búsqueda de cliente, cancelación anticipada, cobro en ventanilla, historiales, estado de cuenta e inicio del portal, y tablero.
+- Servicios y controladores:
+  - `PortalService::estadoCuenta()` admite no registrar la auditoría;
+  - el controlador `Portal\Inicio` pasa el resumen a la vista.
+- Los CSS y JS del sistema se sirven con su fecha de modificación como versión, para que el navegador no use copias viejas.
+- Las pruebas de vistas (`tests/rutas`) verifican el resumen del portal, los indicadores del tablero y los textos sin códigos internos.
+- Cambian textos que las pruebas funcionales esperan:
+  - «Cuotas pendientes» en lugar de «Impagas»;
+  - el responsable de los procesos automáticos;
+  - el importe precargado de la cancelación anticipada;
+  - los medios de cobro «Sin usar».
+- El manual de usuario debe actualizar sus capturas cuando se cierre la interfaz.
+

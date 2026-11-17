@@ -129,7 +129,7 @@ $this->section('contenido');
                     <div class="form-text">El cambio de correo en sucursal exige comprobar presencialmente el documento y la identidad (RN-58).</div>
                 </div>
             <?php endif ?>
-            <div class="col-12"><h3 class="h6 mb-0 mt-1"><span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span></h3></div>
+            <div class="col-12"><h2 class="h6 mb-0 mt-1"><span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span></h2></div>
             <?php $provincia = (string) $v('provincia_id'); $localidad = (string) $v('localidad_id'); ?>
             <div class="col-md-4">
                 <label for="provincia_id" class="form-label">Provincia</label>
