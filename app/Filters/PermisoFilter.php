@@ -28,7 +28,7 @@ class PermisoFilter implements FilterInterface
                     return service('response')->setStatusCode(403)->setJSON(['mensaje' => 'No tiene permiso para realizar esta operación.']);
                 }
 
-                return service('response')->setStatusCode(403)->setBody(view('errores/acceso_denegado'));
+                return service('response')->setStatusCode(403)->setBody(view('errores/acceso_denegado', ['titulo' => 'Acceso no autorizado']));
             }
         }
 

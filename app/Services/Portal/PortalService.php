@@ -89,9 +89,10 @@ class PortalService extends BaseService
      * pendientes y vencidas, los próximos vencimientos, el saldo a favor y lo comprometido en operaciones pendientes.
      * La deuda y el saldo a favor se muestran por separado y la consulta no aplica ni devuelve nada (RN-57).
      *
+     * @param bool $auditar false para el resumen del inicio del portal, que no es una consulta del estado de cuenta
      * @return array<string, mixed>
      */
-    public function estadoCuenta(int $clienteId): array
+    public function estadoCuenta(int $clienteId, bool $auditar = true): array
     {
         $obligaciones = (new CobroService($this->db))->obligaciones($clienteId);
         $cuotas = array_merge(...array_map(static fn ($c) => $c['cuotas'], $obligaciones['creditos']) ?: [[]]);
@@ -114,7 +115,9 @@ class PortalService extends BaseService
             . "OR (estado = 'PendienteConfirmacion' AND vence > SYSDATETIMEOFFSET())) ORDER BY emision",
             [$clienteId],
         )->getResultArray();
-        (new AuditoriaService($this->db))->registrar('portal.consultar-estado-cuenta', 'clientes', $clienteId);
+        if ($auditar) {
+            (new AuditoriaService($this->db))->registrar('portal.consultar-estado-cuenta', 'clientes', $clienteId);
+        }
 
         return [
             'creditos' => $creditos,

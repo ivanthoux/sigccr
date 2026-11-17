@@ -10,6 +10,17 @@
 use App\Libraries\Reportes\Periodo;
 use App\Services\Reportes\ReporteService;
 
+// Indicadores clave, destacados sobre los bloques de detalle: el Gerente los lee primero (H-35)
+$clave = ['Índice de morosidad', 'Saldo deudor total', 'Cobros confirmados', 'Disponible para nuevas colocaciones'];
+$destacados = [];
+foreach ($t['grupos'] as [$grupo, , $indicadores]) {
+    foreach ($indicadores as [$etiqueta, $valor, $tipo]) {
+        if (in_array($etiqueta, $clave, true)) {
+            $destacados[array_search($etiqueta, $clave, true)] = [$etiqueta, $valor, $tipo];
+        }
+    }
+}
+ksort($destacados);
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -29,6 +40,16 @@ $this->section('contenido');
     <div class="col-12 col-md-4 d-flex gap-2 justify-content-end"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button><button type="submit" class="btn btn-sm btn-primary">Actualizar</button></div>
 </form>
 <?php if ($t['aviso'] !== null): ?><div class="alert alert-info"><?= esc($t['aviso']) ?></div><?php endif ?>
+<?php if ($destacados !== []): ?>
+    <section class="hoja p-3 mb-3" aria-labelledby="t-clave">
+        <h2 class="visually-hidden" id="t-clave">Indicadores clave</h2>
+        <dl class="indicadores-clave mb-0">
+            <?php foreach ($destacados as [$etiqueta, $valor, $tipo]): ?>
+                <div><dt><?= esc($etiqueta) ?></dt><dd><?= esc(valor_reporte($valor, $tipo, true)) ?></dd></div>
+            <?php endforeach ?>
+        </dl>
+    </section>
+<?php endif ?>
 <div class="row g-3">
     <?php foreach ($t['grupos'] as [$grupo, $reporte, $indicadores]): ?>
         <?php $permiso = ReporteService::REPORTES[$reporte][2]; ?>
@@ -42,7 +63,7 @@ $this->section('contenido');
                     <?php endforeach ?>
                 </dl>
                 <?php if (tiene_permiso($permiso)): ?>
-                    <a class="small d-print-none" href="<?= url_to($permiso) . '?' . esc(http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1])) ?>">Ver el reporte <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a class="small d-print-none" href="<?= url_to($permiso) . '?' . esc(http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1])) ?>">Ver el reporte<span class="visually-hidden"> de <?= esc(mb_strtolower($grupo)) ?></span> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 <?php endif ?>
             </section>
         </div>

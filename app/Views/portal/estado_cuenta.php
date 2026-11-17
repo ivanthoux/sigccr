@@ -40,7 +40,8 @@ $this->section('contenido');
                 <div><dt><?= esc($etiqueta) ?></dt><dd class="importe fw-normal"><?= esc(formato_importe($deuda['conceptos'][$k])) ?></dd></div>
             <?php endforeach ?>
         </dl>
-        <p class="small mb-0"><?= (int) $deuda['pendientes'] ?> cuota(s) pendiente(s) y <strong><?= (int) $deuda['vencidas'] ?> vencida(s)</strong>.
+        <?php $pend = (int) $deuda['pendientes']; $venc = (int) $deuda['vencidas']; ?>
+        <p class="small mb-0"><?= $pend ?> <?= $pend === 1 ? 'cuota pendiente' : 'cuotas pendientes' ?>; <strong><?= $venc === 0 ? 'ninguna vencida' : ($venc === 1 ? '1 vencida' : $venc . ' vencidas') ?></strong>.
             <?php if ($morosidad_avanzada): ?><span class="text-danger">Tiene cuotas con un atraso prolongado: comuníquese con la entidad para regularizar o refinanciar su deuda.</span><?php endif ?></p>
     <?php endif ?>
 </section>
@@ -112,7 +113,7 @@ $this->section('contenido');
     <?php else: ?>
         <div class="table-responsive">
             <table class="table align-middle mb-0">
-                <thead><tr><th>N.º</th><th>Línea</th><th class="text-end">Capital</th><th class="text-end">Cuotas</th><th>Liquidado</th><th>Estado</th><th class="text-end">Impagas</th></tr></thead>
+                <thead><tr><th>N.º</th><th>Línea</th><th class="text-end">Capital</th><th class="text-end">Cuotas</th><th>Liquidado</th><th>Estado</th><th class="text-end">Cuotas pendientes</th></tr></thead>
                 <tbody>
                 <?php foreach ($creditos as $cr): ?>
                     <tr>

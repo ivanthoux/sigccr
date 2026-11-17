@@ -17,10 +17,10 @@ $this->section('contenido');
     </div>
 </div>
 <?php $mensajes = [
-    'Vencida' => 'La propuesta venció el ' . formato_fecha_hora((string) $p['vence']) . ' sin aplicarse: su vencimiento no modificó sus cuotas originales (A1, RN-36).',
-    'Observada' => 'La propuesta quedó observada' . ($p['observacion'] !== null ? ': ' . $p['observacion'] : '') . '. Si corresponde, la entidad registrará una nueva versión (A2).',
-    'AprobadaPendienteAceptacion' => 'La gerencia aprobó la propuesta. El nuevo plan se aplica recién cuando usted la acepta en la sucursal, dentro de su vigencia (A3).',
-    'Aplicada' => 'La refinanciación se aplicó: sus cuotas originales quedaron sustituidas por el nuevo crédito, sin pagarse ni eliminarse (A4, RN-37).',
+    'Vencida' => 'La propuesta venció el ' . formato_fecha_hora((string) $p['vence']) . ' sin aplicarse: su vencimiento no modificó sus cuotas originales.',
+    'Observada' => 'La propuesta quedó observada' . ($p['observacion'] !== null ? ': ' . $p['observacion'] : '') . '. Si corresponde, la entidad registrará una nueva versión.',
+    'AprobadaPendienteAceptacion' => 'La gerencia aprobó la propuesta. El nuevo plan se aplica recién cuando usted la acepta en la sucursal, dentro de su vigencia.',
+    'Aplicada' => 'La refinanciación se aplicó: sus cuotas originales quedaron sustituidas por el nuevo crédito, sin pagarse ni eliminarse.',
     'PendienteResolucion' => 'La propuesta está pendiente de la resolución de la gerencia.',
 ]; ?>
 <?php if (isset($mensajes[$p['estado']])): ?><div class="alert alert-info"><?= esc($mensajes[$p['estado']]) ?></div><?php endif ?>
@@ -41,7 +41,7 @@ $this->section('contenido');
             </tbody>
         </table>
     </div>
-    <p class="small mb-0">Capital refinanciado: <strong><?= esc(formato_importe((string) $p['capital_refinanciado'])) ?></strong> · concepto no capitalizable (no genera intereses nuevos): <?= esc(formato_importe((string) $p['concepto_no_capitalizable'])) ?> · TNA <?= esc(formato_porcentaje((string) $p['tasa'])) ?> en <?= (int) $p['cantidad_cuotas'] ?> cuotas. El primer vencimiento es a los 30 días de la aplicación (RN-70).</p>
+    <p class="small mb-0">Capital refinanciado: <strong><?= esc(formato_importe((string) $p['capital_refinanciado'])) ?></strong> · concepto no capitalizable (no genera intereses nuevos): <?= esc(formato_importe((string) $p['concepto_no_capitalizable'])) ?> · TNA <?= esc(formato_porcentaje((string) $p['tasa'])) ?> en <?= (int) $p['cantidad_cuotas'] ?> cuotas. El primer vencimiento es a los 30 días de la aplicación.</p>
 </section>
 <section class="hoja p-4 mb-3" aria-labelledby="t-plan">
     <h2 class="h5" id="t-plan"><?= $p['plan_aplicado'] !== null ? 'Plan aplicado' : 'Nuevo plan si se aplicara hoy' ?></h2>

@@ -16,8 +16,8 @@ $this->section('contenido');
     </div>
     <?php if ($jornada): ?>
         <div class="d-flex gap-2">
-            <?php if (!$jornada['anterior'] && tiene_permiso('cobros.registrar')): ?><a href="<?= url_to('cobros.registrar') ?>" class="btn btn-outline-primary"><i class="bi bi-cash me-1" aria-hidden="true"></i>Registrar cobro</a><?php endif ?>
-            <?php if (tiene_permiso('cajas.cerrar')): ?><a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-primary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a><?php endif ?>
+            <?php if (!$jornada['anterior'] && tiene_permiso('cobros.registrar')): ?><a href="<?= url_to('cobros.registrar') ?>" class="btn btn-primary"><i class="bi bi-cash me-1" aria-hidden="true"></i>Registrar cobro</a><?php endif ?>
+            <?php if (tiene_permiso('cajas.cerrar')): ?><a href="<?= url_to('cajas.cerrar') ?>" class="btn btn-outline-secondary"><i class="bi bi-lock me-1" aria-hidden="true"></i>Cerrar caja</a><?php endif ?>
         </div>
     <?php endif ?>
 </div>

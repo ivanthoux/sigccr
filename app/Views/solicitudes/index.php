@@ -24,7 +24,8 @@ $this->section('contenido');
         <a href="<?= url_to('solicitudes.registrar') ?>" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>Registrar solicitud</a>
     <?php endif ?>
 </div>
-<form method="get" action="<?= url_to('solicitudes.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar solicitudes" novalidate>
+<?= view('partials/boton_filtros', ['id' => 'filtros-solicitudes', 'que' => 'solicitudes', 'abierto' => $buscado]) ?>
+<form method="get" action="<?= url_to('solicitudes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $buscado ? ' show' : '' ?>" id="filtros-solicitudes" role="search" aria-label="Buscar solicitudes" novalidate>
     <div class="row g-2 align-items-end">
         <div class="col-sm-4 col-lg-2">
             <label for="numero" class="form-label small">Número</label>
@@ -73,7 +74,7 @@ $this->section('contenido');
 <?php else: ?>
     <div class="hoja p-3">
         <?php if (!$buscado): ?><p class="small text-body-secondary mb-2">Solicitudes registradas más recientemente.</p><?php endif ?>
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda data-orden-servidor>
             <thead><tr><th>N.º</th><th>Cliente</th><th>Línea</th><th class="text-end">Importe</th><th>Cuotas</th><th>Registrada</th><th>Estado</th></tr></thead>
             <tbody>
             <?php foreach ($solicitudes as $s): ?>

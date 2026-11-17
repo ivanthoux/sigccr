@@ -77,5 +77,23 @@ final class VistasAccesoTest extends CIUnitTestCase
         $this->assertSame(1, substr_count($html, 'Próximamente'));
         $this->assertStringContainsString('href="' . esc('https://x/portal/perfil', 'attr') . '"', $html);
         $this->assertStringContainsString(site_url('portal/salir'), $html);
+        $this->assertStringNotContainsString('Su cuenta hoy', $html, 'Sin resumen (cliente sin créditos o consulta fallida) no se muestra el bloque');
+    }
+
+    public function testInicioDelPortalResumeLaCuentaDelCliente(): void
+    {
+        session()->set('cuenta', ['tipo' => 'Cliente', 'nombre' => 'Ana Pérez']);
+        $vencida = ['vencimiento' => '2026-10-10', 'total' => \App\Libraries\Finanzas\Decimal::of('70000.50')];
+        $proxima = ['vencimiento' => '2026-12-10', 'total' => \App\Libraries\Finanzas\Decimal::of('62267.71')];
+        $html = view('portal/inicio', ['titulo' => 'Inicio', 'ultimoAcceso' => null, 'funciones' => [], 'resumen' => [
+            'creditos' => [['id' => 1]], 'deuda' => ['total' => '721372.45', 'conceptos' => [], 'pendientes' => 12, 'vencidas' => 1],
+            'vencidas' => [$vencida], 'proximos' => [$proxima], 'saldo_disponible' => '0.00', 'saldo_reservado' => '0.00',
+        ]]);
+        $this->assertStringContainsString('Su cuenta hoy', $html);
+        $this->assertStringContainsString('1 cuota vencida', $html);
+        $this->assertStringContainsString('10/12/2026', $html);
+        $this->assertStringContainsString(esc(formato_importe('721372.45')), $html);
+        $this->assertStringContainsString(site_url('portal/pagar'), $html);
+        $this->assertStringNotContainsString('Saldo a favor', $html);
     }
 }
