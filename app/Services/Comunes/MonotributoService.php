@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Comunes;
 
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -71,10 +72,15 @@ class MonotributoService extends BaseService
             if ($this->db->table('categorias_monotributo')->where('vigente_desde', $fecha)->countAllResults() > 0) {
                 throw new ValidacionException(['vigente_desde' => 'Ya hay una escala registrada desde esa fecha.']);
             }
+            // D-48: la escala que regía hasta esa fecha, para registrar el tope anterior y el nuevo de cada categoría
+            $antes = array_map(static fn (array $c): string => $c['tope'], $this->vigentes($fecha));
             foreach ($v['topes'] as $cat => $tope) {
                 $this->db->table('categorias_monotributo')->insert(['categoria' => $cat, 'ingresos_brutos_anuales' => $tope, 'vigente_desde' => $fecha]);
             }
-            (new AuditoriaService($this->db))->registrar('monotributo.registrar-escala', 'categorias_monotributo', null, 'Exitoso', null, ['vigente_desde' => $fecha, 'topes' => $v['topes']]);
+            (new AuditoriaService($this->db))->registrarCambios('monotributo.registrar-escala', 'categorias_monotributo', null, Cambios::entre(
+                array_combine(array_map(static fn ($c): string => "tope.{$c}", array_keys($antes)), $antes),
+                array_combine(array_map(static fn ($c): string => "tope.{$c}", array_keys($v['topes'])), $v['topes']),
+            ), null, ['vigente_desde' => $fecha]);
 
             return (string) $fecha;
         });

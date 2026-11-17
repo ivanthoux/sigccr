@@ -6,6 +6,7 @@ namespace App\Services\Comunes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Solicitudes\Contrato;
 use App\Libraries\Validacion\Campos;
@@ -104,9 +105,7 @@ class DocumentacionService extends BaseService
                 throw new ValidacionException(['aplica_a' => 'Ya hay documentos de este tipo en legajos de clientes: no se puede cambiar a quién aplica.']);
             }
             $this->db->table('tipos_documentacion')->where('id', $id)->update($datos);
-            (new AuditoriaService($this->db))->registrar('documentacion.modificar-tipo', 'tipos_documentacion', $id, 'Exitoso', null, [
-                'antes' => array_intersect_key($actual, $datos), 'despues' => $datos,
-            ]);
+            (new AuditoriaService($this->db))->registrarCambios('documentacion.modificar-tipo', 'tipos_documentacion', $id, Cambios::entre($actual, $datos, array_keys($datos)), null, ['codigo' => $actual['codigo']]);
         });
     }
 
@@ -128,13 +127,26 @@ class DocumentacionService extends BaseService
         }
         $ids = array_column($tipos, 'id', 'codigo');
         $this->transaccion(function () use ($limpio, $ids): void {
+            // D-48: configuración anterior por categoría, para registrar qué documentos se agregaron o quitaron
+            $antes = [];
+            foreach ($this->db->query('SELECT s.categoria_ingresos, t.codigo FROM dbo.documentacion_sugerida s JOIN dbo.tipos_documentacion t ON t.id = s.tipo_documentacion_id')->getResultArray() as $f) {
+                $antes[(string) $f['categoria_ingresos']][] = (string) $f['codigo'];
+            }
+            $ordenar = static function (array $porCategoria): array {
+                foreach ($porCategoria as $cat => $codigos) {
+                    sort($codigos);
+                    $porCategoria[$cat] = $codigos;
+                }
+
+                return $porCategoria;
+            };
             $this->db->query('DELETE FROM dbo.documentacion_sugerida');
             foreach ($limpio as $cat => $codigos) {
                 foreach ($codigos as $c) {
                     $this->db->table('documentacion_sugerida')->insert(['categoria_ingresos' => $cat, 'tipo_documentacion_id' => (int) $ids[$c]]);
                 }
             }
-            (new AuditoriaService($this->db))->registrar('documentacion.sugeridos', 'documentacion_sugerida', null, 'Exitoso', null, $limpio);
+            (new AuditoriaService($this->db))->registrarCambios('documentacion.sugeridos', 'documentacion_sugerida', null, Cambios::entre($ordenar($antes), $ordenar($limpio)));
         });
     }
 

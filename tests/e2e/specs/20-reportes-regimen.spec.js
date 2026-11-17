@@ -118,6 +118,12 @@ test('I-75 Registro de auditoría (CU-57)', async ({ comoUsuario }) => {
   await page.locator('main tbody a').first().click();
   await expect(page.locator('main')).toContainText('Proceso automático');
   await expect(page.locator('main')).toContainText('(A4)');
+  // D-48: el detalle de una modificación presenta el valor anterior y el nuevo de cada campo (línea Personal, R-034)
+  const modificacion = await valor("SELECT MIN(id) FROM dbo.registros_auditoria WHERE accion = 'lineas.modificar' AND JSON_VALUE(detalle, '$.cambios.tna.nuevo') = '72,00 %'");
+  await page.goto(`/admin/auditoria/${modificacion}`);
+  const tabla = page.getByRole('table', { name: 'Valor anterior y valor nuevo de cada campo modificado' });
+  await expect(page.getByRole('heading', { name: 'Campos modificados' })).toBeVisible();
+  await expect(tabla.getByRole('row', { name: /TNA\s+70,00 %\s+72,00 %/ })).toBeVisible();
   await page.goto('/admin/auditoria?responsable=nadie-con-este-nombre');
   await expect(page.locator('main')).toContainText('(A1)');
   await page.goto('/admin/auditoria?desde=2026-11-10&hasta=2026-11-01');

@@ -51,6 +51,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-45 | 12/11/2026 | Propuesta |
 | D-46 | 17/11/2026 | Propuesta |
 | D-47 | 17/11/2026 | Propuesta |
+| D-48 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -717,3 +718,41 @@ La mayoría se corrigió sin cambiar el comportamiento (PR #171 a #174). Algunas
   - los medios de cobro «Sin usar».
 - El manual de usuario debe actualizar sus capturas cuando se cierre la interfaz.
 
+## D-48 · Auditoría de modificaciones con el valor anterior y el nuevo de cada campo (RN-45, CU-57; RNF-14)
+
+**Contexto.** La cátedra pidió que la auditoría de cada modificación guarde el estado anterior y el estado nuevo de cada campo modificado. RN-45 ya exigía el «estado anterior y nuevo cuando corresponda», pero cada operación lo registraba a su manera:
+- la modificación de clientes y usuarios guardaba el valor anterior y el nuevo, cada una con su propio formato;
+- la nueva versión de una línea guardaba solo algunos valores nuevos;
+- los parámetros guardaban solo el número de la versión;
+- los cambios de estado guardaban uno de los dos valores, o ninguno.
+
+Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, como el código postal, el código del tipo de documento y la marca de documento clave, porque su nombre contiene «codigo» o «clave».
+
+**Decisión.**
+1. **Formato común.** Toda modificación registra, en el detalle del registro, la clave `cambios` con cada campo que cambió y su valor anterior y nuevo: `{"campo": {"anterior": …, "nuevo": …}}`. Solo se registran los campos que cambiaron. Los demás datos de la operación (versión creada, solicitudes afectadas, medio) quedan junto a ellos.
+2. **Comparación (`Cambios`).** Un valor vacío y uno nulo son iguales. Los números se comparan por su valor (0,600000 = 0,6) y los lógicos, como 1 y 0. Los documentos y los códigos postales se comparan como texto. Los datos anidados, como los pesos del modelo de evaluación, se comparan uno por uno, con la ruta separada por puntos. Las listas, como las categorías admitidas o los escalones, se comparan completas.
+3. **Operaciones alcanzadas.**
+
+   | Operación | Qué se registra |
+   |---|---|
+   | Usuarios (CU-06, CU-08, CU-09, CU-10, verificación del correo) | Cada dato modificado, el rol, el estado y el correo |
+   | Clientes (CU-12, CU-13, CU-14, CU-98, verificación del correo) | Cada dato modificado, con la localidad por su nombre y provincia; el estado, el consentimiento comercial y el correo |
+   | Líneas de crédito (CU-17, CU-18, CU-19) | Cada condición de la versión vigente frente a la nueva, con las tasas en porcentaje; el nombre, la descripción, las categorías y la documentación exigida por categoría; el estado al suspender o reactivar |
+   | Parámetros (CU-51, CU-58 a CU-60) | Cada parámetro de la versión anterior del grupo frente a la nueva |
+   | Catálogo de documentación (CU-100) | Los datos del tipo de documento y la documentación sugerida por categoría |
+   | Escala del monotributo (CU-101) | El tope anterior y el nuevo de cada categoría |
+   | Cajas y fondos (CU-72, CU-81, CU-85) | El estado de la caja, el fin de la asignación y el estado del movimiento de fondos |
+   | Calendario operativo (CU-82) | La baja de un día, con su descripción y su tipo anteriores |
+
+   Las altas registran los datos creados, como hasta ahora. Las transiciones de las operaciones del circuito crediticio no se incluyen: solicitudes, créditos, cobros y refinanciaciones ya conservan su historia en sus propias tablas (resoluciones, imputaciones, versiones de propuestas, anulaciones).
+4. **Consulta (CU-57).** El detalle del registro presenta la tabla «Campos modificados», con el campo por su nombre legible, el valor anterior y el valor nuevo, y debajo los demás datos registrados. Los registros anteriores a esta decisión se presentan de la misma forma cuando tienen el valor anterior y el nuevo con alguno de los formatos que se usaban; no se modifican, porque la tabla de auditoría no admite cambios.
+5. **Datos sensibles.** El filtro de RNF-14 sigue omitiendo contraseñas, tokens, autorizaciones y datos de tarjetas. Exceptúa por su nombre exacto el código postal, el código del tipo de documento y la marca de documento clave.
+
+**Consecuencias.**
+- Componentes nuevos: `App\Libraries\Auditoria\Cambios`, con sus pruebas en `tests/unit/Auditoria/CambiosTest.php`, y `AuditoriaService::registrarCambios()`.
+- Cambian `UsuarioService`, `ClienteService`, `LineaService`, `ParametroService`, `DocumentacionService`, `MonotributoService`, `CajaService`, `FondosService`, `CalendarioService` y la vista del detalle de auditoría.
+- Sin cambios de esquema.
+- Pruebas de punta a punta:
+  - R-034 verifica que la nueva versión de la línea Personal registra solo el cambio de la TNA (70,00 % a 72,00 %);
+  - I-75 verifica que el detalle muestra la tabla.
+- Hay que actualizar la redacción de RN-45 y de CU-57, paso 6, en el documento del Trabajo Final.

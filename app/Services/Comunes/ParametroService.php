@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Comunes;
 
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Services\BaseService;
 
@@ -71,7 +72,10 @@ class ParametroService extends BaseService
         }
 
         return $this->transaccion(function () use ($tipo, $valores, $fecha, $hoy, $motivo, $usuarioId): array {
-            $numero = (int) $this->db->query('SELECT ISNULL(MAX(numero), 0) + 1 AS n FROM dbo.versiones_parametros WITH (UPDLOCK, HOLDLOCK) WHERE tipo = ?', [$tipo])->getRow()->n;
+            // D-48: la versión anterior del grupo, para registrar el valor anterior y el nuevo de cada parámetro
+            $previa = $this->db->query('SELECT TOP (1) numero, valores FROM dbo.versiones_parametros WITH (UPDLOCK, HOLDLOCK) WHERE tipo = ? ORDER BY numero DESC', [$tipo])->getRowArray();
+            $numero = $previa === null ? 1 : (int) $previa['numero'] + 1;
+            $antes = $previa === null ? [] : (array) json_decode((string) $previa['valores'], true);
             $vigenteDesde = $fecha === $hoy ? $this->ahoraUtc()
                 : \CodeIgniter\I18n\Time::parse($fecha . ' 00:00:00', config('Sigccr')->zonaNegocio)->setTimezone('UTC')->format('Y-m-d H:i:s.vP');
             $this->db->table('versiones_parametros')->insert([
@@ -80,7 +84,9 @@ class ParametroService extends BaseService
                 'motivo' => $motivo, 'usuario_id' => $usuarioId, 'creado_en' => $this->ahoraUtc(),
             ]);
             $id = (int) $this->db->insertID();
-            (new AuditoriaService($this->db))->registrar('parametros.' . strtolower($tipo), 'versiones_parametros', $id, 'Exitoso', $motivo, ['numero' => $numero, 'vigente_desde' => $vigenteDesde]);
+            (new AuditoriaService($this->db))->registrarCambios('parametros.' . strtolower($tipo), 'versiones_parametros', $id, Cambios::entre($antes, $valores), $motivo, [
+                'version_anterior' => $previa === null ? null : (int) $previa['numero'], 'numero' => $numero, 'vigente_desde' => $vigenteDesde,
+            ]);
 
             return ['id' => $id, 'numero' => $numero, 'vigente_desde' => $vigenteDesde];
         });

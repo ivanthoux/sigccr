@@ -6,7 +6,9 @@ namespace App\Services\Lineas;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Clientes\RequisitosDocumentales;
+use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Lineas\ValidadorLinea;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -193,9 +195,9 @@ class LineaService extends BaseService
                 'nombre' => $d['nombre'], 'descripcion' => $d['descripcion'] !== '' ? $d['descripcion'] : null, 'actualizado_en' => $this->ahoraUtc(),
             ]);
             $operaciones = $anterior === null ? 0 : array_sum($this->operaciones([(int) $anterior['id']]));
-            (new AuditoriaService($this->db))->registrar('lineas.modificar', 'lineas_credito', $id, 'Exitoso', $motivo, [
-                'version' => $numero, 'version_condiciones_id' => $versionId, 'vigente_desde' => $vigenteDesde,
-                'monto_minimo' => $d['monto_minimo'], 'monto_maximo' => $d['monto_maximo'],
+            (new AuditoriaService($this->db))->registrarCambios('lineas.modificar', 'lineas_credito', $id, $this->cambiosVersion($linea, $anterior, $d), $motivo, [
+                'version_anterior' => $anterior === null ? null : (int) $anterior['numero'], 'version' => $numero,
+                'version_condiciones_id' => $versionId, 'vigente_desde' => $vigenteDesde,
             ]);
 
             return ['version' => $numero, 'vigente_desde' => $vigenteDesde, 'operaciones_anteriores' => $operaciones];
@@ -256,7 +258,7 @@ class LineaService extends BaseService
                 $ops = $this->operaciones($ids);
                 $continuan = $ops['solicitudes_en_curso'] + $ops['ofertas_vigentes'];
             }
-            (new AuditoriaService($this->db))->registrar($accion, 'lineas_credito', $id, 'Exitoso', $motivo, ['estado_anterior' => $desde, 'estado_nuevo' => $hacia]);
+            (new AuditoriaService($this->db))->registrarCambios($accion, 'lineas_credito', $id, Cambios::campo('estado', $desde, $hacia), $motivo);
 
             return $continuan;
         });
@@ -289,6 +291,60 @@ class LineaService extends BaseService
         }
 
         return $versionId;
+    }
+
+    /**
+     * D-48: valor anterior y nuevo de cada condición que cambia entre la versión vigente y la nueva, con el nombre y la
+     * descripción de la línea. Las categorías y la documentación exigida se comparan como listas.
+     *
+     * @param array<string, mixed> $linea fila bloqueada de la línea
+     * @param array<string, mixed>|null $anterior versión vigente (id, numero)
+     * @param array<string, mixed> $d datos normalizados de la nueva versión
+     * @return array<string, array{anterior: mixed, nuevo: mixed}>
+     */
+    private function cambiosVersion(array $linea, ?array $anterior, array $d): array
+    {
+        $campos = ['tna', 'gasto_otorgamiento_pct', 'tipo_gasto_administrativo', 'gasto_administrativo_cuota', 'gasto_administrativo_pct',
+            'monto_minimo', 'monto_maximo', 'cuotas_minimas', 'cuotas_maximas', 'edad_minima', 'edad_maxima', 'antiguedad_minima_meses',
+            'admite_persona_humana', 'admite_persona_juridica', 'vigencia_inicio', 'vigencia_fin'];
+        $antes = ['nombre' => $linea['nombre'], 'descripcion' => $linea['descripcion']];
+        if ($anterior !== null) {
+            $antes += $this->db->table('versiones_condiciones')->select(implode(', ', $campos))->where('id', (int) $anterior['id'])->get()->getRowArray() ?? [];
+            $detalle = $this->detalleVersion((int) $anterior['id']);
+            $antes['categorias'] = $detalle['categorias'];
+            foreach ($detalle['requisitos'] as $cat => $docs) {
+                $antes["documentacion.{$cat}"] = array_column($docs, 'codigo');
+            }
+        }
+        $despues = ['nombre' => $d['nombre'], 'descripcion' => $d['descripcion'] !== '' ? $d['descripcion'] : null]
+            + array_intersect_key($d, array_flip($campos)) + ['categorias' => array_values($d['categorias'])];
+        foreach ($d['categorias'] as $cat) {
+            $despues["documentacion.{$cat}"] = array_values($d['requisitos'][$cat] ?? []);
+        }
+        // Las listas se comparan sin importar el orden en que se eligieron
+        $ordenar = static function (array $datos): array {
+            foreach ($datos as $k => $v) {
+                if (is_array($v)) {
+                    sort($v);
+                    $datos[$k] = $v;
+                }
+            }
+
+            return $datos;
+        };
+        $antes = $ordenar($antes);
+        $despues = $ordenar($despues);
+
+        $cambios = Cambios::entre($antes, $despues, array_values(array_unique([...array_keys($despues), ...array_keys($antes)])));
+        // Las tasas se guardan en tanto por uno: se registran como porcentaje (0.70 -> 70,00 %)
+        $porcentaje = static fn ($v): ?string => $v === null || $v === '' ? null : str_replace('.', ',', Decimal::of((string) $v)->toPercent()) . ' %';
+        foreach (['tna', 'gasto_otorgamiento_pct', 'gasto_administrativo_pct'] as $campo) {
+            if (isset($cambios[$campo])) {
+                $cambios[$campo] = ['anterior' => $porcentaje($cambios[$campo]['anterior']), 'nuevo' => $porcentaje($cambios[$campo]['nuevo'])];
+            }
+        }
+
+        return $cambios;
     }
 
     /** @return array{categorias: list<string>, requisitos: array<string, list<array{codigo: string, nombre: string}>>} */
