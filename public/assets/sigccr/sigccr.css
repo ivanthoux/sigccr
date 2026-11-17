@@ -35,12 +35,22 @@
     --bs-primary-rgb: 31, 122, 87;
     --bs-border-radius: .375rem;
     --bs-focus-ring-color: rgba(31, 122, 87, .35);
+    /* Estados con los colores de la identidad (etiquetas, textos y bordes de error), no los de Bootstrap */
+    --bs-success: #1f7a57;
+    --bs-success-rgb: 31, 122, 87;
+    --bs-danger: #b42318;
+    --bs-danger-rgb: 180, 35, 24;
+    --bs-form-invalid-color: #b42318;
+    --bs-form-invalid-border-color: #b42318;
 }
 
 body { -webkit-font-smoothing: antialiased; }
 h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--tinta); font-weight: 600; letter-spacing: -.01em; }
 h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 :focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+/* Sobre la tinta el verde no llega a 3:1 (WCAG 1.4.11): el foco es claro en la barra lateral, la barra superior
+   y la marca del acceso. */
+.lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: #fff; }
 
 /* Botones: el verde es la acción principal; el resto, contorno sobrio */
 .btn { font-weight: 500; }
@@ -122,6 +132,9 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
 
 .hoja { background: #fff; border: 1px solid var(--linea); border-radius: .5rem; }
+/* Los textos ocultos para lectores de pantalla (position: absolute) dentro de una tabla desplazable deben quedar
+   recortados por su marco: si no, ensanchan la página en el celular aunque la tabla se desplace. */
+.table-responsive { position: relative; }
 
 /* Pantalla principal: índice de funciones por área */
 .indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }
@@ -173,6 +186,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .form-control, .form-select { background-color: #fff; }
 .pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde); --bs-pagination-hover-color: var(--verde-oscuro); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
 .btn-check:checked + .btn-outline-secondary { background-color: #e7f3ee; border-color: var(--verde); color: var(--texto); font-weight: 600; }
+.btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }
 .btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #912018; --bs-btn-hover-border-color: #912018; --bs-btn-active-bg: #912018; }
 .btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
 

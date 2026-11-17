@@ -97,5 +97,5 @@ $this->section('contenido');
     <?= view('solicitudes/_documentos', ['tipos' => $tipos, 'tipoCliente' => (string) $s['tipo_cliente'], 'exigidos' => [], 'presentes' => array_column($s['documentos'], 'codigo')]) ?>
     <div class="text-end mt-2"><button type="submit" class="btn btn-outline-secondary"><i class="bi bi-upload me-1" aria-hidden="true"></i>Incorporar</button></div>
 </form>
-<script src="<?= base_url('assets/sigccr/solicitudes.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/solicitudes.js') ?>"></script>
 <?php $this->endSection() ?>

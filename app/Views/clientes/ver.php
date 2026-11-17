@@ -102,6 +102,7 @@ $this->section('contenido');
             <?php if ($c['documentos'] === []): ?>
                 <p class="text-body-secondary">El legajo no tiene documentos.</p>
             <?php else: ?>
+                <div class="table-responsive">
                 <table class="table align-middle">
                     <thead><tr><th>Documento</th><th>Archivo</th><th class="importe">Tamaño</th><th>Incorporado</th><th><span class="visually-hidden">Descargar</span></th></tr></thead>
                     <tbody>
@@ -111,11 +112,12 @@ $this->section('contenido');
                             <td class="text-break"><?= esc($d['nombre_original']) ?></td>
                             <td class="importe"><?= number_format((int) $d['tamano_bytes'] / 1024, 0, ',', '.') ?> KB</td>
                             <td><?= esc(formato_fecha_hora($d['fecha_incorporacion'])) ?></td>
-                            <td class="text-end"><a href="<?= site_url("admin/clientes/{$id}/documentos/{$d['id']}") ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar</a></td>
+                            <td class="text-end"><a href="<?= site_url("admin/clientes/{$id}/documentos/{$d['id']}") ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar<span class="visually-hidden"> <?= esc($d['nombre_original']) ?></span></a></td>
                         </tr>
                     <?php endforeach ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif ?>
             <?php if ($activo && tiene_permiso('clientes.modificar')): ?>
                 <form method="post" action="<?= site_url("admin/clientes/{$id}/documentos") ?>" enctype="multipart/form-data" class="row g-2 align-items-end mt-1">

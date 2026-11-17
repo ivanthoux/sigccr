@@ -21,7 +21,7 @@ if (!function_exists('menu_panel')) {
     /**
      * Secciones y opciones visibles para la cuenta: con permiso y con la ruta ya construida.
      *
-     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, url: string}>}>
+     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, icono: string, url: string}>}>
      */
     function menu_panel(): array
     {
@@ -31,7 +31,7 @@ if (!function_exists('menu_panel')) {
             foreach ($s['opciones'] as $o) {
                 $url = route_to($o['ruta']);
                 if ($url !== false && ($o['permiso'] === null || tiene_permiso($o['permiso']))) {
-                    $opciones[] = ['texto' => $o['texto'], 'url' => site_url(ltrim($url, '/'))];
+                    $opciones[] = ['texto' => $o['texto'], 'icono' => $o['icono'] ?? $s['icono'], 'url' => site_url(ltrim($url, '/'))];
                 }
             }
             if ($opciones !== []) {
@@ -40,6 +40,19 @@ if (!function_exists('menu_panel')) {
         }
 
         return $menu;
+    }
+}
+
+if (!function_exists('recurso')) {
+    /**
+     * URL de un recurso propio de public/ (CSS o JS del sistema) con su fecha de modificación como versión: al publicar
+     * un cambio, el navegador descarga el archivo nuevo en lugar de seguir usando la copia de su caché.
+     */
+    function recurso(string $ruta): string
+    {
+        $archivo = FCPATH . ltrim($ruta, '/');
+
+        return base_url($ruta) . (is_file($archivo) ? '?v=' . filemtime($archivo) : '');
     }
 }
 
@@ -122,10 +135,43 @@ if (!function_exists('etiqueta_estado_cuenta')) {
 }
 
 if (!function_exists('campo_invalido')) {
-    /** Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true' se agrega a class="...". */
-    function campo_invalido(string $campo): string
+    /**
+     * Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true" aria-describedby="error-…' se
+     * agrega a class="...". Si el campo tiene un texto de ayuda, se pasa su id en $ayuda y el campo no declara su propio
+     * aria-describedby: el helper lo emite siempre, con el error primero y la ayuda después (un atributo repetido se
+     * descarta y la ayuda dejaba de leerse justo cuando hay error).
+     */
+    function campo_invalido(string $campo, string $ayuda = ''): string
     {
-        return isset((session('errores') ?? [])[$campo]) ? ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') : '';
+        $ayuda = esc($ayuda, 'attr');
+        if (!isset((session('errores') ?? [])[$campo])) {
+            return $ayuda === '' ? '' : '" aria-describedby="' . $ayuda;
+        }
+
+        return ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . ($ayuda === '' ? '' : ' ' . $ayuda);
+    }
+}
+
+if (!function_exists('hay_criterios')) {
+    /**
+     * Si un listado tiene algún criterio de búsqueda aplicado (para mostrar abiertos los filtros plegables).
+     *
+     * @param array<string, mixed> $criterios
+     */
+    function hay_criterios(array $criterios): bool
+    {
+        return array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
+    }
+}
+
+if (!function_exists('grupo_invalido')) {
+    /**
+     * Atributos para cada opción de un grupo de radios con error (por ejemplo, el rol): la marca como inválida y le
+     * asocia el mensaje de error_campo(), para que el lector de pantalla lo lea al llegar al grupo.
+     */
+    function grupo_invalido(string $campo): string
+    {
+        return isset((session('errores') ?? [])[$campo]) ? ' aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . '"' : '';
     }
 }
 

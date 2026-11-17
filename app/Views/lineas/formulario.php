@@ -202,5 +202,5 @@ $this->section('contenido');
 </form>
 <?php $this->endSection() ?>
 <?php $this->section('scripts') ?>
-<script src="<?= base_url('assets/sigccr/lineas.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/lineas.js') ?>"></script>
 <?php $this->endSection() ?>
