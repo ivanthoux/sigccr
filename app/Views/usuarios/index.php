@@ -12,8 +12,7 @@ use App\Services\Usuarios\UsuarioService;
 $this->extend('layouts/panel');
 $this->section('contenido');
 $c = static fn (string $k): string => $criterios[$k] ?? '';
-// En el celular los filtros se pliegan para que la lista quede a la vista; se muestran abiertos si hay criterios
-$hayCriterios = array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
+$hayCriterios = hay_criterios($criterios);
 ?>
 <div class="encabezado">
     <div>
@@ -25,9 +24,7 @@ $hayCriterios = array_filter($criterios, static fn ($x): bool => (string) $x !==
     <?php endif ?>
 </div>
 
-<button class="btn btn-outline-secondary w-100 mb-3 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-usuarios" aria-expanded="<?= $hayCriterios ? 'true' : 'false' ?>" aria-controls="filtros-usuarios">
-    <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar usuarios<?= $hayCriterios ? ' (con criterios aplicados)' : '' ?>
-</button>
+<?= view('partials/boton_filtros', ['id' => 'filtros-usuarios', 'que' => 'usuarios', 'abierto' => $hayCriterios]) ?>
 <form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-usuarios" role="search" aria-label="Buscar usuarios">
     <div class="row g-2 align-items-end">
         <div class="col-md-4 col-lg-3">

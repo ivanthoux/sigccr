@@ -9,8 +9,7 @@
  */
 $c = static fn (string $k): string => $criterios[$k] ?? '';
 $puedeVer = tiene_permiso('clientes.consultar-perfil');
-// En el celular los filtros se pliegan para que la lista quede a la vista; se muestran abiertos si hay criterios
-$hayCriterios = array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
+$hayCriterios = hay_criterios($criterios);
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -24,9 +23,7 @@ $this->section('contenido');
     <?php endif ?>
 </div>
 
-<button class="btn btn-outline-secondary w-100 mb-3 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-clientes" aria-expanded="<?= $hayCriterios ? 'true' : 'false' ?>" aria-controls="filtros-clientes">
-    <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar clientes<?= $hayCriterios ? ' (con criterios aplicados)' : '' ?>
-</button>
+<?= view('partials/boton_filtros', ['id' => 'filtros-clientes', 'que' => 'clientes', 'abierto' => $hayCriterios]) ?>
 <form method="get" action="<?= url_to('clientes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-clientes" role="search" aria-label="Buscar clientes">
     <div class="row g-2 align-items-end">
         <div class="col-md-6 col-lg-4">

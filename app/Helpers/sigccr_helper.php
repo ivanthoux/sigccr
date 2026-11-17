@@ -139,6 +139,18 @@ if (!function_exists('campo_invalido')) {
     }
 }
 
+if (!function_exists('hay_criterios')) {
+    /**
+     * Si un listado tiene algún criterio de búsqueda aplicado (para mostrar abiertos los filtros plegables).
+     *
+     * @param array<string, mixed> $criterios
+     */
+    function hay_criterios(array $criterios): bool
+    {
+        return array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
+    }
+}
+
 if (!function_exists('grupo_invalido')) {
     /**
      * Atributos para cada opción de un grupo de radios con error (por ejemplo, el rol): la marca como inválida y le
