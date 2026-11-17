@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Database\Seeds;
 
+use App\Exceptions\DatosDePruebaException;
 use CodeIgniter\Database\Seeder;
-use RuntimeException;
 
 /**
  * Volumen de referencia de RNF-03 para las pruebas de rendimiento: 20.000 clientes, 30.000 créditos liquidados con
@@ -39,7 +39,7 @@ class RendimientoSeeder extends Seeder
     {
         $clave = (string) getenv('RENDIMIENTO_CLAVE');
         if (strlen($clave) < 15) {
-            throw new RuntimeException('Defina RENDIMIENTO_CLAVE (al menos 15 caracteres) para los usuarios de la prueba de carga.');
+            throw new DatosDePruebaException('Defina RENDIMIENTO_CLAVE (al menos 15 caracteres) para los usuarios de la prueba de carga.');
         }
         if ((int) $this->db->query("SELECT COUNT(*) AS n FROM dbo.clientes WHERE correo LIKE '%@" . self::DOMINIO . "'")->getRow()->n > 0) {
             echo "Los datos de rendimiento ya están cargados.\n";
@@ -56,7 +56,7 @@ class RendimientoSeeder extends Seeder
             "SELECT TOP 1 id FROM dbo.versiones_parametros WHERE tipo = 'Morosidad' AND vigente_desde <= SYSDATETIMEOFFSET() ORDER BY vigente_desde DESC, id DESC",
         )->getRowArray();
         if ($version === null || $morosidad === null) {
-            throw new RuntimeException('Faltan una línea de crédito activa o los parámetros de morosidad vigentes.');
+            throw new DatosDePruebaException('Faltan una línea de crédito activa o los parámetros de morosidad vigentes.');
         }
 
         $this->db->query('SET NOCOUNT ON');
@@ -246,7 +246,7 @@ class RendimientoSeeder extends Seeder
             return $base . ($r === 11 ? 0 : $r);
         }
 
-        throw new RuntimeException("No se pudo calcular el CUIL del DNI {$dni}.");
+        throw new DatosDePruebaException("No se pudo calcular el CUIL del DNI {$dni}.");
     }
 
     private function contar(string $sql): int

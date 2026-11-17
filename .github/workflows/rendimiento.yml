@@ -36,8 +36,11 @@ jobs:
 
       - name: Apache JMeter 5.6.3
         run: |
-          curl -fsSL https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz | tar xz
-          mv apache-jmeter-5.6.3 jmeter
+          base=https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          curl --proto '=https' --tlsv1.2 -fsSL -o jmeter.tgz "$base"
+          curl --proto '=https' --tlsv1.2 -fsSL -o jmeter.tgz.sha512 "$base.sha512"
+          echo "$(cut -d' ' -f1 jmeter.tgz.sha512)  jmeter.tgz" | sha512sum -c -
+          tar xzf jmeter.tgz && mv apache-jmeter-5.6.3 jmeter && rm jmeter.tgz jmeter.tgz.sha512
           ./jmeter/bin/jmeter --version | tail -3
 
       - name: Volumen de referencia, carga, concurrencia y procesos

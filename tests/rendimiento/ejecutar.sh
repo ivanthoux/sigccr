@@ -18,7 +18,10 @@ export COMPOSE_PROJECT_NAME=sigccr_e2e
 # Puertos estándar: las redirecciones de la aplicación usan app.baseURL (https://localhost/), sin puerto
 export E2E_HTTP_PORT="${E2E_HTTP_PORT:-80}" E2E_HTTPS_PORT="${E2E_HTTPS_PORT:-443}"
 dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml "$@"; }
-sql() { dc exec -T app sh -c 'sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -d sigccr -b -h -1 -W -s "," -Q "SET NOCOUNT ON; $1"' sh "$1"; }
+sql() {
+  local consulta="$1"
+  dc exec -T app sh -c 'sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -d sigccr -b -h -1 -W -s "," -Q "SET NOCOUNT ON; $1"' sh "$consulta"
+}
 
 rm -rf "$RES" && mkdir -p "$RES"
 CLAVE="Rend-$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')-2026"
