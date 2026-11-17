@@ -53,6 +53,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-47 | 17/11/2026 | Propuesta |
 | D-48 | 17/11/2026 | Propuesta |
 | D-49 | 17/11/2026 | Propuesta |
+| D-50 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -769,3 +770,26 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
 4. **Identificador del mensaje.** La prueba con Mailpit mostró que CodeIgniter reemplazaba el `Message-ID` con uno propio, de modo que el identificador de la operación no llegaba al proveedor y un reintento podía entregarse dos veces. `CorreoConIdentificador` conserva el identificador de la operación como `Message-ID`, como prevé RNF-09.
 
 **Consecuencias.** Cambian `docker-compose.yml` (servicio `mailpit` y volumen `correos`), `env.sigccr.example`, el README, `tests/e2e/ejecutar.sh` y el comando `sigccr:correos`, que indica dónde ver los correos cuando el envío es por SMTP. Componente nuevo: `CorreoConIdentificador`, con su prueba en `SmtpComunicacionesTest`. Sin cambios de esquema ni de casos de uso.
+
+## D-50 · Tema oscuro y carga de las tablas solo donde se usan (RNF-02, RNF-07, RNF-13)
+
+**Contexto.** Después de la auditoría de diseño (D-47) quedaron dos mejoras fuera del alcance de la entrega: un tema oscuro y no cargar jQuery y DataTables en las pantallas que no tienen tablas con paginación. WCAG 2.2 AA no exige un tema oscuro; es una preferencia de comodidad para quien trabaja con poca luz o es sensible al brillo. jQuery (85 KB) y DataTables con sus estilos (117 KB) se descargaban y ejecutaban en todas las pantallas del panel, aunque solo siete listados y el plan de cuotas largo los usan.
+
+**Decisión.**
+
+1. **Tema oscuro con la misma identidad.**
+   - Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el botón «Tema oscuro» (barra lateral del panel y barra del portal); la elección se guarda en el navegador.
+   - El tema se aplica antes de cargar los estilos, para que la página no aparezca un instante con el otro.
+   - Los colores salen de las mismas variables de `sigccr.css`: superficies de tinta muy oscura, textos, enlaces y estados en tonos claros. Todos los textos miden al menos 4,5:1 y los bordes de los campos al menos 3:1 (WCAG 1.4.3 y 1.4.11).
+   - Las etiquetas de estado conservan el verde, el rojo, el ámbar y la tinta con texto blanco.
+   - El borde de los campos pasa a un gris más oscuro en los dos temas (3,1:1 o más sobre la hoja y el papel): con el anterior medía 1,3:1 en el claro, por debajo del mínimo de WCAG 1.4.11 que la auditoría de D-47 no había detectado.
+   - Al imprimir (contratos, comprobantes, informes) se usa siempre el tema claro.
+2. **jQuery y DataTables solo donde se usan.** `sigccr.js` los carga cuando el panel tiene una tabla `data-tabla` o un plan de más de 12 cuotas. Si no se pudieran cargar, la tabla se muestra completa, sin paginar, dentro de su recuadro desplazable.
+
+**Consecuencias.**
+- Nuevos: la vista parcial `partials/tema.php` y el botón del tema en las plantillas del panel y del portal.
+- La pantalla de acceso sigue el tema elegido, sin botón propio.
+- El portal no carga DataTables, como antes.
+- Las vistas no deben usar jQuery: el único uso (el encabezado CSRF de `$.ajax`) se configura al cargarlo.
+- Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad. Se ejecutaron en Docker el 17/11/2026 con Analista, Gerente y Cliente, sin fallas de contraste en las pantallas medidas.
+- El manual de usuario debe mencionar el botón del tema.

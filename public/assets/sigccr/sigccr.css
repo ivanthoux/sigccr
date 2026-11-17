@@ -35,10 +35,17 @@
     --tinta-suave: #e8eef5;
     --tinta-tenue: #8fa6bd;
     --tinta-clara: #e8eef4;
-    --borde-control: #b9c3ce;
+    --borde-control: #7f8d9c;
     --borde-encabezado: #c5ced8;
     --superficie-hover: #e9edf1;
     --blanco: #fff;
+    /* Papeles del tema: superficie de las hojas, títulos, acento y versiones de los estados para usar como texto.
+       En el tema oscuro (D-50) se redefinen abajo; el resto de la hoja de estilos solo usa estas variables. */
+    --superficie: var(--blanco);
+    --titulo: var(--tinta);
+    --acento: var(--tinta-2);
+    --verde-enlace: var(--verde);
+    --rojo-enlace: var(--rojo);
 
     --bs-body-font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --bs-body-font-size: .9375rem;
@@ -62,14 +69,14 @@
     --bs-info: var(--tinta-2);
     --bs-info-rgb: 35, 71, 107;
     --bs-secondary-rgb: 83, 98, 113;
-    --bs-form-invalid-color: var(--rojo);
-    --bs-form-invalid-border-color: var(--rojo);
+    --bs-form-invalid-color: var(--rojo-enlace);
+    --bs-form-invalid-border-color: var(--rojo-enlace);
 }
 
 body { -webkit-font-smoothing: antialiased; }
-h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--tinta); font-weight: 600; letter-spacing: -.01em; }
-h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
-:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--titulo); font-weight: 600; letter-spacing: -.01em; }
+h5, .h5, h6, .h6 { color: var(--titulo); font-weight: 600; }
+:focus-visible { outline: 2px solid var(--verde-enlace); outline-offset: 2px; }
 /* Sobre la tinta el verde no llega a 3:1 (WCAG 1.4.11): el foco es claro en la barra lateral, la barra superior
    y la marca del acceso. */
 .lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: var(--blanco); }
@@ -84,28 +91,28 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     --bs-btn-focus-shadow-rgb: 31, 122, 87;
 }
 .btn-outline-primary, .btn-outline-success {
-    --bs-btn-color: var(--verde); --bs-btn-border-color: var(--verde);
+    --bs-btn-color: var(--verde-enlace); --bs-btn-border-color: var(--verde-enlace);
     --bs-btn-hover-color: var(--blanco); --bs-btn-hover-bg: var(--verde); --bs-btn-hover-border-color: var(--verde);
     --bs-btn-active-color: var(--blanco); --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
-    --bs-btn-disabled-color: var(--verde); --bs-btn-disabled-border-color: var(--verde);
+    --bs-btn-disabled-color: var(--verde-enlace); --bs-btn-disabled-border-color: var(--verde-enlace);
     --bs-btn-focus-shadow-rgb: 31, 122, 87;
 }
 /* Códigos (de línea, de documento, de evento): en tinta y no en el rosa de Bootstrap, que no llega a 4,5:1 sobre el papel */
-code { color: var(--tinta-2); }
+code { color: var(--acento); }
 .btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: var(--borde-control); --bs-btn-hover-bg: var(--superficie-hover); --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: var(--borde-control); }
-.form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
+.form-control:focus, .form-select:focus { border-color: var(--verde-enlace); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
 .form-label { font-weight: 500; }
 .alert { border-width: 0 0 0 4px; border-radius: .25rem; }
 .alert-success { --bs-alert-bg: var(--verde-suave); --bs-alert-color: var(--verde-texto); --bs-alert-border-color: var(--verde); }
 .alert-danger { --bs-alert-bg: var(--rojo-suave); --bs-alert-color: var(--rojo-texto); --bs-alert-border-color: var(--rojo); }
 .alert-warning { --bs-alert-bg: var(--ambar-suave); --bs-alert-color: var(--ambar-texto); --bs-alert-border-color: var(--ambar); }
-.alert-info { --bs-alert-bg: var(--tinta-suave); --bs-alert-color: var(--tinta); --bs-alert-border-color: var(--tinta-2); }
+.alert-info { --bs-alert-bg: var(--tinta-suave); --bs-alert-color: var(--titulo); --bs-alert-border-color: var(--tinta-2); }
 
 /* Importes y tablas con cifras tabulares (RNF-02) */
 .importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 /* Celdas alineadas a la derecha (porcentajes, cantidades, acciones): un valor como «60,00 %» no se parte en dos renglones */
 .table td.text-end, .table th.text-end { white-space: nowrap; }
-.table { --bs-table-bg: var(--blanco); font-variant-numeric: tabular-nums; }
+.table { --bs-table-bg: var(--superficie); font-variant-numeric: tabular-nums; }
 .table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: var(--borde-encabezado); }
 
 /* ── Panel: barra lateral de tinta a toda altura ─────────────────────────── */
@@ -164,14 +171,14 @@ code { color: var(--tinta-2); }
 .encabezado h1 { font-size: 1.625rem; margin: 0; }
 .encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
 
-.hoja { background: var(--blanco); border: 1px solid var(--linea); border-radius: .5rem; }
+.hoja { background: var(--superficie); border: 1px solid var(--linea); border-radius: .5rem; }
 /* Los textos ocultos para lectores de pantalla (position: absolute) dentro de una tabla desplazable deben quedar
    recortados por su marco: si no, ensanchan la página en el celular aunque la tabla se desplace. */
 .table-responsive { position: relative; }
 
 /* Pantalla principal: índice de funciones por área */
 .indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }
-.indice section { padding: 1.25rem 1.5rem; background: var(--blanco); }
+.indice section { padding: 1.25rem 1.5rem; background: var(--superficie); }
 .indice h2 { font-size: 1rem; margin-bottom: .6rem; }
 .indice ul { list-style: none; padding: 0; margin: 0; }
 .indice li + li { margin-top: .3rem; }
@@ -179,7 +186,7 @@ code { color: var(--tinta-2); }
 .indice a:hover { text-decoration: underline; }
 
 /* ── Acceso: tinta a la izquierda, formulario a la derecha ───────────────── */
-.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: var(--blanco); }
+.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: var(--superficie); }
 @media (min-width: 992px) { .acceso { grid-template-columns: minmax(22rem, 5fr) 7fr; } }
 .acceso-marca {
     background: var(--tinta);
@@ -216,12 +223,15 @@ code { color: var(--tinta-2); }
 }
 
 /* Campos blancos sobre las hojas; paginación con el verde de la acción principal */
-.form-control, .form-select { background-color: var(--blanco); }
-.pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde); --bs-pagination-hover-color: var(--verde-oscuro); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
+.form-control, .form-select { background-color: var(--superficie); }
+/* Borde de los campos con contraste ≥ 3:1 sobre la hoja y el papel, en los dos temas (WCAG 1.4.11); el foco y los
+   estados de validación conservan su color. */
+:is(.form-control, .form-select):not(:focus, .is-invalid, .is-valid) { border-color: var(--borde-control); }
+.pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde-enlace); --bs-pagination-hover-color: var(--verde-enlace); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
 .btn-check:checked + .btn-outline-secondary { background-color: var(--verde-suave); border-color: var(--verde); color: var(--texto); font-weight: 600; }
 .btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }
 .btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo-oscuro); --bs-btn-hover-border-color: var(--rojo-oscuro); --bs-btn-active-bg: var(--rojo-oscuro); }
-.btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
+.btn-outline-danger { --bs-btn-color: var(--rojo-enlace); --bs-btn-border-color: var(--rojo-enlace); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
 
 /* Portal de autogestión del cliente: la misma identidad, con una barra superior en lugar del menú lateral. */
 .portal-ancho { max-width: 960px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
@@ -235,8 +245,8 @@ code { color: var(--tinta-2); }
 .portal-salir:hover { color: var(--blanco); text-decoration: underline; }
 .portal-contenido { padding-top: 2rem; padding-bottom: 3rem; }
 .funciones-portal { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); list-style: none; padding: 0; margin: 0; }
-.funciones-portal li { background: var(--blanco); border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
-.funciones-portal .bi { color: var(--tinta-2); font-size: 1.25rem; }
+.funciones-portal li { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
+.funciones-portal .bi { color: var(--acento); font-size: 1.25rem; }
 .funciones-portal h3 { font-size: 1rem; margin: .5rem 0 .25rem; }
 .funciones-portal p { color: var(--texto-2); font-size: .875rem; margin: 0; }
 
@@ -250,7 +260,7 @@ code { color: var(--tinta-2); }
 .verificacion-documento legend { float: none; width: auto; }
 .opcion-resultado { white-space: normal; height: 100%; }
 .historial-estados li { position: relative; padding: 0 0 .9rem 1.1rem; border-left: 2px solid var(--linea); margin-left: .35rem; }
-.historial-estados li::before { content: ""; position: absolute; left: -.4rem; top: .3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--tinta); }
+.historial-estados li::before { content: ""; position: absolute; left: -.4rem; top: .3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--acento); }
 .historial-estados li:last-child { border-left-color: transparent; }
 .list-group { --bs-list-group-active-bg: var(--tinta); --bs-list-group-active-border-color: var(--tinta); }
 .resumen-plan .importe { text-align: left; }
@@ -260,7 +270,7 @@ code { color: var(--tinta-2); }
 @media (min-width: 1200px) { .indicadores-clave { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .indicadores-clave > div { border-left: 3px solid var(--linea); padding-left: .75rem; }
 .indicadores-clave dt { font-size: .8125rem; font-weight: 500; color: var(--texto-2); }
-.indicadores-clave dd { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--tinta); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.indicadores-clave dd { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--titulo); font-variant-numeric: tabular-nums; line-height: 1.2; }
 
 /* ── Evaluación crediticia (D02) ─────────────────────────────────────────── */
 .dimensiones-evaluacion { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
@@ -297,11 +307,68 @@ code { color: var(--tinta-2); }
    negro en las de advertencia e información, que sobre el ámbar y la tinta no se leería. */
 .text-bg-warning { color: var(--blanco) !important; background-color: var(--ambar) !important; }
 .text-bg-info { color: var(--blanco) !important; background-color: var(--tinta-2) !important; }
+/* Las de éxito, error y principal se fijan a los tonos de la identidad: en el tema oscuro las variables -rgb de
+   Bootstrap pasan a tonos claros para los textos, y con texto blanco encima no se leerían. */
+.text-bg-success, .text-bg-primary { color: var(--blanco) !important; background-color: var(--verde) !important; }
+.text-bg-danger { color: var(--blanco) !important; background-color: var(--rojo) !important; }
 
 /* Trabajo pendiente en la pantalla principal del panel (CU-01 paso 6) */
 .pendientes li + li { border-top: 1px solid var(--linea); }
 .pendientes a { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; color: var(--texto); text-decoration: none; }
 .pendientes a:hover span:not(.cantidad) { text-decoration: underline; }
-.pendientes .cantidad { min-width: 2.25rem; padding: .1rem .5rem; border-radius: var(--bs-border-radius); background: var(--tinta-suave); color: var(--tinta); font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.pendientes .cantidad { min-width: 2.25rem; padding: .1rem .5rem; border-radius: var(--bs-border-radius); background: var(--tinta-suave); color: var(--titulo); font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
 .pendientes i.cantidad { background: var(--ambar-suave); color: var(--ambar-texto); font-size: 1.05rem; }
 .pendientes .bi-chevron-right { color: var(--texto-2); }
+
+/* Selector del tema en la barra lateral y en la barra del portal (D-50) */
+.cambiar-tema { padding: 0; border: 0; background: none; color: var(--tinta-texto); font-size: inherit; text-decoration: underline; }
+.cambiar-tema:hover { color: var(--blanco); }
+
+/* ── Tema oscuro (D-50) ──────────────────────────────────────────────────────
+   Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el selector. Los mismos papeles
+   que el tema claro, con superficies de tinta muy oscura; textos, enlaces y estados en tonos claros para mantener el
+   contraste ≥ 4,5:1 (WCAG 1.4.3) y bordes de campo ≥ 3:1 (1.4.11). Al imprimir se vuelve siempre al tema claro. */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --papel: #0f1720;
+    --superficie: #17212c;
+    --superficie-hover: #22303e;
+    --linea: #2c3b4b;
+    --borde-control: #5b6e82;
+    --borde-encabezado: #3a4b5d;
+    --texto: #e3e9ef;
+    --texto-2: #a3b1bf;
+    --titulo: #eef3f8;
+    --acento: #9cc1e6;
+    --verde-enlace: #5fc49b;
+    --rojo-enlace: #f97066;
+    --verde-suave: #12352a;
+    --verde-texto: #a6e3c8;
+    --rojo-suave: #3d1714;
+    --rojo-texto: #fbb4ad;
+    --ambar-suave: #3b2410;
+    --ambar-texto: #fbcf9b;
+    --tinta-suave: #1d3248;
+
+    --bs-body-color: var(--texto);
+    --bs-body-bg: var(--papel);
+    --bs-emphasis-color: var(--titulo);
+    --bs-secondary-bg: var(--superficie-hover);
+    --bs-tertiary-bg: var(--superficie-hover);
+    --bs-border-color: var(--linea);
+    --bs-secondary-color: var(--texto-2);
+    --bs-link-color-rgb: 95, 196, 155;
+    --bs-link-hover-color-rgb: 140, 214, 184;
+    --bs-primary-rgb: 95, 196, 155;
+    --bs-success-rgb: 95, 196, 155;
+    --bs-danger-rgb: 249, 112, 102;
+    --bs-warning-rgb: 253, 176, 34;
+    --bs-info-rgb: 156, 193, 230;
+    --bs-secondary-rgb: 163, 177, 191;
+    --bs-warning-text-emphasis: var(--ambar-texto);
+}
+[data-bs-theme="dark"] .text-bg-secondary { color: var(--papel) !important; }
+[data-bs-theme="dark"] .text-bg-light { color: var(--texto) !important; background-color: var(--superficie-hover) !important; }
+[data-bs-theme="dark"] .btn-outline-secondary { --bs-btn-hover-bg: var(--superficie-hover); }
+.portal-barra .cambiar-tema { color: var(--blanco); text-decoration: none; }
+.portal-barra .cambiar-tema:hover { text-decoration: underline; }

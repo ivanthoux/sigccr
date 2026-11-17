@@ -18,18 +18,20 @@ $cuenta = session('cuenta') ?? [];
     <meta name="csrf-valor" content="<?= esc(csrf_hash()) ?>">
     <title><?= esc(($titulo ?? 'Portal') . ' | SIG-CCR') ?></title>
     <link rel="icon" href="<?= base_url('favicon.ico') ?>">
+    <?= $this->include('partials/tema') ?>
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
     <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
 </head>
 <body class="portal">
-<a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-white" href="#contenido">Ir al contenido</a>
+<a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-body" href="#contenido">Ir al contenido</a>
 <header class="portal-barra">
     <div class="portal-ancho d-flex align-items-center gap-3">
         <a class="portal-marca me-auto" href="<?= url_to('portal.inicio') ?>">
             <strong>SIG-CCR</strong><span class="d-none d-sm-inline">Portal de clientes</span>
         </a>
         <span class="portal-cuenta d-none d-md-inline"><i class="bi bi-person-circle me-1" aria-hidden="true"></i><?= esc($cuenta['nombre'] ?? '') ?></span>
+        <button type="button" class="cambiar-tema portal-salir" data-cambiar-tema aria-pressed="false"><i class="bi bi-moon-stars me-1" aria-hidden="true"></i>Tema oscuro</button>
         <a class="portal-salir" href="<?= url_to('portal.salir') ?>"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión</a>
     </div>
 </header>
