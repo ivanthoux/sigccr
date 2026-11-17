@@ -4,7 +4,7 @@ $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
 <div class="text-center py-5">
-    <i class="bi bi-shield-lock display-4 text-secondary"></i>
+    <i class="bi bi-shield-lock display-4 text-secondary" aria-hidden="true"></i>
     <h1 class="h4 mt-3">Acceso no autorizado</h1>
     <p class="text-body-secondary">No tiene permiso para realizar esta operación.</p>
     <a href="<?= url_to('panel.inicio') ?>" class="btn btn-primary">Ir al inicio</a>

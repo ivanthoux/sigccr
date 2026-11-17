@@ -178,7 +178,7 @@ $this->section('contenido');
                 <?php foreach ($s['transiciones'] as $t): ?>
                     <li>
                         <span class="fw-medium"><?= esc(EstadosSolicitud::etiqueta((string) $t['estado_destino'])) ?></span>
-                        <span class="d-block small text-body-secondary"><?= esc(formato_fecha_hora($t['fecha_hora'])) ?> · <?= esc((string) ($t['responsable'] ?? $t['proceso'] ?? '')) ?></span>
+                        <span class="d-block small text-body-secondary"><?= esc(formato_fecha_hora($t['fecha_hora'])) ?> · <?= esc((string) ($t['responsable'] ?? (isset($t['proceso']) ? etiqueta_proceso($t['proceso']) : ''))) ?></span>
                         <?php if ($t['motivo']): ?><span class="d-block small"><?= esc($t['motivo']) ?></span><?php endif ?>
                     </li>
                 <?php endforeach ?>

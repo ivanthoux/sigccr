@@ -43,6 +43,31 @@ if (!function_exists('menu_panel')) {
     }
 }
 
+if (!function_exists('etiqueta_proceso')) {
+    /**
+     * Nombre legible de un proceso automático (comando programado) para mostrarlo como responsable de una operación:
+     * «Evaluación automática» en lugar de «evaluacion:ejecutar». El registro de auditoría conserva el nombre técnico.
+     */
+    function etiqueta_proceso(?string $proceso): string
+    {
+        $nombre = [
+            'evaluacion:ejecutar' => 'Evaluación automática',
+            'vencimientos:controlar' => 'Control de vencimientos',
+            'cartera:punitorios' => 'Cálculo de punitorios',
+            'regimen:generar' => 'Régimen informativo',
+            'fondos:proyectar' => 'Proyección de fondos',
+            'campanas:cerrar' => 'Cierre de campañas',
+            'pagos:conciliar' => 'Conciliación de pagos',
+            'pagos:notificaciones' => 'Notificaciones de pago',
+            'comunicaciones:enviar' => 'Envío de comunicaciones',
+            'copias:generar' => 'Copia de seguridad',
+            'copias:procesar' => 'Copia de seguridad',
+        ][(string) $proceso] ?? null;
+
+        return 'Proceso automático' . ($nombre !== null ? ': ' . $nombre : '');
+    }
+}
+
 if (!function_exists('recurso')) {
     /**
      * URL de un recurso propio de public/ (CSS o JS del sistema) con su fecha de modificación como versión: al publicar

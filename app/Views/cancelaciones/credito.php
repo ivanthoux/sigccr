@@ -48,7 +48,7 @@ $this->section('contenido');
     <div class="row g-3">
         <div class="col-md-3">
             <label for="importe" class="form-label">Importe</label>
-            <input type="text" inputmode="decimal" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" value="<?= esc((string) (old('importe') ?? $k['total']->toFixed(2)), 'attr') ?>">
+            <input type="text" inputmode="decimal" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" value="<?= esc((string) (old('importe') ?? formato_importe($k['total'], false)), 'attr') ?>">
             <?= error_campo('importe') ?>
         </div>
         <div class="col-md-4">

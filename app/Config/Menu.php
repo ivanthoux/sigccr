@@ -79,11 +79,11 @@ class Menu extends BaseConfig
      * @var list<array{icono: string, titulo: string, texto: string, ruta: string}>
      */
     public array $portal = [
-        ['icono' => 'bi-wallet2', 'titulo' => 'Estado de cuenta', 'texto' => 'Sus créditos, cuotas, deuda y saldo a favor (CU-47).', 'ruta' => 'portal.estado-cuenta'],
-        ['icono' => 'bi-credit-card', 'titulo' => 'Pagar una cuota', 'texto' => 'Pago electrónico de cuotas completas (CU-49).', 'ruta' => 'portal.pagar'],
-        ['icono' => 'bi-receipt', 'titulo' => 'Comprobantes', 'texto' => 'Descarga de los comprobantes de sus pagos (CU-48).', 'ruta' => 'portal.comprobantes'],
-        ['icono' => 'bi-file-earmark-text', 'titulo' => 'Mis solicitudes', 'texto' => 'Estado de sus solicitudes de crédito (CU-46).', 'ruta' => 'portal.solicitudes'],
-        ['icono' => 'bi-arrow-repeat', 'titulo' => 'Refinanciaciones y ofertas', 'texto' => 'Propuestas de refinanciación y ofertas recibidas (CU-43, CU-52).', 'ruta' => 'portal.propuestas'],
-        ['icono' => 'bi-person-vcard', 'titulo' => 'Mi perfil', 'texto' => 'Sus datos registrados en la entidad (CU-45).', 'ruta' => 'portal.perfil'],
+        ['icono' => 'bi-wallet2', 'titulo' => 'Estado de cuenta', 'texto' => 'Sus créditos, cuotas, deuda y saldo a favor.', 'ruta' => 'portal.estado-cuenta'],
+        ['icono' => 'bi-credit-card', 'titulo' => 'Pagar una cuota', 'texto' => 'Pago electrónico de cuotas completas.', 'ruta' => 'portal.pagar'],
+        ['icono' => 'bi-receipt', 'titulo' => 'Comprobantes', 'texto' => 'Descarga de los comprobantes de sus pagos.', 'ruta' => 'portal.comprobantes'],
+        ['icono' => 'bi-file-earmark-text', 'titulo' => 'Mis solicitudes', 'texto' => 'Estado de sus solicitudes de crédito.', 'ruta' => 'portal.solicitudes'],
+        ['icono' => 'bi-arrow-repeat', 'titulo' => 'Refinanciaciones y ofertas', 'texto' => 'Propuestas de refinanciación y ofertas recibidas.', 'ruta' => 'portal.propuestas'],
+        ['icono' => 'bi-person-vcard', 'titulo' => 'Mi perfil', 'texto' => 'Sus datos registrados en la entidad.', 'ruta' => 'portal.perfil'],
     ];
 }

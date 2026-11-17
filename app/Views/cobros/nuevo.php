@@ -93,7 +93,9 @@ $this->section('contenido');
                         <div class="col-md-4">
                             <label class="form-label small" for="medio-<?= $i ?>">Medio <?= $i + 1 ?></label>
                             <select class="form-select" id="medio-<?= $i ?>" name="medios[<?= $i ?>][medio]">
-                                <?php foreach (MediosCobro::MEDIOS as $k => $n): ?><option value="<?= $k ?>"<?= ($mo['medio'] ?? 'Transferencia') === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
+                                <?php // Los medios 2 y 3 empiezan «Sin usar»: si no, parecía que el cobro tenía tres pagos ?>
+                                <?php if ($i > 0): ?><option value=""<?= ($mo['medio'] ?? '') === '' ? ' selected' : '' ?>>Sin usar</option><?php endif ?>
+                                <?php foreach (MediosCobro::MEDIOS as $k => $n): ?><option value="<?= $k ?>"<?= ($mo['medio'] ?? ($i === 0 ? 'Transferencia' : '')) === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
                             </select>
                         </div>
                         <div class="col-md-3">

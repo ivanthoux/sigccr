@@ -23,7 +23,7 @@ $this->section('contenido');
 </div>
 <?php if ($cancelacion !== null): ?>
     <div class="alert alert-light border">
-        <strong>Cancelación anticipada:</strong> para cancelar hoy todo el crédito debería pagar <strong class="importe"><?= esc(formato_importe($cancelacion)) ?></strong>, sin comisión y sin los intereses de las cuotas que todavía no vencieron (RN-67). La cancelación se hace en la sucursal; el importe cambia día a día.
+        <strong>Cancelación anticipada:</strong> para cancelar hoy todo el crédito debería pagar <strong class="importe"><?= esc(formato_importe($cancelacion)) ?></strong>, sin comisión y sin los intereses de las cuotas que todavía no vencieron. La cancelación se hace en la sucursal; el importe cambia día a día.
     </div>
 <?php endif ?>
 <section class="hoja p-0">

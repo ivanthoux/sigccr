@@ -35,7 +35,7 @@ $this->section('contenido');
                         <td><a href="<?= url_to('regimen.ver', (int) $r['id']) ?>"><?= esc((string) $r['periodo']) ?></a></td>
                         <td><?= (int) $r['version'] ?></td>
                         <td><?= esc(formato_fecha_hora((string) $r['fecha_generacion'])) ?></td>
-                        <td class="small"><?= esc($r['usuario'] ?? ('Temporizador (' . $r['proceso'] . ')')) ?></td>
+                        <td class="small"><?= esc($r['usuario'] ?? etiqueta_proceso($r['proceso'])) ?></td>
                         <td class="importe"><?= (int) $r['cantidad_deudores'] ?></td>
                         <td class="importe"><?= esc(formato_importe((string) $r['saldo_total'], false)) ?></td>
                         <td><?= $r['estado'] === 'Vigente' ? '<span class="badge text-bg-success">Vigente</span>' : 'Rectificado' ?></td>
