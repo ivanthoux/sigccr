@@ -68,7 +68,17 @@ $this->section('contenido');
 
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Identificación</legend>
-        <div class="row g-3" data-solo="PersonaHumana">
+        <div class="row g-3">
+            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, 'inputmode="numeric"'), '11 dígitos, con o sin guiones.<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>', 'col-md-6') ?>
+            <?php if ($alta): ?>
+                <div class="col-md-6" data-solo="PersonaHumana">
+                    <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
+                    <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
+                    <div class="form-text" data-padron-resultado role="status">Con el CUIL cargado, propone el nombre, el documento y el domicilio fiscal para que los confirme (A9).</div>
+                </div>
+            <?php endif ?>
+        </div>
+        <div class="row g-3 mt-0" data-solo="PersonaHumana">
             <?= $campo('nombre', 'Nombre', $texto('nombre', 80)) ?>
             <?= $campo('apellido', 'Apellido', $texto('apellido', 80)) ?>
             <div class="col-md-3">
@@ -91,19 +101,10 @@ $this->section('contenido');
             <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-4') ?>
             <datalist id="nacionalidades"><option value="Argentina"><option value="Boliviana"><option value="Brasileña"><option value="Chilena"><option value="Paraguaya"><option value="Peruana"><option value="Uruguaya"><option value="Venezolana"></datalist>
         </div>
-        <div class="row g-3" data-solo="PersonaJuridica">
+        <div class="row g-3 mt-0" data-solo="PersonaJuridica">
             <?= $campo('razon_social', 'Razón social', $texto('razon_social', 200), '', 'col-md-8') ?>
             <?= $campo('fecha_constitucion', 'Fecha de constitución', '<input type="date" class="form-control' . campo_invalido('fecha_constitucion') . '" id="fecha_constitucion" name="fecha_constitucion" value="' . esc($v('fecha_constitucion'), 'attr') . '">', '', 'col-md-4') ?>
             <?= $campo('actividad_principal', 'Actividad principal', $texto('actividad_principal', 150), '', 'col-12') ?>
-        </div>
-        <div class="row g-3 mt-0">
-            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta; obligatorio para solicitar crédito)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, 'inputmode="numeric"'), '11 dígitos, con o sin guiones.', 'col-md-6') ?>
-            <?php if ($alta): ?>
-                <div class="col-md-6 d-flex flex-column justify-content-end" data-solo="PersonaHumana">
-                    <button type="button" class="btn btn-outline-secondary align-self-start" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
-                    <div class="form-text" data-padron-resultado role="status">Propone el nombre, el documento y el domicilio fiscal del CUIL para que los confirme (A9).</div>
-                </div>
-            <?php endif ?>
         </div>
     </fieldset>
 
