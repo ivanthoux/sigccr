@@ -31,6 +31,7 @@ $requisitos = RequisitosDocumentales::IDENTIFICACION;
 $campo = static fn (string $nombre, string $etiqueta, string $html, string $ayuda = '', string $col = 'col-md-6'): string =>
     "<div class=\"{$col}\"><label for=\"{$nombre}\" class=\"form-label\">{$etiqueta}</label>{$html}" . error_campo($nombre) . ($ayuda !== '' ? "<div class=\"form-text\">{$ayuda}</div>" : '') . '</div>';
 $texto = static fn (string $nombre, int $max, string $extra = '') => "<input type=\"text\" class=\"form-control" . campo_invalido($nombre) . "\" id=\"{$nombre}\" name=\"{$nombre}\" maxlength=\"{$max}\" value=\"" . esc($v($nombre), 'attr') . "\" {$extra}>";
+$numerico = 'inputmode="numeric"';
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -69,12 +70,12 @@ $this->section('contenido');
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Identificación</legend>
         <div class="row g-3">
-            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, 'inputmode="numeric"'), '11 dígitos, con o sin guiones.<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>', 'col-md-6') ?>
+            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, $numerico), '11 dígitos, con o sin guiones.<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>', 'col-md-6') ?>
             <?php if ($alta): ?>
                 <div class="col-md-6" data-solo="PersonaHumana">
                     <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
                     <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
-                    <div class="form-text" data-padron-resultado role="status">Con el CUIL cargado, propone el nombre, el documento y el domicilio fiscal para que los confirme (A9).</div>
+                    <output class="form-text d-block" data-padron-resultado>Con el CUIL cargado, propone el nombre, el documento y el domicilio fiscal para que los confirme (A9).</output>
                 </div>
             <?php endif ?>
         </div>
@@ -88,7 +89,7 @@ $this->section('contenido');
                 </select>
                 <?= error_campo('tipo_documento') ?>
             </div>
-            <?= $campo('nro_documento', 'Número de documento', $texto('nro_documento', 15, 'inputmode="numeric"'), 'Sin puntos.', 'col-md-4') ?>
+            <?= $campo('nro_documento', 'Número de documento', $texto('nro_documento', 15, $numerico), 'Sin puntos.', 'col-md-4') ?>
             <?= $campo('fecha_nacimiento', 'Fecha de nacimiento', '<input type="date" class="form-control' . campo_invalido('fecha_nacimiento') . '" id="fecha_nacimiento" name="fecha_nacimiento" value="' . esc($v('fecha_nacimiento'), 'attr') . '">', '', 'col-md-5') ?>
             <div class="col-md-4">
                 <label for="estado_civil" class="form-label">Estado civil <span class="text-body-secondary fw-normal">(opcional)</span></label>
@@ -112,7 +113,7 @@ $this->section('contenido');
         <legend class="h5">Representante</legend>
         <div class="row g-3">
             <?= $campo('representante_nombre', 'Nombre y apellido', $texto('representante_nombre', 150), '', 'col-md-6') ?>
-            <?= $campo('representante_documento', 'DNI', $texto('representante_documento', 15, 'inputmode="numeric"'), '', 'col-md-3') ?>
+            <?= $campo('representante_documento', 'DNI', $texto('representante_documento', 15, $numerico), '', 'col-md-3') ?>
             <?= $campo('representante_cargo', 'Cargo', $texto('representante_cargo', 80), '', 'col-md-3') ?>
         </div>
     </fieldset>
