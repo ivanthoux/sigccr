@@ -9,6 +9,8 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 DIR = Path(__file__).parent
+# Token de los formularios: el campo oculto o, en las páginas sin formulario, la etiqueta meta del panel
+CSRF = '(?:name="csrf_sigccr" value|name="csrf-valor" content)="([^"]+)"'
 ASSERT_SUBSTRING = 16
 
 
@@ -120,15 +122,15 @@ def grupo(nombre: str, hilos: int, rampa: int, hijos: list[str], duracion: str |
 def inicio_sesion(correo: str) -> list[str]:
     """Inicio de sesión del panel: el token de seguridad (CSRF) se renueva al iniciar sesión."""
     return [
-        http('00 Inicio de sesión (formulario)', 'GET', '/admin/login', hijos=[extraer('csrf', 'name="csrf_sigccr" value="([^"]+)"')]),
+        http('00 Inicio de sesión (formulario)', 'GET', '/admin/login', hijos=[extraer('csrf', CSRF)]),
         http('00 Inicio de sesión', 'POST', '/admin/login', [('csrf_sigccr', '${csrf}'), ('correo', correo), ('contrasena', '${__P(clave)}')],
-             [contiene('Cerrar sesión'), extraer('csrf', 'name="csrf_sigccr" value="([^"]+)"')]),
+             [contiene('Cerrar sesión'), extraer('csrf', CSRF)]),
     ]
 
 
 def deuda_y_cobro(etiqueta_deuda: str, etiqueta_cobro: str, cliente: str, operacion: str, hijos_cobro_previos: list[str] | None = None) -> list[str]:
     extraccion = [
-        extraer('csrf', 'name="csrf_sigccr" value="([^"]+)"'),
+        extraer('csrf', CSRF),
         extraer('cuota_nombre', 'name="(cuotas\\[\\d+\\]\\[\\])" value="\\d+" data-cobro-cuota'),
         extraer('cuota_numero', 'name="cuotas\\[\\d+\\]\\[\\]" value="(\\d+)" data-cobro-cuota'),
         extraer('cuota_total', 'value="\\d+" data-cobro-cuota data-total="([\\d.]+)"'),
@@ -202,7 +204,7 @@ concurrencia = plan('SIG-CCR: decisiones simultáneas sobre un mismo objeto (RP-
     # Dos Gerentes anulan el mismo cobro al mismo tiempo: debe registrarse una sola anulación
     grupo('RP-06b Anulación simultánea del mismo cobro', 2, 0, [
         *inicio_sesion('rend.gerente${__threadNum}@' + DOMINIO),
-        http('06 Anulación (formulario)', 'GET', '/admin/cobros/${__P(cobro_concurrencia)}/anular', hijos=[extraer('csrf', 'name="csrf_sigccr" value="([^"]+)"')]),
+        http('06 Anulación (formulario)', 'GET', '/admin/cobros/${__P(cobro_concurrencia)}/anular', hijos=[extraer('csrf', CSRF)]),
         http('RP-06b Anulación simultánea', 'POST', '/admin/cobros/${__P(cobro_concurrencia)}/anular',
              [('csrf_sigccr', '${csrf}'), ('motivo', 'Prueba de concurrencia de RNF-06')], [sincronizar(2)]),
     ], duracion=None, vueltas=1),
