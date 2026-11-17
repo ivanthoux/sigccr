@@ -80,7 +80,7 @@ $this->section('contenido');
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label for="importe" class="form-label">Importe a cobrar</label>
-                    <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc((string) old('importe'), 'attr') ?>" aria-describedby="ayuda-importe">
+                    <input type="text" class="form-control<?= campo_invalido('importe', 'ayuda-importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc((string) old('importe'), 'attr') ?>">
                     <div id="ayuda-importe" class="form-text">Vacío cobra el total. Un importe menor se imputa por antigüedad y la última cuota queda con saldo (D-12).</div>
                     <?= error_campo('importe') ?>
                 </div>

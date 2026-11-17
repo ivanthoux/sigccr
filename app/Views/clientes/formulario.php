@@ -181,6 +181,9 @@ $this->section('contenido');
     <?php if ($alta): ?>
         <fieldset class="hoja p-4 mb-3" id="documentacion">
             <legend class="h5">Documentación respaldatoria</legend>
+            <?php if (!empty(session('errores'))): ?>
+                <div class="alert alert-warning py-2 small" role="status">Si había elegido archivos, vuelva a adjuntarlos: el navegador no los conserva cuando el formulario vuelve con observaciones.</div>
+            <?php endif ?>
             <p class="text-body-secondary small">PDF, JPG o PNG de hasta 5 MB cada uno. Solo es obligatoria la identificación del cliente. La documentación de ingresos puede incorporarse ahora o más adelante: la exige cada línea de crédito al registrar la solicitud (RN-11). Incorporar un documento no equivale a verificarlo.</p>
             <div class="row g-3">
                 <?php foreach ($tipos as $t): ?>

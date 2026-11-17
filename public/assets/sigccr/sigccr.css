@@ -176,6 +176,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .form-control, .form-select { background-color: #fff; }
 .pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde); --bs-pagination-hover-color: var(--verde-oscuro); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
 .btn-check:checked + .btn-outline-secondary { background-color: #e7f3ee; border-color: var(--verde); color: var(--texto); font-weight: 600; }
+.btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }
 .btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #912018; --bs-btn-hover-border-color: #912018; --bs-btn-active-bg: #912018; }
 .btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
 

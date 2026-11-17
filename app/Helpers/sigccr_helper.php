@@ -122,10 +122,31 @@ if (!function_exists('etiqueta_estado_cuenta')) {
 }
 
 if (!function_exists('campo_invalido')) {
-    /** Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true' se agrega a class="...". */
-    function campo_invalido(string $campo): string
+    /**
+     * Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true" aria-describedby="error-…' se
+     * agrega a class="...". Si el campo tiene un texto de ayuda, se pasa su id en $ayuda y el campo no declara su propio
+     * aria-describedby: el helper lo emite siempre, con el error primero y la ayuda después (un atributo repetido se
+     * descarta y la ayuda dejaba de leerse justo cuando hay error).
+     */
+    function campo_invalido(string $campo, string $ayuda = ''): string
     {
-        return isset((session('errores') ?? [])[$campo]) ? ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') : '';
+        $ayuda = esc($ayuda, 'attr');
+        if (!isset((session('errores') ?? [])[$campo])) {
+            return $ayuda === '' ? '' : '" aria-describedby="' . $ayuda;
+        }
+
+        return ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . ($ayuda === '' ? '' : ' ' . $ayuda);
+    }
+}
+
+if (!function_exists('grupo_invalido')) {
+    /**
+     * Atributos para cada opción de un grupo de radios con error (por ejemplo, el rol): la marca como inválida y le
+     * asocia el mensaje de error_campo(), para que el lector de pantalla lo lea al llegar al grupo.
+     */
+    function grupo_invalido(string $campo): string
+    {
+        return isset((session('errores') ?? [])[$campo]) ? ' aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . '"' : '';
     }
 }
 

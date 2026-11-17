@@ -51,6 +51,15 @@
         });
     });
 
+    // Formulario devuelto con observaciones del servidor: el foco va al primer campo marcado y visible, para no
+    // recorrer el formulario buscándolo (la alerta general ya se anuncia con role="alert"). Se espera a que los
+    // scripts de cada pantalla oculten las secciones que no corresponden (por ejemplo, según el tipo de cliente).
+    document.addEventListener('DOMContentLoaded', () => {
+        const primero = [...document.querySelectorAll('main input[aria-invalid="true"], main select[aria-invalid="true"], main textarea[aria-invalid="true"]')]
+            .find((campo) => campo.offsetParent !== null || campo.classList.contains('btn-check'));
+        primero?.focus();
+    });
+
     // Evita el doble envío de formularios
     document.querySelectorAll('form').forEach((form) => {
         form.addEventListener('submit', (e) => {
