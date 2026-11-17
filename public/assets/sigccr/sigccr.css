@@ -61,6 +61,15 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     --bs-btn-disabled-bg: var(--verde); --bs-btn-disabled-border-color: var(--verde);
     --bs-btn-focus-shadow-rgb: 31, 122, 87;
 }
+.btn-outline-primary, .btn-outline-success {
+    --bs-btn-color: var(--verde); --bs-btn-border-color: var(--verde);
+    --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--verde); --bs-btn-hover-border-color: var(--verde);
+    --bs-btn-active-color: #fff; --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
+    --bs-btn-disabled-color: var(--verde); --bs-btn-disabled-border-color: var(--verde);
+    --bs-btn-focus-shadow-rgb: 31, 122, 87;
+}
+/* Códigos (de línea, de documento, de evento): en tinta y no en el rosa de Bootstrap, que no llega a 4,5:1 sobre el papel */
+code { color: var(--tinta-2); }
 .btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: #b9c3ce; --bs-btn-hover-bg: #e9edf1; --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: #b9c3ce; }
 .form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
 .form-label { font-weight: 500; }
@@ -72,6 +81,8 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 
 /* Importes y tablas con cifras tabulares (RNF-02) */
 .importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Celdas alineadas a la derecha (porcentajes, cantidades, acciones): un valor como «60,00 %» no se parte en dos renglones */
+.table td.text-end, .table th.text-end { white-space: nowrap; }
 .table { --bs-table-bg: #fff; font-variant-numeric: tabular-nums; }
 .table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: #c5ced8; }
 

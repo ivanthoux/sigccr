@@ -51,6 +51,19 @@
         });
     });
 
+    // Toda tabla del contenido se desplaza dentro de su recuadro en pantallas angostas (WCAG 1.4.10), aunque la vista no
+    // la haya envuelto en .table-responsive: así ninguna tabla ensancha la página en el celular. Las de DataTables se
+    // envuelven más abajo, después de inicializarlas.
+    document.querySelectorAll('main table.table:not([data-tabla])').forEach((t) => {
+        if (t.closest('.table-responsive')) {
+            return;
+        }
+        const marco = document.createElement('div');
+        marco.className = 'table-responsive';
+        t.parentNode.insertBefore(marco, t);
+        marco.appendChild(t);
+    });
+
     // Formulario devuelto con observaciones del servidor: el foco va al primer campo marcado y visible, para no
     // recorrer el formulario buscándolo (la alerta general ya se anuncia con role="alert"). Se espera a que los
     // scripts de cada pantalla oculten las secciones que no corresponden (por ejemplo, según el tipo de cliente).
