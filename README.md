@@ -65,6 +65,20 @@ Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCC
 
 **Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor. Para ver el último con su enlace: `docker compose exec app php spark sigccr:correos` (o `sigccr:correos 5` para los cinco últimos).
 
+**Correo de desarrollo con Mailpit (D-49):** para ver los correos en el navegador, como los recibiría el destinatario:
+
+1. Levantar Mailpit, una sola vez: `docker compose --profile correo up -d`. Queda activo aunque se reinicie Docker.
+2. En el `.env`, cambiar el correo a SMTP:
+   ```
+   sigccr.adaptadorComunicaciones = real
+   sigccr.smtpHost = mailpit
+   sigccr.smtpPuerto = 1025
+   sigccr.smtpCifrado =
+   ```
+3. Abrir `http://localhost:8025`. Llegan todos los correos del panel, del portal y de los procesos, con sus enlaces; ninguno sale del equipo.
+
+Las direcciones que simulan errores de envío (`falla.transitoria@…`, `falla.definitiva@…`, `incierto@…`) solo funcionan con el simulador: para probarlas se vuelve a `sigccr.adaptadorComunicaciones = simulador`. La batería de punta a punta usa siempre el simulador. Si el `.env` está en SMTP, `tests/e2e/ejecutar.sh` lo cambia mientras corre y lo restaura al terminar.
+
 **Portal de clientes:** un cliente registrado activa su acceso en `https://localhost/portal/activar` con su documento (o CUIT) y su correo verificado (CU-04), y después ingresa en `https://localhost/portal/login` con ese correo y su contraseña (CU-01 a CU-03). La cuenta de un cliente no sirve para el panel ni la de un usuario interno para el portal (RN-08). **Cola de comunicaciones:** el contenedor scheduler ejecuta `comunicaciones:enviar` cada minuto para los reintentos (CU-95); a mano: `docker compose exec app php spark comunicaciones:enviar`. Con `sigccr.adaptadorComunicaciones = real` y los datos `sigccr.smtp*` del `.env`, los correos salen por SMTP.
 
 **Problemas frecuentes**

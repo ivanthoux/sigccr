@@ -11,6 +11,13 @@ export COMPOSE_PROJECT_NAME=sigccr_e2e HTTP_PORT="${E2E_HTTP_PORT:-18080}" HTTPS
 dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml "$@"; }
 
 [[ -f .env ]] || cp env.sigccr.example .env
+# La batería verifica los correos con el simulador (writable/correos y sus direcciones de falla). Si el entorno de
+# desarrollo envía por SMTP a Mailpit (D-49), se usa el simulador mientras dura la ejecución y después se restaura.
+if grep -qE '^[[:space:]]*sigccr\.adaptadorComunicaciones[[:space:]]*=[[:space:]]*real' .env; then
+  sed -i -E 's/^([[:space:]]*sigccr\.adaptadorComunicaciones[[:space:]]*=[[:space:]]*)real/\1simulador/' .env
+  trap "sed -i -E 's/^([[:space:]]*sigccr\\.adaptadorComunicaciones[[:space:]]*=[[:space:]]*)simulador/\\1real/' .env" EXIT
+  echo "Correo: se usa el simulador durante las pruebas (el .env vuelve a SMTP al terminar)"
+fi
 [[ -f .env.docker ]] || cp .env.docker.example .env.docker
 mkdir -p docker/nginx/certs
 [[ -f docker/nginx/certs/sigccr.crt ]] || sh docker/nginx/generar-certificado.sh || exit 1

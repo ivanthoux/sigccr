@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Tests\Unit\Comunicaciones;
 
 use App\Adapters\Comunicaciones\ComunicacionesInterface as C;
+use App\Adapters\Comunicaciones\CorreoConIdentificador;
 use App\Adapters\Comunicaciones\SmtpComunicaciones;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 /** Clasificación de las respuestas SMTP en los resultados de RNF-09. */
 final class SmtpComunicacionesTest extends TestCase
@@ -34,5 +36,12 @@ final class SmtpComunicacionesTest extends TestCase
     {
         $traza = "250 OK\n354 End data with <CR><LF>.<CR><LF>\nUnable to send data: timed out";
         $this->assertSame(C::INCIERTO, SmtpComunicaciones::clasificar(false, $traza, 'op-5')['resultado']);
+    }
+
+    /** D-49: el identificador de la operación viaja como Message-ID; CodeIgniter generaba uno propio y lo reemplazaba. */
+    public function testElMessageIdEsElDeLaOperacion(): void
+    {
+        $correo = (new CorreoConIdentificador(['protocol' => 'smtp']))->setMessageId('<COM-42@sigccr.local>');
+        $this->assertSame('<COM-42@sigccr.local>', (new ReflectionMethod($correo, 'getMessageID'))->invoke($correo));
     }
 }

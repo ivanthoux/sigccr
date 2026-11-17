@@ -28,7 +28,7 @@ class SmtpComunicaciones implements ComunicacionesInterface
     public function enviar(string $destino, string $asunto, string $cuerpoHtml, string $identificadorOperacion): array
     {
         $cfg = config('Sigccr');
-        $email = $this->email ?? new Email([
+        $email = $this->email ?? new CorreoConIdentificador([
             'protocol' => 'smtp',
             'SMTPHost' => $cfg->smtpHost,
             'SMTPPort' => $cfg->smtpPuerto,
@@ -45,7 +45,12 @@ class SmtpComunicaciones implements ComunicacionesInterface
         $email->setTo($destino);
         $email->setSubject($asunto);
         $email->setMessage($cuerpoHtml);
-        $email->setHeader('Message-ID', '<' . $identificadorOperacion . '@' . $dominio . '>');
+        $idMensaje = '<' . $identificadorOperacion . '@' . $dominio . '>';
+        if ($email instanceof CorreoConIdentificador) {
+            $email->setMessageId($idMensaje);
+        } else {
+            $email->setHeader('Message-ID', $idMensaje);
+        }
 
         $ok = $email->send(false);
         $traza = (string) $email->printDebugger(['headers']);

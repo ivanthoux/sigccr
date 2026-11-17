@@ -28,6 +28,11 @@ class CorreosSimulados extends BaseCommand
 
             return EXIT_ERROR;
         }
+        if (config('Sigccr')->adaptadorComunicaciones === 'real') {
+            // D-49: con Mailpit (o un proveedor real) los correos salen por SMTP y no quedan en writable/correos
+            CLI::write('Los correos se envían por SMTP a ' . config('Sigccr')->smtpHost . ':' . config('Sigccr')->smtpPuerto . '. Con Mailpit, se ven en http://localhost:8025.', 'yellow');
+            CLI::write('Abajo, los que guardó el simulador antes del cambio, si los hay.');
+        }
         $archivos = glob(WRITEPATH . 'correos/*.html') ?: [];
         if ($archivos === []) {
             CLI::write('No hay correos simulados todavía (writable/correos está vacío).', 'yellow');
