@@ -6,6 +6,7 @@ namespace App\Services\Fondos;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Validacion\Campos;
@@ -309,7 +310,7 @@ class FondosService extends BaseService
                 $this->exigirDisponible((string) $m['importe']);
             }
             $this->db->table('movimientos_fondos')->where('id', $id)->update(['estado' => 'Realizado']);
-            (new AuditoriaService($this->db))->registrar('fondos.confirmar_movimiento', 'movimientos_fondos', $id);
+            (new AuditoriaService($this->db))->registrarCambios('fondos.confirmar_movimiento', 'movimientos_fondos', $id, Cambios::campo('estado', 'Programado', 'Realizado'));
         });
     }
 
@@ -323,7 +324,7 @@ class FondosService extends BaseService
                 throw new ReglaNegocioException('Solo se anulan movimientos programados; uno realizado se corrige.');
             }
             $this->db->table('movimientos_fondos')->where('id', $id)->update(['estado' => 'Anulado', 'motivo' => $texto]);
-            (new AuditoriaService($this->db))->registrar('fondos.anular_movimiento', 'movimientos_fondos', $id, 'Exitoso', $texto);
+            (new AuditoriaService($this->db))->registrarCambios('fondos.anular_movimiento', 'movimientos_fondos', $id, Cambios::campo('estado', 'Programado', 'Anulado'), $texto);
         });
     }
 

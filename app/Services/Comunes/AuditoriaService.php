@@ -13,6 +13,8 @@ use App\Services\BaseService;
 class AuditoriaService extends BaseService
 {
     private const CLAVES_PROHIBIDAS = ['password', 'contrasena', 'clave', 'token', 'codigo', 'autorizacion', 'tarjeta', 'cvv'];
+    /** Campos de negocio cuyo nombre contiene una palabra prohibida pero no son secretos (D-48). */
+    private const CLAVES_PERMITIDAS = ['codigo', 'codigo_postal', 'es_clave'];
 
     /**
      * @param array<string, mixed>|null $detalle estado anterior y nuevo, parámetros aplicados
@@ -47,14 +49,29 @@ class AuditoriaService extends BaseService
     }
 
     /**
+     * Registro de una modificación con el valor anterior y el nuevo de cada campo que cambió (D-48). Los cambios se
+     * guardan en el detalle bajo la clave «cambios», junto con los datos adicionales.
+     *
+     * @param array<string, array{anterior: mixed, nuevo: mixed}> $cambios resultado de Cambios::entre() o Cambios::campo()
+     * @param array<string, mixed> $datos datos adicionales (versión creada, solicitudes afectadas, etc.)
+     */
+    public function registrarCambios(string $accion, string $objetoTipo, int|string|null $objetoId, array $cambios, ?string $motivo = null, array $datos = [], ?string $proceso = null): void
+    {
+        $this->registrar($accion, $objetoTipo, $objetoId, 'Exitoso', $motivo, ['cambios' => $cambios] + $datos, $proceso);
+    }
+
+    /**
      * @param array<string, mixed> $datos
      * @return array<string, mixed>
      */
     private function depurar(array $datos): array
     {
         foreach ($datos as $k => $v) {
-            foreach (self::CLAVES_PROHIBIDAS as $p) {
-                if (str_contains(strtolower((string) $k), $p)) {
+            $clave = strtolower((string) $k);
+            // En los cambios la clave es la ruta del campo («pesos.situacion_bcra»): se evalúa su último tramo
+            $campo = substr($clave, (int) strrpos('.' . $clave, '.'));
+            foreach (in_array($campo, self::CLAVES_PERMITIDAS, true) ? [] : self::CLAVES_PROHIBIDAS as $p) {
+                if (str_contains($clave, $p)) {
                     $datos[$k] = '[omitido]';
                     continue 2;
                 }

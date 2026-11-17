@@ -6,6 +6,7 @@ namespace App\Services\Clientes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Clientes\ReglasClientes;
 use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Portal\ReglasPortal;
@@ -268,13 +269,16 @@ class ClienteService extends BaseService
                 'ingresos_declarados' => $d['ingresos_declarados'], 'categoria_ingresos' => $d['categoria_ingresos'],
                 'categoria_monotributo' => $d['categoria_monotributo'], 'persona_expuesta' => $d['persona_expuesta'] ? 1 : 0,
             ] + $this->datosSubclase($d);
-            $cambios = [];
-            foreach ($nuevos as $campo => $valor) {
-                $anterior = $actual[$campo] ?? null;
-                $igual = $campo === 'ingresos_declarados' ? Campos::importe((string) $anterior) === $valor : (string) ($anterior ?? '') === (string) ($valor ?? '');
-                if (!$igual) {
-                    $cambios[$campo] = ['anterior' => $anterior, 'nuevo' => $valor];
-                }
+            // D-48: valor anterior y nuevo de cada campo que cambió; la localidad se registra por su nombre
+            $cambios = Cambios::entre($actual, $nuevos, array_keys($nuevos));
+            if (isset($cambios['localidad_id'])) {
+                unset($cambios['localidad_id']);
+                $nombre = static fn ($l): ?string => $l === null ? null : "{$l['nombre']} ({$l['provincia']})";
+                $geo = new GeografiaService($this->db);
+                $cambios['localidad'] = [
+                    'anterior' => $actual['localidad_id'] === null ? null : $nombre($geo->localidad((int) $actual['localidad_id'])),
+                    'nuevo' => $nombre($geo->localidad((int) $d['localidad_id'])),
+                ];
             }
             $consentimientoActual = (bool) ($actual['consentimientos']['ComunicacionesComerciales']['otorgado'] ?? false);
             $cambiaConsentimiento = $consentimientoActual !== $d['acepta_comunicaciones'];
@@ -315,9 +319,8 @@ class ClienteService extends BaseService
             $relevantes = ReglasClientes::cambiosRelevantes($actual, $nuevos);
             if ($relevantes !== []) {
                 $afectadas = $this->tratarSolicitudesAfectadas($id, $actual['denominacion'], $relevantes);
-                $cambios['solicitudes_afectadas'] = $afectadas;
             }
-            (new AuditoriaService($this->db))->registrar('clientes.modificar', 'clientes', $id, 'Exitoso', null, $cambios);
+            (new AuditoriaService($this->db))->registrarCambios('clientes.modificar', 'clientes', $id, $cambios, null, $afectadas > 0 ? ['solicitudes_afectadas' => $afectadas] : []);
 
             return ['comunicacion' => $comunicacionId, 'solicitudes_afectadas' => $afectadas];
         });
@@ -355,7 +358,7 @@ class ClienteService extends BaseService
             $this->db->query('UPDATE dbo.cuentas_acceso SET correo = ?, correo_verificado = 1, actualizado_en = ?, version_fila = version_fila + 1 WHERE id = ?', [$correo, $this->ahoraUtc(), $cuentaId]);
             $this->db->query('UPDATE dbo.clientes SET correo = ?, actualizado_en = ?, version_fila = version_fila + 1 WHERE id = ?', [$correo, $this->ahoraUtc(), $cliente['id']]);
             $autorizaciones->marcarUtilizada((int) $a['id']);
-            (new AuditoriaService($this->db))->registrar('clientes.verificar_correo', 'clientes', (int) $cliente['id'], 'Exitoso', null, ['correo' => ['anterior' => $cliente['correo'], 'nuevo' => $correo]], null, $cuentaId, $correo);
+            (new AuditoriaService($this->db))->registrar('clientes.verificar_correo', 'clientes', (int) $cliente['id'], 'Exitoso', null, ['cambios' => Cambios::campo('correo', $cliente['correo'], $correo), 'correo_verificado' => true], null, $cuentaId, $correo);
 
             return $cuentaId;
         });
@@ -378,12 +381,13 @@ class ClienteService extends BaseService
             )->getRowArray();
             ReglasPortal::validarCambioConsentimiento($vigente === null ? null : (int) $vigente['otorgado'] === 1, $otorgar);
             $this->registrarConsentimiento($clienteId, 'ComunicacionesComerciales', $otorgar, 'Portal');
+            $anterior = $vigente === null ? null : (int) $vigente['otorgado'] === 1;
             $ofertas = 0;
             if (!$otorgar) {
                 $this->cancelarComunicacionesComerciales($clienteId);
                 $ofertas = $this->db->table('ofertas')->where('cliente_id', $clienteId)->where('estado', 'Vigente')->where('vence >', $this->ahoraUtc())->countAllResults();
             }
-            (new AuditoriaService($this->db))->registrar('clientes.consentimiento', 'clientes', $clienteId, 'Exitoso', null, ['comunicaciones_comerciales' => $otorgar, 'medio' => 'Portal']);
+            (new AuditoriaService($this->db))->registrarCambios('clientes.consentimiento', 'clientes', $clienteId, Cambios::campo('comunicaciones_comerciales', $anterior, $otorgar), null, ['medio' => 'Portal']);
 
             return ['otorgado' => $otorgar, 'ofertas_vigentes' => $ofertas];
         });
@@ -476,7 +480,7 @@ class ClienteService extends BaseService
                 $this->db->query("UPDATE dbo.cuentas_acceso SET estado = 'Desactivada', version_seguridad = version_seguridad + 1, version_fila = version_fila + 1 WHERE id = ?", [$c['cuenta_cliente_id']]);
                 (new AutorizacionService($this->db))->sustituirVigentes((int) $c['cuenta_cliente_id']);
             }
-            (new AuditoriaService($this->db))->registrar('clientes.desactivar', 'clientes', $id, 'Exitoso', $motivo);
+            (new AuditoriaService($this->db))->registrarCambios('clientes.desactivar', 'clientes', $id, Cambios::campo('estado', $c['estado'], 'Desactivado'), $motivo);
         });
     }
 
@@ -495,7 +499,7 @@ class ClienteService extends BaseService
                 throw new ReglaNegocioException('El cliente no está desactivado.');
             }
             $this->actualizarConVersion('clientes', $id, $versionLeida, ['estado' => 'Activo', 'actualizado_en' => $this->ahoraUtc()]);
-            (new AuditoriaService($this->db))->registrar('clientes.reactivar', 'clientes', $id, 'Exitoso', $motivo);
+            (new AuditoriaService($this->db))->registrarCambios('clientes.reactivar', 'clientes', $id, Cambios::campo('estado', 'Desactivado', 'Activo'), $motivo);
             $verificado = $c['cuenta_cliente_id'] === null ? null : $this->db->table('cuentas_acceso')->select('correo_verificado')->where('id', $c['cuenta_cliente_id'])->get()->getRowArray();
 
             return (int) ($verificado['correo_verificado'] ?? 0) === 1;

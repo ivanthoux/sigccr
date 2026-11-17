@@ -6,6 +6,7 @@ namespace App\Services\Usuarios;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorUsuarioInterno;
 use App\Libraries\Seguridad\ReglasUsuarios;
@@ -162,12 +163,7 @@ class UsuarioService extends BaseService
             $correoNuevo = $d['correo'] !== $u['correo'] ? $d['correo'] : null;
             $this->verificarUnicidad($correoNuevo, $d['tipo_documento'], $d['nro_documento'], $id);
 
-            $cambios = [];
-            foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento'] as $c) {
-                if ($d[$c] !== $u[$c]) {
-                    $cambios[$c] = ['anterior' => $u[$c], 'nuevo' => $d[$c]];
-                }
-            }
+            $cambios = Cambios::entre($u, $d, ['nombre', 'apellido', 'tipo_documento', 'nro_documento']);
             if ($cambios === [] && $correoNuevo === null) {
                 throw new ReglaNegocioException('No hay cambios para guardar.');
             }
@@ -180,7 +176,7 @@ class UsuarioService extends BaseService
                 $cambios['correo'] = ['anterior' => $u['correo'], 'nuevo' => "{$correoNuevo} (pendiente de verificación)"];
                 $comunicacionId = (new AutorizacionService($this->db))->emitir($id, 'VerificacionCorreo', $correoNuevo, $d['nombre'], self::RUTA_VERIFICACION);
             }
-            (new AuditoriaService($this->db))->registrar('usuarios.modificar', 'usuarios_internos', $id, 'Exitoso', null, $cambios);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.modificar', 'usuarios_internos', $id, $cambios);
 
             return $comunicacionId;
         });
@@ -209,7 +205,7 @@ class UsuarioService extends BaseService
                 [$correo, $this->ahoraUtc(), $id],
             );
             $autorizaciones->marcarUtilizada((int) $a['id']);
-            (new AuditoriaService($this->db))->registrar('usuarios.verificar_correo', 'usuarios_internos', $id, 'Exitoso', null, ['correo' => ['anterior' => $u['correo'], 'nuevo' => $correo]], null, $id, $correo);
+            (new AuditoriaService($this->db))->registrar('usuarios.verificar_correo', 'usuarios_internos', $id, 'Exitoso', null, ['cambios' => Cambios::campo('correo', $u['correo'], $correo), 'correo_verificado' => true], null, $id, $correo);
         });
     }
 
@@ -262,7 +258,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, ['estado' => 'Desactivada', 'actualizado_en' => $this->ahoraUtc()]);
             $this->db->query('UPDATE dbo.cuentas_acceso SET version_seguridad = version_seguridad + 1 WHERE id = ?', [$id]);
             (new AutorizacionService($this->db))->sustituirVigentes($id);
-            (new AuditoriaService($this->db))->registrar('usuarios.desactivar', 'usuarios_internos', $id, 'Exitoso', $motivo, ['estado_anterior' => $u['estado']]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.desactivar', 'usuarios_internos', $id, Cambios::campo('estado', $u['estado'], 'Desactivada'), $motivo);
         });
     }
 
@@ -283,7 +279,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, [
                 'estado' => $estado, 'intentos_fallidos' => 0, 'inicio_ventana_intentos' => null, 'bloqueada_hasta' => null, 'actualizado_en' => $this->ahoraUtc(),
             ]);
-            (new AuditoriaService($this->db))->registrar('usuarios.reactivar', 'usuarios_internos', $id, 'Exitoso', $motivo, ['estado_nuevo' => $estado]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.reactivar', 'usuarios_internos', $id, Cambios::campo('estado', $u['estado'], $estado), $motivo);
 
             return $estado;
         });
@@ -318,7 +314,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, ['actualizado_en' => $this->ahoraUtc()]);
             $this->db->query('UPDATE dbo.cuentas_acceso SET version_seguridad = version_seguridad + 1 WHERE id = ?', [$id]);
             $this->db->table('usuarios_internos')->where('id', $id)->update(['rol_id' => $this->rolId($rolNuevo)]);
-            (new AuditoriaService($this->db))->registrar('usuarios.asignar_rol', 'usuarios_internos', $id, 'Exitoso', $motivo, ['rol' => ['anterior' => $u['rol'], 'nuevo' => $rolNuevo]]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.asignar_rol', 'usuarios_internos', $id, Cambios::campo('rol', $u['rol'], $rolNuevo), $motivo);
 
             return true;
         });

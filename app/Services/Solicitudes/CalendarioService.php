@@ -6,6 +6,7 @@ namespace App\Services\Solicitudes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Solicitudes\CalendarioOperativo;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -51,12 +52,12 @@ class CalendarioService extends BaseService
             throw new ReglaNegocioException('Solo se pueden dar de baja días de hoy en adelante: modificar fechas pasadas alteraría cómputos ya realizados.');
         }
         $this->transaccion(function () use ($fecha): void {
-            $f = $this->db->query('SELECT fecha, descripcion FROM dbo.dias_no_habiles WITH (UPDLOCK) WHERE fecha = ?', [$fecha])->getRowArray();
+            $f = $this->db->query('SELECT fecha, descripcion, tipo FROM dbo.dias_no_habiles WITH (UPDLOCK) WHERE fecha = ?', [$fecha])->getRowArray();
             if ($f === null) {
                 throw new ReglaNegocioException('La fecha no está registrada como día no hábil.');
             }
             $this->db->table('dias_no_habiles')->where('fecha', $fecha)->delete();
-            (new AuditoriaService($this->db))->registrar('calendario.baja', 'dias_no_habiles', $fecha, 'Exitoso', null, ['descripcion' => $f['descripcion']]);
+            (new AuditoriaService($this->db))->registrarCambios('calendario.baja', 'dias_no_habiles', $fecha, Cambios::entre(['descripcion' => $f['descripcion'], 'tipo' => $f['tipo']], []), null, ['eliminado' => true]);
         });
     }
 }

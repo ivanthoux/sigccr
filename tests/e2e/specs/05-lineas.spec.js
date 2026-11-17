@@ -75,6 +75,10 @@ test('R-034 Modificar la TNA con una versión nueva', async ({ comoUsuario }) =>
   await modificar(fecha());
   await expect(exito(page)).toBeVisible();
   expect(await valor('SELECT COUNT(*) FROM dbo.versiones_condiciones WHERE linea_credito_id = @id', { id })).toBe(2);
+  // D-48: la auditoría guarda el valor anterior y el nuevo de cada condición modificada, y solo de esas
+  const detalle = JSON.parse(await valor("SELECT TOP 1 detalle FROM dbo.registros_auditoria WHERE accion = 'lineas.modificar' AND objeto_id = @id ORDER BY id DESC", { id: String(id) }));
+  expect(detalle.cambios).toEqual({ tna: { anterior: '70,00 %', nuevo: '72,00 %' } });
+  expect(detalle).toMatchObject({ version_anterior: 1, version: 2 });
 });
 
 test('R-035 Suspender, consultar y reactivar; el Analista solo consulta', async ({ comoUsuario }) => {
