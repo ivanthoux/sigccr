@@ -15,6 +15,8 @@ RES="$DIR/resultados"
 JMETER="${JMETER:-jmeter}"
 DURACION="${RENDIMIENTO_DURACION:-600}"
 export COMPOSE_PROJECT_NAME=sigccr_e2e
+# Puertos estándar: las redirecciones de la aplicación usan app.baseURL (https://localhost/), sin puerto
+export E2E_HTTP_PORT="${E2E_HTTP_PORT:-80}" E2E_HTTPS_PORT="${E2E_HTTPS_PORT:-443}"
 dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml "$@"; }
 sql() { dc exec -T app sh -c 'sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -d sigccr -b -h -1 -W -s "," -Q "SET NOCOUNT ON; $1"' sh "$1"; }
 
@@ -32,6 +34,10 @@ docker update --cpus 1.5 --memory 3g --memory-swap 3g "$(dc ps -q app)" >/dev/nu
 docker update --cpus 0.5 --memory 1g --memory-swap 1g "$(dc ps -q web)" >/dev/null
 docker inspect --format '{{.Name}}: {{.HostConfig.NanoCpus}} nanoCPU, {{.HostConfig.Memory}} bytes' $(dc ps -q db app web) | tee "$RES/recursos.txt"
 nproc | sed 's/^/CPU del equipo de prueba: /' | tee -a "$RES/recursos.txt"
+
+# Se mide como en producción: sin la barra de depuración ni el registro detallado del entorno de desarrollo
+sed -i 's/^CI_ENVIRONMENT = .*/CI_ENVIRONMENT = production/' .env
+grep '^CI_ENVIRONMENT' .env | tee -a "$RES/recursos.txt"
 
 echo "== 3. Volumen de referencia"
 SECONDS=0
@@ -53,13 +59,13 @@ echo "== 4. Carga mixta: 10 usuarios durante ${DURACION} s (RP-01 a RP-05)"
 ( while true; do docker stats --no-stream --format '{{.Name}},{{.CPUPerc}},{{.MemUsage}}' $(dc ps -q db app web) | sed "s/^/$(date +%T),/"; sleep 15; done ) > "$RES/recursos_durante_la_carga.csv" &
 MONITOR=$!
 "$JMETER" -n -t "$DIR/carga.jmx" -l "$RES/carga.jtl" -j "$RES/jmeter_carga.log" -e -o "$RES/informe-carga" \
-  -Jclave="$CLAVE" -Jdatos="$RES" -Jduracion="$DURACION" -Jhost=localhost -Jpuerto="${E2E_HTTPS_PORT:-18443}" | tail -15
+  -Jclave="$CLAVE" -Jdatos="$RES" -Jduracion="$DURACION" -Jhost=localhost -Jpuerto="$E2E_HTTPS_PORT" | tail -15
 kill "$MONITOR" 2>/dev/null
 
 echo "== 5. Decisiones simultáneas (RP-06)"
 CONC_COBRO=$(sql "SELECT TOP 1 id FROM dbo.cobros WHERE estado = 'Confirmado' AND canal = 'Ventanilla' ORDER BY id DESC" | tr -d '\r ')
 "$JMETER" -n -t "$DIR/concurrencia.jmx" -l "$RES/concurrencia.jtl" -j "$RES/jmeter_concurrencia.log" \
-  -Jclave="$CLAVE" -Jhost=localhost -Jpuerto="${E2E_HTTPS_PORT:-18443}" -Jcliente_concurrencia="$CONC_CLIENTE" -Jcobro_concurrencia="$CONC_COBRO" | tail -5
+  -Jclave="$CLAVE" -Jhost=localhost -Jpuerto="$E2E_HTTPS_PORT" -Jcliente_concurrencia="$CONC_CLIENTE" -Jcobro_concurrencia="$CONC_COBRO" | tail -5
 {
   echo "cliente=$CONC_CLIENTE"
   echo "cobros_confirmados_del_cliente=$(sql "SELECT COUNT(*) FROM dbo.cobros WHERE cliente_id = $CONC_CLIENTE AND estado = 'Confirmado'" | tr -d '\r ')"
@@ -71,7 +77,8 @@ CONC_COBRO=$(sql "SELECT TOP 1 id FROM dbo.cobros WHERE estado = 'Confirmado' AN
 
 echo "== 6. Procesos automáticos con el volumen completo (RP-07)"
 # El cálculo de punitorios procesa cada día una sola vez (RN-53): se olvida la ejecución de hoy para medirlo
-sql "DELETE FROM dbo.ejecuciones_proceso WHERE proceso = 'cartera:punitorios' AND fecha_referencia >= CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time' AS date)" >/dev/null
+# (procesa el día anterior, D-33): se olvida la de ayer para que recorra todas las cuotas vencidas del volumen
+sql "DELETE FROM dbo.ejecuciones_proceso WHERE proceso = 'cartera:punitorios' AND fecha_referencia >= DATEADD(day, -1, CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time' AS date))" >/dev/null
 : > "$RES/procesos.txt"
 for p in cartera:punitorios fondos:proyectar vencimientos:controlar evaluacion:ejecutar; do
   inicio=$(date +%s.%N)
@@ -80,6 +87,10 @@ for p in cartera:punitorios fondos:proyectar vencimientos:controlar evaluacion:e
   echo "$p,$(awk -v i="$inicio" -v f="$(date +%s.%N)" 'BEGIN { printf "%.1f", f - i }'),$rc" | tee -a "$RES/procesos.txt"
 done
 sql "SELECT COUNT(*) FROM dbo.cuotas WHERE punitorio_pendiente > 0" | sed 's/^/Cuotas con punitorios después del cálculo: /' | tee -a "$RES/procesos.txt"
+
+dc exec -T app sh -c 'cat writable/logs/log-*.log 2>/dev/null' > "$RES/aplicacion.log"
+grep -c "^CRITICAL\|^ERROR" "$RES/aplicacion.log" | sed 's/^/Errores en el registro de la aplicación: /'
+sed -i 's/^CI_ENVIRONMENT = .*/CI_ENVIRONMENT = development/' .env
 
 echo "== 7. Evaluación"
 python3 "$DIR/evaluar.py" "$RES"

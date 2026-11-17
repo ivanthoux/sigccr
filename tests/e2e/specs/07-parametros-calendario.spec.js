@@ -69,11 +69,20 @@ test('R-043 Parámetros de morosidad', async ({ comoUsuario }) => {
   await expect(exito(page)).toContainText('de los parámetros de morosidad');
 });
 
-// Fechas relativas a hoy, para que la prueba no dependa del día en que se ejecuta
-const feriado1 = fecha(28);
-const feriado2 = fecha(45);
-const cierre = fecha(44);
+// Fechas relativas a hoy, para que la prueba no dependa del día en que se ejecuta. No pueden coincidir con las fechas
+// de la carga anual del año próximo: desde mediados de noviembre, hoy + 45 días puede caer el 01/01
 const anioProximo = Number(fecha().slice(0, 4)) + 1;
+const DE_LA_CARGA = ['01-01', '02-15', '02-16', '03-24', '04-02', '05-01', '05-25', '06-10'];
+const usadas = new Set();
+const libre = (dias) => {
+  let d = dias;
+  while (DE_LA_CARGA.includes(fecha(d).slice(5)) || usadas.has(d)) d++;
+  usadas.add(d);
+  return fecha(d);
+};
+const feriado1 = libre(28);
+const cierre = libre(44);
+const feriado2 = libre(45);
 
 test('R-044 Calendario operativo', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
