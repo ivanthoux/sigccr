@@ -4,6 +4,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+Auditoría de diseño y accesibilidad de la interfaz (D-47).
+
+### Cambiado
+- Mi caja: «Registrar cobro» es la acción principal y «Cerrar caja», la secundaria.
+- Inicio del portal: resumen «Su cuenta hoy», con el próximo vencimiento, el saldo deudor, las cuotas vencidas y «Pagar cuotas».
+- Tablero gerencial: cuatro indicadores clave destacados. La efectividad de cobranza indica su base de cálculo.
+- Alternativas de financiación: la TNA, la TEA y la vigencia se informan una vez y solo la alternativa pedida tiene botón principal.
+- Listados de clientes, usuarios, solicitudes y líneas: un solo buscador, el orden del servidor y filtros plegables en el celular.
+- Menú del panel: un ícono por opción.
+- El portal ya no muestra códigos internos (CU, RN, flujos alternativos). Los procesos automáticos se muestran con un nombre legible.
+
+### Corregido
+- Accesibilidad (WCAG 2.2 AA):
+  - foco visible sobre la barra lateral;
+  - tablas sin desborde a 375 px;
+  - etiquetas en los parámetros de evaluación;
+  - contraste de los botones contorneados y de los códigos;
+  - errores de formulario asociados a cada campo y foco en el primero.
+- Textos y formatos:
+  - el importe de la cancelación anticipada usa el formato del sistema;
+  - los medios de cobro sin usar dicen «Sin usar»;
+  - «Cuotas pendientes» en el estado de cuenta;
+  - el título de la página de acceso no autorizado.
+- Los CSS y JS del sistema se sirven versionados, para que el navegador no use copias viejas.
+
 ## [0.5.0] - 2026-11-16
 
 Fin de Construcción (previsto para el 30/11/2026): iteración 4 completa (SS-07, SS-08, SS-09, SS-11 y el régimen informativo de SS-06). Prueba funcional de la iteración 4 aprobada y batería de punta a punta completa (208 casos) aprobada sobre SQL Server.
