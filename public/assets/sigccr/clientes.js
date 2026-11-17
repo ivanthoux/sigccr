@@ -72,7 +72,8 @@
             const lista = await r.json();
             localidad.replaceChildren(opcion('', lista.length ? 'Seleccione…' : 'No hay localidades cargadas para la provincia'), ...lista.map((l) => opcion(l.id, l.nombre)));
             localidad.disabled = lista.length === 0;
-            anuncio.textContent = lista.length ? `${lista.length} localidades disponibles.` : 'No hay localidades cargadas para la provincia.';
+            anuncio.textContent = lista.length === 0 ? 'No hay localidades cargadas para la provincia.'
+                : `${lista.length} ${lista.length === 1 ? 'localidad disponible' : 'localidades disponibles'}.`;
         } catch (e) {
             localidad.replaceChildren(opcion('', 'No se pudieron cargar las localidades; intente de nuevo'));
             anuncio.textContent = 'No se pudieron cargar las localidades; elija la provincia de nuevo.';
