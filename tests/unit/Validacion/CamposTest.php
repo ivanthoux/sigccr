@@ -169,4 +169,12 @@ final class CamposTest extends TestCase
             $this->assertSame(is_int($valor) ? 7 : 0, Campos::identificador($valor), json_encode($valor));
         }
     }
+
+    public function testRecortarEnUnidadesDeNvarchar(): void
+    {
+        $this->assertSame('abc', Campos::recortar('abc', 3));
+        $this->assertSame(str_repeat('a', 499), Campos::recortar(str_repeat('a', 499) . '😀', 500), 'no parte el emoji');
+        $this->assertSame(str_repeat('a', 498) . '😀', Campos::recortar(str_repeat('a', 498) . '😀b', 500));
+        $this->assertSame('ñá', Campos::recortar('ñáé', 2));
+    }
 }

@@ -71,6 +71,26 @@ final class Campos
         return preg_match('/^\d{1,9}$/', $t) === 1 ? (int) $t : 0;
     }
 
+    /**
+     * Texto recortado a $maximo unidades de NVARCHAR (un emoji ocupa dos), sin partir un carácter. Para los resúmenes
+     * que se guardan en una columna más corta que el texto completo (por ejemplo, el motivo de una transición).
+     */
+    public static function recortar(string $valor, int $maximo): string
+    {
+        if (self::largo($valor) <= $maximo) {
+            return $valor;
+        }
+        $r = '';
+        foreach (mb_str_split($valor) as $c) {
+            if (self::largo($r . $c) > $maximo) {
+                break;
+            }
+            $r .= $c;
+        }
+
+        return $r;
+    }
+
     /** Correo en minúsculas y sin espacios. */
     public static function correo(mixed $valor): string
     {

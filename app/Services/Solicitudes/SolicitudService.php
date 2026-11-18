@@ -333,6 +333,8 @@ class SolicitudService extends BaseService
      */
     public function verificar(int $id, int $versionLeida, string $resultado, array $verificaciones, string $observaciones, string $motivoRechazo, int $usuarioId): string
     {
+        $resultado = Campos::texto($resultado);
+
         return $this->transaccion(function () use ($id, $versionLeida, $resultado, $verificaciones, $observaciones, $motivoRechazo, $usuarioId): string {
             $s = $this->bloquear('solicitudes_credito', [$id])[0] ?? null;
             if ($s === null) {
@@ -393,9 +395,10 @@ class SolicitudService extends BaseService
         $errores = [];
         $documentos = $legajo->validarArchivos($archivos, $errores);
         $texto = Campos::texto($aclaracion);
-        if ($documentos === [] && $errores === [] && mb_strlen($texto) < 10) {
+        // H-16: largo en unidades de NVARCHAR
+        if ($documentos === [] && $errores === [] && Campos::largo($texto) < 10) {
             $errores['aclaracion'] = 'Adjunte la documentación pedida o registre la aclaración que corresponde (al menos 10 caracteres).';
-        } elseif (mb_strlen($texto) > 500) {
+        } elseif (Campos::largo($texto) > 500) {
             $errores['aclaracion'] = 'La aclaración admite hasta 500 caracteres.';
         }
         if ($errores !== []) {
@@ -512,7 +515,7 @@ class SolicitudService extends BaseService
     {
         $this->db->table('transiciones_solicitud')->insert([
             'solicitud_id' => $solicitudId, 'estado_origen' => $origen, 'estado_destino' => $destino, 'fecha_hora' => $this->ahoraUtc(),
-            'usuario_id' => $usuarioId, 'proceso' => $proceso, 'motivo' => $motivo === null ? null : mb_substr($motivo, 0, 500),
+            'usuario_id' => $usuarioId, 'proceso' => $proceso, 'motivo' => $motivo === null ? null : Campos::recortar($motivo, 500),
         ]);
     }
 
