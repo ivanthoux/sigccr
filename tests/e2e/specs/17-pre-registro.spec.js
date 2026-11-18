@@ -123,9 +123,10 @@ test('I-09 Completar el alta desde el pre-registro', async ({ comoUsuario }) => 
   await expect(page).toHaveURL(new RegExp(`/admin/clientes/nuevo\\?pre=${pre.id}`));
   await expect(page.locator('#nombre')).toHaveValue(sofia.nombre);
   await expect(page.locator('#cuit_cuil')).toHaveValue(/27-?41555104-?0/);
-  // A9: el padrón propone los datos del CUIL
+  // A9: el botón vuelve a consultar el padrón y reemplaza los datos (D-58)
   await page.getByRole('button', { name: 'Consultar el padrón de ARCA' }).click();
-  await expect(page.locator('[data-padron-resultado]')).toContainText('Datos propuestos por el padrón');
+  await expect(page.locator('[data-padron-resultado]')).toContainText('Se completaron el DNI, el nombre y el apellido con el padrón de ARCA');
+  await expect(page.locator('#nro_documento')).toHaveValue('41555104');
   await page.locator('#fecha_nacimiento').fill('1999-04-12');
   await page.locator('#estado_civil').selectOption('Soltero');
   await page.locator('#nacionalidad').fill('Argentina');
