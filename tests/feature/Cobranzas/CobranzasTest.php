@@ -334,7 +334,7 @@ final class CobranzasTest extends IntegracionTestCase
 
         $this->rechazos('admin/refinanciaciones/simular', $base, [
             'sin créditos' => [['creditos' => []], 'creditos', $creditos],
-            'créditos como texto' => [['creditos' => (string) $credito['id']], 'creditos', null],
+            // Un único crédito enviado como texto equivale a una casilla marcada (como las categorías de una línea)
             'crédito como lista anidada' => [['creditos' => [[(string) $credito['id']]]], 'creditos', $creditos],
             'crédito al día' => [['creditos' => [(string) $this->fabrica->credito()['id']]], 'creditos', $creditos],
             'cliente como lista (H-21)' => [['cliente_id' => [$base['cliente_id']]], 'creditos', $creditos],
