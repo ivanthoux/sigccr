@@ -75,8 +75,27 @@ jobs:
           s = s.replace('<directory suffix=".php">./app/Libraries/Finanzas</directory>', inc)
           open('phpunit.cobertura.xml', 'w').write(s)
           P
-          php -d memory_limit=2G vendor/bin/phpunit -c phpunit.cobertura.xml --testsuite Unitarias,Rutas,Integracion --coverage-clover build/clover.xml --coverage-text=build/cobertura.txt --only-summary-for-coverage-text || true
-          head -12 build/cobertura.txt
+          mkdir -p build
+      - name: Unitarias y rutas con cobertura
+        timeout-minutes: 15
+        run: php -d memory_limit=2G vendor/bin/phpunit -c phpunit.cobertura.xml --testsuite Unitarias,Rutas --coverage-php build/a.cov --no-progress || true
+      - name: Integración con cobertura
+        timeout-minutes: 40
+        run: php -d memory_limit=3G vendor/bin/phpunit -c phpunit.cobertura.xml --testsuite Integracion --coverage-php build/b.cov --no-progress || true
+      - name: Resumen
+        if: always()
+        run: |
+          ls -la build
+          cat > /tmp/unir.php <<'P'
+          <?php
+          require 'vendor/autoload.php';
+          use SebastianBergmann\CodeCoverage\CodeCoverage;
+          $base = null;
+          foreach (glob('build/*.cov') as $f) { $c = include $f; if ($base === null) { $base = $c; } else { $base->merge($c); } }
+          (new SebastianBergmann\CodeCoverage\Report\Clover())->process($base, 'build/clover.xml');
+          echo (new SebastianBergmann\CodeCoverage\Report\Text(SebastianBergmann\CodeCoverage\Report\Thresholds::default(), false, true))->process($base, false);
+          P
+          php -d memory_limit=3G /tmp/unir.php | head -12
           python3 - <<'P'
           import xml.etree.ElementTree as ET, collections, os
           r = ET.parse('build/clover.xml').getroot()
