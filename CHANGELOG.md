@@ -6,6 +6,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (pruebas de integración, iteración 2, bloque A)
+- IN-23 a IN-33: fondos, cajas, apertura y cierre de la jornada, calendario operativo y los cuatro grupos de
+  parámetros, con cada campo y cada clase de dato (2195 pruebas en total).
+
+### Corregido (defectos H-14 a H-20)
+- H-14: el motivo de fondos se recortaba en silencio a 300 caracteres; ahora se rechaza con el máximo de la columna.
+- H-15: un campo enviado como lista o un grupo de parámetros enviado como texto respondía error 500.
+- H-16: los largos de cajas, fondos, cierre y calendario se contaban en caracteres: un emoji en el límite respondía error 500.
+- H-17: la referencia de un movimiento de fondos pasa a NVARCHAR(100) (migración 31).
+- H-18: una acción de cambio de estado de caja fuera de la lista se rechaza («Seleccione la acción.»).
+- H-19: el motivo de los parámetros admite hasta 500 caracteres, el largo de su columna.
+- H-20: los porcentajes de los parámetros ya no se redondean en silencio: admiten los decimales que se guardan.
+
 ### Cambiado (documento, D-53)
 - El DNI, la LC y la LE admiten de 6 a 8 dígitos, el largo que admite el CUIL.
 
