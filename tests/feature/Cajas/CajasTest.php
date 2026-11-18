@@ -231,7 +231,8 @@ final class CajasTest extends IntegracionTestCase
             'IMP-09 letras' => ['abc', '', 'acreditado_Transferencia', $acreditado],
             'IMP-07 tres decimales' => ['1,234', '', 'acreditado_Transferencia', $acreditado],
             'IMP-08 18 dígitos' => ['999999999999999999', '', 'acreditado_Transferencia', $acreditado],
-            'COM-02 importe como lista' => [['100'], '', 'acreditado_Transferencia', $acreditado],
+            // COM-02: una lista se toma como vacío y, sin cobros, vacío es cero acreditado
+            'COM-02 importe como lista' => [['100'], '', null, null],
             'TXT-01 diferencia sin explicación' => ['100', '', 'explicacion_Transferencia', $explicar],
             'TXT-02 explicación de 9 caracteres' => ['100', str_repeat('e', 9), 'explicacion_Transferencia', $explicar],
             'TXT-02 explicación de 10 caracteres' => ['100', str_repeat('e', 10), null, null],
