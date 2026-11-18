@@ -21,7 +21,11 @@ use Tests\Support\Feature\IntegracionTestCase;
 final class ControlesComunesTest extends IntegracionTestCase
 {
     /** Prefijos de las rutas de la iteración 1 en el panel. */
-    private const MODULOS = ['admin/usuarios', 'admin/clientes', 'admin/pre-registros', 'admin/lineas', 'admin/alertas'];
+    private const MODULOS = [
+        'admin/usuarios', 'admin/clientes', 'admin/pre-registros', 'admin/lineas', 'admin/alertas',
+        // Iteración 2, bloque A: fondos, cajas, jornada de caja y calendario
+        'admin/fondos', 'admin/cajas', 'admin/caja', 'admin/calendario',
+    ];
 
     /** @return array<string, array{0: string, 1: string, 2: string}> «VERBO ruta» => [verbo, ruta con ids, permiso] */
     public static function rutas(): array
