@@ -598,4 +598,55 @@ final class SolicitudesTest extends IntegracionTestCase
         $this->enviar("admin/liquidaciones/{$l['id']}", ['version_fila' => $this->version($l['id'])] + $datos);
         $this->assertStringStartsWith('La solicitud ya fue liquidada', (string) ($_SESSION['error'] ?? ''), 'RN-26: sin desembolso repetido');
     }
+
+    // ── IN-44 Registrar contrato firmado (CU-27 paso previo, RN-25, RN-78) ─────────────────────────────────────────
+
+    /**
+     * Como en el registro de clientes, PHPUnit no simula la subida de un archivo por HTTP: las clases se ejecutan
+     * contra ContratoService::registrarConstancia(), la operación que llama el controlador.
+     */
+    public function testConstanciaFirmada(): void
+    {
+        $s = $this->fabrica->solicitud('AprobadaPendienteLiquidacion');
+        $servicio = new \App\Services\Solicitudes\ContratoService($this->db);
+        $usuario = $this->fabrica->responsable();
+        $pdf = static fn (): array => Fabrica::archivo('CONTRATO', 'pdf');
+        $casos = [
+            'sin archivo' => [null, self::hoy(), 'constancia', 'Adjunte la copia escaneada de la constancia firmada (PDF, JPG o PNG).'],
+            'archivo vacío' => [Fabrica::archivo('CONTRATO', 'vacio', null, 'contrato.pdf'), self::hoy(), 'constancia', 'El archivo contrato.pdf está vacío.'],
+            'ejecutable con extensión pdf' => [Fabrica::archivo('CONTRATO', 'exe', null, 'contrato.pdf'), self::hoy(), 'constancia', 'El archivo contrato.pdf no es PDF, JPG ni PNG.'],
+            'más de 5 MB' => [Fabrica::archivo('CONTRATO', 'pdf', 5 * 1024 * 1024 + 1, 'contrato.pdf'), self::hoy(), 'constancia', 'El archivo contrato.pdf supera los 5 MB.'],
+            'fecha vacía' => [$pdf(), '', 'fecha_recepcion', 'Indique la fecha en que el cliente recibió su ejemplar firmado.'],
+            'fecha inválida' => [$pdf(), '31/02/2026', 'fecha_recepcion', 'Ingrese una fecha válida (dd/mm/aaaa).'],
+            'fecha futura' => [$pdf(), self::hoy(1), 'fecha_recepcion', 'La fecha de recepción no puede ser futura.'],
+            'fecha anterior a la aprobación' => [$pdf(), self::hoy(-1), 'fecha_recepcion', null],
+        ];
+        foreach ($casos as $caso => [$archivo, $fecha, $campo, $mensaje]) {
+            try {
+                $servicio->registrarConstancia($s['id'], $archivo, $fecha, $usuario);
+                $this->fail("{$caso}: se esperaba el rechazo");
+            } catch (\App\Exceptions\ValidacionException $e) {
+                $this->assertArrayHasKey($campo, $e->errores, $caso);
+                if ($mensaje !== null) {
+                    $this->assertSame($mensaje, $e->errores[$campo], $caso);
+                } else {
+                    $this->assertStringStartsWith('La fecha de recepción no puede ser anterior a la aprobación (', $e->errores[$campo], $caso);
+                }
+            }
+            $this->assertFalse($servicio->constanciaRegistrada($s['id']), "{$caso}: no debe registrarse");
+        }
+
+        foreach (['pdf', 'png', 'jpg'] as $tipo) {
+            $servicio->registrarConstancia($s['id'], Fabrica::archivo('CONTRATO', $tipo, null, "contrato.{$tipo}"), self::hoy(), $usuario);
+            $this->assertTrue($servicio->constanciaRegistrada($s['id']), $tipo);
+        }
+
+        $otra = $this->fabrica->solicitud('PendienteVerificacion');
+        try {
+            $servicio->registrarConstancia($otra['id'], $pdf(), self::hoy(), $usuario);
+            $this->fail('una solicitud no aprobada no admite la constancia');
+        } catch (\App\Exceptions\ReglaNegocioException $e) {
+            $this->assertSame('La solicitud no está aprobada pendiente de liquidación: no se puede registrar la constancia (A2).', $e->getMessage());
+        }
+    }
 }
