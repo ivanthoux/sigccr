@@ -135,7 +135,9 @@ class Database extends Config
         // Durante las pruebas se usa el grupo "tests" para no tocar la base de desarrollo (D-49): todos los grupos
         // apuntan a la base de pruebas, de modo que ni SIGCCR_DB_GRUPO ni un componente que pida otro grupo
         // (por ejemplo, las copias de seguridad) llegan a la base de desarrollo.
-        if (ENVIRONMENT === 'testing') {
+        // SIGCCR_BASE_PRUEBAS=1 aplica el mismo aislamiento fuera de PHPUnit: spark no arranca en el entorno testing, y
+        // tests/feature/preparar_base.sh lo usa para migrar y sembrar la base de pruebas.
+        if (ENVIRONMENT === 'testing' || getenv('SIGCCR_BASE_PRUEBAS') === '1') {
             $this->defaultGroup = 'tests';
             $this->aislarPruebas();
         }

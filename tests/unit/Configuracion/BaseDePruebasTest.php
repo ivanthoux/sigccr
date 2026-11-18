@@ -18,6 +18,7 @@ final class BaseDePruebasTest extends CIUnitTestCase
     protected function tearDown(): void
     {
         putenv('SIGCCR_DB_GRUPO');
+        putenv('SIGCCR_BASE_PRUEBAS');
         parent::tearDown();
     }
 

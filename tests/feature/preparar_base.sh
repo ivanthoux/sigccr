@@ -4,8 +4,9 @@
 #     docker compose exec app bash tests/feature/preparar_base.sh
 #
 # 1. Borra y crea sigccr_pruebas (docker/db/crear_base_pruebas.sql), con el usuario sa.
-# 2. Aplica todas las migraciones y carga los datos semilla con el propietario del esquema, en el entorno de pruebas:
-#    Config\Database dirige todos los grupos a sigccr_pruebas, así que la base de desarrollo no se toca.
+# 2. Aplica todas las migraciones y carga los datos semilla con el propietario del esquema. spark no arranca en el
+#    entorno testing; con SIGCCR_BASE_PRUEBAS=1, Config\Database dirige todos los grupos a sigccr_pruebas, así que la
+#    base de desarrollo no se toca.
 #
 # Variables: MSSQL_SA_PASSWORD (obligatoria; en Docker la define .env.docker), SIGCCR_DB_HOST (por defecto db) y
 # SQLCMD (por defecto sqlcmd). En la integración continua, SIGCCR_CREAR_INICIOS=1 crea antes los inicios de sesión con
@@ -27,7 +28,7 @@ fi
 # spark puede terminar con código 0 aunque haya lanzado una excepción: también se revisa la salida
 ejecutar() {
     local salida
-    salida="$(env CI_ENVIRONMENT=testing SIGCCR_DB_GRUPO=migraciones "$@" 2>&1)" || { echo "$salida"; exit 1; }
+    salida="$(env SIGCCR_BASE_PRUEBAS=1 SIGCCR_DB_GRUPO=migraciones "$@" 2>&1)" || { echo "$salida"; exit 1; }
     echo "$salida"
     if grep -qE '^\[[A-Za-z\\]*Exception\]' <<<"$salida"; then
         echo "Falló: $*" >&2
