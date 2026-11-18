@@ -6,6 +6,12 @@ namespace Tests\Support\Feature;
 
 use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
+use App\Services\Fondos\FondosService;
+use App\Services\Solicitudes\ContratoService;
+use App\Services\Solicitudes\EstructuracionService;
+use App\Services\Solicitudes\EvaluacionService;
+use App\Services\Solicitudes\SimulacionService;
+use App\Services\Solicitudes\SolicitudService;
 use App\Services\Lineas\LineaService;
 use App\Services\Usuarios\UsuarioService;
 use CodeIgniter\Database\BaseConnection;
@@ -87,12 +93,14 @@ final class Fabrica
     }
 
     /** Persona humana con DNI y CUIL coherentes. @return array{dni: int, cuil: string} */
-    public static function personaHumana(): array
+    public static function personaHumana(?int $verificador = null): array
     {
+        // El simulador de la Central de Deudores responde según el último dígito del CUIL: 0, sin deudas; 9, sin
+        // respuesta (evaluación de contingencia); 1, 2, 3 o 5, esa situación
         do {
             $dni = self::dni();
             $dv = Campos::digitoVerificadorCuit('20' . $dni);
-        } while ($dv === null);
+        } while ($dv === null || ($verificador !== null && $dv !== $verificador));
 
         return ['dni' => $dni, 'cuil' => self::cuitValido('20', $dni)];
     }
@@ -304,5 +312,118 @@ final class Fabrica
         $datos = $cambios + self::datosLinea();
 
         return ['id' => (new LineaService($this->db))->registrar($datos), 'datos' => $datos];
+    }
+
+    // ── Solicitudes de crédito (iteración 2, bloque B) ─────────────────────────────────────────────────────────
+
+    /**
+     * Cliente que puede pedir un crédito en una línea de la fábrica: persona humana en relación de dependencia, con el
+     * documento de identidad y el recibo de sueldo en el legajo. $verificador elige la respuesta de la Central de
+     * Deudores simulada (ver personaHumana).
+     *
+     * @param array<string, mixed> $cambios
+     * @return array{id: int, datos: array<string, mixed>}
+     */
+    public function clienteParaCredito(int $verificador = 0, array $cambios = []): array
+    {
+        $p = self::personaHumana($verificador);
+        $datos = $cambios + ['nro_documento' => (string) $p['dni'], 'cuit_cuil' => $p['cuil'], 'ingresos_declarados' => '2.500.000,00'] + $this->datosCliente();
+        $archivos = [...self::archivosIdentificacion(), self::archivo('RECIBO_SUELDO', 'pdf')];
+        $id = (new ClienteService($this->db))->registrar($datos, $archivos, $this->responsable());
+
+        return ['id' => $id, 'datos' => $datos];
+    }
+
+    /** Disponible libre suficiente para reservar y desembolsar (RN-41, RN-71). */
+    public function fondos(): void
+    {
+        if (bccomp((new FondosService($this->db))->disponibilidad()['libre'], '100000000', 2) >= 0) {
+            return;
+        }
+        $this->db->table('movimientos_fondos')->insert([
+            'tipo' => 'AporteCapital', 'caracter' => 'Ingreso', 'importe' => '1000000000.00', 'fecha' => '2020-01-01',
+            'concepto' => 'Fondos para las solicitudes de prueba', 'estado' => 'Realizado', 'usuario_id' => $this->responsable(),
+        ]);
+    }
+
+    public function simulacion(int $clienteId, int $lineaId, string $importe = '500.000,00', string $cuotas = '12'): int
+    {
+        return (new SimulacionService($this->db))->simular($clienteId, $lineaId, $importe, $cuotas, $this->responsable());
+    }
+
+    /**
+     * Solicitud llevada hasta el estado pedido por el mismo camino que los casos de uso, con los servicios:
+     * PendienteVerificacion (CU-22), PendienteEvaluacion (CU-23), PendienteSeleccionPlan (CU-86 favorable),
+     * PendienteContingencia (CU-86 sin respuesta de la Central de Deudores), PendienteResolucion (CU-25),
+     * AprobadaPendienteLiquidacion (CU-79 con aprobación automática) y ConConstancia (CU-27 listo para liquidar).
+     *
+     * @return array{id: int, cliente: array{id: int, datos: array<string, mixed>}, linea_id: int, simulacion_id: int}
+     */
+    public function solicitud(string $hasta = 'PendienteVerificacion', string $importe = '500.000,00', string $cuotas = '12'): array
+    {
+        $this->fondos();
+        $contingencia = in_array($hasta, ['PendienteContingencia', 'PendienteResolucion'], true);
+        $cliente = $this->clienteParaCredito($contingencia ? 9 : 0);
+        $linea = $this->linea()['id'];
+        $simulacion = $this->simulacion($cliente['id'], $linea, $importe, $cuotas);
+        $solicitudes = new SolicitudService($this->db);
+        $id = (int) $solicitudes->registrar($simulacion, [], $this->responsable())['id'];
+        $r = ['id' => $id, 'cliente' => $cliente, 'linea_id' => $linea, 'simulacion_id' => $simulacion];
+        if ($hasta === 'PendienteVerificacion') {
+            return $r;
+        }
+        $s = $solicitudes->obtener($id);
+        $verificaciones = [];
+        foreach ($s['documentos'] as $d) {
+            $verificaciones[(int) $d['id']] = ['resultado' => 'Conforme', 'motivo' => '', 'observacion' => ''];
+        }
+        $solicitudes->verificar($id, (int) $s['version_fila'], 'Verificada', $verificaciones, '', '', $this->responsable());
+        if ($hasta === 'PendienteEvaluacion') {
+            return $r;
+        }
+        (new EvaluacionService($this->db))->evaluar($id);
+        $this->exigirEstado($id, $contingencia ? 'PendienteContingencia' : 'PendienteSeleccionPlan');
+        if (in_array($hasta, ['PendienteSeleccionPlan', 'PendienteContingencia'], true)) {
+            return $r;
+        }
+        if ($hasta === 'PendienteResolucion') {
+            (new EvaluacionService($this->db))->registrarContingencia($id, (int) $solicitudes->obtener($id)['version_fila'], [
+                'antecedentes' => ['informacion_economica', 'documentacion'], 'detalle_antecedentes' => 'Recibos de sueldo de los últimos tres meses verificados.',
+                'recomendacion' => 'Favorable', 'justificacion' => 'Ingresos estables y suficientes para la cuota solicitada.',
+            ], $this->responsable());
+            $this->exigirEstado($id, 'PendienteResolucion');
+
+            return $r;
+        }
+        $alternativa = (int) $this->db->query(
+            "SELECT TOP 1 a.id FROM dbo.alternativas_financiacion a JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id WHERE e.solicitud_id = ? AND a.estado = 'Vigente' ORDER BY a.id",
+            [$id],
+        )->getRow()->id;
+        (new EstructuracionService($this->db))->confirmar($id, $alternativa, (int) $solicitudes->obtener($id)['version_fila'], [
+            'fecha_conformidad' => Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'), 'medio_conformidad' => 'PresencialFirma', 'observaciones' => '',
+        ], $this->responsable());
+        $this->exigirEstado($id, 'AprobadaPendienteLiquidacion');
+        if ($hasta === 'ConConstancia') {
+            (new ContratoService($this->db))->registrarConstancia($id, self::archivo('CONTRATO', 'pdf'), Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'), $this->responsable());
+        }
+
+        return $r;
+    }
+
+    /** Alternativas vigentes de la solicitud. @return list<array<string, mixed>> */
+    public function alternativas(int $solicitudId): array
+    {
+        return $this->db->query(
+            "SELECT a.* FROM dbo.alternativas_financiacion a JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id WHERE e.solicitud_id = ? AND a.estado = 'Vigente' ORDER BY a.id",
+            [$solicitudId],
+        )->getResultArray();
+    }
+
+    private function exigirEstado(int $id, string $esperado): void
+    {
+        $estado = (new SolicitudService($this->db))->estado($id);
+        if ($estado !== $esperado) {
+            throw new \RuntimeException("La solicitud {$id} quedó en {$estado}; se esperaba {$esperado}.");
+        }
     }
 }

@@ -27,7 +27,7 @@ class Cobros extends BaseController
     {
         $usuario = (int) session('cuenta')['id'];
         $jornada = (new CajaService())->jornadaOperable($usuario);
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente('cobros.registrar', 'Cobro en ventanilla', false, ['jornada' => $jornada]);
         }
@@ -54,7 +54,7 @@ class Cobros extends BaseController
         try {
             $r = $this->servicio->registrar(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 (array) $this->request->getPost('cuotas'),
                 $this->campoPost('importe'),
                 $medios,

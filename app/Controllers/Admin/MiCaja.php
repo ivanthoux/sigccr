@@ -47,7 +47,7 @@ class MiCaja extends BaseController
         try {
             $conciliacion = (new CajaService())->cerrar(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 (array) $this->request->getPost('acreditado'),
                 (array) $this->request->getPost('explicacion'),
             );

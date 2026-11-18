@@ -85,7 +85,7 @@ class Lineas extends BaseController
         try {
             $r = $this->servicio->modificar(
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 (array) $this->request->getPost(),
                 $this->campoPost('fecha_vigencia'),
                 $this->campoPost('motivo'),
@@ -128,7 +128,7 @@ class Lineas extends BaseController
     public function suspender(int $id): RedirectResponse
     {
         try {
-            $continuan = $this->servicio->suspender($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
+            $continuan = $this->servicio->suspender($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -144,7 +144,7 @@ class Lineas extends BaseController
     public function reactivar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
+            $this->servicio->reactivar($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

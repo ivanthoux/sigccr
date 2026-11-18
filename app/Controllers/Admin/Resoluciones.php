@@ -45,7 +45,7 @@ class Resoluciones extends BaseController
     public function resolver(int $id): RedirectResponse
     {
         try {
-            $r = (new ResolucionService())->resolver($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(), (int) session('cuenta')['id']);
+            $r = (new ResolucionService())->resolver($id, $this->enteroPost('version_fila'), (array) $this->request->getPost(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -72,7 +72,7 @@ class Resoluciones extends BaseController
     public function cancelar(int $id): RedirectResponse
     {
         try {
-            (new ResolucionService())->cancelar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'), $this->request->getPost('confirma_reserva') !== null, (int) session('cuenta')['id']);
+            (new ResolucionService())->cancelar($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'), $this->request->getPost('confirma_reserva') !== null, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

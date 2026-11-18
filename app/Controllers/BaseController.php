@@ -63,7 +63,7 @@ abstract class BaseController extends Controller
      */
     protected function clienteSeleccionado(string $destino, string $titulo): array|string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente($destino, $titulo);
         }
@@ -104,6 +104,22 @@ abstract class BaseController extends Controller
     protected function campoPost(string $campo): string
     {
         return Campos::crudo($this->request->getPost($campo));
+    }
+
+    /**
+     * Identificador o versión de fila (POST) como entero. Solo dígitos: ausente, vacío, con otros caracteres o enviado
+     * como lista vale 0, que no corresponde a ningún registro ni a ninguna versión (H-21). Un (int) directo convertía
+     * una lista en 1 y «1abc» en 1, y podía elegir otro registro o pasar el control de versión (RN-24).
+     */
+    protected function enteroPost(string $campo): int
+    {
+        return Campos::identificador($this->request->getPost($campo));
+    }
+
+    /** Identificador de la dirección (GET) como entero, con la regla de enteroPost() (H-21). */
+    protected function enteroGet(string $campo): int
+    {
+        return Campos::identificador($this->request->getGet($campo));
     }
 
     /** Parámetro de la dirección (GET) como texto; ausente o enviado como lista, vacío (D-51, clase FIL-02). */

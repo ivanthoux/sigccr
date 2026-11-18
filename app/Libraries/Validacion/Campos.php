@@ -60,6 +60,17 @@ final class Campos
         return is_scalar($valor) ? (string) $valor : '';
     }
 
+    /**
+     * Identificador o versión enviado en un formulario: entero positivo de hasta 9 dígitos, con espacios en los
+     * extremos admitidos; cualquier otra cosa (lista, vacío, signo, decimales, letras) vale 0 (H-21).
+     */
+    public static function identificador(mixed $valor): int
+    {
+        $t = trim(self::crudo($valor));
+
+        return preg_match('/^\d{1,9}$/', $t) === 1 ? (int) $t : 0;
+    }
+
     /** Correo en minúsculas y sin espacios. */
     public static function correo(mixed $valor): string
     {
