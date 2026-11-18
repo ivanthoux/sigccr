@@ -131,7 +131,7 @@ final class FondosTest extends IntegracionTestCase
     public function testEgresoYDisponibleLibre(): void
     {
         $this->comoRol('Gerente');
-        $libre = (new FondosService($this->db))->disponibilidad()['libre'];
+        $libre = $this->libreExpresable();
         $mas = bcadd($libre, '0.01', 2);
         $manana = Time::now(config('Sigccr')->zonaNegocio)->addDays(1)->format('d/m/Y');
 
@@ -159,7 +159,7 @@ final class FondosTest extends IntegracionTestCase
     /** @return array<string, array{0: string, 1: mixed, 2: Esperado, 3: array<string, mixed>}> */
     public static function casosMotivo(): array
     {
-        return self::casosDelCatalogo('IN-24', ['motivo' => ['tipo' => 'MOT', 'obligatorio' => true]]);
+        return self::casosDelCatalogo('IN-24', ['motivo' => ['tipo' => 'MOT', 'obligatorio' => true, 'max' => 300]]);
     }
 
     /**
@@ -219,6 +219,23 @@ final class FondosTest extends IntegracionTestCase
             $this->enviar("admin/fondos/999999999/{$accion}", ['motivo' => 'Movimiento inexistente']);
             $this->assertNotSame('', (string) ($_SESSION['error'] ?? $_SESSION['errores']['motivo'] ?? ''), "{$accion} de un movimiento inexistente");
         }
+    }
+
+    /**
+     * Disponible libre que se puede escribir como importe (hasta 17 dígitos enteros, IMP-08). Otras pruebas registran
+     * ingresos del máximo: si el libre lo supera, se baja con egresos directos.
+     */
+    private function libreExpresable(): string
+    {
+        $servicio = new FondosService($this->db);
+        while (bccomp($libre = $servicio->disponibilidad()['libre'], '10000000000000000', 2) > 0) {
+            $this->db->table('movimientos_fondos')->insert([
+                'tipo' => 'Otro', 'caracter' => 'Egreso', 'importe' => bccomp($exceso = bcsub($libre, '1000000000', 2), '90000000000000000', 2) > 0 ? '90000000000000000.00' : $exceso,
+                'fecha' => '2020-01-01', 'concepto' => 'Ajuste de la prueba', 'estado' => 'Realizado', 'usuario_id' => $this->fabrica->responsable(),
+            ]);
+        }
+
+        return $libre;
     }
 
     /** @param array<string, mixed> $datos */

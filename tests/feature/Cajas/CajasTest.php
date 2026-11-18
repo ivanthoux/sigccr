@@ -51,7 +51,8 @@ final class CajasTest extends IntegracionTestCase
         // Código de la caja: hasta 10 letras, números o guiones, en mayúsculas y único (CU-80 paso 3)
         $u = static fn (int $n): string => strtoupper(substr(Fabrica::sufijo(), -$n));
         $mal = Esperado::rechaza(self::MENSAJE_CODIGO);
-        foreach ([
+        foreach (
+            [
             ['COM-01 campo ausente', Esperado::AUSENTE, $mal],
             ['COM-02 enviado como lista', ['CAJA-01'], $mal],
             ['COM-03 código HTML', '<b>C1</b>', $mal],
@@ -66,7 +67,8 @@ final class CajasTest extends IntegracionTestCase
             ['COD-04 tilde', 'CAJÁ1', $mal],
             ['COD-04 eñe', 'CAÑA1', $mal],
             ['COD-04 punto', 'CAJA.1', $mal],
-        ] as [$nombre, $valor, $esperado]) {
+            ] as [$nombre, $valor, $esperado]
+        ) {
             $casos["IN-25 · codigo · {$nombre}"] = ['codigo', $valor, $esperado, []];
         }
 
@@ -131,7 +133,7 @@ final class CajasTest extends IntegracionTestCase
             'cajero como lista' => [['cajero_id' => ['1']], 'cajero_id', $cajero],
             'cajero inexistente' => [['cajero_id' => '999999999'], 'cajero_id', $cajero],
             'un Gerente como cajero' => [['cajero_id' => (string) $gerente['id']], 'cajero_id', $cajero],
-            'cajero inhabilitado' => [['cajero_id' => (string) $this->fabrica->usuario('Cajero', 'Inhabilitada')['id']], 'cajero_id', $cajero],
+            'cajero inhabilitado' => [['cajero_id' => (string) $this->fabrica->usuario('Cajero', 'Desactivada')['id']], 'cajero_id', $cajero],
         ];
         $caja = $this->nuevaCaja();
         $base = ['cajero_id' => (string) $this->fabrica->usuario('Cajero')['id'], 'desde' => '', 'hasta' => ''];

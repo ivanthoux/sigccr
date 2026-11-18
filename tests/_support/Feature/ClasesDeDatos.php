@@ -481,6 +481,8 @@ final class ClasesDeDatos
     private static function motivo(array $c): array
     {
         $corto = Esperado::rechaza('Indique el motivo de la operación (al menos 5 caracteres).');
+        // H-14: el máximo es el de la columna donde se guarda el motivo (1000 si va a la auditoría)
+        $max = (int) ($c['max'] ?? 1000);
 
         return [
             ['MOT-01', 'vacío', '', $corto],
@@ -488,8 +490,9 @@ final class ClasesDeDatos
             ['MOT-01', '4 caracteres', 'Baja', $corto],
             ['MOT-02', 'espacios internos', 'a    b', $corto],
             ['MOT-03', '5 caracteres', 'Bajas', Esperado::acepta('Bajas')],
-            ['MOT-03', '1000 caracteres', str_repeat('m', 1000), Esperado::acepta(str_repeat('m', 1000))],
-            ['MOT-03', '1001 caracteres', str_repeat('m', 1001), Esperado::rechaza('El motivo admite hasta 1000 caracteres.')],
+            ['MOT-03', "{$max} caracteres", str_repeat('m', $max), Esperado::acepta(str_repeat('m', $max))],
+            ['MOT-03', ($max + 1) . ' caracteres', str_repeat('m', $max + 1), Esperado::rechaza("El motivo admite hasta {$max} caracteres.")],
+            ['MOT-03', ($max - 1) . ' caracteres y un emoji', str_repeat('m', $max - 1) . '😀', Esperado::rechaza("El motivo admite hasta {$max} caracteres.")],
         ];
     }
 

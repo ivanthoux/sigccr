@@ -68,9 +68,15 @@ class CajaService extends BaseService
     public function cambiarEstado(int $cajaId, string $accion, string $motivo): string
     {
         $texto = Campos::texto($motivo);
-        if (($error = Campos::motivo($texto)) !== null) {
-            throw new ValidacionException(['motivo' => $error]);
+        // H-18 (D-52): una acción fuera de la lista se rechaza; antes cualquier valor se tomaba como «rehabilitar»
+        $errores = array_filter([
+            'accion' => in_array(Campos::texto($accion), ['inhabilitar', 'rehabilitar'], true) ? null : 'Seleccione la acción.',
+            'motivo' => Campos::motivo($texto),
+        ]);
+        if ($errores !== []) {
+            throw new ValidacionException($errores);
         }
+        $accion = Campos::texto($accion);
 
         return $this->transaccion(function () use ($cajaId, $accion, $texto): string {
             $c = $this->bloquear('cajas', [$cajaId])[0] ?? null;

@@ -68,7 +68,8 @@ final class CalendarioTest extends IntegracionTestCase
         $this->assertCampoRechazado($r, 'fechas', 'Ingrese al menos una fecha con su descripción.', 'formulario vacío');
 
         // Descripción (TXT, N = 150)
-        foreach ([
+        foreach (
+            [
             '150 caracteres' => [str_repeat('d', 150), true],
             '150 con tildes y eñe' => [str_repeat('ñá', 75), true],
             '148 y un emoji' => [str_repeat('d', 148) . '😀', true],
@@ -77,7 +78,8 @@ final class CalendarioTest extends IntegracionTestCase
             'vacía' => ['', false],
             'solo espacios' => ['    ', false],
             'como lista' => [['Feriado'], false],
-        ] as $caso => [$descripcion, $acepta]) {
+            ] as $caso => [$descripcion, $acepta]
+        ) {
             [$texto, $iso] = self::fechaLibre();
             $datos = ['fecha' => $texto, 'descripcion' => $descripcion, 'tipo' => 'Feriado'];
             if ($acepta) {

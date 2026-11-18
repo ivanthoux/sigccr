@@ -1007,7 +1007,7 @@ add('movimientos_fondos', 'SS-05', 'MovimientoFondos', 'Ingresos y egresos de fo
     C('importe', M2),
     C('fecha', D),
     C('concepto', 'NVARCHAR(200)'),
-    C('referencia', 'VARCHAR(100)', null=True),
+    C('referencia', 'NVARCHAR(100)', null=True, d='Comprobante o referencia externa del movimiento (migración 31, H-17).'),
     EN('estado', 'EstadoMovimientoFondos', default="'Realizado'"),
     FK('usuario_id', 'usuarios_internos'),
     FK('movimiento_corregido_id', 'movimientos_fondos', null=True, uq=True, d='Movimiento que este corrige con el importe inverso (RN-44, CU-85 A2); cada movimiento se corrige una sola vez.'),

@@ -35,15 +35,16 @@ final class ReglasCaja
             $e['codigo'] = 'Ingrese un código de hasta 10 letras, números o guiones (por ejemplo, CAJA-01).';
         }
         $denominacion = Campos::texto($d['denominacion'] ?? '');
-        if ($denominacion === '' || mb_strlen($denominacion) > 60) {
+        // H-16: largo en unidades de NVARCHAR (un emoji ocupa dos)
+        if ($denominacion === '' || Campos::largo($denominacion) > 60) {
             $e['denominacion'] = 'Ingrese la denominación de la caja (hasta 60 caracteres).';
         }
         $ubicacion = Campos::texto($d['ubicacion'] ?? '');
-        if (mb_strlen($ubicacion) > 100) {
+        if (Campos::largo($ubicacion) > 100) {
             $e['ubicacion'] = 'La ubicación admite hasta 100 caracteres.';
         }
         $observaciones = Campos::texto($d['observaciones'] ?? '');
-        if (mb_strlen($observaciones) > 300) {
+        if (Campos::largo($observaciones) > 300) {
             $e['observaciones'] = 'Las observaciones admiten hasta 300 caracteres.';
         }
 
@@ -132,7 +133,8 @@ final class ReglasCaja
         $filas = [];
         foreach (self::MEDIOS_VENTANILLA as $medio => $nombre) {
             $reg = $registrado[$medio] ?? '0.00';
-            $texto = trim((string) ($acreditados[$medio] ?? ''));
+            // H-15: un valor enviado como lista se toma como vacío
+            $texto = Campos::texto($acreditados[$medio] ?? '');
             if ($texto === '' && Decimal::of($reg)->isZero()) {
                 $acreditado = '0.00';
             } else {
@@ -143,10 +145,10 @@ final class ReglasCaja
                 }
             }
             $diferencia = Decimal::of($acreditado)->sub($reg)->toFixed(2);
-            $explicacion = Campos::texto((string) ($explicaciones[$medio] ?? ''));
-            if (!Decimal::of($diferencia)->isZero() && mb_strlen($explicacion) < 10) {
+            $explicacion = Campos::texto($explicaciones[$medio] ?? '');
+            if (!Decimal::of($diferencia)->isZero() && Campos::largo($explicacion) < 10) {
                 $e["explicacion_{$medio}"] = 'Hay una diferencia de ' . str_replace('.', ',', $diferencia) . ': explique su causa (al menos 10 caracteres).';
-            } elseif (mb_strlen($explicacion) > 500) {
+            } elseif (Campos::largo($explicacion) > 500) {
                 $e["explicacion_{$medio}"] = 'La explicación admite hasta 500 caracteres.';
             }
             if (Decimal::of($reg)->isZero() && Decimal::of($acreditado)->isZero()) {
@@ -171,11 +173,12 @@ final class ReglasCaja
     public static function validarMovimiento(array $d, string $hoy): array
     {
         $e = [];
-        $tipo = (string) ($d['tipo'] ?? '');
+        // H-15: texto recortado; una lista llega vacía
+        $tipo = Campos::texto($d['tipo'] ?? '');
         if (!isset(self::TIPOS_FONDOS[$tipo])) {
             $e['tipo'] = 'Seleccione el tipo de movimiento.';
         }
-        $caracter = (string) ($d['caracter'] ?? '');
+        $caracter = Campos::texto($d['caracter'] ?? '');
         if (!in_array($caracter, ['Ingreso', 'Egreso'], true)) {
             $e['caracter'] = 'Indique si es un ingreso o un egreso.';
         }
@@ -193,11 +196,11 @@ final class ReglasCaja
             $e['fecha'] = 'Un movimiento programado debe tener una fecha futura.';
         }
         $concepto = Campos::texto($d['concepto'] ?? '');
-        if ($concepto === '' || mb_strlen($concepto) > 200) {
+        if ($concepto === '' || Campos::largo($concepto) > 200) {
             $e['concepto'] = 'Ingrese el concepto (hasta 200 caracteres).';
         }
         $referencia = Campos::texto($d['referencia'] ?? '');
-        if (mb_strlen($referencia) > 100) {
+        if (Campos::largo($referencia) > 100) {
             $e['referencia'] = 'La referencia admite hasta 100 caracteres.';
         }
 
