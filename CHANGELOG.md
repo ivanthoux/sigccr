@@ -6,6 +6,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (pruebas de integración, iteración 4)
+- IN-53 a IN-60 (bloque A): pre-registro y su verificación, descarte y alta desde el pre-registro, preferencias de
+  comunicación, cambio de correo, pago electrónico desde el portal, comprobantes y consultas de objetos ajenos.
+- IN-61 a IN-63 (bloque B): aceptar y rechazar una oferta desde el portal y consultar campañas.
+- IN-64 a IN-68 (bloque C): reportes de gestión, tablero, caja diaria, auditoría y régimen informativo.
+- IN-69 y IN-70 (bloque D): solicitar, descargar y confirmar la restauración de una copia de seguridad.
+- Controles comunes del portal (IN-C01 e IN-C03 en cada ruta con sesión de cliente) y de los módulos de la iteración 4.
+
+### Corregido (defectos H-27 a H-31 y extensiones)
+- H-27: en las preferencias de comunicación del portal, un valor fuera de la lista revocaba el consentimiento.
+- H-28: un identificador de la dirección de más de 18 dígitos respondía error 500; los identificadores admiten hasta
+  9 dígitos y uno más largo responde 404.
+- H-29: el responsable de la auditoría pasa a NVARCHAR(254), el largo de un correo (migración 33).
+- H-30: el régimen informativo rechaza el período 0000-mm y el motivo de rectificación de más de 500 caracteres.
+- H-31: las fechas de los períodos de consulta (reportes, tablero, caja diaria, auditoría) admiten de 1900 a 2099; el
+  año 9999 respondía error 500.
+- H-15 en el tablero, H-16 en el descarte de pre-registros y en la descripción de las copias.
+- El período del régimen y la alternativa elegida en una oferta admiten espacios en los extremos.
+
 ### Agregado (pruebas de integración, iteración 3)
 - IN-45 a IN-52: cobro en ventanilla, anulación, cancelación anticipada, pago electrónico, revocación,
   condonación de punitorios, refinanciación y saldo a favor con devolución (2648 pruebas en total).
