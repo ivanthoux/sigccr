@@ -172,6 +172,12 @@ class Database extends Config
         if ($base === '' || $base === (string) $this->default['database']) {
             throw new \RuntimeException('La base de pruebas (database.tests.database) no puede estar vacía ni ser la base de la aplicación.');
         }
+        // El servidor de la base de pruebas puede indicarse con SIGCCR_DB_HOST (la integración continua usa localhost):
+        // una variable con puntos en el nombre, como database.tests.hostname, no llega a los procesos que lanza bash
+        $servidor = getenv('SIGCCR_DB_HOST');
+        if (is_string($servidor) && $servidor !== '') {
+            $this->tests['hostname'] = $servidor;
+        }
         foreach (['username', 'password'] as $clave) {
             if ((string) $this->tests[$clave] === '') {
                 $this->tests[$clave] = $this->default[$clave];

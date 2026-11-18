@@ -122,4 +122,4 @@ jobs:
           php spark key:generate --force
 
       - name: Pruebas de integración (base sigccr_pruebas desde cero)
-        run: env 'database.tests.hostname=localhost' composer test:integracion
+        run: composer test:integracion

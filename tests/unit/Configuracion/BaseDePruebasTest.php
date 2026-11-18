@@ -19,6 +19,7 @@ final class BaseDePruebasTest extends CIUnitTestCase
     {
         putenv('SIGCCR_DB_GRUPO');
         putenv('SIGCCR_BASE_PRUEBAS');
+        putenv('SIGCCR_DB_HOST');
         parent::tearDown();
     }
 
@@ -48,5 +49,15 @@ final class BaseDePruebasTest extends CIUnitTestCase
 
         $this->assertSame($config->default['username'], $config->tests['username']);
         $this->assertSame($config->default['password'], $config->tests['password']);
+    }
+
+    public function testElServidorPuedeIndicarseConSigccrDbHost(): void
+    {
+        putenv('SIGCCR_DB_HOST=localhost');
+        $config = new Database();
+
+        foreach (['default', 'tests', 'migraciones', 'copias'] as $grupo) {
+            $this->assertSame('localhost', $config->{$grupo}['hostname'], $grupo);
+        }
     }
 }
