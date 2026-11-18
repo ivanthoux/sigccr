@@ -6,6 +6,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (pruebas de integración, iteración 2, bloque B)
+- IN-34 a IN-44: simulación, comparación de líneas, registro, verificación, corrección, contingencia, confirmación,
+  resolución, cancelación, liquidación y constancia del contrato (2447 pruebas en total).
+
+### Corregido (defectos H-21 a H-25)
+- H-21: un identificador o una versión de fila enviado como lista, con letras o con decimales se convertía en otro
+  número (una lista en 1): podía elegir otro registro o pasar el control de versión. Ahora vale 0.
+- H-22: la comparación de líneas fallaba con más de 255 líneas viables (migración 32).
+- H-23: el motivo de la auditoría admite 2000 caracteres, como la justificación y el fundamento (migración 32).
+- H-24 y H-25: una línea con un gasto de otorgamiento alto rompía la simulación y la comparación; ahora se informa.
+- H-15, H-16, H-17 y H-19 también en verificación, contingencia, confirmación, resolución y liquidación.
+
 ### Agregado (pruebas de integración, iteración 2, bloque A)
 - IN-23 a IN-33: fondos, cajas, apertura y cierre de la jornada, calendario operativo y los cuatro grupos de
   parámetros, con cada campo y cada clase de dato (2195 pruebas en total).

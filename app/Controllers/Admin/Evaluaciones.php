@@ -76,7 +76,7 @@ class Evaluaciones extends BaseController
     {
         $datos = (array) $this->request->getPost(['antecedentes', 'detalle_antecedentes', 'recomendacion', 'justificacion', 'deudas']);
         try {
-            $this->servicio->registrarContingencia($solicitudId, (int) $this->request->getPost('version_fila'), $datos, (int) session('cuenta')['id']);
+            $this->servicio->registrarContingencia($solicitudId, $this->enteroPost('version_fila'), $datos, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

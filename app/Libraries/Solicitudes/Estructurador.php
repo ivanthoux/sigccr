@@ -132,12 +132,13 @@ final class Estructurador
         } elseif ($fecha < substr($generacion, 0, 10)) {
             $e['fecha_conformidad'] = 'La conformidad no puede ser anterior a la generación de la alternativa.';
         }
-        $medio = (string) ($d['medio_conformidad'] ?? '');
+        // H-15: recortado; una lista llega vacía
+        $medio = Campos::texto($d['medio_conformidad'] ?? '');
         if (!isset(self::MEDIOS_CONFORMIDAD[$medio])) {
             $e['medio_conformidad'] = 'Seleccione el medio de la conformidad.';
         }
         $obs = Campos::texto($d['observaciones'] ?? '');
-        if (mb_strlen($obs) > 500) {
+        if (Campos::largo($obs) > 500) {
             $e['observaciones'] = 'Las observaciones admiten hasta 500 caracteres.';
         }
 

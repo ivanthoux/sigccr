@@ -129,4 +129,16 @@ final class ComparadorLineasTest extends TestCase
         $this->assertCount(4, $r['no_viables']);
         $this->assertNull($r['mayor_monto']);
     }
+
+    /** H-24 y H-25: una línea con un CFTEA que no cabe en DECIMAL(18,12) o sin importe neto se informa como no viable. */
+    public function testCostoFueraDelLimiteRegistrableNoEsViable(): void
+    {
+        $extrema = static fn (string $gasto): array => ['id' => 9, 'nombre' => 'Extrema', 'tna' => '5', 'gasto_administrativo_cuota' => '0', 'gasto_otorgamiento_pct' => $gasto,
+            'monto_minimo' => '100000', 'monto_maximo' => '400000', 'cuotas_minimas' => 3, 'cuotas_maximas' => 24];
+        foreach (['0.80' => \App\Libraries\Finanzas\Tasas::MENSAJE_FUERA_DE_LIMITE, '0.999999' => \App\Libraries\Finanzas\Tasas::MENSAJE_SIN_NETO] as $gasto => $motivo) {
+            $r = ComparadorLineas::comparar(Decimal::of('150000'), [$extrema($gasto)], Decimal::of('0.21'), Decimal::of('1000'), new DateTimeImmutable('2026-11-02'));
+            $this->assertSame([], $r['lineas'], $gasto);
+            $this->assertSame($motivo, $r['no_viables'][0]['motivo'], $gasto);
+        }
+    }
 }

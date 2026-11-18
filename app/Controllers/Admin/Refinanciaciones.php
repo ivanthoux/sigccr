@@ -60,7 +60,7 @@ class Refinanciaciones extends BaseController
         try {
             $id = $this->servicio->simular(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 (array) $this->request->getPost('creditos'),
                 $this->campoPost('tasa'),
                 $this->campoPost('cuotas'),
@@ -137,7 +137,7 @@ class Refinanciaciones extends BaseController
             $r = $this->servicio->resolver(
                 (int) session('cuenta')['id'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 $this->campoPost('decision'),
                 $this->campoPost('fundamento'),
             );
@@ -161,7 +161,7 @@ class Refinanciaciones extends BaseController
             $r = $this->servicio->aplicar(
                 (int) session('cuenta')['id'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 $this->campoPost('fecha_constancia'),
                 $this->campoPost('medio'),
                 $this->campoPost('observaciones'),
@@ -187,7 +187,7 @@ class Refinanciaciones extends BaseController
                 (int) session('cuenta')['id'],
                 (string) session('cuenta')['rol'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 $this->campoPost('motivo'),
                 $this->campoPost('fecha_desistimiento'),
                 $this->campoPost('medio_desistimiento'),

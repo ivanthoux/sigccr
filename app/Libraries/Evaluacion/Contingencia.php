@@ -44,31 +44,32 @@ final class Contingencia
             $e['antecedentes'] = 'Indique qué antecedentes verificables utilizó.';
         }
         $detalle = Campos::texto($d['detalle_antecedentes'] ?? '');
-        if (mb_strlen($detalle) < self::MINIMO_TEXTO) {
+        // H-16: largos en unidades de NVARCHAR; H-15: valores con otra forma se toman como vacíos
+        if (Campos::largo($detalle) < self::MINIMO_TEXTO) {
             $e['detalle_antecedentes'] = 'Describa los antecedentes verificados (al menos ' . self::MINIMO_TEXTO . ' caracteres).';
-        } elseif (mb_strlen($detalle) > 2000) {
+        } elseif (Campos::largo($detalle) > 2000) {
             $e['detalle_antecedentes'] = 'La descripción admite hasta 2000 caracteres.';
         }
-        $recomendacion = (string) ($d['recomendacion'] ?? '');
+        $recomendacion = Campos::texto($d['recomendacion'] ?? '');
         if (!isset(self::RECOMENDACIONES[$recomendacion])) {
             $e['recomendacion'] = 'Seleccione la recomendación: favorable o desfavorable.';
         }
         $justificacion = Campos::texto($d['justificacion'] ?? '');
-        if (mb_strlen($justificacion) < self::MINIMO_TEXTO) {
+        if (Campos::largo($justificacion) < self::MINIMO_TEXTO) {
             $e['justificacion'] = 'Justifique la recomendación (al menos ' . self::MINIMO_TEXTO . ' caracteres).';
-        } elseif (mb_strlen($justificacion) > 2000) {
+        } elseif (Campos::largo($justificacion) > 2000) {
             $e['justificacion'] = 'La justificación admite hasta 2000 caracteres.';
         }
 
         $deudas = [];
         $desde = AntecedentesBcra::periodoDesde($hoy);
         $actual = substr(str_replace('-', '', $hoy), 0, 6);
-        foreach ((array) ($d['deudas'] ?? []) as $i => $f) {
-            $f = (array) $f;
+        foreach (is_array($d['deudas'] ?? null) ? $d['deudas'] : [] as $i => $f) {
+            $f = is_array($f) ? $f : [];
             $entidad = Campos::texto($f['entidad'] ?? '');
-            $situacion = trim((string) ($f['situacion'] ?? ''));
-            $montoTexto = trim((string) ($f['monto'] ?? ''));
-            $periodo = trim(str_replace(['/', '-'], '', (string) ($f['periodo'] ?? '')));
+            $situacion = Campos::texto($f['situacion'] ?? '');
+            $montoTexto = Campos::texto($f['monto'] ?? '');
+            $periodo = str_replace(['/', '-', ' '], '', Campos::texto($f['periodo'] ?? ''));
             if ($entidad === '' && $situacion === '' && $montoTexto === '' && $periodo === '') {
                 continue;
             }
@@ -81,7 +82,7 @@ final class Contingencia
                 $periodo = $m[2] . $m[1];
             }
             $monto = Campos::importe($montoTexto);
-            if ($entidad === '' || mb_strlen($entidad) > 150) {
+            if ($entidad === '' || Campos::largo($entidad) > 150) {
                 $e["deudas.{$i}"] = 'Indique la entidad informante (hasta 150 caracteres).';
             } elseif (preg_match('/^[1-6]$/', $situacion) !== 1) {
                 $e["deudas.{$i}"] = 'La situación debe ser un número de 1 a 6.';

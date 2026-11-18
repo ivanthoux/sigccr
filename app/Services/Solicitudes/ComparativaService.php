@@ -48,6 +48,7 @@ class ComparativaService extends BaseService
                 $errores['cantidad_cuotas'] = 'Ingrese una cantidad de cuotas entre 1 y 360, o déjela vacía.';
             }
         }
+        $criterio = Campos::texto($criterio);
         if (!isset(self::CRITERIOS[$criterio])) {
             $errores['criterio'] = 'Seleccione el criterio de comparación.';
         }

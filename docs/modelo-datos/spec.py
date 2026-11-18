@@ -222,7 +222,7 @@ add('registros_auditoria', 'SS-10', 'RegistroAuditoria', 'Evidencia inalterable 
     C('objeto_tipo', 'VARCHAR(60)', d='Tabla o clase del objeto afectado.'),
     C('objeto_id', 'VARCHAR(40)', null=True, d='Identificador del objeto afectado.'),
     C('resultado', 'VARCHAR(20)', d='Exitoso, Rechazado o Error.'),
-    C('motivo', 'NVARCHAR(1000)', null=True, d='Motivo o fundamento, cuando es exigible.'),
+    C('motivo', 'NVARCHAR(2000)', null=True, d='Motivo o fundamento, cuando es exigible (migración 32, H-23).'),
     C('detalle', JSON, null=True, d='Datos adicionales en JSON: estado anterior y nuevo, parámetros aplicados. Sin contraseñas ni autorizaciones (RNF-14).'),
     C('ip_origen', 'VARCHAR(45)', null=True, d='Dirección IP de origen (IPv4 o IPv6).'),
 ], ck=[('CK_registros_auditoria_detalle', 'detalle IS NULL OR ISJSON(detalle) = 1')],
@@ -571,7 +571,7 @@ add('simulaciones', 'SS-04', 'Simulacion', 'Cálculos preliminares; no generan s
     C('vence', TS, d='Generación + 7 días corridos (RN-48).'),
     EN('estado', 'EstadoVigencia', default="'Vigente'"),
     FK('simulacion_comparativa_id', 'simulaciones_comparativas', null=True, d='Simulación comparativa que la generó (CU-99).'),
-    C('posicion', 'TINYINT', null=True, d='Orden de la alternativa dentro de la comparación.'),
+    C('posicion', 'INT', null=True, d='Orden de la alternativa dentro de la comparación (migración 32, H-22).'),
 ], ck=[('CK_simulaciones_comparativa', '(simulacion_comparativa_id IS NULL AND posicion IS NULL) OR (simulacion_comparativa_id IS NOT NULL AND posicion >= 1)')],
    idx=[('IX_simulaciones_cliente', ['cliente_id', 'fecha_generacion'], None, None),
         ('IX_simulaciones_simulacion_comparativa_id', ['simulacion_comparativa_id'], None, 'simulacion_comparativa_id IS NOT NULL')])

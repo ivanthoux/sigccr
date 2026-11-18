@@ -155,4 +155,26 @@ final class CamposTest extends TestCase
         $this->assertSame('!!', Campos::literalLike('!'));
         $this->assertSame("O'Brien", Campos::literalLike("O'Brien"));
     }
+
+    /** H-21: un identificador o una versión solo se acepta con dígitos; cualquier otra cosa vale 0. */
+    public function testIdentificador(): void
+    {
+        foreach (['1' => 1, ' 25 ' => 25, '007' => 7, '999999999' => 999999999] as $valor => $esperado) {
+            $this->assertSame($esperado, Campos::identificador((string) $valor), (string) $valor);
+        }
+        foreach (['', 'abc', '1abc', '1.9', '1,0', '-1', '+1', '1e3', '1000000000', ' ', "1\n2"] as $valor) {
+            $this->assertSame(0, Campos::identificador($valor), json_encode($valor));
+        }
+        foreach ([['1'], [], null, 1.5, 7] as $valor) {
+            $this->assertSame(is_int($valor) ? 7 : 0, Campos::identificador($valor), json_encode($valor));
+        }
+    }
+
+    public function testRecortarEnUnidadesDeNvarchar(): void
+    {
+        $this->assertSame('abc', Campos::recortar('abc', 3));
+        $this->assertSame(str_repeat('a', 499), Campos::recortar(str_repeat('a', 499) . '😀', 500), 'no parte el emoji');
+        $this->assertSame(str_repeat('a', 498) . '😀', Campos::recortar(str_repeat('a', 498) . '😀b', 500));
+        $this->assertSame('ñá', Campos::recortar('ñáé', 2));
+    }
 }

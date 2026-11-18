@@ -22,7 +22,7 @@ class Simulaciones extends BaseController
     /** Pasos 1 a 5: búsqueda del cliente, líneas admitidas y condiciones de la línea elegida. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente('solicitudes.simular', 'Simular crédito', true);
         }
@@ -32,7 +32,7 @@ class Simulaciones extends BaseController
             return redirect()->route('solicitudes.simular')->with('error', $e->getMessage());
         }
         $lineas = $this->servicio->lineasParaCliente($clienteId);
-        $lineaId = (int) $this->request->getGet('linea');
+        $lineaId = $this->enteroGet('linea');
 
         return view('simulaciones/nueva', [
             'titulo' => 'Simular crédito',
@@ -48,8 +48,8 @@ class Simulaciones extends BaseController
     {
         try {
             $id = $this->servicio->simular(
-                (int) $this->request->getPost('cliente_id'),
-                (int) $this->request->getPost('linea_id'),
+                $this->enteroPost('cliente_id'),
+                $this->enteroPost('linea_id'),
                 $this->campoPost('importe'),
                 $this->campoPost('cantidad_cuotas'),
                 (int) session('cuenta')['id'],

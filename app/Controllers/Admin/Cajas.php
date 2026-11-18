@@ -45,7 +45,7 @@ class Cajas extends BaseController
     public function asignar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->asignar($id, (int) $this->request->getPost('cajero_id'), $this->campoPost('desde'), $this->campoPost('hasta'));
+            $this->servicio->asignar($id, $this->enteroPost('cajero_id'), $this->campoPost('desde'), $this->campoPost('hasta'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e)->with('formulario', "asignar-{$id}");
         }
@@ -81,8 +81,8 @@ class Cajas extends BaseController
     public function movimientos(): string
     {
         $f = [
-            'caja_id' => (int) $this->request->getGet('caja'),
-            'cajero_id' => (int) $this->request->getGet('cajero'),
+            'caja_id' => $this->enteroGet('caja'),
+            'cajero_id' => $this->enteroGet('cajero'),
             'estado' => $this->campoGet('estado'),
             'fecha' => Campos::fecha($this->campoGet('fecha')),
             'fecha_texto' => $this->campoGet('fecha'),

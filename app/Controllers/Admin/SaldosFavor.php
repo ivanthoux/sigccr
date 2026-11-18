@@ -35,7 +35,7 @@ class SaldosFavor extends BaseController
     /** CU-76 pasos 5 a 10 (A3, A5). */
     public function aplicar(): RedirectResponse
     {
-        $clienteId = (int) $this->request->getPost('cliente_id');
+        $clienteId = $this->enteroPost('cliente_id');
         try {
             $r = (new SaldoFavorService())->aplicar(
                 (int) session('cuenta')['id'],
@@ -88,7 +88,7 @@ class SaldosFavor extends BaseController
     public function anular(int $id): RedirectResponse
     {
         try {
-            (new DevolucionService())->anular((int) session('cuenta')['id'], $id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo_anulacion'));
+            (new DevolucionService())->anular((int) session('cuenta')['id'], $id, $this->enteroPost('version_fila'), $this->campoPost('motivo_anulacion'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -124,7 +124,7 @@ class SaldosFavor extends BaseController
     public function ejecutar(int $id): RedirectResponse
     {
         try {
-            $r = (new DevolucionService())->ejecutar((int) session('cuenta')['id'], $id, (int) $this->request->getPost('version_fila'), [
+            $r = (new DevolucionService())->ejecutar((int) session('cuenta')['id'], $id, $this->enteroPost('version_fila'), [
                 'numero_operacion' => $this->campoPost('numero_operacion'), 'fecha' => $this->campoPost('fecha'),
                 'importe' => $this->campoPost('importe'), 'cbu' => $this->campoPost('cbu'),
             ]);

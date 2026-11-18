@@ -31,7 +31,7 @@ class PagosElectronicos extends BaseController
         try {
             $r = (new PagoElectronicoService())->generarOrden(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 (array) $this->request->getPost('cuotas'),
                 'Ventanilla',
             );

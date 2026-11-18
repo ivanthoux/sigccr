@@ -143,7 +143,7 @@ class Clientes extends BaseController
     public function actualizar(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->modificar($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(), $this->campoPost('evidencia_identidad'));
+            $r = $this->servicio->modificar($id, $this->enteroPost('version_fila'), (array) $this->request->getPost(), $this->campoPost('evidencia_identidad'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -200,7 +200,7 @@ class Clientes extends BaseController
     public function desactivar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
+            $this->servicio->desactivar($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -212,7 +212,7 @@ class Clientes extends BaseController
     public function reactivar(int $id): RedirectResponse
     {
         try {
-            $verificado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
+            $verificado = $this->servicio->reactivar($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

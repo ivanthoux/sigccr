@@ -58,7 +58,7 @@ class Solicitudes extends BaseController
     /** CU-22 pasos 1 a 4: cliente y sus simulaciones vigentes. */
     public function nueva(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente('solicitudes.registrar', 'Registrar solicitud', true);
         }
@@ -101,7 +101,7 @@ class Solicitudes extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $r = $this->servicio->registrar((int) $this->request->getPost('simulacion_id'), $this->archivosLegajo(), (int) session('cuenta')['id']);
+            $r = $this->servicio->registrar($this->enteroPost('simulacion_id'), $this->archivosLegajo(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -148,7 +148,7 @@ class Solicitudes extends BaseController
         try {
             $estado = $this->servicio->verificar(
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 $this->campoPost('resultado'),
                 (array) $this->request->getPost('verificacion'),
                 $this->campoPost('observaciones'),
@@ -208,7 +208,7 @@ class Solicitudes extends BaseController
     public function corregir(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->registrarCorreccion($id, (int) $this->request->getPost('version_fila'), $this->archivosLegajo(), $this->campoPost('aclaracion'), (int) session('cuenta')['id']);
+            $r = $this->servicio->registrarCorreccion($id, $this->enteroPost('version_fila'), $this->archivosLegajo(), $this->campoPost('aclaracion'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

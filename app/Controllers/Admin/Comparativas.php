@@ -16,7 +16,7 @@ class Comparativas extends BaseController
     /** Pasos 1 a 3: cliente y datos opcionales del pedido. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente('simulaciones.comparar', 'Simular todas las líneas', true);
         }
@@ -35,7 +35,7 @@ class Comparativas extends BaseController
     {
         try {
             $id = (new ComparativaService())->simular(
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 $this->campoPost('importe'),
                 $this->campoPost('cantidad_cuotas'),
                 $this->campoPost('criterio'),

@@ -24,7 +24,7 @@ class Revocaciones extends BaseController
     /** Pasos 1 y 2: cliente (CU-54) y sus créditos con el plazo de revocación. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
             return $this->busquedaCliente('creditos.revocar', 'Revocación del préstamo');
         }

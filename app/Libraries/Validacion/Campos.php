@@ -60,6 +60,37 @@ final class Campos
         return is_scalar($valor) ? (string) $valor : '';
     }
 
+    /**
+     * Identificador o versión enviado en un formulario: entero positivo de hasta 9 dígitos, con espacios en los
+     * extremos admitidos; cualquier otra cosa (lista, vacío, signo, decimales, letras) vale 0 (H-21).
+     */
+    public static function identificador(mixed $valor): int
+    {
+        $t = trim(self::crudo($valor));
+
+        return preg_match('/^\d{1,9}$/', $t) === 1 ? (int) $t : 0;
+    }
+
+    /**
+     * Texto recortado a $maximo unidades de NVARCHAR (un emoji ocupa dos), sin partir un carácter. Para los resúmenes
+     * que se guardan en una columna más corta que el texto completo (por ejemplo, el motivo de una transición).
+     */
+    public static function recortar(string $valor, int $maximo): string
+    {
+        if (self::largo($valor) <= $maximo) {
+            return $valor;
+        }
+        $r = '';
+        foreach (mb_str_split($valor) as $c) {
+            if (self::largo($r . $c) > $maximo) {
+                break;
+            }
+            $r .= $c;
+        }
+
+        return $r;
+    }
+
     /** Correo en minúsculas y sin espacios. */
     public static function correo(mixed $valor): string
     {
