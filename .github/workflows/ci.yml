@@ -93,13 +93,13 @@ jobs:
 
       - name: Controlador ODBC 18 de Microsoft (lo requiere la extensión sqlsrv)
         run: |
-          curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-          curl -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
           sudo apt-get update -q
           sudo ACCEPT_EULA=Y apt-get install -y -q msodbcsql18 unixodbc-dev
 
       - name: PHP 8.3 con sqlsrv
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
         with:
           php-version: "8.3"
           extensions: bcmath, intl, mbstring, sqlsrv
@@ -108,7 +108,7 @@ jobs:
 
       - name: sqlcmd
         run: |
-          curl -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
+          curl --proto =https --tlsv1.2 -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
           sqlcmd --version
 
       - name: Dependencias
