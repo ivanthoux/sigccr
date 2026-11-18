@@ -341,10 +341,11 @@ class FondosService extends BaseService
     private function motivo(string $motivo): string
     {
         $texto = Campos::texto($motivo);
-        if (($error = Campos::motivo($texto)) !== null) {
+        // H-14: la columna motivo es NVARCHAR(300); antes se aceptaban 1000 caracteres y se recortaban en silencio
+        if (($error = Campos::motivo($texto, 300)) !== null) {
             throw new ValidacionException(['motivo' => $error]);
         }
 
-        return mb_substr($texto, 0, 300);
+        return $texto;
     }
 }

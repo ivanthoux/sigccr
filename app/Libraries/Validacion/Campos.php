@@ -233,14 +233,15 @@ final class Campos
     }
 
     /** Texto de motivo de una operación (auditoría): entre 5 y 1000 caracteres. */
-    public static function motivo(string $valor): ?string
+    public static function motivo(string $valor, int $maximo = 1000): ?string
     {
         $largo = self::largo($valor);
         if ($largo < 5) {
             return 'Indique el motivo de la operación (al menos 5 caracteres).';
         }
 
-        return $largo > 1000 ? 'El motivo admite hasta 1000 caracteres.' : null;
+        // H-14: el máximo es el de la columna donde se guarda; nunca se recorta en silencio
+        return $largo > $maximo ? "El motivo admite hasta {$maximo} caracteres." : null;
     }
 
     /**

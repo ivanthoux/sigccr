@@ -33,7 +33,7 @@ class Cajas extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $this->servicio->registrar((array) $this->request->getPost(['codigo', 'denominacion', 'ubicacion', 'observaciones']));
+            $this->servicio->registrar(array_map(fn (string $c): string => $this->campoPost($c), ['codigo' => 'codigo', 'denominacion' => 'denominacion', 'ubicacion' => 'ubicacion', 'observaciones' => 'observaciones']));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e)->with('formulario', 'alta');
         }

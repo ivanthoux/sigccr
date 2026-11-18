@@ -35,7 +35,11 @@ class Fondos extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $this->servicio->registrarMovimiento((array) $this->request->getPost(['tipo', 'caracter', 'programado', 'importe', 'fecha', 'concepto', 'referencia']), (int) session('cuenta')['id']);
+            // H-15: cada campo como texto; uno enviado como lista llega vacío (D-51, COM-02). La casilla «programado»
+            // cuenta como marcada con cualquier valor no vacío, también enviada como lista (CHK-03)
+            $datos = array_map(fn (string $c): string => $this->campoPost($c), ['tipo' => 'tipo', 'caracter' => 'caracter', 'importe' => 'importe', 'fecha' => 'fecha', 'concepto' => 'concepto', 'referencia' => 'referencia']);
+            $datos['programado'] = !empty($this->request->getPost('programado'));
+            $this->servicio->registrarMovimiento($datos, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

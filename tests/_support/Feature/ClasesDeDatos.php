@@ -303,25 +303,39 @@ final class ClasesDeDatos
     {
         $formato = Esperado::rechaza($c['mensajes']['formato'] ?? null);
         $cero = isset($c['mensajes']['cero']) ? Esperado::rechaza($c['mensajes']['cero']) : Esperado::acepta('0.000000');
+        // «muestra»: parte entera de los valores válidos (6 por defecto; 0 para un campo cuyo máximo es 1 %)
+        $e = (string) ($c['muestra'] ?? '6');
+        $guardado = static fn (string $v): string => bcdiv($v, '100', 8);
         $casos = [
             ['PCT-01', 'vacío', '', self::vacio($c)],
-            ['PCT-02', 'entero', '6', Esperado::acepta('0.060000')],
-            ['PCT-02', 'coma decimal', '6,5', Esperado::acepta('0.065000')],
-            ['PCT-02', 'punto decimal', '6.5', Esperado::acepta('0.065000')],
-            ['PCT-02', 'con signo %', '6,5 %', Esperado::acepta('0.065000')],
+            ['PCT-02', 'entero', $e === '0' ? '1' : $e, Esperado::acepta($guardado($e === '0' ? '1' : $e))],
+            ['PCT-02', 'coma decimal', "{$e},5", Esperado::acepta($guardado("{$e}.5"))],
+            ['PCT-02', 'punto decimal', "{$e}.5", Esperado::acepta($guardado("{$e}.5"))],
+            ['PCT-02', 'con signo %', "{$e},5 %", Esperado::acepta($guardado("{$e}.5"))],
             ['PCT-03', 'cero', '0', $cero],
-            ['PCT-04', 'cuatro decimales', '2,1234', Esperado::acepta('0.021234')],
-            ['PCT-04', 'cinco decimales', '2,12345', $formato],
+        ];
+        // H-20: un porcentaje admite tantos decimales como guarda; nunca se redondea en silencio
+        $dec = (int) ($c['decimales'] ?? 4);
+        $base = $e === '6' ? '2' : $e;
+        $casos[] = ['PCT-04', "{$dec} decimales", "{$base}," . substr('1234', 0, $dec), Esperado::acepta($guardado("{$base}." . substr('1234', 0, $dec)))];
+        $casos[] = ['PCT-04', ($dec + 1) . ' decimales', "{$base}," . substr('12345', 0, $dec + 1), $formato];
+        array_push(
+            $casos,
             ['PCT-05', 'cuatro enteros', '1000', $formato],
             ['PCT-05', 'negativo', '-5', $formato],
             ['PCT-05', 'letras', 'abc', $formato],
             ['PCT-05', 'dos comas', '1,5,5', $formato],
-        ];
+        );
+        if (($c['maximo'] ?? null) === null) {
+            // El límite depende de otro campo y se prueba aparte
+            return $casos;
+        }
         $max = (string) $c['maximo'];
         $incluido = (bool) ($c['maximo_incluido'] ?? true);
         $fuera = Esperado::rechaza($c['mensajes']['maximo'] ?? null);
+        $paso = '0.' . str_repeat('0', $dec - 1) . '1';
         $casos[] = ['PCT-06', "límite {$max}", str_replace('.', ',', $max), $incluido ? Esperado::acepta(null) : $fuera];
-        $casos[] = ['PCT-06', 'límite + 0,0001', str_replace('.', ',', bcadd($max, '0.0001', 4)), $fuera];
+        $casos[] = ['PCT-06', 'límite + ' . str_replace('.', ',', $paso), str_replace('.', ',', bcadd($max, $paso, $dec)), $fuera];
 
         return $casos;
     }
@@ -481,6 +495,8 @@ final class ClasesDeDatos
     private static function motivo(array $c): array
     {
         $corto = Esperado::rechaza('Indique el motivo de la operación (al menos 5 caracteres).');
+        // H-14: el máximo es el de la columna donde se guarda el motivo (1000 si va a la auditoría)
+        $max = (int) ($c['max'] ?? 1000);
 
         return [
             ['MOT-01', 'vacío', '', $corto],
@@ -488,8 +504,9 @@ final class ClasesDeDatos
             ['MOT-01', '4 caracteres', 'Baja', $corto],
             ['MOT-02', 'espacios internos', 'a    b', $corto],
             ['MOT-03', '5 caracteres', 'Bajas', Esperado::acepta('Bajas')],
-            ['MOT-03', '1000 caracteres', str_repeat('m', 1000), Esperado::acepta(str_repeat('m', 1000))],
-            ['MOT-03', '1001 caracteres', str_repeat('m', 1001), Esperado::rechaza('El motivo admite hasta 1000 caracteres.')],
+            ['MOT-03', "{$max} caracteres", str_repeat('m', $max), Esperado::acepta(str_repeat('m', $max))],
+            ['MOT-03', ($max + 1) . ' caracteres', str_repeat('m', $max + 1), Esperado::rechaza("El motivo admite hasta {$max} caracteres.")],
+            ['MOT-03', ($max - 1) . ' caracteres y un emoji', str_repeat('m', $max - 1) . '😀', Esperado::rechaza("El motivo admite hasta {$max} caracteres.")],
         ];
     }
 

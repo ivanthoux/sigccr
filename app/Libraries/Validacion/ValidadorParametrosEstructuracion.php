@@ -31,15 +31,17 @@ final class ValidadorParametrosEstructuracion
      */
     public static function normalizar(array $d): array
     {
-        $pct = static fn (mixed $v): ?string => ($n = self::numero($v)) === null ? null : Decimal::of($n)->div(100)->round(4)->toFixed(4);
+        // H-20: se guardan 4 decimales del tanto por uno: el porcentaje admite 2 (antes se redondeaba en silencio)
+        $pct = static fn (mixed $v): ?string => ($n = self::numero($v)) === null ? null : Decimal::of($n)->div(100)->toFixed(4);
         $escalones = [];
-        foreach (preg_split('/[;\s]+/', trim(str_replace('%', '', (string) ($d['escalones'] ?? '')))) ?: [] as $e) {
+        foreach (preg_split('/[;\s]+/', trim(str_replace('%', '', Campos::texto($d['escalones'] ?? '')))) ?: [] as $e) {
             if ($e !== '') {
                 $escalones[] = $pct($e);
             }
         }
-        $tope = trim((string) ($d['tope_global_cliente'] ?? ''));
-        $dias = trim((string) ($d['vigencia_alternativas_dias'] ?? ''));
+        // H-15: un valor enviado como lista se toma como vacío
+        $tope = Campos::texto($d['tope_global_cliente'] ?? '');
+        $dias = Campos::texto($d['vigencia_alternativas_dias'] ?? '');
 
         return [
             'porcentaje_afectacion' => $pct($d['porcentaje_afectacion'] ?? ''),
@@ -120,8 +122,8 @@ final class ValidadorParametrosEstructuracion
 
     private static function numero(mixed $v): ?string
     {
-        $t = str_replace(',', '.', str_replace([' ', '%'], '', trim((string) ($v ?? ''))));
+        $t = str_replace([' ', '%', ','], ['', '', '.'], Campos::texto($v));
 
-        return preg_match('/^\d{1,3}(\.\d{1,4})?$/', $t) === 1 ? $t : null;
+        return preg_match('/^\d{1,3}(\.\d{1,2})?$/', $t) === 1 ? $t : null;
     }
 }
