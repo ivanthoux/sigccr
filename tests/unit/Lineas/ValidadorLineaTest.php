@@ -17,13 +17,33 @@ final class ValidadorLineaTest extends TestCase
     {
         return array_replace([
             'codigo' => 'motos', 'nombre' => 'Créditos para motos', 'descripcion' => 'Compra de motos nuevas o usadas.',
-            'tna' => '70', 'gasto_otorgamiento_pct' => '2', 'gasto_administrativo_cuota' => '500',
+            'tna' => '70', 'gasto_otorgamiento_pct' => '2', 'tipo_gasto_administrativo' => 'Fijo', 'gasto_administrativo_cuota' => '500',
             'monto_minimo' => '300.000', 'monto_maximo' => '1.500.000,00', 'cuotas_minimas' => '6', 'cuotas_maximas' => '24',
             'admite_persona_humana' => '1', 'edad_minima' => '18', 'edad_maxima' => '75',
             'categorias' => ['RelacionDependencia', 'Monotributista'],
             'requisitos' => ['RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO'], 'Monotributista' => ['DOC_IDENTIDAD', 'CONST_MONOTRIBUTO', 'PAGOS_MONOTRIBUTO']],
             'vigencia_inicio' => '01/11/2026', 'vigencia_fin' => '31/12/2027',
         ], $cambios);
+    }
+
+    /** O-01 (D-52): la TNA debe ser mayor que cero. */
+    public function testTnaMayorQueCero(): void
+    {
+        foreach (['0', '0,00', '-1'] as $tna) {
+            $e = V::validar(V::normalizar($this->motos(['tna' => $tna])), self::CODIGOS, '2026-10-27');
+            $this->assertSame($tna === '-1' ? 'Ingrese la TNA en porcentaje, por ejemplo 65 o 65,5.' : 'La TNA debe ser mayor que cero.', $e['tna'] ?? null, $tna);
+        }
+        $this->assertSame([], V::validar(V::normalizar($this->motos(['tna' => '0,01'])), self::CODIGOS, '2026-10-27'));
+    }
+
+    /** O-03 (D-52): un tipo de gasto administrativo fuera de la lista se rechaza. */
+    public function testTipoDeGastoFueraDeLista(): void
+    {
+        foreach (['Variable', 'fijo', '', null] as $tipo) {
+            $datos = $tipo === null ? array_diff_key($this->motos(), ['tipo_gasto_administrativo' => 1]) : $this->motos(['tipo_gasto_administrativo' => $tipo]);
+            $e = V::validar(V::normalizar($datos), self::CODIGOS, '2026-10-27');
+            $this->assertSame(['tipo_gasto_administrativo' => 'Seleccione cómo se cobra el gasto administrativo.'], $e, (string) $tipo);
+        }
     }
 
     public function testLineaMotosValidaYNormalizada(): void

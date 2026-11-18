@@ -7,6 +7,7 @@ namespace App\Libraries\Validacion;
 use App\Libraries\Clientes\CatalogoGeografico;
 use App\Libraries\Clientes\CategoriasMonotributo;
 use App\Libraries\Clientes\RequisitosDocumentales;
+use App\Libraries\Finanzas\Decimal;
 
 /**
  * Datos de un cliente (CU-11 pasos 2 a 5 y A7, A8, A11; CU-12 paso 5; RN-07, RN-08, RN-75, RN-80). La unicidad del
@@ -21,6 +22,11 @@ final class ValidadorCliente
     public const ESTADOS_CIVILES = ['Soltero' => 'Soltero/a', 'Casado' => 'Casado/a', 'UnionConvivencial' => 'Unión convivencial', 'Divorciado' => 'Divorciado/a', 'Viudo' => 'Viudo/a'];
     public const EDAD_MINIMA = 18;
 
+    /** O-06 (D-52): edad máxima admisible, para detectar errores de carga en la fecha de nacimiento. */
+    public const EDAD_MAXIMA = 110;
+
+    public const TIPOS_CLIENTE = ['PersonaHumana', 'PersonaJuridica'];
+
     /**
      * @param array<string, mixed> $d
      * @return array<string, mixed>
@@ -31,6 +37,8 @@ final class ValidadorCliente
         $tipo = $t('tipo_cliente') === 'PersonaJuridica' ? 'PersonaJuridica' : 'PersonaHumana';
         $comunes = [
             'tipo_cliente' => $tipo,
+            // O-02 (D-52): un tipo fuera de la lista se rechaza; el valor normalizado solo elige las reglas a aplicar
+            'tipo_cliente_valido' => in_array($t('tipo_cliente'), self::TIPOS_CLIENTE, true),
             'correo' => Campos::correo($d['correo'] ?? ''),
             'telefono' => $t('telefono'),
             'domicilio' => $t('domicilio'),
@@ -87,7 +95,7 @@ final class ValidadorCliente
     public static function validar(array $d, bool $alta, string $hoy, array $escalaMonotributo = []): array
     {
         $juridica = $d['tipo_cliente'] === 'PersonaJuridica';
-        $r = [];
+        $r = ['tipo_cliente' => [($d['tipo_cliente_valido'] ?? true) ? null : 'Seleccione el tipo de cliente.']];
 
         if ($juridica) {
             $r['razon_social'] = [Campos::obligatorio($d['razon_social'], 'la razón social'), Campos::largoMaximo($d['razon_social'], 200, 'la razón social')];
@@ -106,7 +114,9 @@ final class ValidadorCliente
             $r['apellido'] = [Campos::obligatorio($d['apellido'], 'el apellido'), Campos::nombrePersona($d['apellido'], 'el apellido')];
             $r['tipo_documento'] = [Campos::obligatorio($d['tipo_documento'], 'el tipo de documento'), Campos::tipoDocumento($d['tipo_documento'])];
             $r['nro_documento'] = [Campos::obligatorio($d['nro_documento'], 'el número de documento'), Campos::numeroDocumento($d['tipo_documento'], $d['nro_documento'])];
+            // O-04 (D-52): el CUIL es obligatorio en el alta; los clientes anteriores lo completan al solicitar un crédito
             $r['cuit_cuil'] = [
+                $alta ? Campos::obligatorio($d['cuit_cuil'], 'el CUIL o CUIT') : null,
                 Campos::cuit($d['cuit_cuil'], 'PersonaHumana'),
                 $d['cuit_cuil'] !== '' && $d['tipo_documento'] === 'DNI' && Campos::numeroDocumento('DNI', $d['nro_documento']) === null
                     && !Campos::cuilCorrespondeADni($d['cuit_cuil'], $d['nro_documento']) ? 'El CUIT/CUIL no corresponde al número de documento.' : null,
@@ -116,6 +126,7 @@ final class ValidadorCliente
                 $d['fecha_nacimiento_texto'] !== '' && $d['fecha_nacimiento'] === null ? 'Ingrese una fecha válida (dd/mm/aaaa).' : null,
                 $d['fecha_nacimiento'] !== null && $d['fecha_nacimiento'] > $hoy ? 'La fecha de nacimiento no puede ser futura.' : null,
                 $d['fecha_nacimiento'] !== null && $d['fecha_nacimiento'] <= $hoy && Campos::edad($d['fecha_nacimiento'], $hoy) < self::EDAD_MINIMA ? 'El cliente debe ser mayor de edad (' . self::EDAD_MINIMA . ' años).' : null,
+                $d['fecha_nacimiento'] !== null && $d['fecha_nacimiento'] <= $hoy && Campos::edad($d['fecha_nacimiento'], $hoy) > self::EDAD_MAXIMA ? 'Revise la fecha de nacimiento: la edad no puede superar ' . self::EDAD_MAXIMA . ' años.' : null,
             ];
             $r['estado_civil'] = [$d['estado_civil'] !== '' && !isset(self::ESTADOS_CIVILES[$d['estado_civil']]) ? 'Seleccione un estado civil válido.' : null];
             $r['nacionalidad'] = [Campos::obligatorio($d['nacionalidad'], 'la nacionalidad'), Campos::largoMaximo($d['nacionalidad'], 60, 'la nacionalidad')];
@@ -133,6 +144,8 @@ final class ValidadorCliente
         $r['ingresos_declarados'] = [
             Campos::obligatorio($d['ingresos_texto'], $juridica ? 'los ingresos netos mensuales promedio' : 'los ingresos declarados'),
             $d['ingresos_texto'] !== '' && $d['ingresos_declarados'] === null ? 'Ingrese un importe válido, por ejemplo 850.000,00.' : null,
+            // O-07 (D-52)
+            $d['ingresos_declarados'] !== null && !Decimal::of((string) $d['ingresos_declarados'])->isPositive() ? 'Los ingresos declarados deben ser mayores que cero.' : null,
         ];
         $r['categoria_ingresos'] = [
             $d['categoria_ingresos'] === '' ? 'Seleccione la categoría de ingresos.' : null,

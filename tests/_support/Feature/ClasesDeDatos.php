@@ -72,14 +72,9 @@ final class ClasesDeDatos
                 ['COM-03', 'código HTML', $html, Esperado::acepta('1')],
             ];
         }
-        if (isset($c['fuera_se_toma_como'])) {
-            // Una lista cuyo valor fuera de catálogo se normaliza a uno admitido (observaciones O-02 y O-03)
-            $formato = Esperado::acepta($c['fuera_se_toma_como']);
-            $libre = false;
-        }
         $casos = [
             ['COM-01', 'campo ausente', Esperado::AUSENTE, $vacio],
-            ['COM-02', 'enviado como lista', [$normal], isset($c['fuera_se_toma_como']) ? Esperado::acepta($c['fuera_se_toma_como']) : $vacio],
+            ['COM-02', 'enviado como lista', [$normal], $vacio],
             ['COM-03', 'código HTML', $html, $libre ? Esperado::acepta($html) : $formato],
             ['COM-04', 'texto SQL', $sql, $libre ? Esperado::acepta($sql) : $formato],
         ];
@@ -154,12 +149,16 @@ final class ClasesDeDatos
     {
         $formato = Esperado::rechaza('Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.');
         $u = Fabrica::sufijo();
+        $u2 = Fabrica::sufijo();
         $local64 = str_pad("c{$u}", 64, 'x');
         // 254 caracteres: 64 de la parte local, la arroba y un dominio de 189 con etiquetas de hasta 63
         $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 48) . '.prueba.local';
         $c254 = $local64 . '@' . $dominio189;
         $c255 = $local64 . '@g' . $dominio189;
         assert(strlen($c254) === 254 && strlen($c255) === 255);
+        // 32 eñes con el sufijo al final: 64 octetos en la parte local
+        $local32n = str_repeat('ñ', 32 - (int) ceil(strlen($u) / 2)) . str_pad($u, 2 * (int) ceil(strlen($u) / 2), '0') . '@prueba.local';
+        assert(strlen(strstr($local32n, '@', true)) === 64);
 
         return [
             ['COR-01', 'vacío', '', Esperado::rechaza($c['mensajes']['obligatorio'] ?? 'Complete el correo electrónico.')],
@@ -171,10 +170,21 @@ final class ClasesDeDatos
             ['COR-04', 'dos arrobas', 'ana@@prueba.local', $formato],
             ['COR-04', 'puntos seguidos en el dominio', 'ana@prueba..local', $formato],
             ['COR-05', 'dominio sin punto', 'ana@prueba', $formato],
-            ['COR-06', 'caracteres no ASCII', 'ñandú@prueba.local', $formato],
+            // O-05 (D-52): correos internacionales, con la parte local o el dominio no ASCII
+            ['COR-06', 'parte local no ASCII', "ñandú{$u}@prueba.local", Esperado::acepta("ñandú{$u}@prueba.local")],
+            // Otro sufijo: en minúsculas sería el mismo correo del caso anterior y lo rechazaría la unicidad (COR-09)
+            ['COR-06', 'parte local no ASCII en mayúsculas', 'ÑANDÚ' . strtoupper($u2) . '@Prueba.Local', Esperado::acepta("ñandú{$u2}@prueba.local")],
+            ['COR-06', 'dominio internacional', "ana{$u}@ñandú.com.ar", Esperado::acepta("ana{$u}@ñandú.com.ar")],
+            ['COR-06', 'dominio internacional en punycode', "ana{$u}@xn--and-6ma2c.com.ar", Esperado::acepta("ana{$u}@xn--and-6ma2c.com.ar")],
+            ['COR-06', 'escritura no latina', "用户{$u}@例子.广告", Esperado::acepta("用户{$u}@例子.广告")],
+            ['COR-06', 'dominio internacional sin punto', "ana{$u}@ñandú", $formato],
+            ['COR-06', 'dominio internacional mal formado', "ana{$u}@-ñandú-.com", $formato],
             ['COR-07', '254 caracteres', $c254, Esperado::acepta($c254)],
             ['COR-07', '255 caracteres', $c255, $formato],
             ['COR-08', 'parte local de 65', str_pad("c{$u}", 65, 'x') . '@prueba.local', $formato],
+            // La parte local admite 64 octetos: cada eñe ocupa dos en UTF-8
+            ['COR-08', 'parte local de 64 octetos no ASCII', $local32n, Esperado::acepta($local32n)],
+            ['COR-08', 'parte local de 65 octetos no ASCII', 'x' . $local32n, $formato],
         ];
     }
 
@@ -232,6 +242,7 @@ final class ClasesDeDatos
         [$g, $e, $p] = [Fabrica::cuitValido($prefijo), Fabrica::cuitValido($prefijo), Fabrica::cuitValido($prefijo)];
 
         return [
+            ['CUI-08', 'vacío', '', self::vacio($c)],
             ['CUI-01', 'con guiones', substr($g, 0, 2) . '-' . substr($g, 2, 8) . '-' . $g[10], Esperado::acepta($g)],
             ['CUI-01', 'con espacios', substr($e, 0, 2) . ' ' . substr($e, 2, 8) . ' ' . $e[10], Esperado::acepta($e)],
             ['CUI-01', 'con puntos', substr($p, 0, 2) . '.' . substr($p, 2, 8) . '.' . $p[10], Esperado::acepta($p)],
@@ -372,7 +383,8 @@ final class ClasesDeDatos
         ];
         if ($c['admite_pasado'] ?? true) {
             $casos[] = ['FEC-03', '29 de febrero de un año bisiesto', '29/02/2000', Esperado::acepta('2000-02-29')];
-            $casos[] = ['FEC-05', '1 de enero de 1900', '01/01/1900', Esperado::acepta('1900-01-01')];
+            // O-06 (D-52): un campo con edad máxima rechaza 1900 con su propio mensaje
+            $casos[] = ['FEC-05', '1 de enero de 1900', '01/01/1900', isset($c['mensajes']['edad_maxima']) ? Esperado::rechaza($c['mensajes']['edad_maxima']) : Esperado::acepta('1900-01-01')];
         }
         $casos[] = ['FEC-05', '31 de diciembre de 1899', '31/12/1899', $formato];
 
@@ -389,9 +401,7 @@ final class ClasesDeDatos
         foreach ($c['valores'] as $v) {
             $casos[] = ['SEL-01', "valor {$v}", $v, Esperado::acepta($c['guardado'][$v] ?? $v)];
         }
-        $fuera = isset($c['fuera_se_toma_como'])
-            ? Esperado::acepta($c['fuera_se_toma_como'])
-            : Esperado::rechaza($c['mensajes']['formato'] ?? null);
+        $fuera = Esperado::rechaza($c['mensajes']['formato'] ?? null);
         $casos[] = ['SEL-02', 'vacío', '', self::vacio($c)];
         $casos[] = ['SEL-03', 'valor inexistente', 'Inexistente', $fuera];
         $primero = (string) $c['valores'][0];

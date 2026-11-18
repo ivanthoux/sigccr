@@ -55,6 +55,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-49 | 17/11/2026 | Propuesta |
 | D-50 | 17/11/2026 | Propuesta |
 | D-51 | 17/11/2026 | Propuesta |
+| D-52 | 18/11/2026 | Aceptada |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -871,3 +872,41 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 - La iteración 1 suma 1310 pruebas automáticas (IN-01 a IN-22 e IN-C01 a IN-C14).
 - Pendiente: usar `Campos::largo()` en las validaciones de largo de las iteraciones 2 a 4 que todavía cuentan con `mb_strlen()` (caja, devoluciones, evaluación, resolución, refinanciación), al construir su catálogo.
 - Riesgo aceptado: los datos de las pruebas se acumulan en `sigccr_pruebas` durante una ejecución; se descartan al recrear la base en la ejecución siguiente.
+
+## D-52 · Resolución de las observaciones O-01 a O-07 de las pruebas de integración (RN-07, RN-14, RN-80, D-28; plan de pruebas 7.9.3)
+
+**Contexto.** Al construir las pruebas de integración de la iteración 1 (D-51) aparecieron siete comportamientos que no eran defectos, porque el sistema hacía lo que el código establecía, pero que ninguna regla de negocio definía. Se registraron como observaciones en el punto 7.9.3 del plan de pruebas para que se decidiera cada una:
+- O-01: la TNA admitía 0 %;
+- O-02: un tipo de cliente fuera de la lista se registraba como persona humana;
+- O-03: un tipo de gasto administrativo fuera de la lista se registraba como importe fijo;
+- O-04: el CUIL de una persona humana era opcional en el alta;
+- O-05: los correos con caracteres no ASCII se rechazaban;
+- O-06: la fecha de nacimiento no tenía edad máxima;
+- O-07: los ingresos declarados admitían 0.
+
+**Decisión.**
+1. **O-01.** La TNA de una línea debe ser mayor que cero: «La TNA debe ser mayor que cero.». Una línea sin interés no es un producto de crédito del sistema y suele ser un error de carga.
+2. **O-02.** Un tipo de cliente fuera de la lista (`PersonaHumana`, `PersonaJuridica`), vacío o ausente se rechaza: «Seleccione el tipo de cliente.». Al modificar un cliente rige su tipo actual, como hasta ahora.
+3. **O-03.** Un tipo de gasto administrativo fuera de la lista (`Fijo`, `Porcentual`), vacío o ausente se rechaza: «Seleccione cómo se cobra el gasto administrativo.».
+4. **O-04.** El CUIL o CUIT es obligatorio en el alta de una persona humana: «Complete el CUIL o CUIT.». Los clientes registrados antes de esta decisión lo completan al modificar sus datos o al registrar una solicitud (RN-80), donde ya se exigía.
+5. **O-05.** Se admiten los correos internacionales:
+   - parte local con letras no ASCII (RFC 6531), hasta 64 octetos en UTF-8 (RFC 5321): 64 letras ASCII o 32 eñes;
+   - dominio internacional (IDN), que se valida en su forma punycode (UTS 46) y debe tener al menos un punto;
+   - el largo total sigue limitado a 254 unidades, como la columna `NVARCHAR(254)`;
+   - el correo se guarda como se escribió, en minúsculas y sin espacios.
+   Para enviarlos, `SmtpComunicaciones` convierte el dominio a punycode, y `CorreoConIdentificador` valida la parte local internacional y pide la extensión `SMTPUTF8` en el `MAIL FROM` cuando algún destinatario la necesita. Si el servidor no la admite, el envío se clasifica como fallo transitorio (RNF-09) y se reintenta según la política de envío.
+6. **O-06.** La edad de una persona humana no puede superar 110 años: «Revise la fecha de nacimiento: la edad no puede superar 110 años.». 110 años cumplidos se aceptan.
+7. **O-07.** Los ingresos declarados deben ser mayores que cero: «Los ingresos declarados deben ser mayores que cero.».
+
+**Consecuencias.**
+- Cambian:
+  - `ValidadorLinea` (O-01, O-03) y `ValidadorCliente` (O-02, O-04, O-06, O-07);
+  - `Campos::formatoCorreo()`, con `dominioAscii()` y `correoParaEnvio()` nuevos (O-05), que usan el alta de usuarios y de clientes, el pre-registro, el cambio de correo del portal, la recuperación de acceso, la activación y `AdministradorInicialSeeder`;
+  - `CorreoConIdentificador` y `SmtpComunicaciones` (O-05).
+- Pruebas:
+  - unitarias: `ClientesTest`, `ValidadorLineaTest`, `CamposTest` y `SmtpComunicacionesTest`, con una conversación SMTP simulada que verifica el `MAIL FROM ... SMTPUTF8` y el rechazo del servidor;
+  - de integración: las clases COR-06 y COR-08 con correos internacionales, la clase CUI-08 (vacío), la edad máxima en FEC-05 y FEC-08, el cero en IMP-05 y PCT-03 según el campo, y los valores fuera de la lista en SEL-03, que ya no se normalizan.
+- Plan de pruebas: el punto 7.9.3 pasa de observaciones abiertas a decisiones, y el catálogo de campos del Anexo B se actualiza.
+- Un DNI de 9 dígitos, que el formato admite, no tiene un CUIL que le corresponda: con el CUIL obligatorio no puede darse de alta (se registra en la prueba `testDniDeNueveDigitosSinCuilPosible`).
+- Pendiente de verificación manual: un envío real a un correo con parte local internacional en Mailpit (desarrollo) y en el servidor SMTP de producción, que debe anunciar `SMTPUTF8`.
+

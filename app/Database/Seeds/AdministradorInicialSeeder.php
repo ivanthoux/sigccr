@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Database\Seeds;
 
+use App\Libraries\Validacion\Campos;
 use CodeIgniter\CLI\CLI;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
@@ -30,7 +31,14 @@ class AdministradorInicialSeeder extends Seeder
 
             return;
         }
-        $correo = CLI::prompt('Correo del Administrador', null, 'required|valid_email');
+        // O-05 (D-52): el mismo formato de correo que en las pantallas, que admite direcciones internacionales
+        do {
+            $correo = Campos::correo(CLI::prompt('Correo del Administrador', null, 'required'));
+            $error = Campos::formatoCorreo($correo);
+            if ($error !== null) {
+                CLI::write($error, 'red');
+            }
+        } while ($error !== null);
         $nombre = CLI::prompt('Nombre', null, 'required');
         $apellido = CLI::prompt('Apellido', null, 'required');
         $documento = CLI::prompt('Número de DNI', null, 'required|numeric');
@@ -62,9 +70,9 @@ class AdministradorInicialSeeder extends Seeder
         if ($correo === '') {
             return null;
         }
-        $datos = [$correo, (string) getenv('SIGCCR_ADMIN_NOMBRE'), (string) getenv('SIGCCR_ADMIN_APELLIDO'), (string) getenv('SIGCCR_ADMIN_DNI'), (string) getenv('SIGCCR_ADMIN_CLAVE')];
+        $datos = [Campos::correo($correo), (string) getenv('SIGCCR_ADMIN_NOMBRE'), (string) getenv('SIGCCR_ADMIN_APELLIDO'), (string) getenv('SIGCCR_ADMIN_DNI'), (string) getenv('SIGCCR_ADMIN_CLAVE')];
         $largo = mb_strlen($datos[4]);
-        if (filter_var($correo, FILTER_VALIDATE_EMAIL) === false || $datos[1] === '' || $datos[2] === '' || !ctype_digit($datos[3]) || $largo < 15 || $largo > 128) {
+        if (Campos::formatoCorreo(Campos::correo($correo)) !== null || $datos[1] === '' || $datos[2] === '' || !ctype_digit($datos[3]) || $largo < 15 || $largo > 128) {
             throw new \InvalidArgumentException('Datos del Administrador incompletos o inválidos en las variables SIGCCR_ADMIN_* (contraseña de 15 a 128 caracteres, RN-62).');
         }
 
