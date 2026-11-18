@@ -43,7 +43,8 @@ final class ReglasRegimen
     /** Un período es válido si tiene el formato aaaa-mm y ya cerró. */
     public static function periodoCerrado(string $periodo, string $hoy): bool
     {
-        return preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $periodo) === 1 && $periodo < substr($hoy, 0, 7);
+        // H-30: desde 1900, como las fechas del sistema; el año 0000 no es una fecha válida en SQL Server
+        return preg_match('/^(19|[2-9]\d)\d{2}-(0[1-9]|1[0-2])$/', $periodo) === 1 && $periodo < substr($hoy, 0, 7);
     }
 
     /**

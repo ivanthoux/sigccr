@@ -77,6 +77,7 @@ final class CampanasTest extends IntegracionTestCase
         // Aceptación válida, con espacios en los extremos de la clave
         [$o, $version, $clave] = $this->ofertaEnElPortal();
         $r = $this->enviar("portal/ofertas/{$o['id']}/aceptar", ['version_fila' => " {$version} ", 'alternativa' => " {$clave} "]);
+        $this->assertSame('', (string) ($_SESSION['error'] ?? ''), 'La aceptación válida no debe informar un error: ' . json_encode($_SESSION['errores'] ?? [], JSON_UNESCAPED_UNICODE));
         $solicitud = $this->ultimoId('solicitudes_credito');
         $r->assertRedirectTo(site_url("portal/solicitudes/{$solicitud}"));
         $s = $this->db->table('solicitudes_credito')->where('id', $solicitud)->get()->getRowArray();

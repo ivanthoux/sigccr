@@ -15,7 +15,8 @@ class Tablero extends BaseController
 {
     public function index(): string|RedirectResponse
     {
-        $f = ['tipo' => (string) ($this->request->getGet('tipo') ?? 'mes'), 'fecha' => trim($this->campoGet('fecha')), 'desde' => trim($this->campoGet('desde')), 'hasta' => trim($this->campoGet('hasta'))];
+        // H-15: un criterio enviado como lista vale vacío (antes, (string) de una lista era un error)
+        $f = ['tipo' => $this->request->getGet('tipo') === null ? 'mes' : trim($this->campoGet('tipo')), 'fecha' => trim($this->campoGet('fecha')), 'desde' => trim($this->campoGet('desde')), 'hasta' => trim($this->campoGet('hasta'))];
         try {
             $t = (new ReporteService())->tablero($f);
         } catch (ReglaNegocioException $e) {

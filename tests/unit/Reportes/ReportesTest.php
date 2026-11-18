@@ -120,6 +120,10 @@ final class ReportesTest extends TestCase
         $this->assertTrue(ReglasRegimen::periodoCerrado('2026-10', '2026-11-12'));
         $this->assertFalse(ReglasRegimen::periodoCerrado('2026-11', '2026-11-12'));
         $this->assertFalse(ReglasRegimen::periodoCerrado('2026-13', '2027-11-12'));
+        // H-30: el año 0000 no es una fecha válida en SQL Server; se admiten períodos desde 1900
+        $this->assertFalse(ReglasRegimen::periodoCerrado('0000-01', '2026-11-12'));
+        $this->assertFalse(ReglasRegimen::periodoCerrado('1899-12', '2026-11-12'));
+        $this->assertTrue(ReglasRegimen::periodoCerrado('1900-01', '2026-11-12'));
     }
 
     public function testClasificacionDeDeudoresYArchivo(): void
