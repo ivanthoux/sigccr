@@ -150,4 +150,12 @@ final class ValidadorLineaTest extends TestCase
         $this->assertSame('Fijo', $fijo['tipo_gasto_administrativo']);
         $this->assertNull($fijo['gasto_administrativo_pct']);
     }
+
+    /** D-54: el gasto de otorgamiento admite hasta 50 % del capital. */
+    public function testGastoDeOtorgamientoHasta50(): void
+    {
+        $this->assertSame([], V::validar(V::normalizar($this->motos(['gasto_otorgamiento_pct' => '50'])), self::CODIGOS, '2026-10-27'));
+        $e = V::validar(V::normalizar($this->motos(['gasto_otorgamiento_pct' => '50,0001'])), self::CODIGOS, '2026-10-27');
+        $this->assertSame(['gasto_otorgamiento_pct' => 'El gasto de otorgamiento no puede superar el 50 % del capital.'], $e);
+    }
 }

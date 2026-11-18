@@ -57,6 +57,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-51 | 17/11/2026 | Propuesta |
 | D-52 | 18/11/2026 | Aceptada |
 | D-53 | 18/11/2026 | Aceptada |
+| D-54 | 18/11/2026 | Aceptada |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -924,4 +925,21 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 - Pruebas: `CamposTest`; en integración, las clases DOC-05 (6 y 8 dígitos) y DOC-06 (5, 9 y 10 dígitos), y las pruebas `testDocumentoDeNueveDigitos` y `testDniCortoConSuCuil` de clientes.
 - Plan de pruebas: clases DOC-05 y DOC-06 del Anexo A y campos de documento del Anexo B.
 - Los registros existentes con 9 dígitos, si los hubiera, no se modifican; al editarlos se pide corregir el número.
+
+## D-54 · Límites del gasto de otorgamiento y de los movimientos de fondos (RN-14, RN-71, CU-16, CU-85)
+
+**Contexto.** Las pruebas de integración de la iteración 2 dejaron tres comportamientos que ninguna regla definía:
+- el gasto de otorgamiento de una línea admitía hasta 99,9999 %, pero con el IVA desde 82,64 % no queda neto para desembolsar y con valores más bajos el CFTEA no cabe en sus columnas (H-24, H-25);
+- un movimiento de fondos realizado admitía cualquier fecha desde 1900;
+- un movimiento de fondos admitía importes de hasta 17 dígitos: dos ingresos así dejan un disponible que ya no se puede escribir como importe.
+
+**Decisión.**
+1. El gasto de otorgamiento de una línea admite hasta 50 % del capital, incluido: «El gasto de otorgamiento no puede superar el 50 % del capital.». Las líneas anteriores con un gasto mayor siguen funcionando: al simular se rechazan con el mensaje de H-24 o H-25 y en la comparación y las alternativas figuran como no viables.
+2. Un movimiento de fondos realizado puede tener hasta un año de antigüedad: «La fecha del movimiento no puede tener más de un año de antigüedad.». Un aporte más antiguo se registra como saldo inicial. Un movimiento programado no tiene límite hacia adelante.
+3. Un movimiento de fondos admite hasta $ 1.000.000.000,00: «El importe de un movimiento no puede superar $ 1.000.000.000,00.». Un aporte mayor se registra en varios movimientos.
+
+**Consecuencias.**
+- Cambian `ValidadorLinea` y `ReglasCaja::validarMovimiento()` (constante `IMPORTE_MAXIMO_MOVIMIENTO`).
+- Pruebas: `ValidadorLineaTest`, `CajasFondosTest`; en integración, PCT-06 del gasto de otorgamiento (IN-18), IMP-08 e IMP-10 del importe e `testAntiguedadDeUnMovimientoRealizado` (IN-23).
+- Plan de pruebas: filas de los campos en los Anexos B.6 y B.8.
 

@@ -230,7 +230,9 @@ final class SimulacionTest extends IntegracionTestCase
         // H-24: 80 % de gasto más su IVA deja un neto del 3,2 %: el CFTEA no cabe en DECIMAL(18,12)
         // H-25: 99,9999 % más su IVA supera el capital: no hay neto para desembolsar
         foreach (['80' => \App\Libraries\Finanzas\Tasas::MENSAJE_FUERA_DE_LIMITE, '99,9999' => \App\Libraries\Finanzas\Tasas::MENSAJE_SIN_NETO] as $gasto => $mensaje) {
-            $extrema = $this->fabrica->linea(['tna' => '500', 'gasto_otorgamiento_pct' => $gasto])['id'];
+            // D-54 limita el gasto a 50 %: estas líneas son anteriores a la decisión y se crean con el gasto en la base
+            $extrema = $this->fabrica->linea(['tna' => '500'])['id'];
+            $this->db->table('versiones_condiciones')->where('linea_credito_id', $extrema)->update(['gasto_otorgamiento_pct' => bcdiv(str_replace(',', '.', (string) $gasto), '100', 6)]);
             $this->enviar('admin/simulaciones', ['cliente_id' => (string) $cliente['id'], 'linea_id' => (string) $extrema, 'importe' => '500.000,00', 'cantidad_cuotas' => '12']);
             $this->assertSame($mensaje, $_SESSION['error'] ?? null, "gasto {$gasto} %");
             $this->assertSame($antes, $this->ultimoId('simulaciones'));

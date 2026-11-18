@@ -272,7 +272,7 @@ final class ClasesDeDatos
         $formato = Esperado::rechaza($c['mensajes']['formato'] ?? null);
         $cero = isset($c['mensajes']['cero']) ? Esperado::rechaza($c['mensajes']['cero']) : Esperado::acepta('0.00');
 
-        return [
+        $casos = [
             ['IMP-01', 'vacío', '', self::vacio($c)],
             ['IMP-02', 'puntos y coma', '1.234.567,89', Esperado::acepta('1234567.89')],
             ['IMP-02', 'solo coma', '1234567,89', Esperado::acepta('1234567.89')],
@@ -286,12 +286,20 @@ final class ClasesDeDatos
             ['IMP-06', 'negativo', '-100', $formato],
             ['IMP-07', 'tres decimales con coma', '1,234', $formato],
             ['IMP-07', 'cuatro decimales', '1.2345', $formato],
-            ['IMP-08', '17 dígitos', '99999999999999999', Esperado::acepta('99999999999999999.00')],
+            ['IMP-08', '17 dígitos', '99999999999999999', isset($c['maximo_importe']) ? Esperado::rechaza($c['mensajes']['maximo'] ?? null) : Esperado::acepta('99999999999999999.00')],
             ['IMP-08', '18 dígitos', '999999999999999999', $formato],
             ['IMP-09', 'notación científica', '1e5', $formato],
             ['IMP-09', 'letras', 'abc', $formato],
             ['IMP-09', 'dos comas', '1.000,00,00', $formato],
         ];
+        if (isset($c['maximo_importe'])) {
+            // D-54: el importe máximo del campo, incluido, y un centavo más
+            $max = (string) $c['maximo_importe'];
+            $casos[] = ['IMP-10', "máximo {$max}", str_replace('.', ',', $max), Esperado::acepta($max)];
+            $casos[] = ['IMP-10', 'máximo + 0,01', str_replace('.', ',', bcadd($max, '0.01', 2)), Esperado::rechaza($c['mensajes']['maximo'] ?? null)];
+        }
+
+        return $casos;
     }
 
     /**

@@ -99,7 +99,8 @@ class CobroService extends BaseService
      */
     public function registrar(int $usuarioId, int $clienteId, array $seleccion, string $importeTexto, array $medios): array
     {
-        $seleccion = array_map(static fn ($n) => array_values(array_map('intval', (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
+        // H-21: un número de cuota enviado como lista o con letras vale 0 y la selección se rechaza
+        $seleccion = array_map(static fn ($n) => array_values(array_map([Campos::class, 'identificador'], (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
 
         return $this->transaccion(function () use ($usuarioId, $clienteId, $seleccion, $importeTexto, $medios): array {
             // A3: jornada abierta hoy con la asignación vigente (RN-28)
@@ -347,7 +348,8 @@ class CobroService extends BaseService
     public function anular(int $cobroId, string $motivoTexto, bool $continuarConDependientes, int $usuarioId): array
     {
         $motivo = Campos::texto($motivoTexto);
-        $error = Campos::motivo($motivo) ?? (mb_strlen($motivo) > 500 ? 'El motivo admite hasta 500 caracteres.' : null);
+        // H-16: largo en unidades de NVARCHAR(500)
+        $error = Campos::motivo($motivo, 500);
         if ($error !== null) {
             throw new ValidacionException(['motivo' => $error], 'RN-33');
         }

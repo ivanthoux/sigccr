@@ -27,6 +27,9 @@ final class ControlesComunesTest extends IntegracionTestCase
         'admin/fondos', 'admin/cajas', 'admin/caja', 'admin/calendario', 'admin/parametros',
         // Iteración 2, bloque B: simulación, solicitudes, evaluación, resolución, contratos y liquidación
         'admin/simulaciones', 'admin/solicitudes', 'admin/evaluaciones', 'admin/resoluciones', 'admin/contratos', 'admin/liquidaciones',
+        // Iteración 3: cobranzas, cartera, saldos y devoluciones
+        'admin/cobros', 'admin/pagos-electronicos', 'admin/creditos', 'admin/cancelaciones', 'admin/revocaciones', 'admin/punitorios',
+        'admin/refinanciaciones', 'admin/saldos-favor', 'admin/devoluciones',
     ];
 
     /** @return array<string, array{0: string, 1: string, 2: string}> «VERBO ruta» => [verbo, ruta con ids, permiso] */

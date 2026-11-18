@@ -52,7 +52,7 @@ class PagoElectronicoService extends BaseService
      */
     public function generarOrden(?int $usuarioId, int $clienteId, array $seleccion, string $presentado): array
     {
-        $seleccion = array_map(static fn ($n) => array_values(array_map('intval', (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
+        $seleccion = array_map(static fn ($n) => array_values(array_map([Campos::class, 'identificador'], (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
         $orden = $this->transaccion(function () use ($clienteId, $seleccion, $presentado): array {
             $elegidas = (new CobroService($this->db))->seleccionar($clienteId, $seleccion)['cuotas'];
             // A7: una cuota no integra dos órdenes abiertas y vigentes
