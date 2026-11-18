@@ -7,6 +7,10 @@ use CodeIgniter\Router\RouteCollection;
  *
  * @var RouteCollection $routes
  */
+// Identificadores en la dirección: hasta 9 dígitos, como Campos::identificador() (H-21). Un número más largo no
+// cabe en una columna INT y, si superaba el entero de PHP, el controlador fallaba con un error 500 (H-28): responde 404.
+$routes->addPlaceholder('num', '[0-9]{1,9}');
+
 // Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
 $routes->get('/', 'Portada::index', ['as' => 'portada']);
 

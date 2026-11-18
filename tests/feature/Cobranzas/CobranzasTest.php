@@ -37,41 +37,6 @@ final class CobranzasTest extends IntegracionTestCase
         return \App\Libraries\Caja\CobroCuotas::total($cuota)->toFixed(2);
     }
 
-    /**
-     * Envía cada caso y verifica que se rechaza con el mensaje en el campo, sin registros nuevos en las tablas indicadas.
-     *
-     * @param array<string, mixed> $base
-     * @param array<string, array{0: array<string, mixed>, 1: string, 2: ?string}> $casos nombre => [cambios, campo ('' = mensaje general), mensaje (null = cualquiera; si contiene «*», prefijo)]
-     * @param list<string> $tablas
-     */
-    private function rechazos(string $ruta, array $base, array $casos, array $tablas): void
-    {
-        foreach ($casos as $caso => [$cambios, $campo, $mensaje]) {
-            $antes = array_map(fn (string $t): int => $this->ultimoId($t), $tablas);
-            $datos = $base;
-            foreach ($cambios as $k => $v) {
-                $datos = self::conValor($datos, $k, $v);
-            }
-            $r = $this->enviar($ruta, $datos);
-            if ($mensaje === Esperado::PETICION) {
-                $this->assertCampoRechazado($r, $campo, $mensaje, $caso);
-            } elseif ($campo === '') {
-                $this->assertTrue($r->isRedirect(), $caso);
-                $error = (string) ($_SESSION['error'] ?? '');
-                $this->assertNotSame('', $error, "{$caso}: falta el mensaje");
-                if ($mensaje !== null) {
-                    $this->assertStringStartsWith(rtrim($mensaje, '*'), $error, $caso);
-                }
-            } elseif ($mensaje !== null && str_ends_with($mensaje, '*')) {
-                $this->assertCampoRechazado($r, $campo, null, $caso);
-                $this->assertStringStartsWith(rtrim($mensaje, '*'), (string) $_SESSION['errores'][$campo], $caso);
-            } else {
-                $this->assertCampoRechazado($r, $campo, $mensaje, $caso);
-            }
-            $this->assertSame($antes, array_map(fn (string $t): int => $this->ultimoId($t), $tablas), "{$caso}: no debe registrarse nada");
-        }
-    }
-
     // ── IN-45 Registrar cobro (CU-33) ────────────────────────────────────────────────────────────────────────────
 
     /** @return array{credito: array<string, mixed>, base: array<string, mixed>, total: string} */

@@ -186,6 +186,41 @@ abstract class IntegracionTestCase extends CIUnitTestCase
         $this->assertNotSame('', (string) ($_SESSION['exito'] ?? $_SESSION['aviso'] ?? ''), "{$contexto}: falta el mensaje de éxito");
     }
 
+    /**
+     * Envía cada caso y verifica que se rechaza con el mensaje en el campo, sin registros nuevos en las tablas indicadas.
+     *
+     * @param array<string, mixed> $base
+     * @param array<string, array{0: array<string, mixed>, 1: string, 2: ?string}> $casos nombre => [cambios, campo ('' = mensaje general), mensaje (null = cualquiera; si contiene «*», prefijo)]
+     * @param list<string> $tablas
+     */
+    protected function rechazos(string $ruta, array $base, array $casos, array $tablas): void
+    {
+        foreach ($casos as $caso => [$cambios, $campo, $mensaje]) {
+            $antes = array_map(fn (string $t): int => $this->ultimoId($t), $tablas);
+            $datos = $base;
+            foreach ($cambios as $k => $v) {
+                $datos = self::conValor($datos, $k, $v);
+            }
+            $r = $this->enviar($ruta, $datos);
+            if ($mensaje === Esperado::PETICION) {
+                $this->assertCampoRechazado($r, $campo, $mensaje, $caso);
+            } elseif ($campo === '') {
+                $this->assertTrue($r->isRedirect(), $caso);
+                $error = (string) ($_SESSION['error'] ?? '');
+                $this->assertNotSame('', $error, "{$caso}: falta el mensaje");
+                if ($mensaje !== null) {
+                    $this->assertStringStartsWith(rtrim($mensaje, '*'), $error, $caso);
+                }
+            } elseif ($mensaje !== null && str_ends_with($mensaje, '*')) {
+                $this->assertCampoRechazado($r, $campo, null, $caso);
+                $this->assertStringStartsWith(rtrim($mensaje, '*'), (string) $_SESSION['errores'][$campo], $caso);
+            } else {
+                $this->assertCampoRechazado($r, $campo, $mensaje, $caso);
+            }
+            $this->assertSame($antes, array_map(fn (string $t): int => $this->ultimoId($t), $tablas), "{$caso}: no debe registrarse nada");
+        }
+    }
+
     /** Un valor guardado coincide con el esperado: los numéricos se comparan por valor (DECIMAL devuelve más ceros). */
     protected function assertValorGuardado(?string $esperado, mixed $guardado, string $contexto = ''): void
     {

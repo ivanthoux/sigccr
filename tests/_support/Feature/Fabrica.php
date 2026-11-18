@@ -270,13 +270,24 @@ final class Fabrica
     public function clienteConAcceso(string $tipo = 'PersonaHumana'): array
     {
         $c = $this->cliente($tipo);
-        $cuentaId = (int) $this->db->table('clientes')->select('cuenta_cliente_id')->where('id', $c['id'])->get()->getRowArray()['cuenta_cliente_id'];
+
+        return $this->habilitarPortal($c['id']) + ['datos' => $c['datos']];
+    }
+
+    /**
+     * Habilita el acceso al portal de un cliente ya registrado, con la contraseña Fabrica::CLAVE (CU-04 abreviado).
+     *
+     * @return array{id: int, cuenta_id: int, correo: string, clave: string}
+     */
+    public function habilitarPortal(int $clienteId): array
+    {
+        $fila = $this->db->query('SELECT c.cuenta_cliente_id, ca.correo FROM dbo.clientes c JOIN dbo.cuentas_acceso ca ON ca.id = c.cuenta_cliente_id WHERE c.id = ?', [$clienteId])->getRowArray();
         self::$hashClave ??= password_hash(self::CLAVE, PASSWORD_ARGON2ID);
-        $this->db->table('cuentas_acceso')->where('id', $cuentaId)->update([
+        $this->db->table('cuentas_acceso')->where('id', $fila['cuenta_cliente_id'])->update([
             'hash_contrasena' => self::$hashClave, 'estado' => 'Habilitada', 'correo_verificado' => 1,
         ]);
 
-        return ['id' => $c['id'], 'cuenta_id' => $cuentaId, 'correo' => $c['datos']['correo'], 'clave' => self::CLAVE, 'datos' => $c['datos']];
+        return ['id' => $clienteId, 'cuenta_id' => (int) $fila['cuenta_cliente_id'], 'correo' => (string) $fila['correo'], 'clave' => self::CLAVE];
     }
 
     // ── Líneas de crédito ────────────────────────────────────────────────────────────────────────────────────────

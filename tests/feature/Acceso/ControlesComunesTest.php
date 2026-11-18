@@ -44,7 +44,7 @@ final class ControlesComunesTest extends IntegracionTestCase
                     continue;
                 }
                 $permisos = array_values(array_filter($coleccion->getFiltersForRoute($ruta, $verbo), static fn (string $f): bool => str_starts_with($f, 'permiso:')));
-                $concreta = str_replace(['([0-9]+)', '(:num)', '([^/]+)', '(:segment)'], ['999999999', '999999999', 'x', 'x'], $ruta);
+                $concreta = str_replace(['([0-9]{1,9})', '([0-9]+)', '(:num)', '([^/]+)', '(:segment)'], ['999999999', '999999999', '999999999', 'x', 'x'], $ruta);
                 $r["{$verbo} {$ruta}"] = [$verbo, $concreta, substr($permisos[0] ?? 'permiso:', strlen('permiso:'))];
             }
         }
@@ -133,11 +133,15 @@ final class ControlesComunesTest extends IntegracionTestCase
         }
     }
 
-    /** IN-C09: un identificador no numérico en la dirección responde 404, sin detalles técnicos. */
+    /**
+     * IN-C09: un identificador no numérico o de más de 9 dígitos en la dirección responde 404, sin detalles técnicos.
+     * Uno mayor que el entero de PHP hacía fallar al controlador con un error 500 (H-28).
+     */
     public function testIdentificadorNoNumerico(): void
     {
         $this->comoRol('Administrador');
-        foreach (['admin/usuarios/abc', 'admin/usuarios/-1', 'admin/usuarios/1.5', "admin/usuarios/1%27", 'admin/clientes/abc/editar', 'admin/lineas/abc'] as $ruta) {
+        foreach (['admin/usuarios/abc', 'admin/usuarios/-1', 'admin/usuarios/1.5', "admin/usuarios/1%27", 'admin/clientes/abc/editar', 'admin/lineas/abc',
+            'admin/clientes/2147483648', 'admin/clientes/99999999999999999999', 'admin/solicitudes/99999999999999999999', 'portal/solicitudes/99999999999999999999'] as $ruta) {
             try {
                 $r = $this->pedir($ruta);
                 $this->assertContains($r->response()->getStatusCode(), [400, 404], $ruta);
