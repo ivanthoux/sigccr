@@ -301,7 +301,7 @@ final class PortalTest extends IntegracionTestCase
     {
         $c = $this->fabrica->clienteConAcceso();
         $this->comoUsuario($c, 'Cliente');
-        $consentimiento = fn (): ?string => $this->db->query('SELECT TOP 1 otorgado FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC', [$c['id']])->getRow()?->otorgado;
+        $consentimiento = fn (): ?string => $this->db->query("SELECT TOP 1 otorgado FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC", [$c['id']])->getRow()?->otorgado;
         $antes = $this->ultimoId('consentimientos');
 
         // Un valor fuera de la lista no cambia el consentimiento (H-27)
@@ -321,7 +321,7 @@ final class PortalTest extends IntegracionTestCase
         $this->assertSame('1', (string) $consentimiento());
         $this->assertAceptado($this->enviar('portal/perfil/preferencias', ['comunicaciones' => 'Revocar']));
         $this->assertSame('0', (string) $consentimiento());
-        $this->assertSame('Portal', $this->db->query('SELECT TOP 1 medio FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC', [$c['id']])->getRow()->medio);
+        $this->assertSame('Portal', $this->db->query("SELECT TOP 1 medio FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC", [$c['id']])->getRow()->medio);
     }
 
     // ── IN-57 Cambio de correo por autogestión (CU-75) ───────────────────────────────────────────────────────────
@@ -437,7 +437,7 @@ final class PortalTest extends IntegracionTestCase
             'comprobante' => ['portal/comprobantes/%d', 'cobros'],
             'orden de pago' => ['portal/pagar/ordenes/%d', 'ordenes_pago_electronico'],
             'propuesta de refinanciación' => ['portal/propuestas/refinanciaciones/%d', 'propuestas_refinanciacion'],
-            'oferta' => ['portal/ofertas/%d', 'ofertas_campana'],
+            'oferta' => ['portal/ofertas/%d', 'ofertas'],
         ];
     }
 
