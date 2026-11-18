@@ -310,9 +310,14 @@ final class CobranzasTest extends IntegracionTestCase
 
     // ── IN-51 Refinanciación (CU-39 a CU-44) ─────────────────────────────────────────────────────────────────────
 
-    /** Crédito en mora: la cuota 1 vencida hace 40 días. */
+    /**
+     * Crédito en mora: la cuota 1 vencida hace 40 días. Los punitorios se calculan día por día con los parámetros
+     * vigentes en cada día (CU-88): como en los datos de demostración, la carga inicial de parámetros se lleva dos
+     * años atrás para que rija en esos días.
+     */
     private function creditoEnMora(): array
     {
+        $this->db->query("UPDATE dbo.versiones_parametros SET vigente_desde = DATEADD(year, -2, vigente_desde) WHERE numero = 1 AND vigente_desde > DATEADD(year, -1, SYSDATETIMEOFFSET())");
         $credito = $this->fabrica->credito();
         $this->db->table('cuotas')->where('id', $credito['cuotas'][0]['id'])->update(['vencimiento' => Time::now(config('Sigccr')->zonaNegocio)->subDays(40)->format('Y-m-d'), 'estado' => 'Vencida']);
         $this->db->table('creditos')->where('id', $credito['id'])->update(['estado' => 'EnMora']);
@@ -326,8 +331,6 @@ final class CobranzasTest extends IntegracionTestCase
         $credito = $this->creditoEnMora();
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'creditos' => [(string) $credito['id']], 'tasa' => '60', 'cuotas' => '12'];
         $creditos = 'Seleccione uno o más créditos en mora del cliente (RN-70).';
-        $versiones = $this->db->query("SELECT id, numero, vigente_desde, SYSDATETIMEOFFSET() AS ahora FROM dbo.versiones_parametros WHERE tipo = 'Morosidad' ORDER BY id")->getResultArray();
-        $this->assertNotSame([], array_filter($versiones, static fn ($v) => strtotime((string) $v['vigente_desde']) <= time()), 'Parámetros de morosidad vigentes: ' . json_encode($versiones));
 
         $this->rechazos('admin/refinanciaciones/simular', $base, [
             'sin créditos' => [['creditos' => []], 'creditos', $creditos],
