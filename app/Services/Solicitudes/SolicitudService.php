@@ -50,7 +50,7 @@ class SolicitudService extends BaseService
             $b->where('s.numero', (int) trim($c['numero']));
         }
         foreach (preg_split('/\s+/u', Campos::texto($c['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
-            $b->like('c.denominacion', trim($palabra, ','));
+            $b->like('c.denominacion', Campos::literalLike((string) trim($palabra, ',')));
         }
         if (ctype_digit((string) ($c['cliente'] ?? ''))) {
             $b->where('s.cliente_id', (int) $c['cliente']);

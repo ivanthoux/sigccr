@@ -156,7 +156,7 @@ final class ClasesDeDatos
         $u = Fabrica::sufijo();
         $local64 = str_pad("c{$u}", 64, 'x');
         // 254 caracteres: 64 de la parte local, la arroba y un dominio de 189 con etiquetas de hasta 63
-        $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 47) . '.prueba.local';
+        $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 48) . '.prueba.local';
         $c254 = $local64 . '@' . $dominio189;
         $c255 = $local64 . '@g' . $dominio189;
         assert(strlen($c254) === 254 && strlen($c255) === 255);

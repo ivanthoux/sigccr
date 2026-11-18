@@ -141,7 +141,7 @@ class PreRegistroService extends BaseService
         $t = Campos::texto($texto);
         if ($t !== '') {
             $digitos = preg_replace('/\D/', '', $t) ?? '';
-            $b->groupStart()->like('p.apellido', $t)->orLike('p.nombre', $t)->orLike('p.correo', $t);
+            $b->groupStart()->like('p.apellido', Campos::literalLike((string) $t))->orLike('p.nombre', Campos::literalLike((string) $t))->orLike('p.correo', Campos::literalLike((string) $t));
             if ($digitos !== '') {
                 $b->orWhere('p.nro_documento', $digitos)->orWhere('p.cuit_cuil', $digitos);
             }

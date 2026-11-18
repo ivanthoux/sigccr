@@ -8,6 +8,7 @@ use App\Exceptions\ConflictoConcurrenciaException;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Services\Clientes\ClienteService;
+use CodeIgniter\HTTP\DownloadResponse;
 use CodeIgniter\I18n\Time;
 use Tests\Support\Feature\Esperado;
 use Tests\Support\Feature\Fabrica;
@@ -422,9 +423,9 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertSame('El documento no existe.', $_SESSION['error'] ?? null);
 
         $propio = $this->pedir("admin/clientes/{$b['id']}/documentos/{$docB}");
-        // La descarga se envía como archivo: el cuerpo de la respuesta de prueba queda vacío
+        // La descarga se envía como archivo: en la prueba no hay cuerpo ni cabeceras hasta enviarlo
         $this->assertSame(200, $propio->response()->getStatusCode());
-        $this->assertStringContainsString('attachment', $propio->response()->getHeaderLine('Content-Disposition'));
+        $this->assertInstanceOf(DownloadResponse::class, $propio->response());
         $this->assertSame(1, $this->contar('registros_auditoria', ['accion' => 'clientes.descargar_documento', 'objeto_id' => (string) $docB]));
     }
 

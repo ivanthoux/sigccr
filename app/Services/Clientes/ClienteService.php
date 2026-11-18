@@ -47,7 +47,7 @@ class ClienteService extends BaseService
             ->select("c.id, c.tipo_cliente, c.denominacion, c.cuit_cuil, c.correo, c.estado, ph.tipo_documento, ph.nro_documento")
             ->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left');
         foreach (preg_split('/\s+/u', Campos::texto($c['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
-            $b->like('c.denominacion', trim($palabra, ','));
+            $b->like('c.denominacion', Campos::literalLike((string) trim($palabra, ',')));
         }
         if (($c['documento'] ?? '') !== '') {
             $b->where('ph.nro_documento', Campos::documentoFlexible($c['documento']));

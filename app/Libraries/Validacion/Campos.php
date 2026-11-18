@@ -45,6 +45,15 @@ final class Campos
         return $r;
     }
 
+    /**
+     * Texto para buscar con like() del Query Builder como texto literal: CodeIgniter agrega ESCAPE '!' pero no escapa
+     * los comodines del valor, así que «%» devolvía todos los registros (D-49, H-12, clase FIL-03).
+     */
+    public static function literalLike(string $texto): string
+    {
+        return str_replace(['!', '%', '_', '['], ['!!', '!%', '!_', '!['], $texto);
+    }
+
     /** Valor de un formulario como texto sin transformar (contraseñas): un valor que no es texto se trata como vacío. */
     public static function crudo(mixed $valor): string
     {

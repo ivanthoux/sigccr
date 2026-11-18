@@ -115,10 +115,8 @@ abstract class IntegracionTestCase extends CIUnitTestCase
         }
         // El servicio de seguridad lee el token de la sesión al crearse: se vuelve a crear con la sesión de la petición
         Services::resetSingle('security');
-        $peticion = $this->withSession($sesion);
-        if ($ajax) {
-            $peticion = $peticion->withHeaders(['X-Requested-With' => 'XMLHttpRequest']);
-        }
+        // withHeaders() persiste entre peticiones: se fija en cada una
+        $peticion = $this->withSession($sesion)->withHeaders($ajax ? ['X-Requested-With' => 'XMLHttpRequest'] : []);
 
         try {
             $respuesta = $peticion->post($ruta, $datos);
@@ -136,10 +134,7 @@ abstract class IntegracionTestCase extends CIUnitTestCase
     protected function pedir(string $ruta, array $parametros = [], bool $ajax = false): TestResponse
     {
         Services::resetSingle('security');
-        $peticion = $this->withSession($this->sesionActual);
-        if ($ajax) {
-            $peticion = $peticion->withHeaders(['X-Requested-With' => 'XMLHttpRequest']);
-        }
+        $peticion = $this->withSession($this->sesionActual)->withHeaders($ajax ? ['X-Requested-With' => 'XMLHttpRequest'] : []);
 
         return $this->controlarRespuesta($peticion->get($ruta, $parametros === [] ? null : $parametros));
     }

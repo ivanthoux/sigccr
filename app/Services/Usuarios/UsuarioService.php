@@ -50,13 +50,13 @@ class UsuarioService extends BaseService
             ->join('roles r', 'r.id = ui.rol_id');
         // Cada palabra debe aparecer en el nombre o en el apellido ("ana gomez" encuentra a Ana María Gómez)
         foreach (preg_split('/\s+/u', trim($criterios['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
-            $b->groupStart()->like('ui.nombre', $palabra)->orLike('ui.apellido', $palabra)->groupEnd();
+            $b->groupStart()->like('ui.nombre', Campos::literalLike((string) $palabra))->orLike('ui.apellido', Campos::literalLike((string) $palabra))->groupEnd();
         }
         if (($criterios['documento'] ?? '') !== '') {
             $b->where('ui.nro_documento', Campos::documentoFlexible($criterios['documento']));
         }
         if (($criterios['correo'] ?? '') !== '') {
-            $b->like('ca.correo', mb_strtolower(trim($criterios['correo'])));
+            $b->like('ca.correo', Campos::literalLike((string) mb_strtolower(trim($criterios['correo']))));
         }
         if (in_array($criterios['rol'] ?? '', ReglasUsuarios::ROLES, true)) {
             $b->where('r.codigo', $criterios['rol']);

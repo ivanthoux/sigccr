@@ -131,4 +131,14 @@ final class CamposTest extends TestCase
         $this->assertSame('La nacionalidad admite hasta 60 caracteres.', Campos::largoMaximo(str_repeat('ñ', 59) . '😀', 60, 'la nacionalidad'));
         $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('😀', 501)));
     }
+
+    /** D-49, H-12 y FIL-03: los comodines de LIKE se buscan como texto (ESCAPE '!'). */
+    public function testLiteralLike(): void
+    {
+        $this->assertSame('!%', Campos::literalLike('%'));
+        $this->assertSame('a!_b', Campos::literalLike('a_b'));
+        $this->assertSame('![a]', Campos::literalLike('[a]'));
+        $this->assertSame('!!', Campos::literalLike('!'));
+        $this->assertSame("O'Brien", Campos::literalLike("O'Brien"));
+    }
 }
