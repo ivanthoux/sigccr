@@ -193,7 +193,7 @@ abstract class IntegracionTestCase extends CIUnitTestCase
      * @param array<string, array{0: array<string, mixed>, 1: string, 2: ?string}> $casos nombre => [cambios, campo ('' = mensaje general), mensaje (null = cualquiera; si contiene «*», prefijo)]
      * @param list<string> $tablas
      */
-    protected function rechazos(string $ruta, array $base, array $casos, array $tablas): void
+    protected function assertRechazos(string $ruta, array $base, array $casos, array $tablas): void
     {
         foreach ($casos as $caso => [$cambios, $campo, $mensaje]) {
             $antes = array_map(fn (string $t): int => $this->ultimoId($t), $tablas);

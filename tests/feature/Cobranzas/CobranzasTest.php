@@ -61,7 +61,7 @@ final class CobranzasTest extends IntegracionTestCase
         $medio = static fn (array $m): array => ['medios' => [$m + ['medio' => 'Transferencia', 'importe' => str_replace('.', ',', $total), 'numero_operacion' => 'OP-1']]];
         $otro = $this->fabrica->credito();
 
-        $this->rechazos('admin/cobros', $c['base'], [
+        $this->assertRechazos('admin/cobros', $c['base'], [
             'sin cuotas' => [['cuotas' => []], 'seleccion', 'Seleccione al menos una cuota.'],
             'cuotas ausentes' => [['cuotas' => Esperado::AUSENTE], 'seleccion', 'Seleccione al menos una cuota.'],
             'cuotas como texto' => [['cuotas' => '1'], 'seleccion', null],
@@ -169,7 +169,7 @@ final class CobranzasTest extends IntegracionTestCase
         $base = ['importe' => str_replace('.', ',', $total), 'medio' => 'Transferencia', 'numero_operacion' => self::operacion()];
         $parcial = 'El importe debe ser igual al total de la cancelación: *';
 
-        $this->rechazos("admin/creditos/{$credito['id']}/cancelacion-anticipada", $base, [
+        $this->assertRechazos("admin/creditos/{$credito['id']}/cancelacion-anticipada", $base, [
             'importe vacío' => [['importe' => ''], 'importe', $parcial],
             'importe parcial (RN-67)' => [['importe' => '1,00'], 'importe', $parcial],
             'importe un centavo más' => [['importe' => str_replace('.', ',', bcadd($total, '0.01', 2))], 'importe', $parcial],
@@ -195,7 +195,7 @@ final class CobranzasTest extends IntegracionTestCase
         $credito = $this->fabrica->credito();
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'cuotas' => [$credito['id'] => ['1']]];
 
-        $this->rechazos('admin/pagos-electronicos/nueva', $base, [
+        $this->assertRechazos('admin/pagos-electronicos/nueva', $base, [
             'sin cuotas' => [['cuotas' => []], 'seleccion', 'Seleccione al menos una cuota.'],
             'cuotas como texto' => [['cuotas' => 'x'], 'seleccion', null],
             'cuota salteada' => [['cuotas' => [$credito['id'] => ['3']]], 'seleccion', 'Crédito *'],
@@ -217,7 +217,7 @@ final class CobranzasTest extends IntegracionTestCase
         $credito = $this->fabrica->credito();
         $base = ['fecha_comunicacion' => self::hoy(), 'medio_comunicacion' => 'Nota presentada en la sucursal'];
 
-        $this->rechazos("admin/revocaciones/{$credito['id']}", $base, [
+        $this->assertRechazos("admin/revocaciones/{$credito['id']}", $base, [
             'fecha vacía' => [['fecha_comunicacion' => ''], 'fecha_comunicacion', null],
             'fecha inválida' => [['fecha_comunicacion' => '30/02/2026'], 'fecha_comunicacion', null],
             'fecha futura' => [['fecha_comunicacion' => self::hoy(1)], 'fecha_comunicacion', null],
@@ -237,7 +237,7 @@ final class CobranzasTest extends IntegracionTestCase
         $this->fabrica->cajaAbierta($cajero['id']);
         $restituir = (string) $this->db->table('revocaciones')->where('credito_id', $credito['id'])->get()->getRow()->importe_restituir;
         $conf = ['numero_operacion' => self::operacion(), 'importe' => str_replace('.', ',', $restituir)];
-        $this->rechazos("admin/revocaciones/{$credito['id']}/confirmar", $conf, [
+        $this->assertRechazos("admin/revocaciones/{$credito['id']}/confirmar", $conf, [
             'operación vacía' => [['numero_operacion' => ''], 'numero_operacion', null],
             'operación de 61' => [['numero_operacion' => str_repeat('9', 61)], 'numero_operacion', null],
             'operación con eñe (VARCHAR)' => [['numero_operacion' => 'OP-Ñ'], 'numero_operacion', null],
@@ -257,7 +257,7 @@ final class CobranzasTest extends IntegracionTestCase
         $cuota = (string) $credito['cuotas'][0]['id'];
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'cuotas' => [$cuota], 'importe' => '100,00', 'fundamento' => 'Situación de salud del titular'];
 
-        $this->rechazos('admin/punitorios/condonar', $base, [
+        $this->assertRechazos('admin/punitorios/condonar', $base, [
             'sin cuotas' => [['cuotas' => []], 'cuotas', 'Seleccione al menos una cuota con punitorios pendientes.'],
             'cuotas como texto' => [['cuotas' => 'x'], 'cuotas', 'Seleccione al menos una cuota con punitorios pendientes.'],
             'cuota como lista anidada' => [['cuotas' => [[$cuota]]], 'cuotas', null],
@@ -297,7 +297,7 @@ final class CobranzasTest extends IntegracionTestCase
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'creditos' => [(string) $credito['id']], 'tasa' => '60', 'cuotas' => '12'];
         $creditos = 'Seleccione uno o más créditos en mora del cliente (RN-70).';
 
-        $this->rechazos('admin/refinanciaciones/simular', $base, [
+        $this->assertRechazos('admin/refinanciaciones/simular', $base, [
             'sin créditos' => [['creditos' => []], 'creditos', $creditos],
             // Un único crédito enviado como texto equivale a una casilla marcada (como las categorías de una línea)
             'crédito como lista anidada' => [['creditos' => [[(string) $credito['id']]]], 'creditos', $creditos],
@@ -322,7 +322,7 @@ final class CobranzasTest extends IntegracionTestCase
         // CU-42 Resolver (Gerente)
         $this->comoRol('Gerente');
         $decision = 'Seleccione Aprobar, Rechazar u Observar.';
-        $this->rechazos("admin/refinanciaciones/{$propuesta}/resolver", ['version_fila' => $version(), 'decision' => 'Aprobada', 'fundamento' => 'Capacidad de pago verificada'], [
+        $this->assertRechazos("admin/refinanciaciones/{$propuesta}/resolver", ['version_fila' => $version(), 'decision' => 'Aprobada', 'fundamento' => 'Capacidad de pago verificada'], [
             'decisión vacía' => [['decision' => ''], 'decision', $decision],
             'decisión en minúsculas' => [['decision' => 'aprobada'], 'decision', $decision],
             'decisión como lista' => [['decision' => ['Aprobada']], 'decision', $decision],
@@ -336,7 +336,7 @@ final class CobranzasTest extends IntegracionTestCase
         // CU-43 Aplicar (aceptación del cliente)
         $this->comoRol('AnalistaCredito');
         $aplicar = ['version_fila' => $version(), 'fecha_constancia' => self::hoy(), 'medio' => 'Firma en la sucursal', 'observaciones' => ''];
-        $this->rechazos("admin/refinanciaciones/{$propuesta}/aplicar", $aplicar, [
+        $this->assertRechazos("admin/refinanciaciones/{$propuesta}/aplicar", $aplicar, [
             'fecha vacía' => [['fecha_constancia' => ''], 'fecha_constancia', null],
             'fecha futura' => [['fecha_constancia' => self::hoy(1)], 'fecha_constancia', null],
             'fecha anterior a la propuesta' => [['fecha_constancia' => self::hoy(-1)], 'fecha_constancia', 'La aceptación no puede ser anterior al registro de la propuesta.'],
@@ -360,7 +360,7 @@ final class CobranzasTest extends IntegracionTestCase
         $base = ['version_fila' => (string) $this->db->table('propuestas_refinanciacion')->where('id', $propuesta)->get()->getRow()->version_fila,
             'motivo' => 'El cliente desistió', 'fecha_desistimiento' => self::hoy(), 'medio_desistimiento' => 'Nota en la sucursal'];
 
-        $this->rechazos("admin/refinanciaciones/{$propuesta}/cancelar", $base, [
+        $this->assertRechazos("admin/refinanciaciones/{$propuesta}/cancelar", $base, [
             'motivo de 4' => [['motivo' => 'Baja'], 'motivo', 'Indique el motivo de la operación (al menos 5 caracteres).'],
             'motivo de 501' => [['motivo' => str_repeat('m', 501)], 'motivo', 'El motivo admite hasta 500 caracteres.'],
             'motivo de 499 y un emoji' => [['motivo' => str_repeat('m', 499) . '😀'], 'motivo', 'El motivo admite hasta 500 caracteres.'],
@@ -391,7 +391,7 @@ final class CobranzasTest extends IntegracionTestCase
         $this->saldo($credito['cliente']['id']);
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'cuotas' => [$credito['id'] => ['1']], 'fecha_conformidad' => self::hoy(), 'medio_conformidad' => 'Nota firmada', 'observaciones' => ''];
 
-        $this->rechazos('admin/saldos-favor/aplicar', $base, [
+        $this->assertRechazos('admin/saldos-favor/aplicar', $base, [
             'fecha vacía' => [['fecha_conformidad' => ''], 'fecha_conformidad', 'Ingrese la fecha de la solicitud o conformidad del cliente (no posterior a hoy, A3).'],
             'fecha futura' => [['fecha_conformidad' => self::hoy(1)], 'fecha_conformidad', 'Ingrese la fecha de la solicitud o conformidad del cliente (no posterior a hoy, A3).'],
             'medio vacío' => [['medio_conformidad' => ''], 'medio_conformidad', 'Indique el medio de la solicitud o conformidad del cliente (A3).'],
@@ -417,7 +417,7 @@ final class CobranzasTest extends IntegracionTestCase
             'destino' => 'Transferencia', 'cbu' => Fabrica::cbu(7), 'cuit_titular' => $cuit, 'entidad' => 'Banco de Prueba', 'evidencia' => 'Constancia de CBU del titular',
         ];
 
-        $this->rechazos("admin/saldos-favor/{$saldo}/devolucion", $base, [
+        $this->assertRechazos("admin/saldos-favor/{$saldo}/devolucion", $base, [
             'importe cero' => [['importe' => '0'], 'importe', 'Ingrese el importe a devolver, mayor que cero.'],
             'importe mayor que el saldo' => [['importe' => '50.000,01'], 'importe', 'El importe supera el saldo disponible: *'],
             'importe como lista' => [['importe' => ['100']], 'importe', 'Ingrese el importe a devolver, mayor que cero.'],
@@ -446,7 +446,7 @@ final class CobranzasTest extends IntegracionTestCase
         // CU-78 Ejecutar (Cajero)
         $this->comoRol('Cajero');
         $ejecutar = ['version_fila' => $version(), 'numero_operacion' => self::operacion(), 'fecha' => self::hoy(), 'importe' => '10.000,00', 'cbu' => Fabrica::cbu(7)];
-        $this->rechazos("admin/devoluciones/{$autorizacion}/ejecutar", $ejecutar, [
+        $this->assertRechazos("admin/devoluciones/{$autorizacion}/ejecutar", $ejecutar, [
             'operación vacía' => [['numero_operacion' => ''], 'numero_operacion', 'Ingrese el número de operación de la transferencia (hasta 100 caracteres).'],
             'operación de 101' => [['numero_operacion' => str_repeat('9', 101)], 'numero_operacion', 'Ingrese el número de operación de la transferencia (hasta 100 caracteres).'],
             'fecha futura' => [['fecha' => self::hoy(1)], 'fecha', 'Ingrese la fecha de la transferencia (no posterior a hoy).'],
@@ -457,7 +457,7 @@ final class CobranzasTest extends IntegracionTestCase
 
         // CU-77 A4 Anular la autorización (Gerente)
         $this->comoRol('Gerente');
-        $this->rechazos("admin/saldos-favor/autorizaciones/{$autorizacion}/anular", ['version_fila' => $version(), 'motivo_anulacion' => 'El cliente desistió'], [
+        $this->assertRechazos("admin/saldos-favor/autorizaciones/{$autorizacion}/anular", ['version_fila' => $version(), 'motivo_anulacion' => 'El cliente desistió'], [
             'motivo de 4' => [['motivo_anulacion' => 'Baja'], 'motivo_anulacion', null],
             'motivo como lista' => [['motivo_anulacion' => ['El cliente desistió']], 'motivo_anulacion', null],
             'versión como lista (H-21)' => [['version_fila' => [$version()]], '', null],

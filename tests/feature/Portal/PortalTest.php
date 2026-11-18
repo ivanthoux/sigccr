@@ -122,7 +122,7 @@ final class PortalTest extends IntegracionTestCase
         $cliente = $this->fabrica->cliente();
         $base = self::datosPreRegistro();
 
-        $this->rechazos('portal/pre-registro', $base, [
+        $this->assertRechazos('portal/pre-registro', $base, [
             'A1 documento de un cliente' => [['nro_documento' => (string) $cliente['datos']['nro_documento'], 'cuit_cuil' => (string) $cliente['datos']['cuit_cuil']], '', 'Usted ya es cliente de la entidad*'],
             'A1 CUIL de un cliente con pasaporte' => [['tipo_documento' => 'Pasaporte', 'nro_documento' => 'PP' . Fabrica::entre(1000000, 9999999), 'cuit_cuil' => (string) $cliente['datos']['cuit_cuil']], '', 'Usted ya es cliente de la entidad*'],
             'A2 correo de otro cliente' => [['correo' => mb_strtoupper((string) $cliente['datos']['correo'])], 'correo', 'Ese correo ya está registrado para otro cliente: ingrese otro.'],
@@ -368,7 +368,7 @@ final class PortalTest extends IntegracionTestCase
         $otro = $this->fabrica->clienteConAcceso();
         $c = $this->fabrica->clienteConAcceso();
         $this->comoUsuario($c, 'Cliente');
-        $this->rechazos('portal/perfil/correo', [], [
+        $this->assertRechazos('portal/perfil/correo', [], [
             'igual al actual' => [['correo_nuevo' => mb_strtoupper($c['correo'])], 'correo_nuevo', 'El nuevo correo es igual al actual.'],
             'de otro cliente (A1)' => [['correo_nuevo' => $otro['correo']], 'correo_nuevo', 'Ese correo ya está registrado para otro cliente: ingrese otro.'],
         ], ['autorizaciones_temporales']);
@@ -400,7 +400,7 @@ final class PortalTest extends IntegracionTestCase
         $c = $this->clienteConCredito();
         $base = ['cuotas' => [$c['id'] => ['1']]];
 
-        $this->rechazos('portal/pagar', $base, [
+        $this->assertRechazos('portal/pagar', $base, [
             'sin cuotas' => [['cuotas' => []], 'seleccion', 'Seleccione al menos una cuota.'],
             'cuotas ausentes' => [['cuotas' => Esperado::AUSENTE], 'seleccion', 'Seleccione al menos una cuota.'],
             'cuotas como texto' => [['cuotas' => 'x'], 'seleccion', null],
