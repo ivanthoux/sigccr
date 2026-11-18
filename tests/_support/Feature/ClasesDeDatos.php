@@ -149,6 +149,7 @@ final class ClasesDeDatos
     {
         $formato = Esperado::rechaza('Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.');
         $u = Fabrica::sufijo();
+        $u2 = Fabrica::sufijo();
         $local64 = str_pad("c{$u}", 64, 'x');
         // 254 caracteres: 64 de la parte local, la arroba y un dominio de 189 con etiquetas de hasta 63
         $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 48) . '.prueba.local';
@@ -171,7 +172,8 @@ final class ClasesDeDatos
             ['COR-05', 'dominio sin punto', 'ana@prueba', $formato],
             // O-05 (D-52): correos internacionales, con la parte local o el dominio no ASCII
             ['COR-06', 'parte local no ASCII', "ñandú{$u}@prueba.local", Esperado::acepta("ñandú{$u}@prueba.local")],
-            ['COR-06', 'parte local no ASCII en mayúsculas', "ÑANDÚ{$u}@Prueba.Local", Esperado::acepta("ñandú{$u}@prueba.local")],
+            // Otro sufijo: en minúsculas sería el mismo correo del caso anterior y lo rechazaría la unicidad (COR-09)
+            ['COR-06', 'parte local no ASCII en mayúsculas', 'ÑANDÚ' . strtoupper($u2) . '@Prueba.Local', Esperado::acepta("ñandú{$u2}@prueba.local")],
             ['COR-06', 'dominio internacional', "ana{$u}@ñandú.com.ar", Esperado::acepta("ana{$u}@ñandú.com.ar")],
             ['COR-06', 'dominio internacional en punycode', "ana{$u}@xn--and-6ma2c.com.ar", Esperado::acepta("ana{$u}@xn--and-6ma2c.com.ar")],
             ['COR-06', 'escritura no latina', "用户{$u}@例子.广告", Esperado::acepta("用户{$u}@例子.广告")],
