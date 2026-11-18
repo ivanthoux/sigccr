@@ -50,23 +50,27 @@ final class ClientesTest extends IntegracionTestCase
             'tipo_documento' => [
                 'tipo' => 'SEL', 'obligatorio' => true, 'valores' => ['DNI', 'LC', 'LE', 'Pasaporte'],
                 'mensajes' => ['obligatorio' => 'Complete el tipo de documento.', 'formato' => 'Seleccione un tipo de documento válido.'],
-                // Sin CUIL, para que el tipo no choque con la correspondencia entre CUIL y DNI
-                'otros' => ['cuit_cuil' => ''],
+                // El CUIL de la fábrica corresponde a su DNI; con LC, LE o pasaporte no se exige la correspondencia
             ],
             'nro_documento' => [
                 'tipo' => 'DOC', 'obligatorio' => true, 'admite_pasaporte' => true,
                 'mensajes' => ['obligatorio' => 'Complete el número de documento.', 'formato' => 'El documento debe tener entre 6 y 9 dígitos, sin puntos.'],
-                'otros' => ['cuit_cuil' => ''],
+                // Con LE el número tiene el mismo formato que el DNI, sin la correspondencia con el CUIL (CUI-06 se prueba aparte)
+                'otros' => ['tipo_documento' => 'LE'],
             ],
             'cuit_cuil' => [
-                'tipo' => 'CUI', 'obligatorio' => false, 'persona' => 'PersonaHumana',
-                'mensajes' => ['formato' => 'El CUIT o CUIL debe tener 11 dígitos.'],
+                // O-04 (D-52): obligatorio en el alta
+                'tipo' => 'CUI', 'obligatorio' => true, 'persona' => 'PersonaHumana',
+                'mensajes' => ['obligatorio' => 'Complete el CUIL o CUIT.', 'formato' => 'El CUIT o CUIL debe tener 11 dígitos.'],
                 // Con pasaporte, el CUIL no tiene que coincidir con el documento (CUI-06 se prueba aparte)
                 'otros' => $pasaporte,
             ],
             'fecha_nacimiento' => [
                 'tipo' => 'FEC', 'obligatorio' => true, 'anio_valido' => 1985,
-                'mensajes' => ['obligatorio' => 'Complete la fecha de nacimiento.', 'formato' => 'Ingrese una fecha válida (dd/mm/aaaa).'],
+                'mensajes' => [
+                    'obligatorio' => 'Complete la fecha de nacimiento.', 'formato' => 'Ingrese una fecha válida (dd/mm/aaaa).',
+                    'edad_maxima' => 'Revise la fecha de nacimiento: la edad no puede superar 110 años.',
+                ],
             ],
             'estado_civil' => [
                 'tipo' => 'SEL', 'obligatorio' => false, 'valores' => ['Soltero', 'Casado', 'UnionConvivencial', 'Divorciado', 'Viudo'],
@@ -84,7 +88,10 @@ final class ClientesTest extends IntegracionTestCase
             'codigo_postal' => ['tipo' => 'CPO', 'obligatorio' => false, 'mensajes' => ['formato' => 'Ingrese un código postal de 4 dígitos o el CPA de 8 caracteres (por ejemplo, N3350ABC).']],
             'ingresos_declarados' => [
                 'tipo' => 'IMP', 'obligatorio' => true,
-                'mensajes' => ['obligatorio' => 'Complete los ingresos declarados.', 'formato' => 'Ingrese un importe válido, por ejemplo 850.000,00.'],
+                'mensajes' => [
+                    'obligatorio' => 'Complete los ingresos declarados.', 'formato' => 'Ingrese un importe válido, por ejemplo 850.000,00.',
+                    'cero' => 'Los ingresos declarados deben ser mayores que cero.',
+                ],
             ],
             'categoria_ingresos' => [
                 // Monotributista exige además la categoría del monotributo (D-26): se prueba aparte
@@ -137,7 +144,10 @@ final class ClientesTest extends IntegracionTestCase
             'domicilio' => $texto('el domicilio', 200, 'Complete la calle y el número del domicilio legal.'),
             'ingresos_declarados' => [
                 'tipo' => 'IMP', 'obligatorio' => true,
-                'mensajes' => ['obligatorio' => 'Complete los ingresos netos mensuales promedio.', 'formato' => 'Ingrese un importe válido, por ejemplo 850.000,00.'],
+                'mensajes' => [
+                    'obligatorio' => 'Complete los ingresos netos mensuales promedio.', 'formato' => 'Ingrese un importe válido, por ejemplo 850.000,00.',
+                    'cero' => 'Los ingresos declarados deben ser mayores que cero.',
+                ],
             ],
         ];
     }
@@ -225,6 +235,35 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertErrores(['fecha_constitucion' => 'La fecha de constitución no puede ser futura.'], ['fecha_constitucion' => $hoy->addDays(1)->format('d/m/Y')] + $this->fabrica->datosCliente('PersonaJuridica'));
     }
 
+    /** FEC-08 (O-06, D-52): la edad no puede superar 110 años; 110 cumplidos hoy se aceptan. */
+    public function testEdadMaxima(): void
+    {
+        $hoy = Time::now(config('Sigccr')->zonaNegocio);
+        $mensaje = 'Revise la fecha de nacimiento: la edad no puede superar 110 años.';
+
+        $this->fabrica->cliente('PersonaHumana', ['fecha_nacimiento' => $hoy->subYears(111)->addDays(1)->format('d/m/Y')]);
+        $this->assertErrores(['fecha_nacimiento' => $mensaje], ['fecha_nacimiento' => $hoy->subYears(111)->format('d/m/Y')] + $this->fabrica->datosCliente());
+        $this->assertErrores(['fecha_nacimiento' => $mensaje], ['fecha_nacimiento' => '01/01/1900'] + $this->fabrica->datosCliente());
+    }
+
+    /** SEL-03 (O-02, D-52): un tipo de cliente fuera de la lista se rechaza; ya no se toma como persona humana. */
+    public function testTipoDeClienteFueraDeLista(): void
+    {
+        foreach (['Empresa', 'personahumana', 'PERSONAJURIDICA', '', ['PersonaHumana']] as $tipo) {
+            $datos = ['tipo_cliente' => $tipo] + $this->fabrica->datosCliente();
+            $this->assertErrores(['tipo_cliente' => 'Seleccione el tipo de cliente.'], $datos, 'tipo ' . var_export($tipo, true));
+        }
+        $sinTipo = $this->fabrica->datosCliente();
+        unset($sinTipo['tipo_cliente']);
+        $this->assertErrores(['tipo_cliente' => 'Seleccione el tipo de cliente.'], $sinTipo, 'tipo ausente');
+    }
+
+    /** O-04 (D-52): un DNI de 9 dígitos no tiene un CUIL que le corresponda, por lo que no puede darse de alta. */
+    public function testDniDeNueveDigitosSinCuilPosible(): void
+    {
+        $this->assertErrores(['cuit_cuil' => 'El CUIT/CUIL no corresponde al número de documento.'], ['nro_documento' => '100000001'] + $this->fabrica->datosCliente());
+    }
+
     /** REF-01 a REF-05: provincia y localidad del domicilio (D-18). */
     public function testProvinciaYLocalidad(): void
     {
@@ -255,10 +294,26 @@ final class ClientesTest extends IntegracionTestCase
         $d = $primero['datos'];
 
         $this->assertErrores(['correo' => 'El correo electrónico ya está registrado para otro cliente.'], ['correo' => mb_strtoupper($d['correo'])] + $this->fabrica->datosCliente());
-        $this->assertErrores(['nro_documento' => 'El documento ya está registrado para otro cliente.'], ['nro_documento' => $d['nro_documento'], 'cuit_cuil' => ''] + $this->fabrica->datosCliente());
+        $this->assertErrores(['nro_documento' => 'El documento ya está registrado para otro cliente.'], ['nro_documento' => $d['nro_documento'], 'cuit_cuil' => self::otroCuilDelDni((string) $d['nro_documento'], (string) $d['cuit_cuil'])] + $this->fabrica->datosCliente());
         $this->assertErrores(['cuit_cuil' => 'El CUIT/CUIL ya está registrado para otro cliente.'], ['cuit_cuil' => $d['cuit_cuil'], 'tipo_documento' => 'Pasaporte', 'nro_documento' => 'PP1234567'] + $this->fabrica->datosCliente());
         // El mismo número con otro tipo de documento se admite
-        $this->fabrica->cliente('PersonaHumana', ['tipo_documento' => 'LE', 'nro_documento' => $d['nro_documento'], 'cuit_cuil' => '']);
+        $this->fabrica->cliente('PersonaHumana', ['tipo_documento' => 'LE', 'nro_documento' => $d['nro_documento'], 'cuit_cuil' => Fabrica::cuitValido('20')]);
+    }
+
+    /** CUIL del mismo DNI con otro prefijo, para que solo choque el documento. */
+    private static function otroCuilDelDni(string $dni, string $usado): string
+    {
+        foreach (['20', '23', '24', '27'] as $prefijo) {
+            try {
+                $cuil = Fabrica::cuitValido($prefijo, (int) $dni);
+            } catch (\RuntimeException) {
+                continue;
+            }
+            if ($cuil !== $usado) {
+                return $cuil;
+            }
+        }
+        throw new \RuntimeException("El DNI {$dni} no tiene otro CUIL.");
     }
 
     /** RN-11 y ARC-01 a ARC-06: el documento de identidad es obligatorio y cada archivo se valida por su contenido. */
@@ -533,7 +588,7 @@ final class ClientesTest extends IntegracionTestCase
     {
         $antes = $this->ultimoId('clientes');
         try {
-            (new ClienteService($this->db))->registrar($datos, Fabrica::archivosIdentificacion((string) $datos['tipo_cliente']), $this->fabrica->responsable());
+            (new ClienteService($this->db))->registrar($datos, Fabrica::archivosIdentificacion(is_string($datos['tipo_cliente'] ?? null) && $datos['tipo_cliente'] === 'PersonaJuridica' ? 'PersonaJuridica' : 'PersonaHumana'), $this->fabrica->responsable());
             $this->fail("{$contexto}: se esperaba el rechazo");
         } catch (ValidacionException $e) {
             foreach ($esperados as $campo => $mensaje) {

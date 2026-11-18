@@ -44,4 +44,67 @@ final class SmtpComunicacionesTest extends TestCase
         $correo = (new CorreoConIdentificador(['protocol' => 'smtp']))->setMessageId('<COM-42@sigccr.local>');
         $this->assertSame('<COM-42@sigccr.local>', (new ReflectionMethod($correo, 'getMessageID'))->invoke($correo));
     }
+
+    /** O-05 (D-52): la biblioteca rechazaba la parte local internacional; ahora se admite, con el dominio en punycode. */
+    public function testValidaCorreosInternacionales(): void
+    {
+        $correo = new CorreoConIdentificador(['protocol' => 'smtp']);
+        $this->assertTrue($correo->isValidEmail('ñandú@prueba.local'));
+        $this->assertTrue($correo->isValidEmail('ana@ñandú.com.ar'));
+        $this->assertTrue($correo->isValidEmail('ana@prueba.local'));
+        $this->assertFalse($correo->isValidEmail('ana@@prueba.local'));
+        $this->assertFalse($correo->isValidEmail('ana.prueba.local'));
+        $this->assertFalse($correo->isValidEmail('ana@'));
+    }
+
+    /** O-05 (D-52): el MAIL FROM pide SMTPUTF8 solo si algún destinatario tiene la parte local no ASCII. */
+    public function testPideSmtpUtf8SoloParaDestinatariosInternacionales(): void
+    {
+        $this->assertSame('MAIL FROM:<sigccr@sigccr.local>', $this->mailFrom('ana@prueba.local'));
+        $this->assertSame('MAIL FROM:<sigccr@sigccr.local> SMTPUTF8', $this->mailFrom('ñandú@prueba.local'));
+        $this->assertSame('MAIL FROM:<sigccr@sigccr.local>', $this->mailFrom('ana@xn--and-6ma2c.com.ar'));
+    }
+
+    public function testRechazoDelMailFromConSmtpUtf8EsTransitorio(): void
+    {
+        $correo = $this->correoSimulado('555 5.5.4 SMTPUTF8 not supported');
+        $correo->setTo('ñandú@prueba.local');
+        $this->assertFalse((new ReflectionMethod($correo, 'sendCommand'))->invoke($correo, 'from', 'sigccr@sigccr.local'));
+        $this->assertStringContainsString('555', (string) $correo->printDebugger([]));
+    }
+
+    private function mailFrom(string $destino): string
+    {
+        $correo = $this->correoSimulado('250 2.1.0 OK');
+        $correo->setTo($destino);
+        $this->assertTrue((new ReflectionMethod($correo, 'sendCommand'))->invoke($correo, 'from', 'sigccr@sigccr.local'));
+
+        return $correo->enviados[0];
+    }
+
+    /** Correo con un servidor SMTP simulado que registra los comandos y responde siempre lo mismo. */
+    private function correoSimulado(string $respuesta): CorreoConIdentificador
+    {
+        return new class (['protocol' => 'smtp'], $respuesta) extends CorreoConIdentificador {
+            /** @var list<string> */
+            public array $enviados = [];
+
+            public function __construct(array $config, private readonly string $respuesta)
+            {
+                parent::__construct($config);
+            }
+
+            protected function sendData($data)
+            {
+                $this->enviados[] = $data;
+
+                return true;
+            }
+
+            protected function getSMTPData()
+            {
+                return $this->respuesta;
+            }
+        };
+    }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\Comunicaciones;
 
+use App\Libraries\Validacion\Campos;
 use CodeIgniter\Email\Email;
 
 /**
@@ -42,7 +43,7 @@ class SmtpComunicaciones implements ComunicacionesInterface
         ]);
         $dominio = substr((string) strrchr($cfg->correoRemitente, '@'), 1) ?: 'sigccr.local';
         $email->setFrom($cfg->correoRemitente, 'SIG-CCR');
-        $email->setTo($destino);
+        $email->setTo(Campos::correoParaEnvio($destino));
         $email->setSubject($asunto);
         $email->setMessage($cuerpoHtml);
         $idMensaje = '<' . $identificadorOperacion . '@' . $dominio . '>';

@@ -61,7 +61,19 @@ final class ClientesTest extends TestCase
     public function testPersonaHumanaValida(): void
     {
         $this->assertSame([], $this->errores([...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222')]));
-        $this->assertSame([], $this->errores([...$this->humana(), 'cuit_cuil' => '']), 'el CUIT/CUIL es opcional para el alta');
+        // O-04 (D-52): obligatorio en el alta; los clientes anteriores lo completan al solicitar un crédito
+        $this->assertSame(['cuit_cuil' => 'Complete el CUIL o CUIT.'], $this->errores([...$this->humana(), 'cuit_cuil' => '']));
+        $this->assertSame([], $this->errores([...$this->humana(), 'cuit_cuil' => ''], false), 'opcional al modificar');
+    }
+
+    /** O-02 (D-52): un tipo de cliente fuera de la lista ya no se toma como persona humana. */
+    public function testTipoDeClienteFueraDeLista(): void
+    {
+        $base = [...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222')];
+        foreach (['Empresa', 'personahumana', '1', ''] as $tipo) {
+            $this->assertSame(['tipo_cliente' => 'Seleccione el tipo de cliente.'], $this->errores([...$base, 'tipo_cliente' => $tipo]), $tipo);
+        }
+        $this->assertArrayNotHasKey('tipo_cliente', $this->errores([...$base, 'tipo_cliente' => ' PersonaHumana ']), 'se recortan los espacios');
     }
 
     public function testPersonaJuridicaValidaYCategoriaEmpresa(): void
@@ -74,10 +86,11 @@ final class ClientesTest extends TestCase
     public function testFormularioVacioDePersonaHumana(): void
     {
         $e = $this->errores([]);
-        foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica', 'nacionalidad', 'ocupacion', 'persona_expuesta'] as $campo) {
+        foreach (['tipo_cliente', 'cuit_cuil', 'nombre', 'apellido', 'tipo_documento', 'nro_documento', 'fecha_nacimiento', 'correo', 'domicilio', 'provincia_id', 'ingresos_declarados', 'categoria_ingresos', 'acepta_politica', 'nacionalidad', 'ocupacion', 'persona_expuesta'] as $campo) {
             $this->assertArrayHasKey($campo, $e, $campo);
         }
-        $this->assertCount(14, $e);
+        $this->assertCount(16, $e);
+        $this->assertSame('Seleccione el tipo de cliente.', $e['tipo_cliente']);
     }
 
     public function testFormularioVacioDePersonaJuridica(): void
@@ -91,7 +104,7 @@ final class ClientesTest extends TestCase
 
     public function testPoliticaDeDatosSoloEnElAlta(): void
     {
-        $sinPolitica = [...$this->humana(), 'cuit_cuil' => '', 'acepta_politica' => ''];
+        $sinPolitica = [...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222'), 'acepta_politica' => ''];
         $this->assertSame(['acepta_politica' => 'El cliente debe aceptar la política de tratamiento de datos personales.'], $this->errores($sinPolitica));
         $this->assertSame([], $this->errores($sinPolitica, false));
     }
@@ -105,11 +118,15 @@ final class ClientesTest extends TestCase
 
     public function testFechaDeNacimiento(): void
     {
-        $base = [...$this->humana(), 'cuit_cuil' => ''];
+        $base = [...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222')];
         $this->assertSame(['fecha_nacimiento' => 'Ingrese una fecha válida (dd/mm/aaaa).'], $this->errores([...$base, 'fecha_nacimiento' => '31/02/1985']));
         $this->assertSame(['fecha_nacimiento' => 'La fecha de nacimiento no puede ser futura.'], $this->errores([...$base, 'fecha_nacimiento' => '01/01/2030']));
         $this->assertSame(['fecha_nacimiento' => 'El cliente debe ser mayor de edad (18 años).'], $this->errores([...$base, 'fecha_nacimiento' => '25/10/2008']));
         $this->assertSame([], $this->errores([...$base, 'fecha_nacimiento' => '24/10/2008']), 'cumple 18 hoy');
+        // O-06 (D-52): hasta 110 años
+        $this->assertSame([], $this->errores([...$base, 'fecha_nacimiento' => '25/10/1915']), 'tiene 110 años');
+        $this->assertSame(['fecha_nacimiento' => 'Revise la fecha de nacimiento: la edad no puede superar 110 años.'], $this->errores([...$base, 'fecha_nacimiento' => '24/10/1915']), 'cumple 111 hoy');
+        $this->assertSame(['fecha_nacimiento' => 'Revise la fecha de nacimiento: la edad no puede superar 110 años.'], $this->errores([...$base, 'fecha_nacimiento' => '01/01/1900']));
     }
 
     public function testFechaDeConstitucionNoFutura(): void
@@ -119,10 +136,14 @@ final class ClientesTest extends TestCase
 
     public function testIngresosTelefonoYEstadoCivil(): void
     {
-        $base = [...$this->humana(), 'cuit_cuil' => ''];
+        $base = [...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222')];
         $this->assertSame(['ingresos_declarados' => 'Ingrese un importe válido, por ejemplo 850.000,00.'], $this->errores([...$base, 'ingresos_declarados' => '85O.000']));
         $this->assertSame(['ingresos_declarados' => 'Ingrese un importe válido, por ejemplo 850.000,00.'], $this->errores([...$base, 'ingresos_declarados' => '-100']));
         $this->assertSame('850000.00', ValidadorCliente::normalizar($base)['ingresos_declarados']);
+        // O-07 (D-52)
+        $this->assertSame(['ingresos_declarados' => 'Los ingresos declarados deben ser mayores que cero.'], $this->errores([...$base, 'ingresos_declarados' => '0']));
+        $this->assertSame(['ingresos_declarados' => 'Los ingresos declarados deben ser mayores que cero.'], $this->errores([...$base, 'ingresos_declarados' => '0,00']));
+        $this->assertSame([], $this->errores([...$base, 'ingresos_declarados' => '0,01']));
         $this->assertSame(['telefono' => 'Ingrese un teléfono válido (solo números, espacios, guiones o +).'], $this->errores([...$base, 'telefono' => 'llamar a la tarde']));
         $this->assertSame([], $this->errores([...$base, 'telefono' => '']), 'el teléfono es opcional');
         $this->assertSame(['estado_civil' => 'Seleccione un estado civil válido.'], $this->errores([...$base, 'estado_civil' => 'Otro']));
@@ -130,7 +151,7 @@ final class ClientesTest extends TestCase
 
     public function testCategoriaSegunTipoDeCliente(): void
     {
-        $this->assertSame(['categoria_ingresos' => 'Seleccione una categoría de ingresos válida.'], $this->errores([...$this->humana(), 'cuit_cuil' => '', 'categoria_ingresos' => 'Empresa']));
+        $this->assertSame(['categoria_ingresos' => 'Seleccione una categoría de ingresos válida.'], $this->errores([...$this->humana(), 'cuit_cuil' => $this->cuilValido('27', '30111222'), 'categoria_ingresos' => 'Empresa']));
         $this->assertTrue(RequisitosDocumentales::categoriaValida('PersonaJuridica', 'Empresa'));
         $this->assertFalse(RequisitosDocumentales::categoriaValida('PersonaJuridica', 'Monotributista'));
     }

@@ -44,12 +44,20 @@ final class CamposTest extends TestCase
         $this->assertSame('El nombre admite hasta 80 caracteres.', Campos::nombrePersona(str_repeat('a', 81), 'el nombre'));
     }
 
+    public function testCorreoParaEnvio(): void
+    {
+        $this->assertSame('ana@xn--and-6ma2c.com.ar', Campos::correoParaEnvio('ana@ñandú.com.ar'));
+        $this->assertSame('ñandú@prueba.local', Campos::correoParaEnvio('ñandú@prueba.local'), 'la parte local se conserva');
+        $this->assertSame('ana@prueba.local', Campos::correoParaEnvio('ana@prueba.local'));
+    }
+
     public function testCorreo(): void
     {
-        foreach (['ana@entidad.com.ar', 'a.b+c@dominio.com', 'x@sub.dominio.org'] as $valido) {
+        // O-05 (D-52): se admiten correos internacionales, con la parte local o el dominio no ASCII
+        foreach (['ana@entidad.com.ar', 'a.b+c@dominio.com', 'x@sub.dominio.org', 'ñandú@prueba.local', 'josé.pérez@dominio.com', 'ana@ñandú.com.ar', 'ana@xn--and-6ma2c.com.ar', '用户@例子.广告', str_repeat('ñ', 32) . '@prueba.local', str_repeat('a', 64) . '@prueba.local'] as $valido) {
             $this->assertNull(Campos::formatoCorreo($valido), $valido);
         }
-        foreach (['ana', 'ana@', '@dominio.com', 'ana@dominio', 'ana gomez@dominio.com', 'ana@@dominio.com', str_repeat('a', 250) . '@x.com'] as $invalido) {
+        foreach (['ana', 'ana@', '@dominio.com', 'ana@dominio', 'ana gomez@dominio.com', 'ana@@dominio.com', str_repeat('a', 250) . '@x.com', 'ana@ñandú', 'ana@-ñandú-.com', str_repeat('ñ', 32) . 'a@prueba.local', str_repeat('a', 65) . '@prueba.local', str_repeat('ñ', 64) . '@' . str_repeat('ü', 190) . '.com'] as $invalido) {
             $this->assertSame('Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.', Campos::formatoCorreo($invalido), $invalido);
         }
     }

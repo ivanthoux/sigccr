@@ -117,16 +117,50 @@ final class Campos
         return self::largoMaximo($valor, 80, $nombreCampo);
     }
 
+    /**
+     * Correo con formato válido (O-05, D-52): admite direcciones internacionales, con letras no ASCII en la parte local
+     * (RFC 6531) o en el dominio (IDN, que se valida en su forma punycode). El dominio debe tener al menos un punto y
+     * el largo total no puede superar 254 unidades, como la columna NVARCHAR(254). La parte local admite hasta 64
+     * octetos (RFC 5321, 4.5.3.1.1): 64 letras ASCII o 32 eñes, que ocupan dos octetos cada una en UTF-8.
+     */
     public static function formatoCorreo(string $valor): ?string
     {
         if ($valor === '') {
             return null;
         }
-        if (mb_strlen($valor) > 254 || filter_var($valor, FILTER_VALIDATE_EMAIL) === false || !str_contains(substr($valor, strrpos($valor, '@') ?: 0), '.')) {
-            return 'Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.';
+        $error = 'Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.';
+        $arroba = strrpos($valor, '@');
+        if ($arroba === false || $arroba > 64 || self::largo($valor) > 254) {
+            return $error;
+        }
+        $dominio = self::dominioAscii(substr($valor, $arroba + 1));
+        if ($dominio === null || !str_contains($dominio, '.')) {
+            return $error;
         }
 
-        return null;
+        return filter_var(substr($valor, 0, $arroba) . '@' . $dominio, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE) === false ? $error : null;
+    }
+
+    /** Dominio de un correo en ASCII (punycode para un dominio internacional); null si no es un dominio válido. */
+    public static function dominioAscii(string $dominio): ?string
+    {
+        if ($dominio === '' || preg_match('/^[\x00-\x7F]+$/', $dominio) === 1) {
+            return $dominio === '' ? null : $dominio;
+        }
+        $ascii = idn_to_ascii($dominio, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
+
+        return $ascii === false ? null : $ascii;
+    }
+
+    /** Correo con el dominio en ASCII, para enviarlo por SMTP (la parte local se conserva). */
+    public static function correoParaEnvio(string $correo): string
+    {
+        $arroba = strrpos($correo, '@');
+        if ($arroba === false) {
+            return $correo;
+        }
+
+        return substr($correo, 0, $arroba) . '@' . (self::dominioAscii(substr($correo, $arroba + 1)) ?? substr($correo, $arroba + 1));
     }
 
     public static function tipoDocumento(string $valor): ?string

@@ -70,7 +70,8 @@ $this->section('contenido');
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Identificación</legend>
         <div class="row g-3">
-            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, $numerico), '11 dígitos, con o sin guiones.<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>', 'col-md-6') ?>
+            <?php // O-04 (D-52): obligatorio en el alta; un cliente anterior sin CUIL lo completa al modificar o al solicitar ?>
+            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL</span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, $numerico), '11 dígitos, con o sin guiones.' . ($alta ? '' : '<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>'), 'col-md-6') ?>
             <?php if ($alta): ?>
                 <div class="col-md-6" data-solo="PersonaHumana">
                     <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>

@@ -6,6 +6,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Cambiado (observaciones O-01 a O-07, D-52)
+- O-01: la TNA de una línea debe ser mayor que cero.
+- O-02 y O-03: un tipo de cliente o de gasto administrativo fuera de la lista, vacío o ausente se rechaza con un mensaje, en lugar de tomarse como persona humana o importe fijo.
+- O-04: el CUIL o CUIT es obligatorio en el alta de una persona humana.
+- O-05: se admiten correos internacionales (parte local no ASCII y dominios IDN); el envío usa el dominio en punycode y pide `SMTPUTF8` cuando la parte local lo necesita.
+- O-06: la edad de una persona humana no puede superar 110 años.
+- O-07: los ingresos declarados deben ser mayores que cero.
+
 ### Agregado (pruebas de integración, D-51)
 - Suite `Integracion` (`composer test:integracion`): cada campo de los formularios de la iteración 1 con cada clase de dato de su tipo y los controles comunes de cada operación, contra SQL Server (plan de pruebas 7.9 y Anexo B). 1310 pruebas generadas desde el catálogo de campos, aprobadas sobre SQL Server.
 - Base `sigccr_pruebas` recreada en cada ejecución (`docker/db/crear_base_pruebas.sql`, `tests/feature/preparar_base.sh`) y trabajo `integracion` en el flujo `CI` con SQL Server como servicio.

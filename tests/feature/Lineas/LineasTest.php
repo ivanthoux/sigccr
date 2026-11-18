@@ -35,7 +35,7 @@ final class LineasTest extends IntegracionTestCase
             'descripcion' => ['tipo' => 'TXT', 'obligatorio' => false, 'max' => 500, 'mensajes' => ['largo' => 'La descripción admite hasta 500 caracteres.']],
             'tna' => ['tipo' => 'PCT', 'obligatorio' => true, 'maximo' => '500', 'maximo_incluido' => true, 'mensajes' => [
                 'obligatorio' => 'Complete la TNA.', 'formato' => 'Ingrese la TNA en porcentaje, por ejemplo 65 o 65,5.',
-                'maximo' => 'La TNA no puede superar el 500 %.',
+                'maximo' => 'La TNA no puede superar el 500 %.', 'cero' => 'La TNA debe ser mayor que cero.',
             ]],
             'gasto_otorgamiento_pct' => ['tipo' => 'PCT', 'obligatorio' => true, 'maximo' => '100', 'maximo_incluido' => false, 'mensajes' => [
                 'obligatorio' => 'Complete el gasto de otorgamiento (0 si no tiene).',
@@ -43,7 +43,9 @@ final class LineasTest extends IntegracionTestCase
                 'maximo' => 'El gasto de otorgamiento debe ser menor que el 100 % del capital.',
             ]],
             'tipo_gasto_administrativo' => [
-                'tipo' => 'SEL', 'obligatorio' => false, 'valores' => ['Fijo', 'Porcentual'], 'fuera_se_toma_como' => 'Fijo', 'vacio_guardado' => 'Fijo',
+                // O-03 (D-52): un valor fuera de la lista, vacío o ausente se rechaza
+                'tipo' => 'SEL', 'obligatorio' => true, 'valores' => ['Fijo', 'Porcentual'],
+                'mensajes' => ['obligatorio' => 'Seleccione cómo se cobra el gasto administrativo.', 'formato' => 'Seleccione cómo se cobra el gasto administrativo.'],
                 'otros' => ['gasto_administrativo_pct' => '0,5'],
             ],
             'gasto_administrativo_cuota' => ['tipo' => 'IMP', 'obligatorio' => true, 'mensajes' => [
