@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Copias\EstadoRestauracion;
 use App\Libraries\Copias\PoliticaCopias;
+use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 use App\Services\Comunes\AuditoriaService;
 use CodeIgniter\Database\BaseConnection;
@@ -67,8 +68,9 @@ class CopiaService extends BaseService
     /** CU-61 pasos 3 y 4 (A1, A2): la copia queda Solicitada y la genera el contenedor de procesos. */
     public function solicitar(int $usuarioId, string $responsable, string $descripcion): int
     {
-        $descripcion = trim($descripcion);
-        if (mb_strlen($descripcion) > 300) {
+        // H-16: el largo se cuenta como lo cuenta NVARCHAR(300) (un emoji ocupa dos)
+        $descripcion = Campos::texto($descripcion);
+        if (Campos::largo($descripcion) > 300) {
             throw new ValidacionException(['descripcion' => 'La descripción admite hasta 300 caracteres.']);
         }
         $d = $this->destino();

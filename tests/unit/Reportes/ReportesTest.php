@@ -108,6 +108,20 @@ final class ReportesTest extends TestCase
         unlink($ruta);
     }
 
+    /** H-31: las fechas del período admiten hasta 2099; con el año 9999 el cálculo salía del rango de fechas. */
+    public function testFechaMaximaDelPeriodo(): void
+    {
+        $this->assertSame('2099-12-31', Periodo::desde(['tipo' => 'dia', 'fecha' => '31/12/2099'], '2026-11-12')['hasta']);
+        foreach ([['tipo' => 'semana', 'fecha' => '31/12/9999'], ['tipo' => 'rango', 'hasta' => '01/01/2100']] as $g) {
+            try {
+                Periodo::desde($g, '2026-11-12');
+                $this->fail('Se esperaba el rechazo de ' . json_encode($g));
+            } catch (\App\Exceptions\ValidacionException $e) {
+                $this->assertContains('Ingrese una fecha válida.', $e->errores);
+            }
+        }
+    }
+
     public function testPeriodoDelRegimen(): void
     {
         // Noviembre de 2026 empieza en domingo: el primer día hábil es el lunes 2
@@ -120,6 +134,10 @@ final class ReportesTest extends TestCase
         $this->assertTrue(ReglasRegimen::periodoCerrado('2026-10', '2026-11-12'));
         $this->assertFalse(ReglasRegimen::periodoCerrado('2026-11', '2026-11-12'));
         $this->assertFalse(ReglasRegimen::periodoCerrado('2026-13', '2027-11-12'));
+        // H-30: el año 0000 no es una fecha válida en SQL Server; se admiten períodos desde 1900
+        $this->assertFalse(ReglasRegimen::periodoCerrado('0000-01', '2026-11-12'));
+        $this->assertFalse(ReglasRegimen::periodoCerrado('1899-12', '2026-11-12'));
+        $this->assertTrue(ReglasRegimen::periodoCerrado('1900-01', '2026-11-12'));
     }
 
     public function testClasificacionDeDeudoresYArchivo(): void

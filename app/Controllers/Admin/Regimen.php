@@ -33,7 +33,7 @@ class Regimen extends BaseController
     public function generar(): RedirectResponse
     {
         try {
-            $r = (new RegimenService())->generar($this->campoPost('periodo'), (int) session('cuenta')['id'], $this->campoPost('motivo'));
+            $r = (new RegimenService())->generar(trim($this->campoPost('periodo')), (int) session('cuenta')['id'], $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
