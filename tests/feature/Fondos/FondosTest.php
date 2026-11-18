@@ -18,6 +18,7 @@ final class FondosTest extends IntegracionTestCase
 {
     private const MENSAJE_IMPORTE = 'Ingrese un importe mayor que cero.';
     private const MENSAJE_FECHA = 'Ingrese la fecha del movimiento (dd/mm/aaaa).';
+    private const MENSAJE_TOPE = 'El importe de un movimiento no puede superar $ 1.000.000.000,00.';
 
     /** @return array<string, array<string, mixed>> definición de cada campo (Anexo B.8) */
     public static function campos(): array
@@ -32,11 +33,14 @@ final class FondosTest extends IntegracionTestCase
                 'mensajes' => ['obligatorio' => 'Indique si es un ingreso o un egreso.', 'formato' => 'Indique si es un ingreso o un egreso.'],
             ],
             'importe' => [
-                'tipo' => 'IMP', 'obligatorio' => true,
-                'mensajes' => ['obligatorio' => self::MENSAJE_IMPORTE, 'formato' => self::MENSAJE_IMPORTE, 'cero' => self::MENSAJE_IMPORTE],
+                // D-54: hasta $ 1.000.000.000,00 por movimiento
+                'tipo' => 'IMP', 'obligatorio' => true, 'maximo_importe' => '1000000000.00',
+                'mensajes' => ['obligatorio' => self::MENSAJE_IMPORTE, 'formato' => self::MENSAJE_IMPORTE, 'cero' => self::MENSAJE_IMPORTE, 'maximo' => self::MENSAJE_TOPE],
             ],
             'fecha' => [
-                'tipo' => 'FEC', 'obligatorio' => true, 'anio_valido' => 2020,
+                // Las clases de formato usan fechas futuras: se prueban como movimiento programado. La antigüedad de un
+                // movimiento realizado (D-54) se prueba aparte
+                'tipo' => 'FEC', 'obligatorio' => true, 'anio_valido' => (int) date('Y') + 2, 'admite_pasado' => false, 'otros' => ['programado' => '1'],
                 'mensajes' => ['obligatorio' => self::MENSAJE_FECHA, 'formato' => self::MENSAJE_FECHA],
             ],
             'concepto' => [
@@ -93,7 +97,7 @@ final class FondosTest extends IntegracionTestCase
             $m = $this->movimiento($this->ultimoId('movimientos_fondos'));
             $this->assertGreaterThan($antes, (int) $m['id'], 'Debe registrarse el movimiento');
             $this->assertValorGuardado($esperado->guardado, $m[$campo], $campo);
-            $this->assertSame('Realizado', $m['estado']);
+            $this->assertSame(isset($otros['programado']) ? 'Programado' : 'Realizado', $m['estado']);
 
             return;
         }
@@ -143,17 +147,32 @@ final class FondosTest extends IntegracionTestCase
         $this->assertSame('0.00', (new FondosService($this->db))->disponibilidad()['libre']);
     }
 
-    /** IMP-08 con fondos: dos ingresos del máximo admitido no deben impedir consultar la disponibilidad. */
+    /** D-54: tope por movimiento; varios movimientos del tope se registran y la disponibilidad se sigue consultando. */
     public function testIngresosDelMaximoAdmitido(): void
     {
         $this->comoRol('Gerente');
         foreach ([1, 2] as $vez) {
-            $r = $this->enviar('admin/fondos', ['importe' => '99999999999999999'] + self::datos());
-            if ($vez === 1) {
-                $this->assertAceptado($r, 'primer ingreso del máximo');
-            }
+            $this->assertAceptado($this->enviar('admin/fondos', ['importe' => '1.000.000.000,00'] + self::datos()), "ingreso del tope {$vez}");
         }
+        $this->assertCampoRechazado($this->enviar('admin/fondos', ['importe' => '1.000.000.000,01'] + self::datos()), 'importe', self::MENSAJE_TOPE);
+        $this->assertCampoRechazado($this->enviar('admin/fondos', ['importe' => '1.000.000.000,01', 'programado' => '1', 'fecha' => Time::now(config('Sigccr')->zonaNegocio)->addDays(1)->format('d/m/Y')] + self::datos()), 'importe', self::MENSAJE_TOPE, 'también programado');
         $this->pedir('admin/fondos')->assertStatus(200);
+    }
+
+    /** D-54: un movimiento realizado puede tener hasta un año de antigüedad. */
+    public function testAntiguedadDeUnMovimientoRealizado(): void
+    {
+        $this->comoRol('Gerente');
+        $hoy = Time::now(config('Sigccr')->zonaNegocio);
+        $limite = $hoy->subYears(1);
+        $mensaje = 'La fecha del movimiento no puede tener más de un año de antigüedad.';
+
+        $this->assertAceptado($this->enviar('admin/fondos', ['fecha' => $limite->format('d/m/Y')] + self::datos()), 'hace un año exacto');
+        $this->assertValorGuardado($limite->format('Y-m-d'), $this->movimiento($this->ultimoId('movimientos_fondos'))['fecha']);
+        $this->assertAceptado($this->enviar('admin/fondos', ['fecha' => $hoy->subDays(1)->format('d/m/Y')] + self::datos()), 'ayer');
+        foreach ([$limite->subDays(1)->format('d/m/Y'), '29/02/2000', '01/01/1900'] as $fecha) {
+            $this->assertCampoRechazado($this->enviar('admin/fondos', ['fecha' => $fecha] + self::datos()), 'fecha', $mensaje, $fecha);
+        }
     }
 
     /** @return array<string, array{0: string, 1: mixed, 2: Esperado, 3: array<string, mixed>}> */
@@ -228,9 +247,10 @@ final class FondosTest extends IntegracionTestCase
     private function libreExpresable(): string
     {
         $servicio = new FondosService($this->db);
-        while (bccomp($libre = $servicio->disponibilidad()['libre'], '10000000000000000', 2) > 0) {
+        // D-54: el egreso de todo el libre debe caber en el tope de un movimiento
+        while (bccomp($libre = $servicio->disponibilidad()['libre'], '900000000', 2) > 0) {
             $this->db->table('movimientos_fondos')->insert([
-                'tipo' => 'Otro', 'caracter' => 'Egreso', 'importe' => bccomp($exceso = bcsub($libre, '1000000000', 2), '90000000000000000', 2) > 0 ? '90000000000000000.00' : $exceso,
+                'tipo' => 'Otro', 'caracter' => 'Egreso', 'importe' => bccomp($exceso = bcsub($libre, '500000000', 2), '90000000000000000', 2) > 0 ? '90000000000000000.00' : $exceso,
                 'fecha' => '2020-01-01', 'concepto' => 'Ajuste de la prueba', 'estado' => 'Realizado', 'usuario_id' => $this->fabrica->responsable(),
             ]);
         }

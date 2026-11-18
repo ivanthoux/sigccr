@@ -93,4 +93,14 @@ final class CajasFondosTest extends TestCase
         $e = ReglasCaja::validarMovimiento(['tipo' => 'X', 'caracter' => '', 'importe' => '0', 'concepto' => ''] + $base, self::HOY)['errores'];
         $this->assertSame(['tipo', 'caracter', 'importe', 'concepto'], array_keys($e));
     }
+
+    /** D-54: hasta $ 1.000.000.000,00 por movimiento y hasta un año de antigüedad para uno realizado. */
+    public function testTopeYAntiguedadDelMovimiento(): void
+    {
+        $base = ['tipo' => 'AporteCapital', 'caracter' => 'Ingreso', 'importe' => '1.000.000.000,00', 'fecha' => '04/11/2025', 'concepto' => 'Aporte de los socios'];
+        $this->assertSame([], ReglasCaja::validarMovimiento($base, self::HOY)['errores'], 'el tope y hace un año exacto');
+        $this->assertSame(['importe' => 'El importe de un movimiento no puede superar $ 1.000.000.000,00.'], ReglasCaja::validarMovimiento(['importe' => '1.000.000.000,01'] + $base, self::HOY)['errores']);
+        $this->assertSame(['fecha' => 'La fecha del movimiento no puede tener más de un año de antigüedad.'], ReglasCaja::validarMovimiento(['fecha' => '03/11/2025'] + $base, self::HOY)['errores']);
+        $this->assertSame([], ReglasCaja::validarMovimiento(['programado' => '1', 'fecha' => '01/01/2030'] + $base, self::HOY)['errores'], 'un programado no tiene límite hacia adelante');
+    }
 }

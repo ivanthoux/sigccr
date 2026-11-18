@@ -6,6 +6,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Cambiado (límites, D-54)
+- El gasto de otorgamiento de una línea admite hasta 50 % del capital.
+- Un movimiento de fondos realizado puede tener hasta un año de antigüedad y un movimiento admite hasta $ 1.000.000.000,00.
+
 ### Agregado (pruebas de integración, iteración 2, bloque B)
 - IN-34 a IN-44: simulación, comparación de líneas, registro, verificación, corrección, contingencia, confirmación,
   resolución, cancelación, liquidación y constancia del contrato (2447 pruebas en total).

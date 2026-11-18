@@ -111,7 +111,8 @@ final class ValidadorLinea
         $r['gasto_otorgamiento_pct'] = [
             Campos::obligatorio($d['gasto_otorgamiento_texto'], 'el gasto de otorgamiento (0 si no tiene)'),
             $d['gasto_otorgamiento_texto'] !== '' && $d['gasto_otorgamiento_pct'] === null ? 'Ingrese el gasto de otorgamiento en porcentaje del capital.' : null,
-            $d['gasto_otorgamiento_pct'] !== null && Decimal::of($d['gasto_otorgamiento_pct'])->compare(1) >= 0 ? 'El gasto de otorgamiento debe ser menor que el 100 % del capital.' : null,
+            // D-54: hasta 50 %; antes se admitía hasta 99,9999 % y con el IVA no quedaba neto para desembolsar (H-24, H-25)
+            $d['gasto_otorgamiento_pct'] !== null && Decimal::of($d['gasto_otorgamiento_pct'])->compare('0.5') > 0 ? 'El gasto de otorgamiento no puede superar el 50 % del capital.' : null,
         ];
         $r['tipo_gasto_administrativo'] = [($d['tipo_gasto_valido'] ?? true) ? null : 'Seleccione cómo se cobra el gasto administrativo.'];
         $r['gasto_administrativo_cuota'] = $d['tipo_gasto_administrativo'] === 'Porcentual' ? [] : [

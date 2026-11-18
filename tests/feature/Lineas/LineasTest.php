@@ -37,10 +37,11 @@ final class LineasTest extends IntegracionTestCase
                 'obligatorio' => 'Complete la TNA.', 'formato' => 'Ingrese la TNA en porcentaje, por ejemplo 65 o 65,5.',
                 'maximo' => 'La TNA no puede superar el 500 %.', 'cero' => 'La TNA debe ser mayor que cero.',
             ]],
-            'gasto_otorgamiento_pct' => ['tipo' => 'PCT', 'obligatorio' => true, 'maximo' => '100', 'maximo_incluido' => false, 'mensajes' => [
+            // D-54: hasta 50 % del capital, incluido
+            'gasto_otorgamiento_pct' => ['tipo' => 'PCT', 'obligatorio' => true, 'maximo' => '50', 'maximo_incluido' => true, 'mensajes' => [
                 'obligatorio' => 'Complete el gasto de otorgamiento (0 si no tiene).',
                 'formato' => 'Ingrese el gasto de otorgamiento en porcentaje del capital.',
-                'maximo' => 'El gasto de otorgamiento debe ser menor que el 100 % del capital.',
+                'maximo' => 'El gasto de otorgamiento no puede superar el 50 % del capital.',
             ]],
             'tipo_gasto_administrativo' => [
                 // O-03 (D-52): un valor fuera de la lista, vacío o ausente se rechaza

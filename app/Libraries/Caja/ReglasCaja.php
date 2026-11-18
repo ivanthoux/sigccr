@@ -14,6 +14,9 @@ use App\Libraries\Validacion\Campos;
  */
 final class ReglasCaja
 {
+    /** D-54: importe máximo de un movimiento de fondos. */
+    public const IMPORTE_MAXIMO_MOVIMIENTO = '1000000000.00';
+
     public const TIPOS_FONDOS = [
         'AporteCapital' => 'Aporte de capital',
         'Financiamiento' => 'Financiamiento o fondeo',
@@ -186,10 +189,16 @@ final class ReglasCaja
         $importe = Campos::importe($d['importe'] ?? '');
         if ($importe === null || !Decimal::of($importe)->isPositive()) {
             $e['importe'] = 'Ingrese un importe mayor que cero.';
+        } elseif (Decimal::of($importe)->compare(self::IMPORTE_MAXIMO_MOVIMIENTO) > 0) {
+            // D-54: un aporte mayor se registra en varios movimientos
+            $e['importe'] = 'El importe de un movimiento no puede superar $ 1.000.000.000,00.';
         }
         $fecha = Campos::fecha($d['fecha'] ?? '');
         if ($fecha === null) {
             $e['fecha'] = 'Ingrese la fecha del movimiento (dd/mm/aaaa).';
+        } elseif ($estado === 'Realizado' && $fecha < date('Y-m-d', (int) strtotime($hoy . ' -1 year'))) {
+            // D-54: un movimiento de más de un año se registra como saldo inicial, no como movimiento
+            $e['fecha'] = 'La fecha del movimiento no puede tener más de un año de antigüedad.';
         } elseif ($estado === 'Realizado' && $fecha > $hoy) {
             $e['fecha'] = 'Un movimiento realizado no puede tener fecha futura: márquelo como programado.';
         } elseif ($estado === 'Programado' && $fecha <= $hoy) {
