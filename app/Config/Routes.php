@@ -234,6 +234,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
             $routes->get('campanas', 'Admin\Parametros::campanas', ['as' => 'parametros.campanas', 'filter' => 'permiso:parametros.campanas']);
             $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
+            // CU-106 Configurar Modelo de Contrato (D-56)
+            $routes->get('contrato', 'Admin\Parametros::contrato', ['as' => 'parametros.contrato', 'filter' => 'permiso:parametros.contrato']);
+            $routes->post('contrato', 'Admin\Parametros::guardarContrato', ['filter' => 'permiso:parametros.contrato']);
         });
 
         // SS-11 Copias de seguridad (CU-61 a CU-63; D-45)

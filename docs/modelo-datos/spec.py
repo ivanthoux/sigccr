@@ -85,7 +85,7 @@ ENUMS = {
     'CriterioComparacion': ['Monto', 'Costo'],
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
     'TipoComunicacion': ['Autorizacion', 'VerificacionCorreo', 'Oferta', 'AvisoObligacion', 'Notificacion'],
-    'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas'],
+    'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas', 'Contrato'],
     'OrigenCopia': ['Manual', 'Automatica', 'PreviaRestauracion'],
     # técnicas (sin clase de dominio)
     'EstadoNotificacion': ['Pendiente', 'Procesada', 'Descartada', 'Error'],
@@ -725,6 +725,7 @@ add('contratos_prestamo', 'SS-04', 'ContratoPrestamo', 'Contrato de préstamo ge
     C('fecha_recepcion', D, null=True, d='Día en que el cliente recibió su ejemplar firmado.'),
     C('fecha_registro', TS, null=True),
     FK('usuario_id', 'usuarios_internos', null=True, d='Analista que incorporó la constancia.'),
+    FK('version_contrato_id', 'versiones_parametros', null=True, d='Modelo de contrato (grupo Contrato) vigente al generarlo; nulo: el modelo inicial (D-56).'),
 ], ck=[('CK_contratos_prestamo_constancia', '(documento_legajo_id IS NULL AND fecha_recepcion IS NULL AND fecha_registro IS NULL AND usuario_id IS NULL) OR (documento_legajo_id IS NOT NULL AND fecha_recepcion IS NOT NULL AND fecha_registro IS NOT NULL AND usuario_id IS NOT NULL)')])
 
 add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola liquidación por solicitud (RNF-06, RN-25).', [

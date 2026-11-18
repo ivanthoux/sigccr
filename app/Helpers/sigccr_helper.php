@@ -303,3 +303,73 @@ if (!function_exists('valor_reporte')) {
         };
     }
 }
+
+if (!function_exists('texto_css')) {
+    /** Cadena CSS entre comillas, sin saltos de línea ni forma de cerrar el bloque <style> (D-57). */
+    function texto_css(string $texto): string
+    {
+        return '"' . strtr(trim((string) preg_replace('/\s+/u', ' ', $texto)), ['\\' => '\\\\', '"' => '\"', '<' => '\3C ', '>' => '\3E ']) . '"';
+    }
+}
+
+if (!function_exists('datos_impresion')) {
+    /**
+     * Datos comunes de la impresión formal de un documento (D-57): entidad, título, momento de emisión y usuario.
+     *
+     * @return array{entidad: string, cuit: string, domicilio: string, titulo: string, emitido: string, usuario: string}
+     */
+    function datos_impresion(string $titulo): array
+    {
+        static $emitido = null;
+        $emitido ??= \CodeIgniter\I18n\Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y H:i');
+        $c = config('Sigccr');
+        $cuenta = session('cuenta') ?? [];
+
+        return [
+            'entidad' => $c->entidadRazonSocial, 'cuit' => $c->entidadCuit !== '' ? formato_cuit($c->entidadCuit) : '', 'domicilio' => $c->entidadDomicilio,
+            'titulo' => $titulo, 'emitido' => $emitido, 'usuario' => (string) ($cuenta['nombre'] ?? $cuenta['correo'] ?? ''),
+        ];
+    }
+}
+
+if (!function_exists('estilo_impresion')) {
+    /**
+     * Márgenes de la hoja impresa con la cabecera y el pie de cada página (D-57): la entidad y el título arriba; la
+     * fecha y hora de emisión, el usuario y «Página N de M» abajo. Los navegadores basados en Chromium (Chrome y Edge
+     * desde la versión 131) dibujan estas cajas de margen; los demás imprimen el documento sin ellas.
+     */
+    function estilo_impresion(string $titulo): string
+    {
+        $d = datos_impresion($titulo);
+        $pie = 'Emitido el ' . $d['emitido'] . ($d['usuario'] !== '' ? ' por ' . $d['usuario'] : '') . ' · SIG-CCR';
+        $caja = 'font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #3d4a48;';
+
+        return '<style media="print">@page { margin: 20mm 14mm 18mm 14mm;'
+            . ' @top-left { content: ' . texto_css($d['entidad']) . "; {$caja} vertical-align: bottom; padding-bottom: 3mm; }"
+            . ' @top-right { content: ' . texto_css($d['titulo']) . "; {$caja} vertical-align: bottom; padding-bottom: 3mm; text-align: right; }"
+            . ' @bottom-left { content: ' . texto_css($pie) . "; {$caja} vertical-align: top; padding-top: 3mm; }"
+            . " @bottom-right { content: \"Página \" counter(page) \" de \" counter(pages); {$caja} vertical-align: top; padding-top: 3mm; text-align: right; }"
+            . ' }</style>';
+    }
+}
+
+if (!function_exists('cabecera_impresion')) {
+    /**
+     * Cabecera formal de la primera hoja de un informe impreso (D-57): entidad, título del informe, fecha y hora de
+     * emisión y usuario. Solo se ve al imprimir; los documentos con su propio encabezado (contrato, comprobantes y
+     * constancias) llevan solo la cabecera y el pie de cada página.
+     */
+    function cabecera_impresion(string $titulo): string
+    {
+        $d = datos_impresion($titulo);
+        $identidad = implode(' · ', array_filter([$d['cuit'] !== '' ? 'CUIT ' . $d['cuit'] : '', $d['domicilio']]));
+
+        return '<div class="cabecera-impresion d-none d-print-block">'
+            . '<div class="d-flex justify-content-between align-items-end gap-3">'
+            . '<div><div class="entidad">' . esc($d['entidad']) . '</div>' . ($identidad !== '' ? '<div>' . esc($identidad) . '</div>' : '') . '</div>'
+            . '<div class="text-end">SIG-CCR<br>Sistema Integral de Gestión de Créditos, Cobranzas y Refinanciación</div></div>'
+            . '<div class="titulo-documento">' . esc($d['titulo']) . '</div>'
+            . '<div>Emitido el ' . esc(str_replace(' ', ' a las ', $d['emitido'])) . ($d['usuario'] !== '' ? ' por ' . esc($d['usuario']) : '') . '</div>'
+            . '</div>';
+    }
+}

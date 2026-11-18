@@ -1,8 +1,9 @@
 // Parte 2, secciones 13 y 14. Contrato, liquidación, cancelación y consultas (CU-103, CU-27, CU-28, CU-29, CU-30 y
-// D-24): R-080 a R-091. Al terminar quedan liquidados los créditos A a E de la iteración 3 (A.10).
+// D-24): R-080 a R-091 y R-151 (declaración PEP, D-55). Al terminar quedan liquidados los créditos A a E de la iteración 3 (A.10).
 const { test, expect } = require('../lib/fixtures');
 const { clientes, desembolsos, cbuInvalido, cvu, fecha } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
+const { documento } = require('../lib/archivos');
 const f = require('../lib/flujo');
 
 const { C01: ana, C02: bruno, C05: elena, C06: federico, C12: marcos } = clientes;
@@ -33,6 +34,25 @@ test('R-082 Incorporar la constancia firmada (CU-103)', async ({ comoUsuario }) 
   const page = await comoUsuario('analista');
   await f.incorporarContrato(page, await solicitudDe(ana));
   await expect(exito(page)).toContainText('Constancia firmada incorporada al legajo: la solicitud ya puede liquidarse');
+});
+
+test('R-151 Liquidar sin la declaración jurada PEP (RN-80, D-55)', async ({ comoUsuario }) => {
+  // Ana se registró sin la declaración: el alta la admite, la liquidación no
+  const id = await solicitudDe(ana);
+  const cajero = await comoUsuario('cajero');
+  await cajero.goto(`/admin/liquidaciones/${id}`);
+  await expect(cajero.locator('main')).toContainText('Falta la declaración jurada de persona expuesta políticamente');
+  await expect(cajero.locator(`form[action$="/admin/liquidaciones/${id}"]`)).toHaveAttribute('inert', '');
+  // El Analista la incorpora al legajo desde la ficha del cliente
+  const analista = await comoUsuario('analista');
+  await analista.goto(`/admin/clientes/${await f.idCliente(ana)}`);
+  await analista.locator('#tipo-documento-nuevo').selectOption('DDJJ_PEP');
+  await analista.locator('#archivo-nuevo').setInputFiles(documento('ddjj_pep_Gomez.pdf'));
+  await analista.getByRole('button', { name: 'Incorporar' }).click();
+  await expect(exito(analista)).toContainText('Documento incorporado al legajo.');
+  await expect(analista.locator('#legajo')).not.toContainText('se exige para liquidar un crédito');
+  await cajero.goto(`/admin/liquidaciones/${id}`);
+  await expect(cajero.locator('main')).not.toContainText('Falta la declaración jurada');
 });
 
 test('R-083 Validaciones del desembolso', async ({ comoUsuario }) => {

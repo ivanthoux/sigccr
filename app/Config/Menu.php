@@ -61,6 +61,7 @@ class Menu extends BaseConfig
             ['texto' => 'Parámetros de estructuración', 'icono' => 'bi-diagram-3', 'ruta' => 'parametros.estructuracion', 'permiso' => 'parametros.estructuracion'],
             ['texto' => 'Parámetros de morosidad', 'icono' => 'bi-hourglass-split', 'ruta' => 'parametros.morosidad', 'permiso' => 'parametros.morosidad'],
             ['texto' => 'Parámetros de campañas', 'icono' => 'bi-bullseye', 'ruta' => 'parametros.campanas', 'permiso' => 'parametros.campanas'],
+            ['texto' => 'Modelo de contrato', 'icono' => 'bi-file-earmark-text', 'ruta' => 'parametros.contrato', 'permiso' => 'parametros.contrato'],
             ['texto' => 'Calendario operativo', 'icono' => 'bi-calendar3', 'ruta' => 'calendario.actualizar', 'permiso' => 'calendario.actualizar'],
             ['texto' => 'Documentación exigible', 'icono' => 'bi-folder-check', 'ruta' => 'documentacion.configurar', 'permiso' => 'documentacion.configurar'],
             ['texto' => 'Categorías del monotributo', 'icono' => 'bi-tags', 'ruta' => 'monotributo.actualizar', 'permiso' => 'monotributo.actualizar'],

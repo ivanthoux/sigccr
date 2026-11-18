@@ -84,6 +84,43 @@ const feriado1 = libre(28);
 const cierre = libre(44);
 const feriado2 = libre(45);
 
+test('R-152 Modelo de contrato (CU-106, D-56)', async ({ comoUsuario }) => {
+  const page = await comoUsuario('gerente');
+  await page.goto('/admin/parametros/contrato');
+  await expect(page.locator('main')).toContainText('Vigente: modelo inicial.');
+  const clausulas = page.locator('[data-clausula]');
+  await expect(clausulas).toHaveCount(11);
+  // Una variable mal escrita se rechaza y el formulario conserva lo escrito
+  await page.getByRole('button', { name: 'Agregar cláusula' }).click();
+  await expect(clausulas).toHaveCount(12);
+  await page.locator('#clausula-12-titulo').fill('Seguro');
+  await page.locator('#clausula-12-texto').fill('Seguro de vida sobre saldo deudor del préstamo de {monto}.');
+  await page.locator('#motivo').fill('Cláusula de seguro de vida pedida por la entidad.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(page.locator('#clausula-12-texto')).toHaveClass(/is-invalid/);
+  await expect(page.locator('main')).toContainText('Variable desconocida: {monto}');
+  // Se corrige, se sube un lugar y se registra la versión 1
+  await page.locator('#clausula-12-texto').fill('Seguro de vida sobre saldo deudor del préstamo de {importe}.');
+  await page.locator('[data-clausula]').nth(11).getByRole('button', { name: 'Subir la cláusula' }).click();
+  await expect(page.locator('#clausula-11-titulo')).toHaveValue('Seguro');
+  await page.locator('#motivo').fill('Cláusula de seguro de vida pedida por la entidad.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(exito(page)).toContainText('Se registró la versión 1 del modelo de contrato');
+  expect(await valor("SELECT COUNT(*) FROM dbo.versiones_parametros WHERE tipo = 'Contrato'")).toBe(1);
+  // Lo exigido por la ley no se puede quitar: sin el plan de cuotas no se registra
+  await page.locator('[data-clausula]', { has: page.locator('textarea', { hasText: '{plan_cuotas}' }) }).getByRole('button', { name: 'Quitar la cláusula' }).click();
+  await page.locator('#motivo').fill('Prueba de una cláusula obligatoria.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(page.locator('main')).toContainText('Falta {plan_cuotas}');
+  // Se vuelve al modelo inicial para el resto de la batería
+  await page.goto('/admin/parametros/contrato?inicial=1');
+  await page.locator('#motivo').fill('Se vuelve al modelo inicial.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(exito(page)).toContainText('Se registró la versión 2 del modelo de contrato');
+  const analista = await comoUsuario('analista');
+  expect((await analista.goto('/admin/parametros/contrato')).status()).toBe(403);
+});
+
 test('R-044 Calendario operativo', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
   const agregar = async (dia, descripcion, tipo = 'Feriado', carga = '') => {

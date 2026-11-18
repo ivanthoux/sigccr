@@ -7,12 +7,14 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Solicitudes\ModeloContrato;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorParametrosEstructuracion as E;
 use App\Libraries\Validacion\ValidadorParametrosCampanas as C;
 use App\Libraries\Validacion\ValidadorParametrosMorosidad as M;
 use App\Libraries\Validacion\ValidadorParametrosEvaluacion as V;
 use App\Services\Comunes\ParametroService;
+use App\Services\Solicitudes\ContratoService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -205,5 +207,51 @@ class Parametros extends BaseController
     private function lineasParaCampanas(): array
     {
         return db_connect()->table('lineas_credito')->select('id, nombre, codigo')->where('estado', 'Activa')->orderBy('nombre')->get()->getResultArray();
+    }
+
+    // ── CU-106 Configurar Modelo de Contrato (D-56) ────────────────────────────
+
+    /** Pasos 1 a 3: cláusulas del modelo vigente (o del inicial, A4), variables disponibles y versiones anteriores. */
+    public function contrato(): string
+    {
+        $servicio = new ContratoService();
+        $vigente = $servicio->modeloVigente();
+        $inicial = $this->request->getGet('inicial') !== null;
+        // Al volver con observaciones, el formulario conserva lo escrito (las filas vacías se descartan)
+        $escritas = old('texto') !== null ? ModeloContrato::normalizar(['estilo' => old('estilo'), 'titulo' => old('titulo'), 'texto' => old('texto')]) : null;
+
+        return view('parametros/contrato', [
+            'titulo' => 'Modelo de contrato',
+            'vigente' => $vigente,
+            'clausulas' => $escritas ?? ($inicial ? ModeloContrato::INICIAL : $vigente['clausulas']),
+            'inicial' => $inicial,
+            'historial' => (new ParametroService())->historial('Contrato'),
+        ]);
+    }
+
+    /** Pasos 4 a 7 (A1 a A3). */
+    public function guardarContrato(): RedirectResponse
+    {
+        $clausulas = ModeloContrato::normalizar((array) $this->request->getPost());
+        $errores = ModeloContrato::validar($clausulas);
+        $fecha = Campos::fecha($this->request->getPost('fecha_vigencia'));
+        if ($fecha === null) {
+            $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige el nuevo modelo.';
+        }
+        $motivo = Campos::texto($this->request->getPost('motivo'));
+        if (($m = Campos::motivo($motivo, 500)) !== null) {
+            $errores['motivo'] = $m;
+        }
+        try {
+            if ($errores !== []) {
+                throw new ValidacionException($errores, 'RN-78');
+            }
+            $r = (new ContratoService())->registrarModelo($clausulas, (string) $fecha, $motivo, (int) session('cuenta')['id']);
+        } catch (ReglaNegocioException $e) {
+            return $this->volverConError($e);
+        }
+
+        return redirect()->route('parametros.contrato')->with('exito', "Se registró la versión {$r['numero']} del modelo de contrato, vigente desde el " . formato_fecha_hora($r['vigente_desde'])
+            . '. Se aplica a los contratos que se generen desde entonces; los ya generados conservan su texto (RN-15).');
     }
 }

@@ -24,6 +24,8 @@ $actual = current_url();
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
         <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
+    <?php // D-57: cabecera y pie de cada hoja impresa (entidad, título, emisión, «Página N de M») ?>
+    <?= estilo_impresion($titulo ?? 'SIG-CCR') ?>
 </head>
 <body class="panel d-lg-flex">
 <a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-body" href="#contenido">Ir al contenido</a>
@@ -73,6 +75,8 @@ $actual = current_url();
 
 <main id="contenido" class="contenido" tabindex="-1">
     <?= $this->include('partials/mensajes') ?>
+    <?php // D-57: cabecera formal de la primera hoja impresa; un documento con encabezado propio la omite (.documento-propio) ?>
+    <?= cabecera_impresion($titulo ?? 'SIG-CCR') ?>
     <?= $this->renderSection('contenido') ?>
 </main>
 

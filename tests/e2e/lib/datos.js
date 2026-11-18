@@ -23,7 +23,7 @@ const h = (codigo, nombre, apellido, dni, cuil, nacimiento, estadoCivil, correo,
   categoria, ingresos, ocupacion, empleador, nacionalidad: 'Argentina', pep: false, comunicaciones: true, ...extra,
 });
 const clientes = {
-  C01: h('C-01', 'Ana', 'Gómez', '30111233', '27301112330', '1985-03-14', 'Casado', 'ana.gomez@prueba.local', '3758 41-1001', 101, 'RelacionDependencia', '1500000', 'Docente', 'Escuela Normal N.º 3'),
+  C01: h('C-01', 'Ana', 'Gómez', '30111233', '27301112330', '1985-03-14', 'Casado', 'ana.gomez@prueba.local', '3758 41-1001', 101, 'RelacionDependencia', '1500000', 'Docente', 'Escuela Normal N.º 3', { sinDeclaracionPep: true }),
   C02: h('C-02', 'Bruno', 'Fernández', '31222335', '20312223350', '1986-07-02', 'Soltero', 'bruno.fernandez@prueba.local', '3758 41-1002', 202, 'RelacionDependencia', '1500000', 'Empleado administrativo', 'Cooperativa Agrícola Apóstoles'),
   C03: h('C-03', 'Carla', 'Sosa', '32333445', '27323334450', '1987-11-21', 'Soltero', 'carla.sosa@prueba.local', '3758 41-1003', 303, 'RelacionDependencia', '1500000', 'Enfermera', 'Hospital de Área Apóstoles'),
   C04: h('C-04', 'Diego', 'Ramírez', '33444550', '20334445500', '1988-05-09', 'Casado', 'diego.ramirez@prueba.local', '3758 41-1004', 404, 'RelacionDependencia', '1500000', 'Técnico electricista', 'Energía de Misiones S.A.'),

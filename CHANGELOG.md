@@ -6,6 +6,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (observaciones de la cátedra del 18/11/2026)
+- D-55: declaración jurada de persona expuesta políticamente en el legajo: opcional en el alta, exigida para
+  liquidar (migración 33).
+- D-56: modelo de contrato configurable y versionado, CU-106 del Gerente (migración 34, permiso 106: ejecutar
+  `composer semillas`).
+- D-57: impresión formal de informes y documentos: entidad y título en cada hoja, fecha y hora de emisión, usuario
+  y «Página N de M».
+- D-58: el alta consulta el padrón al ingresar un CUIL válido y completa el DNI, el nombre y el apellido.
+
 ### Agregado (pruebas de integración, iteración 3)
 - IN-45 a IN-52: cobro en ventanilla, anulación, cancelación anticipada, pago electrónico, revocación,
   condonación de punitorios, refinanciación y saldo a favor con devolución (2648 pruebas en total).
