@@ -7,7 +7,9 @@ namespace Tests\Support\Feature;
 use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Fondos\FondosService;
+use App\Services\Caja\CajaService;
 use App\Services\Solicitudes\ContratoService;
+use App\Services\Solicitudes\LiquidacionService;
 use App\Services\Solicitudes\EstructuracionService;
 use App\Services\Solicitudes\EvaluacionService;
 use App\Services\Solicitudes\SimulacionService;
@@ -408,6 +410,62 @@ final class Fabrica
         }
 
         return $r;
+    }
+
+    // ── Créditos y caja (iteración 3) ─────────────────────────────────────────────────────────────────────────
+
+    /** CBU válido de un banco de prueba (072, sucursal 0045), distinto para cada $n. */
+    public static function cbu(int $n = 1): string
+    {
+        $digito = static function (string $numero, array $pesos): string {
+            $suma = 0;
+            foreach ($pesos as $i => $peso) {
+                $suma += (int) $numero[$i] * $peso;
+            }
+
+            return (string) ((10 - $suma % 10) % 10);
+        };
+        $bloque = '0720045';
+        $cuenta = str_pad((string) (90000001 + $n * 137), 13, '0', STR_PAD_LEFT);
+
+        return $bloque . $digito($bloque, [7, 1, 3, 9, 7, 1, 3]) . $cuenta . $digito($cuenta, [3, 9, 7, 1, 3, 9, 7, 1, 3, 9, 7, 1, 3]);
+    }
+
+    /**
+     * Crédito vigente liquidado por el camino de CU-21 a CU-27, con sus cuotas pendientes.
+     *
+     * @return array{id: int, solicitud_id: int, cliente: array{id: int, datos: array<string, mixed>}, cuotas: list<array<string, mixed>>}
+     */
+    public function credito(string $importe = '500.000,00', string $cuotas = '12'): array
+    {
+        $s = $this->solicitud('ConConstancia', $importe, $cuotas);
+        $liquidacion = new LiquidacionService($this->db);
+        $datos = $liquidacion->datos($s['id']);
+        $r = $liquidacion->liquidar($s['id'], (int) $datos['version_fila'], [
+            'documento_verificado' => (string) $s['cliente']['datos']['nro_documento'], 'conformidad' => '1', 'cbu' => self::cbu(),
+            'cuit_titular' => (string) $s['cliente']['datos']['cuit_cuil'], 'evidencia_titularidad' => 'Constancia de CBU del titular',
+            'comprobante' => 'OP-' . self::sufijo(), 'fecha_transferencia' => Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'),
+            'importe_transferencia' => str_replace('.', ',', $datos['calculo']['neto']->toFixed(2)),
+        ], $this->responsable());
+        $id = (int) ($r['credito_id'] ?? $this->db->query('SELECT credito_id FROM dbo.liquidaciones WHERE solicitud_id = ?', [$s['id']])->getRow()->credito_id);
+
+        return ['id' => $id, 'solicitud_id' => $s['id'], 'cliente' => $s['cliente'], 'cuotas' => $this->cuotas($id)];
+    }
+
+    /** @return list<array<string, mixed>> cuotas del crédito, por número */
+    public function cuotas(int $creditoId): array
+    {
+        return $this->db->table('cuotas')->where('credito_id', $creditoId)->orderBy('numero')->get()->getResultArray();
+    }
+
+    /** Asigna una caja nueva al Cajero desde hoy y abre su jornada (CU-72, CU-31). */
+    public function cajaAbierta(int $cajeroId): int
+    {
+        $this->db->table('cajas')->insert(['codigo' => 'T' . strtoupper(substr(self::sufijo(), -9)), 'denominacion' => 'Caja de prueba', 'estado' => 'Habilitada']);
+        $caja = (int) $this->db->insertID();
+        $this->db->table('asignaciones_caja')->insert(['caja_id' => $caja, 'usuario_id' => $cajeroId, 'desde' => Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d')]);
+
+        return (new CajaService($this->db))->abrir($cajeroId);
     }
 
     /** Alternativas vigentes de la solicitud. @return list<array<string, mixed>> */
