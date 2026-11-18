@@ -38,7 +38,7 @@ final class ParametrosTest extends IntegracionTestCase
         $minima = 'Ingrese la TNA mínima de refinanciación (entre 0 % y 500 %).';
         $maxima = 'Ingrese la TNA máxima de refinanciación (entre 0 % y 500 %).';
         $cuotas = 'La cantidad máxima de cuotas de una refinanciación debe estar entre 1 y 120.';
-        $m = static fn (string $msg, array $extra = []): array => ['obligatorio' => $msg, 'formato' => $msg, 'maximo' => $msg, 'minimo' => $msg] + $extra;
+        $m = static fn (string $msg, array $extra = []): array => $extra + ['obligatorio' => $msg, 'formato' => $msg, 'maximo' => $msg, 'minimo' => $msg];
 
         return [
             'estructuracion' => [
@@ -274,8 +274,8 @@ final class ParametrosTest extends IntegracionTestCase
             $this->assertCampoRechazado($this->enviar('admin/parametros/campanas', ['linea_id' => $valor] + $base), 'linea_id', $linea, 'línea ' . json_encode($valor));
         }
         $inactiva = $this->fabrica->linea()['id'];
-        $this->db->table('lineas_credito')->where('id', $inactiva)->update(['estado' => 'Inactiva']);
-        $this->assertCampoRechazado($this->enviar('admin/parametros/campanas', ['linea_id' => (string) $inactiva] + $base), 'linea_id', $linea, 'línea inactiva');
+        $this->db->table('lineas_credito')->where('id', $inactiva)->update(['estado' => 'Suspendida']);
+        $this->assertCampoRechazado($this->enviar('admin/parametros/campanas', ['linea_id' => (string) $inactiva] + $base), 'linea_id', $linea, 'línea suspendida');
 
         $categorias = 'Seleccione al menos una categoría de ingresos admitida.';
         // Un único valor enviado como texto equivale a una casilla marcada
@@ -301,12 +301,10 @@ final class ParametrosTest extends IntegracionTestCase
             'morosidad' => M::aFormulario(M::SUGERIDOS),
             'campanas' => ['linea_id' => (string) $this->fabrica->linea()['id']] + C::aFormulario(C::SUGERIDOS),
         };
-        // Las casillas viajan como «1» o no viajan, como en el navegador
-        foreach ($datos as $k => $v) {
-            if (is_bool($v)) {
-                $datos[$k] = $v ? '1' : '';
-            }
-        }
+        // El navegador envía todo como texto; las casillas, como «1» o vacías
+        array_walk_recursive($datos, static function (mixed &$v): void {
+            $v = is_bool($v) ? ($v ? '1' : '') : (string) $v;
+        });
 
         return $datos + [
             'fecha_vigencia' => Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'),
