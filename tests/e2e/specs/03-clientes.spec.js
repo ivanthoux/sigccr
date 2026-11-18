@@ -101,6 +101,10 @@ test('R-022 Legajo: incorporar y descargar', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const id = await idCliente(ana.correo);
   await page.goto(`/admin/clientes/${id}`);
+  // D-55: Ana se registró sin la declaración PEP; la ficha lo advierte y la propone primero para incorporar
+  await expect(page.locator('#legajo')).toContainText('se exige para liquidar un crédito');
+  await expect(page.locator('#tipo-documento-nuevo')).toHaveValue('DDJJ_PEP');
+  await page.locator('#tipo-documento-nuevo').selectOption('DOC_IDENTIDAD');
   await page.locator('#archivo-nuevo').setInputFiles(documento('otro_documento_prueba.pdf'));
   await page.getByRole('button', { name: 'Incorporar' }).click();
   await expect(exito(page)).toContainText('Documento incorporado al legajo.');

@@ -12,6 +12,7 @@ $pendiente = $a['estado'] === 'PendienteEjecucion' && $e === null;
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
+<span class="documento-propio" hidden></span><?php // D-57: con encabezado propio; al imprimir lleva solo la cabecera y el pie de cada hoja ?>
 <nav aria-label="Ruta" class="mb-2 d-print-none">
     <?php if (tiene_permiso('saldos-favor.ejecutar-devolucion')): ?><a href="<?= url_to('saldos-favor.ejecutar-devolucion') ?>"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Devoluciones</a>
     <?php else: ?><a href="<?= url_to('saldos-favor.autorizar-devolucion') ?>?cliente=<?= (int) $a['cliente_id'] ?>"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Saldos del cliente</a><?php endif ?>

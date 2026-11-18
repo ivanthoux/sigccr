@@ -76,7 +76,7 @@ $this->section('contenido');
                 <div class="col-md-6" data-solo="PersonaHumana">
                     <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
                     <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
-                    <output class="form-text d-block" data-padron-resultado>Con el CUIL cargado, propone el nombre, el documento y el domicilio fiscal para que los confirme (A9).</output>
+                    <output class="form-text d-block" data-padron-resultado>Al ingresar un CUIL válido se completan el DNI, el nombre y el apellido con el padrón de ARCA, para que los confirme (A9).</output>
                 </div>
             <?php endif ?>
         </div>
@@ -192,6 +192,7 @@ $this->section('contenido');
                 <?php foreach ($tipos as $t): ?>
                     <div class="col-md-6" data-aplica="<?= esc($t['aplica_a'], 'attr') ?>">
                         <label for="doc-<?= esc($t['codigo'], 'attr') ?>" class="form-label"><?= esc($t['nombre']) ?> <span class="badge text-bg-light border" data-obligatorio="<?= esc($t['codigo'], 'attr') ?>" hidden>Obligatorio</span></label>
+                        <?php if ($t['codigo'] === RequisitosDocumentales::DECLARACION_PEP): ?><div class="form-text mt-0 mb-1" id="ayuda-doc-pep">Firmada por el cliente. Opcional en el alta; se exige para liquidar un crédito (RN-80).</div><?php endif ?>
                         <input type="file" class="form-control<?= campo_invalido('doc_' . $t['codigo']) ?>" id="doc-<?= esc($t['codigo'], 'attr') ?>" name="documentos[<?= esc($t['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
                         <?= error_campo('doc_' . $t['codigo']) ?>
                     </div>
@@ -215,7 +216,7 @@ $this->section('contenido');
             </div>
         </div>
         <?= error_campo('persona_expuesta') ?>
-        <p class="small text-body-secondary mt-2 mb-0">Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
+        <p class="small text-body-secondary mt-2 mb-0"><?= $c === null ? 'La declaración firmada se adjunta en la documentación, ahora o más adelante: se exige para liquidar. ' : '' ?>Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
     </fieldset>
 
     <fieldset class="hoja p-4 mb-3">

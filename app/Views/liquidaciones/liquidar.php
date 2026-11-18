@@ -23,6 +23,9 @@ $this->section('contenido');
 <?php if (!$s['constancia']): ?>
     <div class="alert alert-danger">Falta la constancia firmada del contrato de préstamo en el legajo: el Analista debe incorporarla antes de liquidar (CU-103, RN-25, RN-78).</div>
 <?php endif ?>
+<?php if (!$s['declaracion_pep']): ?>
+    <div class="alert alert-danger">Falta la declaración jurada de persona expuesta políticamente firmada por el cliente: el Analista debe incorporarla al legajo antes de liquidar (RN-80).<?php if (tiene_permiso('clientes.modificar')): ?> <a href="<?= site_url('admin/clientes/' . (int) $s['cliente_id'] . '#legajo') ?>">Abrir el legajo del cliente</a><?php endif ?></div>
+<?php endif ?>
 <div class="alert alert-info">La aprobación vence el <strong><?= esc(formato_fecha_hora($s['vence_aprobacion'])) ?></strong>. Reserva de fondos: <?= $s['reserva'] !== null ? esc(formato_importe($s['reserva'])) : '<strong>sin reserva</strong>' ?>.</div>
 
 <section class="hoja p-4 mb-3" aria-labelledby="titulo-plan">
@@ -30,7 +33,7 @@ $this->section('contenido');
     <?= view('partials/plan_preliminar', ['calculo' => $s['calculo'], 'importe' => (string) $s['importe_aprobado'], 'tna' => (string) $s['tna']]) ?>
 </section>
 
-<form method="post" action="<?= site_url("admin/liquidaciones/{$id}") ?>" class="hoja p-4" novalidate<?= $s['constancia'] ? '' : ' inert' ?>>
+<form method="post" action="<?= site_url("admin/liquidaciones/{$id}") ?>" class="hoja p-4" novalidate<?= $s['constancia'] && $s['declaracion_pep'] ? '' : ' inert' ?>>
     <?= csrf_field() ?>
     <input type="hidden" name="version_fila" value="<?= (int) $s['version_fila'] ?>">
     <h2 class="h5">Desembolso de <?= esc(formato_importe($neto)) ?></h2>

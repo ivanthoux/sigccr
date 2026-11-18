@@ -24,6 +24,8 @@ class TiposDocumentacionSeeder extends Seeder
             ['CONST_CUIT', 'Constancia de CUIT', 'PersonaJuridica', 1],
             ['ESTADOS_CONTABLES', 'Últimos estados contables', 'PersonaJuridica', 1],
             ['PODER_REPRESENTACION', 'Instrumento que acredita la representación', 'PersonaJuridica', 1],
+            // D-55: opcional en el alta, exigida para liquidar (RN-80)
+            ['DDJJ_PEP', 'Declaración jurada de persona expuesta políticamente', 'Ambos', 0],
         ];
         // Constancia firmada del contrato (RN-78): documento interno, inactivo para no ofrecerse como exigible
         $tipos[] = ['CONTRATO_FIRMADO', 'Constancia firmada del contrato de préstamo', 'Ambos', 0, 0];

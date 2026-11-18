@@ -162,6 +162,32 @@ test('I-10 Padrón sin respuesta, sin datos o con un CUIL inválido', async ({ c
   await expect(page.locator('#nombre')).toHaveValue('');
 });
 
+test('I-92 El CUIL completa el DNI, el nombre y el apellido (A9, D-58)', async ({ comoUsuario }) => {
+  const page = await comoUsuario('analista');
+  await page.goto('/admin/clientes/nuevo');
+  await page.locator('label[for="tipo-PersonaHumana"]').click();
+  const resultado = page.locator('[data-padron-resultado]');
+  // Sin el botón: al quedar completo y válido, el CUIL consulta el padrón (simulado) y completa los campos vacíos
+  await page.locator('#cuit_cuil').fill('20-40222309-0');
+  await expect(page.locator('#nombre')).toHaveValue('Mateo');
+  await expect(page.locator('#apellido')).toHaveValue('Acosta');
+  await expect(page.locator('#nro_documento')).toHaveValue('40222309');
+  await expect(page.locator('#tipo_documento')).toHaveValue('DNI');
+  await expect(resultado).toContainText('Se completaron el DNI, el nombre y el apellido con el padrón de ARCA');
+  // Un dato escrito a mano se conserva; los que completó el padrón se actualizan con el nuevo CUIL
+  await page.locator('#nombre').fill('Mateo José');
+  await page.locator('#cuit_cuil').fill('27415551040');
+  await expect(page.locator('#apellido')).toHaveValue('Benítez');
+  await expect(page.locator('#nro_documento')).toHaveValue('41555104');
+  await expect(page.locator('#nombre')).toHaveValue('Mateo José');
+  // Un CUIL incompleto o con el dígito verificador mal no consulta
+  const consultas = await valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion = 'clientes.consultar-padron'");
+  await page.locator('#cuit_cuil').fill('2741555104');
+  await page.locator('#cuit_cuil').fill('27415551041');
+  await page.waitForTimeout(500);
+  expect(await valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion = 'clientes.consultar-padron'")).toBe(consultas);
+});
+
 test('I-11 Descartar un pre-registro', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const [pre] = await preRegistros(mateo.cuil);

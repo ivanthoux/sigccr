@@ -8,7 +8,9 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ArchivoLegajo;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Solicitudes\Contrato;
+use App\Libraries\Solicitudes\ModeloContrato;
 use App\Services\BaseService;
 use App\Services\Clientes\LegajoService;
 use App\Services\Comunes\AuditoriaService;
@@ -16,8 +18,8 @@ use App\Services\Comunes\ParametroService;
 use Throwable;
 
 /**
- * Contrato de préstamo (SS-04): generación para cada aprobación vigente y CU-103 Registrar Contrato Firmado.
- * RN-25, RN-78, RN-79, D-31.
+ * Contrato de préstamo (SS-04): generación para cada aprobación vigente, CU-103 Registrar Contrato Firmado y el
+ * modelo de cláusulas configurable (CU-106, D-56). RN-25, RN-78, RN-79, D-31.
  */
 class ContratoService extends BaseService
 {
@@ -35,7 +37,10 @@ class ContratoService extends BaseService
         }
         $c = $this->db->table('contratos_prestamo')->where('resolucion_id', (int) $r['id'])->get()->getRowArray();
         if ($c === null) {
-            $this->db->table('contratos_prestamo')->insert(['solicitud_id' => $solicitudId, 'resolucion_id' => (int) $r['id'], 'fecha_generacion' => $this->ahoraUtc()]);
+            // D-56: el contrato conserva el modelo vigente al generarse (RN-15)
+            $this->db->table('contratos_prestamo')->insert([
+                'solicitud_id' => $solicitudId, 'resolucion_id' => (int) $r['id'], 'fecha_generacion' => $this->ahoraUtc(), 'version_contrato_id' => $this->modeloVigente()['id'],
+            ]);
             $c = $this->db->table('contratos_prestamo')->where('id', (int) $this->db->insertID())->get()->getRowArray();
         }
 
@@ -86,8 +91,131 @@ class ContratoService extends BaseService
         $morosidad = (new ParametroService($this->db))->vigente('Morosidad')['valores'];
         $s['punitorios'] = Contrato::punitorios($morosidad, Decimal::of((string) $s['tna']));
         $s['entidad'] = ['razon_social' => config('Sigccr')->entidadRazonSocial, 'cuit' => config('Sigccr')->entidadCuit, 'domicilio' => config('Sigccr')->entidadDomicilio];
+        // D-56: las cláusulas del modelo con que se generó, con los datos de este préstamo
+        $modelo = $this->modelo(isset($s['contrato']['version_contrato_id']) ? (int) $s['contrato']['version_contrato_id'] : null);
+        $s['modelo'] = $modelo;
+        $s['clausulas'] = ModeloContrato::componer($modelo['clausulas'], $this->valores($s));
 
         return $s;
+    }
+
+    /**
+     * CU-106: modelo de contrato vigente. Sin versiones registradas rige el modelo inicial (id y número nulos).
+     *
+     * @return array{id: ?int, numero: ?int, clausulas: list<array{estilo: string, titulo: string, texto: string}>}
+     */
+    public function modeloVigente(): array
+    {
+        try {
+            $v = (new ParametroService($this->db))->vigente('Contrato');
+        } catch (ReglaNegocioException) {
+            return ['id' => null, 'numero' => null, 'clausulas' => ModeloContrato::INICIAL];
+        }
+
+        return ['id' => $v['id'], 'numero' => $v['numero'], 'clausulas' => self::clausulasDe($v['valores'])];
+    }
+
+    /**
+     * Modelo de una versión del grupo Contrato; null es el modelo inicial (contratos anteriores a D-56).
+     *
+     * @return array{id: ?int, numero: ?int, clausulas: list<array{estilo: string, titulo: string, texto: string}>}
+     */
+    public function modelo(?int $versionId): array
+    {
+        $fila = $versionId === null ? null : $this->db->table('versiones_parametros')->select('id, numero, valores')->where('id', $versionId)->where('tipo', 'Contrato')->get()->getRowArray();
+        if ($fila === null) {
+            return ['id' => null, 'numero' => null, 'clausulas' => ModeloContrato::INICIAL];
+        }
+
+        return ['id' => (int) $fila['id'], 'numero' => (int) $fila['numero'], 'clausulas' => self::clausulasDe((array) json_decode((string) $fila['valores'], true))];
+    }
+
+    /**
+     * Las cláusulas se guardan numeradas desde 1 («clausulas.1.texto»), para que la auditoría compare cada una (D-48).
+     *
+     * @param list<array{estilo: string, titulo: string, texto: string}> $clausulas
+     * @return array{clausulas: array<int, array{estilo: string, titulo: string, texto: string}>}
+     */
+    public static function valoresDe(array $clausulas): array
+    {
+        return ['clausulas' => $clausulas === [] ? [] : array_combine(range(1, count($clausulas)), $clausulas)];
+    }
+
+    /**
+     * @param array<string, mixed> $valores
+     * @return list<array{estilo: string, titulo: string, texto: string}>
+     */
+    private static function clausulasDe(array $valores): array
+    {
+        return array_values(array_map(static fn ($c): array => [
+            'estilo' => (string) ($c['estilo'] ?? 'numerada'), 'titulo' => (string) ($c['titulo'] ?? ''), 'texto' => (string) ($c['texto'] ?? ''),
+        ], (array) ($valores['clausulas'] ?? [])));
+    }
+
+    /**
+     * Valores de las variables del modelo (ModeloContrato::VARIABLES) para un contrato, como texto.
+     *
+     * @param array<string, mixed> $s datos de obtener()
+     * @return array<string, string>
+     */
+    public function valores(array $s): array
+    {
+        helper('sigccr');
+        $c = $s['calculo'];
+        $e = $s['entidad'];
+        $juridica = $s['tipo_cliente'] === 'PersonaJuridica';
+        $gasto = GastoAdministrativo::deVersion($s);
+        $cl = $s['cliente'] ?? [];
+
+        return [
+            'entidad' => (string) $e['razon_social'],
+            'entidad_datos' => ($e['cuit'] !== '' ? ', CUIT ' . formato_cuit($e['cuit']) : '') . ($e['domicilio'] !== '' ? ', con domicilio en ' . $e['domicilio'] : ''),
+            'cliente' => (string) $s['denominacion'],
+            'cliente_identificacion' => $juridica
+                ? 'CUIT ' . formato_cuit($s['cuit_cuil']) . ', representada por ' . $s['representante_nombre'] . ' (DNI ' . $s['representante_documento'] . ')'
+                : $s['tipo_documento'] . ' ' . $s['nro_documento'] . ', CUIL ' . formato_cuit($s['cuit_cuil']),
+            'cliente_domicilio' => trim(($cl['domicilio'] ?? '') . (!empty($cl['localidad']) ? ', ' . $cl['localidad'] . ', ' . $cl['provincia'] : '')),
+            'cliente_correo' => (string) ($cl['correo'] ?? ''),
+            'numero_contrato' => (string) ($s['contrato']['id'] ?? ''),
+            'numero_solicitud' => (string) $s['numero'],
+            'linea' => (string) $s['linea'],
+            'importe' => formato_importe((string) $s['importe_aprobado']),
+            'gasto_otorgamiento' => formato_importe($c['gasto_otorgamiento']),
+            'iva_otorgamiento' => formato_importe($c['iva_otorgamiento']),
+            'neto' => formato_importe($c['neto']),
+            'cftea' => formato_porcentaje($c['cftea']),
+            'tna' => formato_porcentaje((string) $s['tna']),
+            'tea' => formato_porcentaje($c['tea']),
+            'tasa_mensual' => formato_porcentaje($c['tasa_mensual'], 4),
+            'total_intereses' => formato_importe($c['total_intereses']),
+            'total_a_pagar' => formato_importe($c['total_a_pagar']),
+            'cuotas' => (string) (int) $s['cuotas_aprobadas'],
+            'gasto_administrativo' => $gasto->tipo === 'Porcentual'
+                ? 'un gasto administrativo del ' . formato_porcentaje((string) $s['gasto_administrativo_pct']) . ' del capital'
+                : 'un gasto administrativo de ' . formato_importe((string) $s['gasto_administrativo_cuota']),
+            'tolerancia' => (string) (int) $s['punitorios']['tolerancia'],
+            'punitorio_diario' => formato_porcentaje($s['punitorios']['diaria'], 4),
+            'punitorio_anual' => formato_porcentaje($s['punitorios']['anual']),
+            'plazo_revocacion' => (string) Contrato::DIAS_REVOCACION,
+        ];
+    }
+
+    /**
+     * CU-106 pasos 4 a 6 (A1 a A3): nueva versión del modelo de contrato. Rige para los contratos que se generen desde
+     * la fecha indicada; los ya generados conservan el suyo (RN-15).
+     *
+     * @param list<array{estilo: string, titulo: string, texto: string}> $clausulas
+     * @return array{id: int, numero: int, vigente_desde: string}
+     */
+    public function registrarModelo(array $clausulas, string $fecha, string $motivo, int $usuarioId): array
+    {
+        $errores = ModeloContrato::validar($clausulas);
+        if ($errores !== []) {
+            throw new ValidacionException($errores, 'RN-78');
+        }
+
+        // La primera versión se compara con el modelo inicial, que regía hasta entonces (D-48)
+        return (new ParametroService($this->db))->registrarVersion('Contrato', self::valoresDe($clausulas), $fecha, $motivo, $usuarioId, self::valoresDe(ModeloContrato::INICIAL));
     }
 
     /**

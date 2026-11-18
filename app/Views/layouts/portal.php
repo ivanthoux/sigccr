@@ -22,6 +22,8 @@ $cuenta = session('cuenta') ?? [];
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
     <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
+    <?php // D-57: cabecera y pie de cada hoja impresa (entidad, título, emisión, «Página N de M») ?>
+    <?= estilo_impresion($titulo ?? 'SIG-CCR') ?>
 </head>
 <body class="portal">
 <a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-body" href="#contenido">Ir al contenido</a>
@@ -37,6 +39,8 @@ $cuenta = session('cuenta') ?? [];
 </header>
 <main id="contenido" class="portal-ancho portal-contenido" tabindex="-1">
     <?= $this->include('partials/mensajes') ?>
+    <?php // D-57: cabecera formal de la primera hoja impresa; un documento con encabezado propio la omite (.documento-propio) ?>
+    <?= cabecera_impresion($titulo ?? 'SIG-CCR') ?>
     <?= $this->renderSection('contenido') ?>
 </main>
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>

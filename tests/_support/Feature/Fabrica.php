@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support\Feature;
 
+use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Fondos\FondosService;
@@ -407,9 +408,17 @@ final class Fabrica
         $this->exigirEstado($id, 'AprobadaPendienteLiquidacion');
         if ($hasta === 'ConConstancia') {
             (new ContratoService($this->db))->registrarConstancia($id, self::archivo('CONTRATO', 'pdf'), Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'), $this->responsable());
+            // D-55: la declaración jurada PEP firmada, exigida para liquidar (RN-80)
+            $this->declaracionPep($cliente['id']);
         }
 
         return $r;
+    }
+
+    /** D-55: incorpora al legajo la declaración jurada de persona expuesta políticamente (CU-15, RN-80). */
+    public function declaracionPep(int $clienteId): void
+    {
+        (new ClienteService($this->db))->agregarDocumentos($clienteId, [self::archivo(RequisitosDocumentales::DECLARACION_PEP, 'pdf')], $this->responsable());
     }
 
     // ── Créditos y caja (iteración 3) ─────────────────────────────────────────────────────────────────────────
