@@ -6,6 +6,7 @@ namespace Tests\Support\Feature;
 
 use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
+use App\Services\Comunes\ParametroService;
 use App\Services\Fondos\FondosService;
 use App\Services\Caja\CajaService;
 use App\Services\Solicitudes\ContratoService;
@@ -345,6 +346,40 @@ final class Fabrica
         $id = (new ClienteService($this->db))->registrar($datos, $archivos, $this->responsable());
 
         return ['id' => $id, 'datos' => $datos];
+    }
+
+    /**
+     * Oferta vigente de una campaña activa para un cliente con capacidad de pago y el portal habilitado (CU-93
+     * abreviado). La activación real recorre todos los clientes de la base; acá la campaña se registra con los mismos
+     * datos que guarda CampanaService::activar() y sin otra campaña activa (RN-66).
+     *
+     * @return array{id: int, campana_id: int, cliente: array{id: int, datos: array<string, mixed>}, acceso: array<string, mixed>, linea_id: int}
+     */
+    public function oferta(string $importeMaximo = '500000.00', int $cuotas = 12, string $capitalAsignado = '100000000.00'): array
+    {
+        $this->fondos();
+        $cliente = $this->clienteParaCredito();
+        $acceso = $this->habilitarPortal($cliente['id']);
+        $linea = $this->linea();
+        $version = (new SimulacionService($this->db))->versionVigente($linea['id']);
+        $parametros = (new ParametroService($this->db))->vigente('Campanas');
+        $this->db->query("UPDATE dbo.campanas SET estado = 'Finalizada', fecha_cierre = SYSDATETIMEOFFSET(), causa_cierre = 'Vigencia' WHERE estado = 'Activa'");
+        $this->db->table('proyecciones_fondos')->insert([
+            'periodo_dias' => 30, 'disponible_actual' => '0.00', 'ingresos_esperados' => '0.00', 'egresos_comprometidos' => '0.00',
+            'reserva_minima' => '0.00', 'disponible_proyectado' => $capitalAsignado, 'version_parametros_id' => (int) $parametros['id'],
+        ]);
+        $vence = Time::now('UTC')->addDays(15)->format('Y-m-d H:i:s.vP');
+        $this->db->table('campanas')->insert([
+            'proyeccion_fondos_id' => (int) $this->db->insertID(), 'version_condiciones_id' => (int) $version['version_id'],
+            'version_parametros_id' => (int) $parametros['id'], 'vence' => $vence, 'capital_asignado' => $capitalAsignado, 'estado' => 'Activa',
+        ]);
+        $campana = (int) $this->db->insertID();
+        $this->db->table('ofertas')->insert([
+            'campana_id' => $campana, 'cliente_id' => $cliente['id'], 'importe_maximo' => $importeMaximo, 'cantidad_cuotas' => $cuotas,
+            'tna' => (string) $version['tna'], 'tea' => (string) $version['tna'], 'cftea' => (string) $version['tna'], 'vence' => $vence, 'estado' => 'Vigente',
+        ]);
+
+        return ['id' => (int) $this->db->insertID(), 'campana_id' => $campana, 'cliente' => $cliente, 'acceso' => $acceso, 'linea_id' => $linea['id']];
     }
 
     /** Disponible libre suficiente para reservar y desembolsar (RN-41, RN-71). */

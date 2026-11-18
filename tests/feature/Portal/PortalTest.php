@@ -301,7 +301,7 @@ final class PortalTest extends IntegracionTestCase
     {
         $c = $this->fabrica->clienteConAcceso();
         $this->comoUsuario($c, 'Cliente');
-        $consentimiento = fn (): ?string => $this->db->query("SELECT TOP 1 otorgado FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC", [$c['id']])->getRow()?->otorgado;
+        $consentimiento = fn (): mixed => $this->db->query("SELECT TOP 1 otorgado FROM dbo.consentimientos WHERE cliente_id = ? AND tipo = 'ComunicacionesComerciales' ORDER BY id DESC", [$c['id']])->getRow()?->otorgado;
         $antes = $this->ultimoId('consentimientos');
 
         // Un valor fuera de la lista no cambia el consentimiento (H-27)

@@ -50,6 +50,8 @@ abstract class IntegracionTestCase extends CIUnitTestCase
         config('Security')->redirect = true;
         // El límite de intentos por dirección (RN-62) usa la caché: cada prueba empieza sin intentos previos
         Services::injectMock('cache', new MockCache());
+        // El limitador guarda la caché que recibió al crearse: se vuelve a crear con la de esta prueba
+        Services::resetSingle('throttler');
         $this->fabrica = new Fabrica($this->db);
         $this->sesionActual = [];
     }

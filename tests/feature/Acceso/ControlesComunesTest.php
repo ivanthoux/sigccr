@@ -30,6 +30,8 @@ final class ControlesComunesTest extends IntegracionTestCase
         // Iteración 3: cobranzas, cartera, saldos y devoluciones
         'admin/cobros', 'admin/pagos-electronicos', 'admin/creditos', 'admin/cancelaciones', 'admin/revocaciones', 'admin/punitorios',
         'admin/refinanciaciones', 'admin/saldos-favor', 'admin/devoluciones',
+        // Iteración 4: campañas
+        'admin/campanas',
     ];
 
     /** @return array<string, array{0: string, 1: string, 2: string}> «VERBO ruta» => [verbo, ruta con ids, permiso] */
@@ -140,8 +142,11 @@ final class ControlesComunesTest extends IntegracionTestCase
     public function testIdentificadorNoNumerico(): void
     {
         $this->comoRol('Administrador');
-        foreach (['admin/usuarios/abc', 'admin/usuarios/-1', 'admin/usuarios/1.5', "admin/usuarios/1%27", 'admin/clientes/abc/editar', 'admin/lineas/abc',
-            'admin/clientes/2147483648', 'admin/clientes/99999999999999999999', 'admin/solicitudes/99999999999999999999', 'portal/solicitudes/99999999999999999999'] as $ruta) {
+        $rutas = [
+            'admin/usuarios/abc', 'admin/usuarios/-1', 'admin/usuarios/1.5', "admin/usuarios/1%27", 'admin/clientes/abc/editar', 'admin/lineas/abc',
+            'admin/clientes/2147483648', 'admin/clientes/99999999999999999999', 'admin/solicitudes/99999999999999999999', 'portal/solicitudes/99999999999999999999',
+        ];
+        foreach ($rutas as $ruta) {
             try {
                 $r = $this->pedir($ruta);
                 $this->assertContains($r->response()->getStatusCode(), [400, 404], $ruta);
