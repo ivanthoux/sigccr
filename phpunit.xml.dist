@@ -19,9 +19,16 @@
         <testsuite name="Rutas">
             <directory>./tests/rutas</directory>
         </testsuite>
+        <!-- Integración por campo y por clase de dato contra SQL Server (D-51): necesita la base sigccr_pruebas,
+             que prepara tests/feature/preparar_base.sh. Se ejecuta con composer test:integracion. -->
+        <testsuite name="Integracion">
+            <directory>./tests/feature</directory>
+        </testsuite>
+        <!-- Todo lo que no necesita la base de datos -->
         <testsuite name="App">
             <directory>./tests</directory>
             <exclude>./tests/_local</exclude>
+            <exclude>./tests/feature</exclude>
         </testsuite>
     </testsuites>
     <!-- El mínimo de 90 % de RNF-15 rige para el motor financiero. Los servicios (app/Services) necesitan la base de
@@ -33,8 +40,10 @@
     </source>
     <php>
         <server name="app.baseURL" value="https://localhost/"/>
-        <!-- Base de pruebas: las pruebas de integración usan el grupo "tests" -->
-        <env name="database.tests.hostname" value="db"/>
+        <!-- Base de pruebas (D-51): las pruebas de integración usan el grupo "tests". Sin usuario propio, toma las
+             credenciales de la aplicación (database.default.*), y en el entorno de pruebas todos los grupos apuntan a
+             esta base (Config\Database). force="false": la integración continua puede definir otros valores. -->
+        <env name="database.tests.hostname" value="db" force="false"/>
         <env name="database.tests.database" value="sigccr_pruebas"/>
         <env name="database.tests.DBDriver" value="SQLSRV"/>
     </php>

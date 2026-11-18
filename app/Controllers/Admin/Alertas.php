@@ -16,7 +16,7 @@ class Alertas extends BaseController
     public function index(): string
     {
         $cuenta = session('cuenta');
-        $filtros = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['estado', 'tipo', 'desde', 'hasta'])));
+        $filtros = $this->filtrosBusqueda(['estado', 'tipo', 'desde', 'hasta']);
         $filtros['estado'] ??= 'Pendiente';
 
         return view('alertas/index', [

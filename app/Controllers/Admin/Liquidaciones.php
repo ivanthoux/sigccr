@@ -22,7 +22,7 @@ class Liquidaciones extends BaseController
     /** Pasos 1 y 2. */
     public function index(): string
     {
-        $texto = trim((string) $this->request->getGet('texto'));
+        $texto = trim($this->campoGet('texto'));
 
         return view('liquidaciones/index', ['titulo' => 'Liquidar créditos aprobados', 'texto' => $texto, 'solicitudes' => $this->servicio->pendientes($texto)]);
     }

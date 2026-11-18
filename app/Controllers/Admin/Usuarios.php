@@ -25,7 +25,7 @@ class Usuarios extends BaseController
     /** CU-53 pasos 1 a 4. */
     public function index(): string
     {
-        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['texto', 'documento', 'correo', 'rol', 'estado'])));
+        $criterios = $this->filtrosBusqueda(['texto', 'documento', 'correo', 'rol', 'estado']);
 
         return view('usuarios/index', [
             'titulo' => 'Usuarios',
@@ -120,7 +120,7 @@ class Usuarios extends BaseController
     public function desactivar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'), (int) session('cuenta')['id']);
+            $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -132,7 +132,7 @@ class Usuarios extends BaseController
     public function reactivar(int $id): RedirectResponse
     {
         try {
-            $estado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
+            $estado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -145,7 +145,7 @@ class Usuarios extends BaseController
     public function asignarRol(int $id): RedirectResponse
     {
         try {
-            $cambio = $this->servicio->asignarRol($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('rol'), (string) $this->request->getPost('motivo'));
+            $cambio = $this->servicio->asignarRol($id, (int) $this->request->getPost('version_fila'), $this->campoPost('rol'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

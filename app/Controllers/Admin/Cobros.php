@@ -56,7 +56,7 @@ class Cobros extends BaseController
                 (int) session('cuenta')['id'],
                 (int) $this->request->getPost('cliente_id'),
                 (array) $this->request->getPost('cuotas'),
-                (string) $this->request->getPost('importe'),
+                $this->campoPost('importe'),
                 $medios,
             );
         } catch (ReglaNegocioException $e) {
@@ -73,15 +73,15 @@ class Cobros extends BaseController
     {
         $anular = url_is('admin/cobros/anulaciones*');
         $f = [
-            'numero' => preg_replace('/\D/', '', (string) $this->request->getGet('numero')),
-            'texto' => trim((string) $this->request->getGet('texto')),
-            'fecha' => Campos::fecha((string) $this->request->getGet('fecha')),
+            'numero' => preg_replace('/\D/', '', $this->campoGet('numero')),
+            'texto' => trim($this->campoGet('texto')),
+            'fecha' => Campos::fecha($this->campoGet('fecha')),
         ];
         $buscado = $f['numero'] !== '' || $f['texto'] !== '' || $f['fecha'] !== null;
 
         return view('cobros/comprobantes', [
             'titulo' => $anular ? 'Anular cobro' : 'Comprobantes de pago', 'anular' => $anular,
-            'f' => $f + ['fecha_texto' => (string) $this->request->getGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null,
+            'f' => $f + ['fecha_texto' => $this->campoGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null,
         ]);
     }
 
@@ -122,7 +122,7 @@ class Cobros extends BaseController
     public function anular(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->anular($id, (string) $this->request->getPost('motivo'), $this->request->getPost('continuar') === '1', (int) session('cuenta')['id']);
+            $r = $this->servicio->anular($id, $this->campoPost('motivo'), $this->request->getPost('continuar') === '1', (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

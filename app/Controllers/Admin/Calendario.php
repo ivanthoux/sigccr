@@ -25,9 +25,9 @@ class Calendario extends BaseController
     /** Pasos 3 a 7 (A1 a A3). */
     public function agregar(): RedirectResponse
     {
-        $tipo = (string) $this->request->getPost('tipo');
-        $filas = [['fecha' => (string) $this->request->getPost('fecha'), 'descripcion' => (string) $this->request->getPost('descripcion'), 'tipo' => $tipo]];
-        $filas = array_merge($filas, CalendarioOperativo::filasDeTexto((string) $this->request->getPost('carga'), $tipo));
+        $tipo = $this->campoPost('tipo');
+        $filas = [['fecha' => $this->campoPost('fecha'), 'descripcion' => $this->campoPost('descripcion'), 'tipo' => $tipo]];
+        $filas = array_merge($filas, CalendarioOperativo::filasDeTexto($this->campoPost('carga'), $tipo));
         try {
             $r = (new CalendarioService())->agregar($filas);
         } catch (ReglaNegocioException $e) {
@@ -42,7 +42,7 @@ class Calendario extends BaseController
     public function baja(): RedirectResponse
     {
         try {
-            (new CalendarioService())->darDeBaja((string) $this->request->getPost('fecha'));
+            (new CalendarioService())->darDeBaja($this->campoPost('fecha'));
         } catch (ReglaNegocioException $e) {
             return redirect()->route('calendario.actualizar')->with('error', $e->getMessage());
         }

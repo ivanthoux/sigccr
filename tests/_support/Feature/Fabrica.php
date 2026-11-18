@@ -1,0 +1,308 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Support\Feature;
+
+use App\Libraries\Validacion\Campos;
+use App\Services\Clientes\ClienteService;
+use App\Services\Lineas\LineaService;
+use App\Services\Usuarios\UsuarioService;
+use CodeIgniter\Database\BaseConnection;
+use CodeIgniter\I18n\Time;
+
+/**
+ * Datos propios de cada prueba de integración (D-51): usuarios, clientes y líneas con identificadores únicos, dígitos
+ * verificadores válidos y el dominio ficticio prueba.local. Se crean con los servicios del sistema, de modo que pasan
+ * por las mismas validaciones y transacciones que una operación real; solo la contraseña inicial de un usuario se
+ * define directamente en la base, para no recorrer el enlace de activación en cada prueba.
+ */
+final class Fabrica
+{
+    public const CLAVE = 'Prueba.Integracion.2026!';
+
+    /** @var array<string, true> números ya entregados en esta ejecución */
+    private static array $usados = [];
+
+    private static ?string $hashClave = null;
+
+    private static ?int $responsableId = null;
+
+    /** @param BaseConnection<mixed, mixed> $db */
+    public function __construct(private readonly BaseConnection $db)
+    {
+    }
+
+    // ── Valores únicos ───────────────────────────────────────────────────────────────────────────────────────────
+
+    public static function sufijo(): string
+    {
+        return bin2hex(random_bytes(5));
+    }
+
+    public static function entre(int $desde, int $hasta): int
+    {
+        return random_int($desde, $hasta);
+    }
+
+    /** DNI de 8 dígitos entre 40.000.000 y 49.999.999, distinto de los ya entregados. */
+    public static function dni(): int
+    {
+        do {
+            $n = random_int(40_000_000, 49_999_999);
+        } while (isset(self::$usados["dni{$n}"]));
+        self::$usados["dni{$n}"] = true;
+
+        return $n;
+    }
+
+    /** CUIT o CUIL válido con ese prefijo; con $dni, los 8 dígitos centrales son el documento. */
+    public static function cuitValido(string $prefijo, ?int $dni = null): string
+    {
+        for ($i = 0; $i < 100; $i++) {
+            $cuerpo = $prefijo . str_pad((string) ($dni ?? random_int(10_000_000, 99_999_999)), 8, '0', STR_PAD_LEFT);
+            $dv = Campos::digitoVerificadorCuit($cuerpo);
+            if ($dv !== null && !isset(self::$usados["cuit{$cuerpo}{$dv}"])) {
+                self::$usados["cuit{$cuerpo}{$dv}"] = true;
+
+                return $cuerpo . $dv;
+            }
+            if ($dni !== null) {
+                throw new \RuntimeException("El DNI {$dni} no tiene CUIL con el prefijo {$prefijo}.");
+            }
+        }
+        throw new \RuntimeException('No se encontró un CUIT disponible.');
+    }
+
+    /** Diez dígitos con ese prefijo cuyo verificador calculado es 10: no existe un CUIT válido con ellos (CUI-05). */
+    public static function numeroSinVerificador(string $prefijo): string
+    {
+        for ($i = 0; $i < 10_000; $i++) {
+            $cuerpo = $prefijo . random_int(10_000_000, 99_999_999);
+            if (Campos::digitoVerificadorCuit($cuerpo) === null) {
+                return $cuerpo;
+            }
+        }
+        throw new \RuntimeException('No se encontró un número sin verificador.');
+    }
+
+    /** Persona humana con DNI y CUIL coherentes. @return array{dni: int, cuil: string} */
+    public static function personaHumana(): array
+    {
+        do {
+            $dni = self::dni();
+            $dv = Campos::digitoVerificadorCuit('20' . $dni);
+        } while ($dv === null);
+
+        return ['dni' => $dni, 'cuil' => self::cuitValido('20', $dni)];
+    }
+
+    // ── Usuarios internos ────────────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Datos válidos del formulario de usuario interno (CU-05).
+     *
+     * @return array<string, string>
+     */
+    public static function datosUsuario(string $rol = 'AnalistaCredito'): array
+    {
+        $u = self::sufijo();
+
+        return [
+            'nombre' => 'Prueba', 'apellido' => 'Integración', 'correo' => "usuario.{$u}@prueba.local",
+            'tipo_documento' => 'DNI', 'nro_documento' => (string) self::dni(), 'rol' => $rol,
+        ];
+    }
+
+    /**
+     * Usuario interno habilitado con la contraseña Fabrica::CLAVE.
+     *
+     * @param 'Administrador'|'Gerente'|'AnalistaCredito'|'Cajero' $rol
+     * @return array{id: int, correo: string, clave: string, rol: string}
+     */
+    public function usuario(string $rol = 'AnalistaCredito', string $estado = 'Habilitada'): array
+    {
+        $datos = self::datosUsuario($rol);
+        $id = (new UsuarioService($this->db))->registrar($datos);
+        self::$hashClave ??= password_hash(self::CLAVE, PASSWORD_ARGON2ID);
+        $this->db->table('cuentas_acceso')->where('id', $id)->update([
+            'hash_contrasena' => self::$hashClave, 'estado' => $estado, 'correo_verificado' => 1,
+        ]);
+
+        return ['id' => $id, 'correo' => $datos['correo'], 'clave' => self::CLAVE, 'rol' => $rol];
+    }
+
+    /** Analista que figura como responsable de los clientes que crea la fábrica. */
+    public function responsable(): int
+    {
+        return self::$responsableId ??= $this->usuario('AnalistaCredito')['id'];
+    }
+
+    // ── Clientes ─────────────────────────────────────────────────────────────────────────────────────────────────
+
+    /** @return array{provincia_id: int, localidad_id: int} una localidad activa del catálogo */
+    public function localidad(int $desplazamiento = 0): array
+    {
+        $l = $this->db->query(
+            'SELECT id, provincia_id FROM dbo.localidades WHERE activa = 1 ORDER BY id OFFSET ? ROWS FETCH NEXT 1 ROWS ONLY',
+            [$desplazamiento],
+        )->getRowArray();
+        if ($l === null) {
+            throw new \RuntimeException('El catálogo geográfico está vacío: falta GeografiaSeeder.');
+        }
+
+        return ['provincia_id' => (int) $l['provincia_id'], 'localidad_id' => (int) $l['id']];
+    }
+
+    /** Una localidad activa de otra provincia que la indicada (REF-04). */
+    public function localidadDeOtraProvincia(int $provinciaId): int
+    {
+        return (int) $this->db->query(
+            'SELECT TOP 1 id FROM dbo.localidades WHERE activa = 1 AND provincia_id <> ? ORDER BY id',
+            [$provinciaId],
+        )->getRowArray()['id'];
+    }
+
+    /**
+     * Datos válidos del formulario de cliente (CU-11).
+     *
+     * @param 'PersonaHumana'|'PersonaJuridica' $tipo
+     * @return array<string, string>
+     */
+    public function datosCliente(string $tipo = 'PersonaHumana'): array
+    {
+        $u = self::sufijo();
+        $comunes = $this->localidad() + [
+            'tipo_cliente' => $tipo, 'correo' => "cliente.{$u}@prueba.local", 'telefono' => '3764441234',
+            'domicilio' => 'Av. Siempre Viva 742', 'codigo_postal' => '3300', 'ingresos_declarados' => '850.000,00',
+            'persona_expuesta' => 'No', 'acepta_politica' => '1',
+        ];
+        $comunes = array_map('strval', $comunes);
+        if ($tipo === 'PersonaJuridica') {
+            return $comunes + [
+                'razon_social' => "Empresa de Prueba {$u} S.A.", 'cuit_cuil' => self::cuitValido('30'),
+                'fecha_constitucion' => '15/03/2010', 'actividad_principal' => 'Comercio minorista',
+                'representante_nombre' => 'Laura Gómez', 'representante_documento' => (string) self::dni(),
+                'representante_cargo' => 'Presidenta', 'categoria_ingresos' => 'Empresa',
+            ];
+        }
+        $p = self::personaHumana();
+
+        return $comunes + [
+            'nombre' => 'Ana', 'apellido' => 'Prueba', 'tipo_documento' => 'DNI', 'nro_documento' => (string) $p['dni'],
+            'cuit_cuil' => $p['cuil'], 'fecha_nacimiento' => '10/05/1985', 'estado_civil' => 'Soltero',
+            'nacionalidad' => 'Argentina', 'ocupacion' => 'Empleada administrativa', 'empleador' => 'Comercio Prueba S.R.L.',
+            'categoria_ingresos' => 'RelacionDependencia',
+        ];
+    }
+
+    /**
+     * Archivos del legajo exigidos para identificar a un cliente del tipo indicado (RN-11), como los arma el
+     * controlador a partir de la subida.
+     *
+     * @return list<array{codigo: string, nombre: string, temporal: string, tamano: int, reemplaza: ?int}>
+     */
+    public static function archivosIdentificacion(string $tipo = 'PersonaHumana'): array
+    {
+        $codigos = $tipo === 'PersonaJuridica' ? ['CONST_CUIT', 'DOC_IDENTIDAD', 'PODER_REPRESENTACION'] : ['DOC_IDENTIDAD'];
+
+        return array_map(static fn (string $c): array => self::archivo($c, 'pdf'), $codigos);
+    }
+
+    /**
+     * Un archivo temporal del tipo pedido, como lo entrega el controlador al servicio.
+     *
+     * @param 'pdf'|'jpg'|'png'|'gif'|'exe'|'vacio' $tipo
+     * @return array{codigo: string, nombre: string, temporal: string, tamano: int, reemplaza: ?int}
+     */
+    public static function archivo(string $codigo, string $tipo, ?int $tamano = null, ?string $nombre = null): array
+    {
+        $contenido = match ($tipo) {
+            'pdf' => "%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n",
+            'png' => base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', true),
+            'jpg' => base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=', true),
+            'gif' => 'GIF89a' . "\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;",
+            'exe' => "MZ\x90\x00\x03\x00\x00\x00\x04\x00\x00\x00\xff\xff\x00\x00" . str_repeat("\x00", 64),
+            'vacio' => '',
+        };
+        if ($tamano !== null && $tipo === 'pdf') {
+            $contenido = str_pad((string) $contenido, $tamano, ' ');
+        }
+        $ruta = tempnam(sys_get_temp_dir(), 'leg');
+        file_put_contents($ruta, (string) $contenido);
+
+        return [
+            'codigo' => $codigo, 'nombre' => $nombre ?? "documento.{$tipo}", 'temporal' => $ruta,
+            'tamano' => strlen((string) $contenido), 'reemplaza' => null,
+        ];
+    }
+
+    /**
+     * Cliente activo registrado con CU-11.
+     *
+     * @param 'PersonaHumana'|'PersonaJuridica' $tipo
+     * @param array<string, string> $cambios datos que reemplazan a los generados
+     * @return array{id: int, datos: array<string, string>}
+     */
+    public function cliente(string $tipo = 'PersonaHumana', array $cambios = []): array
+    {
+        $datos = $cambios + $this->datosCliente($tipo);
+        $id = (new ClienteService($this->db))->registrar($datos, self::archivosIdentificacion($tipo), $this->responsable());
+
+        return ['id' => $id, 'datos' => $datos];
+    }
+
+    /**
+     * Cliente activo con su acceso al portal habilitado y la contraseña Fabrica::CLAVE.
+     *
+     * @return array{id: int, cuenta_id: int, correo: string, clave: string, datos: array<string, string>}
+     */
+    public function clienteConAcceso(string $tipo = 'PersonaHumana'): array
+    {
+        $c = $this->cliente($tipo);
+        $cuentaId = (int) $this->db->table('clientes')->select('cuenta_cliente_id')->where('id', $c['id'])->get()->getRowArray()['cuenta_cliente_id'];
+        self::$hashClave ??= password_hash(self::CLAVE, PASSWORD_ARGON2ID);
+        $this->db->table('cuentas_acceso')->where('id', $cuentaId)->update([
+            'hash_contrasena' => self::$hashClave, 'estado' => 'Habilitada', 'correo_verificado' => 1,
+        ]);
+
+        return ['id' => $c['id'], 'cuenta_id' => $cuentaId, 'correo' => $c['datos']['correo'], 'clave' => self::CLAVE, 'datos' => $c['datos']];
+    }
+
+    // ── Líneas de crédito ────────────────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Datos válidos del formulario de línea (CU-16).
+     *
+     * @return array<string, mixed>
+     */
+    public static function datosLinea(): array
+    {
+        $u = strtoupper(substr(self::sufijo(), 0, 8));
+        $hoy = Time::now(config('Sigccr')->zonaNegocio);
+
+        return [
+            'codigo' => "L{$u}", 'nombre' => "Línea de prueba {$u}", 'descripcion' => 'Línea creada por las pruebas de integración.',
+            'tna' => '65', 'gasto_otorgamiento_pct' => '2', 'tipo_gasto_administrativo' => 'Fijo', 'gasto_administrativo_cuota' => '500,00',
+            'gasto_administrativo_pct' => '', 'monto_minimo' => '100.000,00', 'monto_maximo' => '1.500.000,00',
+            'cuotas_minimas' => '3', 'cuotas_maximas' => '24', 'admite_persona_humana' => '1', 'admite_persona_juridica' => '1',
+            'edad_minima' => '18', 'edad_maxima' => '75', 'antiguedad_minima_meses' => '12',
+            'categorias' => ['RelacionDependencia', 'Empresa'],
+            'requisitos' => ['RelacionDependencia' => ['DOC_IDENTIDAD', 'RECIBO_SUELDO'], 'Empresa' => ['DOC_IDENTIDAD', 'ESTATUTO']],
+            'vigencia_inicio' => $hoy->format('d/m/Y'), 'vigencia_fin' => $hoy->addYears(1)->format('d/m/Y'),
+        ];
+    }
+
+    /**
+     * Línea activa registrada con CU-16.
+     *
+     * @param array<string, mixed> $cambios
+     * @return array{id: int, datos: array<string, mixed>}
+     */
+    public function linea(array $cambios = []): array
+    {
+        $datos = $cambios + self::datosLinea();
+
+        return ['id' => (new LineaService($this->db))->registrar($datos), 'datos' => $datos];
+    }
+}

@@ -36,9 +36,9 @@ class Comparativas extends BaseController
         try {
             $id = (new ComparativaService())->simular(
                 (int) $this->request->getPost('cliente_id'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('cantidad_cuotas'),
-                (string) $this->request->getPost('criterio'),
+                $this->campoPost('importe'),
+                $this->campoPost('cantidad_cuotas'),
+                $this->campoPost('criterio'),
                 (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {

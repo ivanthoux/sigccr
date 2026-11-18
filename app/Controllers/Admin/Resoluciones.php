@@ -72,7 +72,7 @@ class Resoluciones extends BaseController
     public function cancelar(int $id): RedirectResponse
     {
         try {
-            (new ResolucionService())->cancelar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'), $this->request->getPost('confirma_reserva') !== null, (int) session('cuenta')['id']);
+            (new ResolucionService())->cancelar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'), $this->request->getPost('confirma_reserva') !== null, (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

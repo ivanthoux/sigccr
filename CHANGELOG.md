@@ -6,6 +6,29 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (pruebas de integración, D-51)
+- Suite `Integracion` (`composer test:integracion`): cada campo de los formularios de la iteración 1 con cada clase de dato de su tipo y los controles comunes de cada operación, contra SQL Server (plan de pruebas 7.9 y Anexo B). 1310 pruebas generadas desde el catálogo de campos, aprobadas sobre SQL Server.
+- Base `sigccr_pruebas` recreada en cada ejecución (`docker/db/crear_base_pruebas.sql`, `tests/feature/preparar_base.sh`) y trabajo `integracion` en el flujo `CI` con SQL Server como servicio.
+
+### Corregido (hallazgos de D-51)
+- H-01: un campo enviado como lista (`campo[]=x`) producía «Array to string conversion» y un error del servidor en lugar del mensaje de validación: `Campos::texto()`, `Campos::lista()` y los métodos `campoPost()`, `campoGet()` y `filtrosBusqueda()` de `BaseController` lo tratan como vacío.
+- H-02: los caracteres de control (por ejemplo, el carácter nulo) se eliminan antes de validar y guardar.
+- H-03: el largo máximo se cuenta como en `NVARCHAR` (un emoji ocupa dos unidades): un texto con emoji en el límite pasaba la validación y fallaba al guardarse.
+- H-04: el mensaje del control de versión de fila ya no muestra el nombre interno de la tabla (RNF-12).
+- H-05: un formulario vencido o enviado sin token CSRF mostraba el mensaje del framework en inglés (`app/Language/es/Security.php`).
+- H-06: la recuperación de acceso y la activación del portal aceptaban correos sin punto en el dominio, a diferencia del alta.
+- H-07: el rol elegido al asignar un rol (CU-10) se recorta como en el registro (CU-05).
+- H-08: en el entorno de pruebas, `Config\Database` dirige todos los grupos a la base de pruebas (también con `SIGCCR_BASE_PRUEBAS=1`, que usa `preparar_base.sh`).
+- H-09: los textos fuera de Latin-1 (emoji, «ł», «ș») se guardaban como «?» en las columnas NVARCHAR: el controlador `App\Database\SQLSRV` los escribe como `N'...'`.
+- H-10: un acceso denegado a una ruta de más de 40 caracteres respondía error 500 en lugar de 403 (auditoría).
+- H-11: el motivo del rechazo de un archivo del legajo se reemplazaba por «Adjunte este documento».
+- H-12: las búsquedas tomaban %, _ y [ como comodines (`Campos::literalLike()` en las 19 búsquedas con `like()`).
+- H-13: las páginas de error 400, 404 y de error general se mostraban en inglés (`app/Language/es/Errors.php`).
+
+### Cambiado (D-51)
+- `composer test` ejecuta la suite `App`, que reúne todas las pruebas que no necesitan la base.
+- Se elimina la prueba de ejemplo del appstarter `tests/session/ExampleSessionTest.php`.
+
 ### Agregado
 - Tema oscuro: sigue al sistema operativo o se elige con «Tema oscuro» en la barra lateral y en el portal; se imprime siempre en claro (D-50).
 - Inicio del panel: «Trabajo pendiente» con las colas que el rol puede atender y el aviso de caja sin abrir.

@@ -312,7 +312,7 @@ class CobroService extends BaseService
             $b->groupStart()->where('p.numero', (int) $f['numero'])->orWhere('b.numero', (int) $f['numero'])->groupEnd();
         }
         if (($f['texto'] ?? '') !== '') {
-            $b->groupStart()->like('cl.denominacion', (string) $f['texto'])->orLike('cl.cuit_cuil', preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto'])->groupEnd();
+            $b->groupStart()->like('cl.denominacion', Campos::literalLike((string) $f['texto']))->orLike('cl.cuit_cuil', Campos::literalLike((string) preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto']))->groupEnd();
         }
         if (($f['fecha'] ?? null) !== null) {
             // Fecha local de negocio (UTC−3, sin horario de verano)

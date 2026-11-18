@@ -6,6 +6,7 @@ namespace App\Controllers\Portal;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Validacion\Campos;
 use App\Services\Acceso\AccesoService;
 use App\Services\Acceso\RecuperacionService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -33,8 +34,8 @@ class Acceso extends BaseController
     /** CU-01 pasos 3 a 6, A1 y A2 (con el mensaje genérico, RN-62), y RN-10. */
     public function autenticar(): RedirectResponse
     {
-        $correo = (string) $this->request->getPost('correo');
-        $contrasena = (string) $this->request->getPost('contrasena');
+        $correo = $this->campoPost('correo');
+        $contrasena = $this->campoPost('contrasena');
         if (trim($correo) === '' || $contrasena === '') {
             return redirect()->back()->withInput()->with('error', 'Ingrese el correo electrónico y la contraseña.');
         }
@@ -78,8 +79,8 @@ class Acceso extends BaseController
     /** CU-02 pasos 3 a 5: siempre el mismo mensaje (A1, A4, A5). */
     public function solicitarRecuperacion(): RedirectResponse
     {
-        $correo = trim((string) $this->request->getPost('correo'));
-        if ($correo === '' || filter_var($correo, FILTER_VALIDATE_EMAIL) === false) {
+        $correo = trim($this->campoPost('correo'));
+        if ($correo === '' || Campos::formatoCorreo(Campos::correo($correo)) !== null) {
             return redirect()->back()->withInput()->with('error', 'Ingrese un correo electrónico válido.');
         }
         (new RecuperacionService())->solicitar(self::TIPO, $correo, self::BASE . '/restablecer');
@@ -102,7 +103,7 @@ class Acceso extends BaseController
     public function guardarContrasena(string $codigo): RedirectResponse
     {
         try {
-            (new RecuperacionService())->restablecer($codigo, (string) $this->request->getPost('contrasena'), (string) $this->request->getPost('confirmacion'));
+            (new RecuperacionService())->restablecer($codigo, $this->campoPost('contrasena'), $this->campoPost('confirmacion'));
         } catch (ReglaNegocioException $e) {
             if ($e->getMessage() === RecuperacionService::MENSAJE_INVALIDA) {
                 return redirect()->route('portal.recuperar')->with('error', $e->getMessage());

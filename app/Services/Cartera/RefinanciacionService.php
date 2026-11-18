@@ -286,9 +286,9 @@ class RefinanciacionService extends BaseService
         }
         if (($f['texto'] ?? '') !== '') {
             $digitos = preg_replace('/\D/', '', (string) $f['texto']);
-            $b->groupStart()->like('cl.denominacion', (string) $f['texto']);
+            $b->groupStart()->like('cl.denominacion', Campos::literalLike((string) $f['texto']));
             if ($digitos !== '') {
-                $b->orLike('cl.cuit_cuil', $digitos)->orWhere('cl.id IN (SELECT cliente_id FROM dbo.personas_humanas WHERE nro_documento = ' . $this->db->escape($digitos) . ')', null, false);
+                $b->orLike('cl.cuit_cuil', Campos::literalLike((string) $digitos))->orWhere('cl.id IN (SELECT cliente_id FROM dbo.personas_humanas WHERE nro_documento = ' . $this->db->escape($digitos) . ')', null, false);
             }
             $b->groupEnd();
         }

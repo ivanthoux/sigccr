@@ -15,7 +15,7 @@ class CajaDiaria extends BaseController
 {
     public function index(): string|RedirectResponse
     {
-        $f = ['desde' => trim((string) $this->request->getGet('desde')), 'hasta' => trim((string) $this->request->getGet('hasta')), 'caja' => (string) $this->request->getGet('caja'), 'cajero' => (string) $this->request->getGet('cajero')];
+        $f = ['desde' => trim($this->campoGet('desde')), 'hasta' => trim($this->campoGet('hasta')), 'caja' => $this->campoGet('caja'), 'cajero' => $this->campoGet('cajero')];
         $cuenta = session('cuenta');
         $soloCajero = ($cuenta['rol'] ?? '') === 'Cajero' ? (int) $cuenta['id'] : null;
         $s = new ReporteService();

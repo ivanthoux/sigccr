@@ -41,9 +41,11 @@ class LineaService extends BaseService
         $donde = [];
         $param = [$this->ahoraUtc()];
         foreach (preg_split('/\s+/u', Campos::texto($c['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
+            // H-12: %, _ y [ se buscan como texto, no como comodines de LIKE
+            $patron = '%' . str_replace(['[', '%', '_'], ['[[]', '[%]', '[_]'], $palabra) . '%';
             $donde[] = '(l.nombre LIKE ? OR l.codigo LIKE ?)';
-            $param[] = '%' . $palabra . '%';
-            $param[] = '%' . $palabra . '%';
+            $param[] = $patron;
+            $param[] = $patron;
         }
         if (($c['categoria'] ?? '') !== '') {
             $donde[] = 'EXISTS (SELECT 1 FROM dbo.condiciones_categorias cc WHERE cc.version_condiciones_id = v.id AND cc.categoria_ingresos = ?)';

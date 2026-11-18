@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Reportes;
 
+use App\Libraries\Validacion\Campos;
 use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Campanas\ReglasCampanas;
@@ -784,7 +785,7 @@ class ReporteService extends BaseService
             return null;
         }
         $digitos = preg_replace('/\D/', '', $t) ?? '';
-        $b = $this->db->table('clientes c')->select('c.id')->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')->groupStart()->like('c.denominacion', $t);
+        $b = $this->db->table('clientes c')->select('c.id')->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')->groupStart()->like('c.denominacion', Campos::literalLike((string) $t));
         if ($digitos !== '') {
             $b->orWhere('c.cuit_cuil', $digitos)->orWhere('ph.nro_documento', $digitos);
         }

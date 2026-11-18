@@ -54,6 +54,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-48 | 17/11/2026 | Propuesta |
 | D-49 | 17/11/2026 | Propuesta |
 | D-50 | 17/11/2026 | Propuesta |
+| D-51 | 17/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -793,3 +794,80 @@ Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, co
 - Las vistas no deben usar jQuery: el único uso (el encabezado CSRF de `$.ajax`) se configura al cargarlo.
 - Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad. Se ejecutaron en Docker el 17/11/2026 con Analista, Gerente y Cliente, sin fallas de contraste en las pantallas medidas.
 - El manual de usuario debe mencionar el botón del tema.
+
+## D-51 · Pruebas de integración por campo y por clase de dato, con una base de pruebas aislada (RNF-01, RNF-06, RNF-12, RNF-15; plan de pruebas)
+
+**Contexto.** El plan de pruebas (versión 1.1) tiene estos niveles automáticos:
+- los casos de referencia del motor financiero y las pruebas unitarias, sin base de datos;
+- la autorización de cada ruta con cada rol (C10), que lee la configuración de rutas sin ejecutar las peticiones;
+- la batería de punta a punta con Playwright (D-39), que automatiza 208 casos funcionales y se ejecuta al cierre de cada iteración (D-41).
+
+Ningún nivel verifica de forma sistemática cada campo de cada formulario con cada tipo de dato. Los casos funcionales prueban algunos valores inválidos por formulario; el resto de las combinaciones (límites de largo, formatos alternativos, valores fuera del catálogo, un campo enviado como lista, caracteres especiales) no se prueba en ningún nivel. Tampoco se verifican en el servidor, durante la iteración, situaciones que el navegador no muestra: una petición sin token CSRF, un permiso faltante con su registro en la auditoría, una versión de fila vieja o un identificador de otro cliente escrito en la dirección.
+
+La revisión del código para armar este nivel encontró que hoy no se puede ejecutar ninguna prueba de integración:
+- la base `sigccr_pruebas` del grupo `tests` no existe, porque `crear_base.sql` solo crea `sigccr`;
+- el grupo `tests` no tiene credenciales en `phpunit.xml.dist` ni en `env.sigccr.example`;
+- en el entorno `testing`, la variable `SIGCCR_DB_GRUPO` puede cambiar el grupo por defecto, y los grupos `migraciones` y `copias` siguen apuntando a `sigccr` y a `master`, así que una prueba podría escribir en la base de desarrollo.
+
+También encontró una prueba de ejemplo del appstarter (`tests/session/ExampleSessionTest.php`) en la suite `App`, y al escribir las pruebas de la iteración 1 aparecieron ocho defectos (punto 7.9.4 del plan):
+- H-01: un campo enviado como lista (`nombre[]=x`) producía «Array to string conversion» y un error del servidor en lugar del mensaje de validación, en todos los formularios y búsquedas;
+- H-02: los caracteres de control, como el carácter nulo, se guardaban;
+- H-03: el largo se contaba con `mb_strlen()`, pero NVARCHAR cuenta un emoji como dos unidades, así que un texto con emoji en el largo máximo pasaba la validación y fallaba al guardarse;
+- H-04: el mensaje de `ConflictoConcurrenciaException` mostraba al usuario el nombre interno de la tabla (RNF-12);
+- H-05: un formulario vencido o sin token CSRF mostraba el mensaje del framework en inglés;
+- H-06: la recuperación de acceso y la activación del portal aceptaban correos sin punto en el dominio, a diferencia del alta;
+- H-07: al asignar un rol (CU-10) el valor no se recortaba, a diferencia del registro (CU-05);
+- H-08: la posibilidad de escribir en la base de desarrollo desde las pruebas, descripta arriba.
+
+La primera ejecución contra SQL Server (1220 pruebas, 109 con diferencias) encontró cinco defectos más:
+- H-09: los textos con caracteres fuera de Latin-1 (emoji, «ł», «ș») se guardaban como «?» en las columnas NVARCHAR, porque CodeIgniter escribe los literales sin el prefijo N y SQL Server los convierte a la página de códigos de la intercalación;
+- H-10: un acceso denegado a una ruta de más de 40 caracteres excedía la columna objeto_id de la auditoría y respondía error 500 en lugar de 403;
+- H-11: el motivo del rechazo de un archivo del legajo se reemplazaba por «Adjunte este documento»;
+- H-12: la búsqueda de líneas tomaba %, _ y [ como comodines;
+- H-13: las páginas de error 400, 404 y de error general se mostraban en inglés.
+
+El resto de las diferencias eran errores de las pruebas (comparación de decimales, largos de correo, datos repetidos entre pruebas) y un resultado mal previsto en el catálogo: por HTTP, un carácter de control lo rechaza el filtro invalidchars de CodeIgniter con la página 400 antes de llegar a la validación (COM-06).
+
+No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro cliente ni asignación masiva de campos.
+
+**Decisión.**
+1. **Catálogo de campos.** El plan incorpora un catálogo con cada campo de cada formulario: tipo de dato, obligatoriedad, límites, formato, valores admitidos y regla de negocio. El catálogo se obtiene de los validadores (`Campos`, `ValidadorUsuarioInterno`, `ValidadorCliente`, `ValidadorLinea` y los demás) y de las columnas del modelo de datos. Es la fuente de los resultados esperados.
+2. **Clases de datos por tipo.** Cada tipo de dato tiene un juego fijo de clases de equivalencia y valores límite: vacío, solo espacios, campo ausente, campo enviado como lista, caracteres especiales, texto con código HTML o SQL, el largo máximo y el siguiente, formatos alternativos, valores fuera del catálogo, fechas imposibles y límites de importes, cuotas, edades y porcentajes. Cada combinación de campo y clase tiene un resultado esperado: el valor se acepta (y cómo queda guardado) o se rechaza (con qué mensaje y en qué campo).
+3. **Controles comunes a cada operación.** Cada operación que escribe se prueba además sin sesión, sin el permiso, sin token CSRF, con `version_fila` vieja o ausente (RN-24), con un identificador inexistente, negativo o de texto, con campos extra que deben ignorarse y con el objeto en un estado que no admite la operación.
+4. **Qué se verifica.** En cada prueba, la respuesta HTTP, el mensaje y el campo marcado, y el resultado en la base: la fila guardada con su valor normalizado, la ausencia de cambios cuando se rechaza (`dontSeeInDatabase`) y el registro de auditoría sin datos sensibles (RN-45, RNF-14). Como el acceso a datos está en los servicios y no hay modelos de CodeIgniter, el borrado lógico es el cambio de estado (cliente Desactivado, usuario Desactivado, línea Suspendida) y no `deleted_at`. El registro de clientes exige adjuntar el documento de identidad (RN-11), y PHPUnit no puede simular la subida de un archivo por HTTP: sus clases de datos se ejecutan contra `ClienteService::registrar`, la operación que llama el controlador, con la misma validación y transacción, y la petición HTTP se verifica con los controles comunes.
+5. **Sin repetir otros niveles.** Las pruebas de integración no repiten los recorridos funcionales que automatiza la batería de punta a punta; verifican los campos y los controles de los puntos 2 y 3.
+6. **Trazabilidad (D-39).** Cada formulario tiene un caso IN-xx en el plan, que remite a sus filas del catálogo. Las pruebas se generan a partir del catálogo: cada combinación de campo y clase es una prueba con el identificador del caso, el campo y la clase (por ejemplo, «IN-12 · cuit_cuil · verificador incorrecto»). Una diferencia entre el catálogo y el sistema se resuelve corrigiendo el sistema o el catálogo, nunca solo la prueba.
+7. **Una base limpia por ejecución.** Un script recrea `sigccr_pruebas` desde cero al comienzo de cada ejecución: aplica las migraciones con el propietario del esquema y carga `SigccrSeeder`. Se descarta `$refresh = true` de `DatabaseTestTrait`, que deshace y vuelve a aplicar las 30 migraciones antes de cada prueba y multiplicaría el tiempo de la suite.
+8. **Aislamiento por datos propios.** Cada prueba crea sus usuarios, clientes y líneas con identificadores únicos, generados con dígitos verificadores válidos y dominios ficticios, sin usar los datos del Anexo A. Las aserciones se limitan a esos registros; ninguna prueba depende del orden de ejecución ni de los datos de otra.
+9. **Mismos permisos que la aplicación.** Las peticiones se ejecutan con `sigccr_app` (rol `rol_sigccr_app`) sobre `sigccr_pruebas`; las migraciones y las semillas, con el propietario.
+10. **Protección de la base de desarrollo.** En el entorno `testing`, `Config\Database` dirige todos los grupos a `sigccr_pruebas` y no acepta otro grupo por `SIGCCR_DB_GRUPO`.
+11. **Ejecución.** En desarrollo, con `composer test:integracion` en el contenedor `app` (`docker exec`). En la integración continua, en cada *pull request*, con SQL Server como servicio del flujo `CI`, para que los defectos de campos y controles se detecten durante la iteración y no recién al cierre.
+12. **Alcance por etapas.** Primero la iteración 1 (acceso al panel y al portal, usuarios, clientes, líneas, alertas y comunicaciones); después las iteraciones 2, 3 y 4, con el mismo método.
+
+**Consecuencias.**
+- Plan de pruebas, versión 1.2:
+  - el nivel «Integración» en la tabla del punto 2;
+  - la base de pruebas en el punto 3;
+  - la aclaración sobre los datos en el punto 5;
+  - la línea del nivel en el punto 6;
+  - el punto 7.9 con los casos IN-xx;
+  - el Anexo B con las clases de datos por tipo y el catálogo de campos.
+- Componentes nuevos:
+  - `docker/db/crear_base_pruebas.sql` y `tests/feature/preparar_base.sh`;
+  - `tests/_support/Feature/IntegracionTestCase.php`, con el inicio de sesión por rol, el token CSRF y HTTPS;
+  - `tests/_support/Feature/Fabrica.php`, que genera los datos de cada prueba;
+  - `tests/_support/Feature/CatalogoCampos.php` y `ClasesDeDatos.php`, que generan las combinaciones;
+  - las pruebas de `tests/feature/` por módulo.
+- Cambian:
+  - `phpunit.xml.dist`, con la suite `Integracion` y las credenciales del grupo `tests`;
+  - `composer.json`, con el script `test:integracion` y el espacio de nombres `Tests\Feature\`;
+  - `Config\Database`;
+  - `Campos` (`texto()`, `lista()`, `crudo()` y `largo()`) y `BaseController` (`campoPost()`, `campoGet()` y `filtrosBusqueda()`), que usan los 35 controladores que leían la entrada con `(string)` o `strval` (H-01 a H-03);
+  - el mensaje de `ConflictoConcurrenciaException` (H-04);
+  - el controlador `App\Database\SQLSRV`, que escribe los textos no ASCII como N'...' (H-09), `AuditoriaService` (H-10), `ClienteService::registrar()` (H-11), `LineaService::buscar()` (H-12) y `app/Language/es/Errors.php` (H-13);
+  - `app/Language/es/Security.php` (H-05), la validación del correo en `Admin\Acceso`, `Portal\Acceso` y `Portal\Activacion` (H-06) y `UsuarioService::asignarRol()` (H-07);
+  - `.github/workflows/ci.yml`, con el servicio de SQL Server y el paso de integración.
+- Se elimina `tests/session/ExampleSessionTest.php`.
+- La iteración 1 suma 1310 pruebas automáticas (IN-01 a IN-22 e IN-C01 a IN-C14).
+- Pendiente: usar `Campos::largo()` en las validaciones de largo de las iteraciones 2 a 4 que todavía cuentan con `mb_strlen()` (caja, devoluciones, evaluación, resolución, refinanciación), al construir su catálogo.
+- Riesgo aceptado: los datos de las pruebas se acumulan en `sigccr_pruebas` durante una ejecución; se descartan al recrear la base en la ejecución siguiente.

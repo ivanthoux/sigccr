@@ -50,8 +50,8 @@ class Simulaciones extends BaseController
             $id = $this->servicio->simular(
                 (int) $this->request->getPost('cliente_id'),
                 (int) $this->request->getPost('linea_id'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('cantidad_cuotas'),
+                $this->campoPost('importe'),
+                $this->campoPost('cantidad_cuotas'),
                 (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {

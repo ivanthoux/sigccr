@@ -47,7 +47,7 @@ class ClienteService extends BaseService
             ->select("c.id, c.tipo_cliente, c.denominacion, c.cuit_cuil, c.correo, c.estado, ph.tipo_documento, ph.nro_documento")
             ->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left');
         foreach (preg_split('/\s+/u', Campos::texto($c['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
-            $b->like('c.denominacion', trim($palabra, ','));
+            $b->like('c.denominacion', Campos::literalLike((string) trim($palabra, ',')));
         }
         if (($c['documento'] ?? '') !== '') {
             $b->where('ph.nro_documento', Campos::documentoFlexible($c['documento']));
@@ -171,7 +171,8 @@ class ClienteService extends BaseService
         $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
         foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
-            $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
+            // H-11: si el archivo se adjuntó y se rechazó, se conserva el motivo (vacío, tamaño, tipo)
+            $errores['doc_' . $falta] ??= 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-11');

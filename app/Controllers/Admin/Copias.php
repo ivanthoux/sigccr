@@ -29,7 +29,7 @@ class Copias extends BaseController
     {
         $cuenta = session('cuenta');
         try {
-            $id = (new CopiaService())->solicitar((int) $cuenta['id'], (string) $cuenta['nombre'], (string) $this->request->getPost('descripcion'));
+            $id = (new CopiaService())->solicitar((int) $cuenta['id'], (string) $cuenta['nombre'], $this->campoPost('descripcion'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -81,7 +81,7 @@ class Copias extends BaseController
     {
         $cuenta = session('cuenta');
         try {
-            (new CopiaService())->solicitarRestauracion($id, (string) $this->request->getPost('confirmacion'), $this->request->getPost('sin_respaldo') === '1', (int) $cuenta['id'], (string) $cuenta['nombre']);
+            (new CopiaService())->solicitarRestauracion($id, $this->campoPost('confirmacion'), $this->request->getPost('sin_respaldo') === '1', (int) $cuenta['id'], (string) $cuenta['nombre']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

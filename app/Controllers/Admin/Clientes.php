@@ -35,7 +35,7 @@ class Clientes extends BaseController
     /** CU-54. */
     public function index(): string
     {
-        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['texto', 'documento', 'cuit', 'tipo', 'estado'])));
+        $criterios = $this->filtrosBusqueda(['texto', 'documento', 'cuit', 'tipo', 'estado']);
         $buscado = array_filter($criterios, static fn ($v) => $v !== '') !== [];
 
         return view('clientes/index', [
@@ -51,7 +51,7 @@ class Clientes extends BaseController
     {
         // CU-104 paso 7: el alta puede partir de un pre-registro verificado, con sus datos propuestos
         $pre = null;
-        $preId = (string) $this->request->getGet('pre');
+        $preId = $this->campoGet('pre');
         if (ctype_digit($preId)) {
             try {
                 $pre = (new PreRegistroService())->datosParaAlta((int) $preId);
@@ -69,7 +69,7 @@ class Clientes extends BaseController
      */
     public function padron(): ResponseInterface
     {
-        $cuil = str_replace(['-', ' ', '.'], '', (string) $this->request->getGet('cuil'));
+        $cuil = str_replace(['-', ' ', '.'], '', $this->campoGet('cuil'));
         $error = Campos::obligatorio($cuil, 'el CUIL') ?? Campos::cuit($cuil, 'PersonaHumana');
         if ($error !== null) {
             return $this->response->setStatusCode(422)->setJSON(['mensaje' => $error]);
@@ -143,7 +143,7 @@ class Clientes extends BaseController
     public function actualizar(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->modificar($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(), (string) $this->request->getPost('evidencia_identidad'));
+            $r = $this->servicio->modificar($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(), $this->campoPost('evidencia_identidad'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -200,7 +200,7 @@ class Clientes extends BaseController
     public function desactivar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
+            $this->servicio->desactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -212,7 +212,7 @@ class Clientes extends BaseController
     public function reactivar(int $id): RedirectResponse
     {
         try {
-            $verificado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
+            $verificado = $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

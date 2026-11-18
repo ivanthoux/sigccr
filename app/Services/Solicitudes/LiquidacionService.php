@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Solicitudes;
 
+use App\Libraries\Validacion\Campos;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Finanzas\AmortizacionFrancesa;
@@ -43,7 +44,7 @@ class LiquidacionService extends BaseService
             ->join('resoluciones r', "r.solicitud_id = s.id AND r.decision = 'Aprobada' AND r.vigente = 1")
             ->where('s.estado', 'AprobadaPendienteLiquidacion');
         foreach (preg_split('/\s+/u', trim($texto), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $p) {
-            ctype_digit($p) ? $b->groupStart()->where('s.numero', (int) $p)->orLike('c.cuit_cuil', $p)->groupEnd() : $b->like('c.denominacion', $p);
+            ctype_digit($p) ? $b->groupStart()->where('s.numero', (int) $p)->orLike('c.cuit_cuil', Campos::literalLike((string) $p))->groupEnd() : $b->like('c.denominacion', Campos::literalLike((string) $p));
         }
 
         return $b->orderBy('r.vence_aprobacion')->get(200)->getResultArray();

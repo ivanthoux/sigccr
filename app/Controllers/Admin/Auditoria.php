@@ -18,7 +18,7 @@ class Auditoria extends BaseController
     {
         $f = [];
         foreach (['desde', 'hasta', 'responsable', 'categoria', 'objeto', 'resultado', 'pagina'] as $k) {
-            $f[$k] = trim((string) $this->request->getGet($k));
+            $f[$k] = trim($this->campoGet($k));
         }
         try {
             $b = (new AuditoriaConsultaService())->buscar($f);
@@ -38,6 +38,6 @@ class Auditoria extends BaseController
             return redirect()->route('auditoria.consultar')->with('error', $e->getMessage());
         }
 
-        return view('auditoria/ver', ['titulo' => 'Registro de auditoría N.º ' . $id, 'a' => $a, 'volver' => (string) $this->request->getGet('volver')]);
+        return view('auditoria/ver', ['titulo' => 'Registro de auditoría N.º ' . $id, 'a' => $a, 'volver' => $this->campoGet('volver')]);
     }
 }
