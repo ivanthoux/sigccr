@@ -95,4 +95,40 @@ final class CamposTest extends TestCase
         $this->assertNull(Campos::motivo('Licencia prolongada'));
         $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('a', 1001)));
     }
+
+    /** D-49, COM-02 y COM-06: un campo enviado como lista se trata como vacío y los caracteres de control se eliminan. */
+    public function testValoresQueNoSonTextoYCaracteresDeControl(): void
+    {
+        $this->assertSame('', Campos::texto(['Ana']));
+        $this->assertSame('', Campos::texto(['a' => ['b']]));
+        $this->assertSame('', Campos::correo(['ana@prueba.local']));
+        $this->assertSame('', Campos::documento(['28999111']));
+        $this->assertNull(Campos::importe(['100']));
+        $this->assertNull(Campos::fecha(['2026-01-01']));
+        $this->assertSame('12', Campos::texto(12));
+        $this->assertSame('AnaB', Campos::texto("Ana\0B"));
+        $this->assertSame('Ana B', Campos::texto("Ana\x07 \x1FB"));
+        $this->assertSame('Ana María', Campos::texto("Ana\r\nMaría"));
+        $this->assertSame('', Campos::crudo(['x']));
+        $this->assertSame('  clave con espacios  ', Campos::crudo('  clave con espacios  '));
+    }
+
+    public function testLista(): void
+    {
+        $this->assertSame(['A', 'B'], Campos::lista(['A', ['x'], 'B']));
+        $this->assertSame(['A'], Campos::lista('A'));
+        $this->assertSame([], Campos::lista(null));
+        $this->assertSame([], Campos::lista(''));
+        $this->assertSame(['1'], Campos::lista([1]));
+    }
+
+    /** D-49, TXT-04 y TXT-05: el largo se mide como en NVARCHAR; un emoji ocupa dos unidades. */
+    public function testLargoComoEnLaBase(): void
+    {
+        $this->assertSame(5, Campos::largo('Ñandú'));
+        $this->assertSame(2, Campos::largo('😀'));
+        $this->assertNull(Campos::largoMaximo(str_repeat('ñ', 60), 60, 'la nacionalidad'));
+        $this->assertSame('La nacionalidad admite hasta 60 caracteres.', Campos::largoMaximo(str_repeat('ñ', 59) . '😀', 60, 'la nacionalidad'));
+        $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('😀', 501)));
+    }
 }

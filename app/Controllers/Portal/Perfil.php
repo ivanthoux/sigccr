@@ -56,7 +56,7 @@ class Perfil extends BasePortal
     public function solicitarCorreo(): RedirectResponse
     {
         try {
-            (new ClienteService())->solicitarCambioCorreo($this->clienteId(), (string) $this->request->getPost('correo_nuevo'));
+            (new ClienteService())->solicitarCambioCorreo($this->clienteId(), $this->campoPost('correo_nuevo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConErrores($e);
         }

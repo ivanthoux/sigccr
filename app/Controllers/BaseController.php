@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ArchivoLegajo;
+use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\Controller;
@@ -82,7 +83,7 @@ abstract class BaseController extends Controller
      */
     protected function busquedaCliente(string $destino, string $titulo, bool $soloActivos = false, array $datos = []): string
     {
-        $texto = trim((string) $this->request->getGet('texto'));
+        $texto = trim($this->campoGet('texto'));
         $clientes = $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]);
         if ($soloActivos) {
             $clientes = array_values(array_filter($clientes, static fn ($c) => $c['estado'] === 'Activo'));
@@ -95,6 +96,39 @@ abstract class BaseController extends Controller
      * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
      * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
      */
+    /**
+     * Campo del formulario (POST) como texto, sin transformar. Un campo ausente o enviado como lista (campo[]=x) se
+     * trata como vacío, para que la validación responda con el mensaje del campo y no con un error del servidor
+     * (D-49, clase COM-02).
+     */
+    protected function campoPost(string $campo): string
+    {
+        return Campos::crudo($this->request->getPost($campo));
+    }
+
+    /** Parámetro de la dirección (GET) como texto; ausente o enviado como lista, vacío (D-49, clase FIL-02). */
+    protected function campoGet(string $campo): string
+    {
+        return Campos::crudo($this->request->getGet($campo));
+    }
+
+    /**
+     * Filtros de una búsqueda (GET): solo los parámetros admitidos que llegaron, como texto. Uno enviado como lista se
+     * trata como vacío (D-49, clase FIL-02).
+     *
+     * @param list<string> $admitidos
+     * @return array<string, string>
+     */
+    protected function filtrosBusqueda(array $admitidos): array
+    {
+        $filtros = [];
+        foreach (array_intersect_key((array) $this->request->getGet(), array_flip($admitidos)) as $clave => $valor) {
+            $filtros[(string) $clave] = Campos::crudo($valor);
+        }
+
+        return $filtros;
+    }
+
     protected function volverConError(ReglaNegocioException $e): RedirectResponse
     {
         return redirect()->back()->withInput()

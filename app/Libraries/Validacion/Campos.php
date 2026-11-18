@@ -12,10 +12,43 @@ final class Campos
 {
     public const TIPOS_DOCUMENTO = ['DNI', 'LC', 'LE', 'Pasaporte'];
 
-    /** Recorta y colapsa los espacios internos. */
+    /**
+     * Recorta y colapsa los espacios internos. Un valor que no es texto ni número (por ejemplo, un campo enviado como
+     * lista: nombre[]=x) se trata como vacío, y los caracteres de control se eliminan: la tabulación y los saltos de
+     * línea cuentan como espacios (D-49, clases COM-02, COM-05 y COM-06).
+     */
     public static function texto(mixed $valor): string
     {
-        return trim(preg_replace('/\s+/u', ' ', (string) ($valor ?? '')) ?? '');
+        if (!is_scalar($valor)) {
+            return '';
+        }
+        $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string) $valor) ?? '';
+
+        return trim(preg_replace('/\s+/u', ' ', $t) ?? '');
+    }
+
+    /**
+     * Lista de valores de un formulario (casillas múltiples, campo[]): solo los elementos que son texto o número,
+     * como texto. Un valor suelto se toma como lista de un elemento; uno anidado (campo[][]=x) se descarta (D-49).
+     *
+     * @return list<string>
+     */
+    public static function lista(mixed $valor): array
+    {
+        $r = [];
+        foreach (is_array($valor) ? $valor : ($valor === null || $valor === '' ? [] : [$valor]) as $v) {
+            if (is_scalar($v)) {
+                $r[] = (string) $v;
+            }
+        }
+
+        return $r;
+    }
+
+    /** Valor de un formulario como texto sin transformar (contraseñas): un valor que no es texto se trata como vacío. */
+    public static function crudo(mixed $valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
     }
 
     /** Correo en minúsculas y sin espacios. */
@@ -47,9 +80,19 @@ final class Campos
         return $valor === '' ? "Complete {$nombreCampo}." : null;
     }
 
+    /**
+     * Largo de un texto como lo mide SQL Server en una columna NVARCHAR (unidades UTF-16): las letras con tilde y la
+     * eñe cuentan uno, y un emoji u otro carácter fuera del plano básico, dos. Con mb_strlen() un texto con emoji
+     * pasaba la validación y fallaba al guardarse (D-49, clase TXT-05).
+     */
+    public static function largo(string $valor): int
+    {
+        return intdiv(strlen((string) mb_convert_encoding($valor, 'UTF-16LE', 'UTF-8')), 2);
+    }
+
     public static function largoMaximo(string $valor, int $maximo, string $nombreCampo): ?string
     {
-        return mb_strlen($valor) > $maximo ? ucfirst($nombreCampo) . " admite hasta {$maximo} caracteres." : null;
+        return self::largo($valor) > $maximo ? ucfirst($nombreCampo) . " admite hasta {$maximo} caracteres." : null;
     }
 
     /** Nombres y apellidos: letras (con tildes y ñ), espacios, apóstrofo, guion y punto. */
@@ -147,7 +190,7 @@ final class Campos
     /** Texto de motivo de una operación (auditoría): entre 5 y 1000 caracteres. */
     public static function motivo(string $valor): ?string
     {
-        $largo = mb_strlen($valor);
+        $largo = self::largo($valor);
         if ($largo < 5) {
             return 'Indique el motivo de la operación (al menos 5 caracteres).';
         }

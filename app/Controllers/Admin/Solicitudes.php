@@ -30,7 +30,7 @@ class Solicitudes extends BaseController
     /** CU-29: listado con filtros; sin filtros, las más recientes. */
     public function index(): string
     {
-        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['numero', 'texto', 'estado', 'cliente', 'documento', 'linea', 'desde', 'hasta'])));
+        $criterios = $this->filtrosBusqueda(['numero', 'texto', 'estado', 'cliente', 'documento', 'linea', 'desde', 'hasta']);
         // A2: rango de fechas válido
         $errores = [];
         $filtro = $criterios;
@@ -149,10 +149,10 @@ class Solicitudes extends BaseController
             $estado = $this->servicio->verificar(
                 $id,
                 (int) $this->request->getPost('version_fila'),
-                (string) $this->request->getPost('resultado'),
+                $this->campoPost('resultado'),
                 (array) $this->request->getPost('verificacion'),
-                (string) $this->request->getPost('observaciones'),
-                (string) $this->request->getPost('motivo_rechazo'),
+                $this->campoPost('observaciones'),
+                $this->campoPost('motivo_rechazo'),
                 (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {
@@ -208,7 +208,7 @@ class Solicitudes extends BaseController
     public function corregir(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->registrarCorreccion($id, (int) $this->request->getPost('version_fila'), $this->archivosLegajo(), (string) $this->request->getPost('aclaracion'), (int) session('cuenta')['id']);
+            $r = $this->servicio->registrarCorreccion($id, (int) $this->request->getPost('version_fila'), $this->archivosLegajo(), $this->campoPost('aclaracion'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

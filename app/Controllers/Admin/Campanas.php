@@ -16,9 +16,9 @@ class Campanas extends BaseController
     public function index(): string
     {
         $f = [
-            'numero' => trim((string) $this->request->getGet('numero')), 'linea' => (string) $this->request->getGet('linea'),
-            'estado' => (string) $this->request->getGet('estado'), 'desde' => (string) $this->request->getGet('desde'),
-            'hasta' => (string) $this->request->getGet('hasta'), 'canal' => (string) $this->request->getGet('canal'),
+            'numero' => trim($this->campoGet('numero')), 'linea' => $this->campoGet('linea'),
+            'estado' => $this->campoGet('estado'), 'desde' => $this->campoGet('desde'),
+            'hasta' => $this->campoGet('hasta'), 'canal' => $this->campoGet('canal'),
         ];
 
         return view('campanas/index', [

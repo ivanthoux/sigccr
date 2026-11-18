@@ -15,7 +15,7 @@ class Tablero extends BaseController
 {
     public function index(): string|RedirectResponse
     {
-        $f = ['tipo' => (string) ($this->request->getGet('tipo') ?? 'mes'), 'fecha' => trim((string) $this->request->getGet('fecha')), 'desde' => trim((string) $this->request->getGet('desde')), 'hasta' => trim((string) $this->request->getGet('hasta'))];
+        $f = ['tipo' => (string) ($this->request->getGet('tipo') ?? 'mes'), 'fecha' => trim($this->campoGet('fecha')), 'desde' => trim($this->campoGet('desde')), 'hasta' => trim($this->campoGet('hasta'))];
         try {
             $t = (new ReporteService())->tablero($f);
         } catch (ReglaNegocioException $e) {

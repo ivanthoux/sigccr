@@ -45,7 +45,7 @@ class Cajas extends BaseController
     public function asignar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->asignar($id, (int) $this->request->getPost('cajero_id'), (string) $this->request->getPost('desde'), (string) $this->request->getPost('hasta'));
+            $this->servicio->asignar($id, (int) $this->request->getPost('cajero_id'), $this->campoPost('desde'), $this->campoPost('hasta'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e)->with('formulario', "asignar-{$id}");
         }
@@ -57,7 +57,7 @@ class Cajas extends BaseController
     public function finalizarAsignacion(int $id): RedirectResponse
     {
         try {
-            $this->servicio->finalizarAsignacion($id, (string) $this->request->getPost('motivo_fin'));
+            $this->servicio->finalizarAsignacion($id, $this->campoPost('motivo_fin'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e)->with('formulario', "finalizar-{$id}");
         }
@@ -69,7 +69,7 @@ class Cajas extends BaseController
     public function cambiarEstado(int $id): RedirectResponse
     {
         try {
-            $estado = $this->servicio->cambiarEstado($id, (string) $this->request->getPost('accion'), (string) $this->request->getPost('motivo'));
+            $estado = $this->servicio->cambiarEstado($id, $this->campoPost('accion'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e)->with('formulario', "estado-{$id}");
         }
@@ -83,9 +83,9 @@ class Cajas extends BaseController
         $f = [
             'caja_id' => (int) $this->request->getGet('caja'),
             'cajero_id' => (int) $this->request->getGet('cajero'),
-            'estado' => (string) $this->request->getGet('estado'),
-            'fecha' => Campos::fecha((string) $this->request->getGet('fecha')),
-            'fecha_texto' => (string) $this->request->getGet('fecha'),
+            'estado' => $this->campoGet('estado'),
+            'fecha' => Campos::fecha($this->campoGet('fecha')),
+            'fecha_texto' => $this->campoGet('fecha'),
         ];
         $soloCajero = $this->soloCajero();
 

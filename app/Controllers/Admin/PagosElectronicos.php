@@ -51,9 +51,9 @@ class PagosElectronicos extends BaseController
     public function index(): string
     {
         $f = [
-            'numero' => trim((string) $this->request->getGet('numero')),
-            'texto' => trim((string) $this->request->getGet('texto')),
-            'estado' => (string) $this->request->getGet('estado'),
+            'numero' => trim($this->campoGet('numero')),
+            'texto' => trim($this->campoGet('texto')),
+            'estado' => $this->campoGet('estado'),
         ];
 
         return view('pagos/ordenes', ['titulo' => 'Pagos electrónicos', 'filtros' => $f, 'ordenes' => (new PagoElectronicoService())->buscar($f)]);

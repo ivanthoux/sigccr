@@ -32,8 +32,8 @@ class Condonaciones extends BaseController
                 (int) session('cuenta')['id'],
                 $clienteId,
                 (array) $this->request->getPost('cuotas'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('fundamento'),
+                $this->campoPost('importe'),
+                $this->campoPost('fundamento'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

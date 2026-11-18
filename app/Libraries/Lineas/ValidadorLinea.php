@@ -33,11 +33,11 @@ final class ValidadorLinea
             $humana ? array_keys(RequisitosDocumentales::CATEGORIAS['PersonaHumana']) : [],
             $juridica ? array_keys(RequisitosDocumentales::CATEGORIAS['PersonaJuridica']) : [],
         );
-        $categorias = array_values(array_intersect(array_unique(array_map('strval', (array) ($d['categorias'] ?? []))), $posibles));
+        $categorias = array_values(array_intersect(array_unique(Campos::lista($d['categorias'] ?? [])), $posibles));
         $requisitos = [];
         foreach ((array) ($d['requisitos'] ?? []) as $cat => $codigos) {
             if (in_array((string) $cat, $categorias, true)) {
-                $requisitos[(string) $cat] = array_values(array_unique(array_map('strval', (array) $codigos)));
+                $requisitos[(string) $cat] = array_values(array_unique(Campos::lista($codigos)));
             }
         }
 

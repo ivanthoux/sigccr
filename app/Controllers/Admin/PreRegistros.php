@@ -18,7 +18,7 @@ class PreRegistros extends BaseController
     public function index(): string
     {
         $estado = (string) ($this->request->getGet('estado') ?? 'PendienteValidacion');
-        $texto = trim((string) $this->request->getGet('texto'));
+        $texto = trim($this->campoGet('texto'));
 
         return view('clientes/pre_registros', [
             'titulo' => 'Pre-registros del portal', 'estado' => $estado, 'texto' => $texto,
@@ -40,7 +40,7 @@ class PreRegistros extends BaseController
     public function descartar(int $id): RedirectResponse
     {
         try {
-            (new PreRegistroService())->descartar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'), (int) session('cuenta')['id']);
+            (new PreRegistroService())->descartar($id, (int) $this->request->getPost('version_fila'), $this->campoPost('motivo'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

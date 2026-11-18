@@ -46,7 +46,7 @@ class Fondos extends BaseController
     /** A2: corrección con un movimiento inverso. */
     public function corregir(int $id): RedirectResponse
     {
-        return $this->operar(fn () => $this->servicio->corregir($id, (string) $this->request->getPost('motivo'), (int) session('cuenta')['id']), 'Se registró el movimiento inverso que corrige el N.º ' . $id . '.', $id);
+        return $this->operar(fn () => $this->servicio->corregir($id, $this->campoPost('motivo'), (int) session('cuenta')['id']), 'Se registró el movimiento inverso que corrige el N.º ' . $id . '.', $id);
     }
 
     /** A3: confirmación de un programado. */
@@ -58,7 +58,7 @@ class Fondos extends BaseController
     /** A3: anulación de un programado. */
     public function anular(int $id): RedirectResponse
     {
-        return $this->operar(fn () => $this->servicio->anularProgramado($id, (string) $this->request->getPost('motivo')), 'Movimiento N.º ' . $id . ' anulado.', $id);
+        return $this->operar(fn () => $this->servicio->anularProgramado($id, $this->campoPost('motivo')), 'Movimiento N.º ' . $id . ' anulado.', $id);
     }
 
     private function operar(callable $operacion, string $exito, int $id): RedirectResponse

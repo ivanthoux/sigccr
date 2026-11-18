@@ -110,6 +110,17 @@ php tests/_local/run.php               # ejecutor mínimo sin Composer (usa un r
 
 `tests/_local/` existe solo para ejecutar las pruebas en un entorno sin Composer ni BCMath; en el proyecto se usa PHPUnit.
 
+## Pruebas de integración (D-49)
+
+```bash
+docker compose exec app composer test:integracion    # recrea sigccr_pruebas y ejecuta la suite Integracion
+docker compose exec app vendor/bin/phpunit -c phpunit.xml.dist --testsuite Integracion --filter IN-09   # un caso
+```
+
+Verifican cada campo de cada formulario con cada clase de dato de su tipo (vacío, enviado como lista, código HTML o SQL, límites de largo, formatos alternativos, valores fuera de catálogo, fechas imposibles, importes y porcentajes límite) y los controles comunes de cada operación (sesión, permiso, token CSRF, versión de fila, identificadores), contra SQL Server. El catálogo de campos y las clases de datos están en el Anexo B del plan de pruebas; cada prueba lleva el identificador de su caso (IN-xx) y la clase (por ejemplo, `IN-09 · cuit_cuil · CUI-04 verificador incorrecto`).
+
+`tests/feature/preparar_base.sh` borra y vuelve a crear la base `sigccr_pruebas` en cada ejecución, aplica las migraciones y carga las semillas. Las pruebas se conectan con el usuario de la aplicación (`sigccr_app`) y, en el entorno de pruebas, `Config\Database` dirige todos los grupos a `sigccr_pruebas`: la base de desarrollo no se toca. La integración continua las ejecuta en cada *pull request* con SQL Server como servicio.
+
 ## Pruebas de punta a punta
 
 ```bash

@@ -31,13 +31,18 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\Support\\": "tests/_support",
-            "Tests\\Unit\\": "tests/unit/"
+            "Tests\\Unit\\": "tests/unit/",
+            "Tests\\Feature\\": "tests/feature/"
         }
     },
     "scripts": {
-        "test": "phpunit -c phpunit.xml.dist",
+        "test": "phpunit -c phpunit.xml.dist --testsuite App",
         "test:unitarias": "phpunit -c phpunit.xml.dist --testsuite Unitarias --no-coverage",
         "test:finanzas": "phpunit -c phpunit.xml.dist --testsuite Finanzas --no-coverage",
+        "test:integracion": [
+            "bash tests/feature/preparar_base.sh",
+            "phpunit -c phpunit.xml.dist --testsuite Integracion --no-coverage"
+        ],
         "cobertura": "@php -d pcov.enabled=1 vendor/bin/phpunit -c phpunit.xml.dist --testsuite Finanzas --coverage-text --coverage-html build/cobertura",
         "migrar": "SIGCCR_DB_GRUPO=migraciones php spark migrate --all",
         "semillas": "SIGCCR_DB_GRUPO=migraciones php spark db:seed SigccrSeeder",

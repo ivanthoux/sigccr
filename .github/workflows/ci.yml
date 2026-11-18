@@ -61,3 +61,53 @@ jobs:
       - name: PHPStan
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
         continue-on-error: true   # se vuelve obligatorio cuando la estructura base esté versionada
+
+  integracion:
+    # D-49: cada campo con cada clase de dato y los controles comunes, contra SQL Server (plan de pruebas 7.9)
+    name: Integración contra SQL Server
+    runs-on: ubuntu-24.04
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: Integracion.Sa.2026
+          MSSQL_COLLATION: Modern_Spanish_CI_AI
+        ports: ["1433:1433"]
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Integracion.Sa.2026 -Q 'SELECT 1' -b -o /dev/null"
+          --health-interval 10s --health-timeout 5s --health-retries 20 --health-start-period 30s
+    env:
+      MSSQL_SA_PASSWORD: Integracion.Sa.2026
+      OWNER_PASSWORD: Cambiar.Owner.2026
+      APP_PASSWORD: Cambiar.App.2026
+      SIGCCR_DB_HOST: localhost
+      SIGCCR_CREAR_INICIOS: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP 8.3 con sqlsrv
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring, sqlsrv
+          coverage: none
+          tools: composer:v2
+
+      - name: sqlcmd
+        run: |
+          curl -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | tar -xj -C /usr/local/bin sqlcmd
+          sqlcmd --version
+
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress
+
+      - name: Configuración (.env de ejemplo con la base en localhost)
+        run: |
+          cp env.sigccr.example .env
+          sed -i -E 's/^(database\.[a-z]+\.hostname) = db$/\1 = localhost/; s/^app\.forceGlobalSecureRequests = true/app.forceGlobalSecureRequests = false/' .env
+          php spark key:generate --force
+
+      - name: Pruebas de integración (base sigccr_pruebas desde cero)
+        run: env 'database.tests.hostname=localhost' composer test:integracion

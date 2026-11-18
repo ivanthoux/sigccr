@@ -37,7 +37,7 @@ final class Contingencia
     {
         $e = [];
         $antecedentes = array_values(array_unique(array_filter(
-            array_map('strval', (array) ($d['antecedentes'] ?? [])),
+            Campos::lista($d['antecedentes'] ?? []),
             static fn (string $a): bool => isset(self::ANTECEDENTES[$a]),
         )));
         if ($antecedentes === []) {

@@ -74,8 +74,8 @@ final class ValidadorParametrosCampanas
     public static function normalizar(array $d): array
     {
         $entero = static fn (mixed $v): ?int => ctype_digit($t = trim((string) ($v ?? ''))) && strlen($t) <= 5 ? (int) $t : null;
-        $categorias = array_values(array_intersect(array_keys(self::categorias()), array_map('strval', (array) ($d['categorias_admitidas'] ?? []))));
-        $canales = array_values(array_intersect(array_keys(self::CANALES), array_map('strval', (array) ($d['canales'] ?? []))));
+        $categorias = array_values(array_intersect(array_keys(self::categorias()), Campos::lista($d['categorias_admitidas'] ?? [])));
+        $canales = array_values(array_intersect(array_keys(self::CANALES), Campos::lista($d['canales'] ?? [])));
         $factor = Campos::importe($d['factor_cobrabilidad'] ?? '');
 
         return [

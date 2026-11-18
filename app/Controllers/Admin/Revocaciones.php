@@ -56,7 +56,7 @@ class Revocaciones extends BaseController
     public function registrar(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->registrar($id, (string) $this->request->getPost('fecha_comunicacion'), (string) $this->request->getPost('medio_comunicacion'), (int) session('cuenta')['id']);
+            $r = $this->servicio->registrar($id, $this->campoPost('fecha_comunicacion'), $this->campoPost('medio_comunicacion'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -70,7 +70,7 @@ class Revocaciones extends BaseController
     public function confirmar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->confirmar($id, (string) $this->request->getPost('numero_operacion'), (string) $this->request->getPost('importe'), (int) session('cuenta')['id']);
+            $this->servicio->confirmar($id, $this->campoPost('numero_operacion'), $this->campoPost('importe'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
