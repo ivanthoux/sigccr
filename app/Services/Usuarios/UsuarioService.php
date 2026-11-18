@@ -294,7 +294,7 @@ class UsuarioService extends BaseService
     public function asignarRol(int $id, int $versionLeida, string $rolNuevo, string $motivo): bool
     {
         $motivo = $this->exigirMotivo($motivo);
-        // Igual que en el registro (CU-05): el rol elegido se recorta antes de compararlo (D-49, SEL-04)
+        // Igual que en el registro (CU-05): el rol elegido se recorta antes de compararlo (D-51, SEL-04)
         $rolNuevo = Campos::texto($rolNuevo);
 
         return $this->transaccion(function () use ($id, $versionLeida, $rolNuevo, $motivo): bool {

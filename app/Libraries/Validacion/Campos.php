@@ -15,7 +15,7 @@ final class Campos
     /**
      * Recorta y colapsa los espacios internos. Un valor que no es texto ni número (por ejemplo, un campo enviado como
      * lista: nombre[]=x) se trata como vacío, y los caracteres de control se eliminan: la tabulación y los saltos de
-     * línea cuentan como espacios (D-49, clases COM-02, COM-05 y COM-06).
+     * línea cuentan como espacios (D-51, clases COM-02, COM-05 y COM-06).
      */
     public static function texto(mixed $valor): string
     {
@@ -29,7 +29,7 @@ final class Campos
 
     /**
      * Lista de valores de un formulario (casillas múltiples, campo[]): solo los elementos que son texto o número,
-     * como texto. Un valor suelto se toma como lista de un elemento; uno anidado (campo[][]=x) se descarta (D-49).
+     * como texto. Un valor suelto se toma como lista de un elemento; uno anidado (campo[][]=x) se descarta (D-51).
      *
      * @return list<string>
      */
@@ -47,7 +47,7 @@ final class Campos
 
     /**
      * Texto para buscar con like() del Query Builder como texto literal: CodeIgniter agrega ESCAPE '!' pero no escapa
-     * los comodines del valor, así que «%» devolvía todos los registros (D-49, H-12, clase FIL-03).
+     * los comodines del valor, así que «%» devolvía todos los registros (D-51, H-12, clase FIL-03).
      */
     public static function literalLike(string $texto): string
     {
@@ -92,7 +92,7 @@ final class Campos
     /**
      * Largo de un texto como lo mide SQL Server en una columna NVARCHAR (unidades UTF-16): las letras con tilde y la
      * eñe cuentan uno, y un emoji u otro carácter fuera del plano básico, dos. Con mb_strlen() un texto con emoji
-     * pasaba la validación y fallaba al guardarse (D-49, clase TXT-05).
+     * pasaba la validación y fallaba al guardarse (D-51, clase TXT-05).
      */
     public static function largo(string $valor): int
     {

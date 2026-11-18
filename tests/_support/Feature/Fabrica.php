@@ -12,7 +12,7 @@ use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\I18n\Time;
 
 /**
- * Datos propios de cada prueba de integración (D-49): usuarios, clientes y líneas con identificadores únicos, dígitos
+ * Datos propios de cada prueba de integración (D-51): usuarios, clientes y líneas con identificadores únicos, dígitos
  * verificadores válidos y el dominio ficticio prueba.local. Se crean con los servicios del sistema, de modo que pasan
  * por las mismas validaciones y transacciones que una operación real; solo la contraseña inicial de un usuario se
  * define directamente en la base, para no recorrer el enlace de activación en cada prueba.

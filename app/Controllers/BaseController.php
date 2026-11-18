@@ -99,14 +99,14 @@ abstract class BaseController extends Controller
     /**
      * Campo del formulario (POST) como texto, sin transformar. Un campo ausente o enviado como lista (campo[]=x) se
      * trata como vacío, para que la validación responda con el mensaje del campo y no con un error del servidor
-     * (D-49, clase COM-02).
+     * (D-51, clase COM-02).
      */
     protected function campoPost(string $campo): string
     {
         return Campos::crudo($this->request->getPost($campo));
     }
 
-    /** Parámetro de la dirección (GET) como texto; ausente o enviado como lista, vacío (D-49, clase FIL-02). */
+    /** Parámetro de la dirección (GET) como texto; ausente o enviado como lista, vacío (D-51, clase FIL-02). */
     protected function campoGet(string $campo): string
     {
         return Campos::crudo($this->request->getGet($campo));
@@ -114,7 +114,7 @@ abstract class BaseController extends Controller
 
     /**
      * Filtros de una búsqueda (GET): solo los parámetros admitidos que llegaron, como texto. Uno enviado como lista se
-     * trata como vacío (D-49, clase FIL-02).
+     * trata como vacío (D-51, clase FIL-02).
      *
      * @param list<string> $admitidos
      * @return array<string, string>

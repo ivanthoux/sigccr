@@ -96,7 +96,7 @@ final class CamposTest extends TestCase
         $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('a', 1001)));
     }
 
-    /** D-49, COM-02 y COM-06: un campo enviado como lista se trata como vacío y los caracteres de control se eliminan. */
+    /** D-51, COM-02 y COM-06: un campo enviado como lista se trata como vacío y los caracteres de control se eliminan. */
     public function testValoresQueNoSonTextoYCaracteresDeControl(): void
     {
         $this->assertSame('', Campos::texto(['Ana']));
@@ -122,7 +122,7 @@ final class CamposTest extends TestCase
         $this->assertSame(['1'], Campos::lista([1]));
     }
 
-    /** D-49, TXT-04 y TXT-05: el largo se mide como en NVARCHAR; un emoji ocupa dos unidades. */
+    /** D-51, TXT-04 y TXT-05: el largo se mide como en NVARCHAR; un emoji ocupa dos unidades. */
     public function testLargoComoEnLaBase(): void
     {
         $this->assertSame(5, Campos::largo('Ñandú'));
@@ -132,7 +132,7 @@ final class CamposTest extends TestCase
         $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('😀', 501)));
     }
 
-    /** D-49, H-12 y FIL-03: los comodines de LIKE se buscan como texto (ESCAPE '!'). */
+    /** D-51, H-12 y FIL-03: los comodines de LIKE se buscan como texto (ESCAPE '!'). */
     public function testLiteralLike(): void
     {
         $this->assertSame('!%', Campos::literalLike('%'));

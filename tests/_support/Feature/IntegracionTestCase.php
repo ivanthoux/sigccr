@@ -14,7 +14,7 @@ use CodeIgniter\Test\TestResponse;
 use Config\Services;
 
 /**
- * Base de las pruebas de integración (D-49, plan de pruebas 7.9).
+ * Base de las pruebas de integración (D-51, plan de pruebas 7.9).
  *
  * - Usa la base sigccr_pruebas, que tests/feature/preparar_base.sh recrea en cada ejecución: no migra ni siembra por
  *   prueba ($migrate y $refresh en false) y cada prueba crea sus propios datos con la Fabrica.

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Páginas de error del framework en español (RNF-02, RNF-12, D-49 H-13). Sin este archivo, con la configuración
+ * Páginas de error del framework en español (RNF-02, RNF-12, D-51 H-13). Sin este archivo, con la configuración
  * regional «es» las páginas 400, 404 y de error se mostraban en inglés.
  */
 

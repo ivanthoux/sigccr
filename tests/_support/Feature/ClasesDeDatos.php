@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\Feature;
 
 /**
- * Clases de datos por tipo del Anexo B.1 del plan de pruebas (D-49). Cada método recibe la definición de un campo del
+ * Clases de datos por tipo del Anexo B.1 del plan de pruebas (D-51). Cada método recibe la definición de un campo del
  * catálogo y devuelve sus casos: [clase, descripción, valor enviado, resultado esperado].
  *
  * Resultado esperado:

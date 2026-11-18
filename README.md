@@ -110,7 +110,7 @@ php tests/_local/run.php               # ejecutor mínimo sin Composer (usa un r
 
 `tests/_local/` existe solo para ejecutar las pruebas en un entorno sin Composer ni BCMath; en el proyecto se usa PHPUnit.
 
-## Pruebas de integración (D-49)
+## Pruebas de integración (D-51)
 
 ```bash
 docker compose exec app composer test:integracion    # recrea sigccr_pruebas y ejecuta la suite Integracion

@@ -63,7 +63,7 @@ jobs:
         continue-on-error: true   # se vuelve obligatorio cuando la estructura base esté versionada
 
   integracion:
-    # D-49: cada campo con cada clase de dato y los controles comunes, contra SQL Server (plan de pruebas 7.9)
+    # D-51: cada campo con cada clase de dato y los controles comunes, contra SQL Server (plan de pruebas 7.9)
     name: Integración contra SQL Server
     runs-on: ubuntu-24.04
     services:

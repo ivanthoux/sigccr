@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Mensajes de la protección CSRF en español (RNF-02, D-49). Sin este archivo, con la configuración regional «es» se
+ * Mensajes de la protección CSRF en español (RNF-02, D-51). Sin este archivo, con la configuración regional «es» se
  * mostraba el texto en inglés del framework al volver de un formulario vencido o enviado sin su token.
  */
 

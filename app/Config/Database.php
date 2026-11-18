@@ -132,7 +132,7 @@ class Database extends Config
     {
         parent::__construct();
 
-        // Durante las pruebas se usa el grupo "tests" para no tocar la base de desarrollo (D-49): todos los grupos
+        // Durante las pruebas se usa el grupo "tests" para no tocar la base de desarrollo (D-51): todos los grupos
         // apuntan a la base de pruebas, de modo que ni SIGCCR_DB_GRUPO ni un componente que pida otro grupo
         // (por ejemplo, las copias de seguridad) llegan a la base de desarrollo.
         // SIGCCR_BASE_PRUEBAS=1 aplica el mismo aislamiento fuera de PHPUnit: spark no arranca en el entorno testing, y
@@ -161,7 +161,7 @@ class Database extends Config
     }
 
     /**
-     * D-49: en el entorno de pruebas todos los grupos usan la base de pruebas, que nunca puede ser la de desarrollo.
+     * D-51: en el entorno de pruebas todos los grupos usan la base de pruebas, que nunca puede ser la de desarrollo.
      * Las credenciales que el grupo "tests" no define se toman del grupo de la aplicación (default), de modo que las
      * pruebas operan con los mismos permisos que la aplicación (rol_sigccr_app); el grupo "migraciones" conserva las
      * del propietario del esquema para preparar la base.

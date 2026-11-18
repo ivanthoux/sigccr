@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Support\Feature;
 
-/** Resultado esperado de una combinación de campo y clase de dato (D-49). */
+/** Resultado esperado de una combinación de campo y clase de dato (D-51). */
 final class Esperado
 {
     /** Mensaje especial: la petición entera se rechaza con HTTP 400 (filtro invalidchars, COM-06). */

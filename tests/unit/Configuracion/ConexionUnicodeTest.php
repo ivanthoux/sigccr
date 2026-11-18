@@ -10,7 +10,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use Config\Database;
 
 /**
- * D-49, H-09 · Los textos con caracteres fuera de ASCII se escriben como N'...' para que SQL Server no los convierta a
+ * D-51, H-09 · Los textos con caracteres fuera de ASCII se escriben como N'...' para que SQL Server no los convierta a
  * la página de códigos de la intercalación (un emoji se guardaba como «??»). No necesita la base: escape() no conecta.
  *
  * @internal

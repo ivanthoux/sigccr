@@ -1,4 +1,4 @@
-/* Base de las pruebas de integración (D-49). La ejecuta tests/feature/preparar_base.sh con el usuario sa, desde el
+/* Base de las pruebas de integración (D-51). La ejecuta tests/feature/preparar_base.sh con el usuario sa, desde el
    contenedor app, al comienzo de cada ejecución de la suite:
      sqlcmd -C -S db -U sa -P "$MSSQL_SA_PASSWORD" -b -i docker/db/crear_base_pruebas.sql
 

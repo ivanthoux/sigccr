@@ -8,7 +8,7 @@ use CodeIgniter\Database\RawSql;
 use Stringable;
 
 /**
- * Controlador SQLSRV del SIG-CCR (D-49, H-09).
+ * Controlador SQLSRV del SIG-CCR (D-51, H-09).
  *
  * CodeIgniter escribe los textos como literales '...' y SQL Server los interpreta en la página de códigos de la
  * intercalación de la base (Modern_Spanish_CI_AI, Latin-1): las letras con tilde y la eñe se conservan, pero un emoji,

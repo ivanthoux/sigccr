@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepara la base de las pruebas de integración desde cero (D-49). Lo ejecuta «composer test:integracion» antes de
+# Prepara la base de las pruebas de integración desde cero (D-51). Lo ejecuta «composer test:integracion» antes de
 # PHPUnit; también se puede ejecutar solo:
 #     docker compose exec app bash tests/feature/preparar_base.sh
 #

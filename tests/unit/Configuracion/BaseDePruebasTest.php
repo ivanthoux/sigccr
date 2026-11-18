@@ -8,7 +8,7 @@ use CodeIgniter\Test\CIUnitTestCase;
 use Config\Database;
 
 /**
- * D-49 · En el entorno de pruebas ninguna conexión puede apuntar a la base de desarrollo, aunque SIGCCR_DB_GRUPO pida
+ * D-51 · En el entorno de pruebas ninguna conexión puede apuntar a la base de desarrollo, aunque SIGCCR_DB_GRUPO pida
  * otro grupo o un componente (copias de seguridad, migraciones) se conecte con el suyo.
  *
  * @internal

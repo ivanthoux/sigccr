@@ -19,7 +19,7 @@
         <testsuite name="Rutas">
             <directory>./tests/rutas</directory>
         </testsuite>
-        <!-- Integración por campo y por clase de dato contra SQL Server (D-49): necesita la base sigccr_pruebas,
+        <!-- Integración por campo y por clase de dato contra SQL Server (D-51): necesita la base sigccr_pruebas,
              que prepara tests/feature/preparar_base.sh. Se ejecuta con composer test:integracion. -->
         <testsuite name="Integracion">
             <directory>./tests/feature</directory>
@@ -40,7 +40,7 @@
     </source>
     <php>
         <server name="app.baseURL" value="https://localhost/"/>
-        <!-- Base de pruebas (D-49): las pruebas de integración usan el grupo "tests". Sin usuario propio, toma las
+        <!-- Base de pruebas (D-51): las pruebas de integración usan el grupo "tests". Sin usuario propio, toma las
              credenciales de la aplicación (database.default.*), y en el entorno de pruebas todos los grupos apuntan a
              esta base (Config\Database). force="false": la integración continua puede definir otros valores. -->
         <env name="database.tests.hostname" value="db" force="false"/>
