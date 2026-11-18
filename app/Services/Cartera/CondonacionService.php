@@ -55,7 +55,8 @@ class CondonacionService extends BaseService
         $fundamento = Campos::texto($fundamentoTexto);
         $importe = Campos::importe($importeTexto);
         $errores = [];
-        $ids = array_values(array_unique(array_filter(array_map('intval', $cuotaIds))));
+        // H-21: un identificador como lista o con letras vale 0 y se descarta
+        $ids = array_values(array_unique(array_filter(array_map([Campos::class, 'identificador'], $cuotaIds))));
         if ($ids === []) {
             $errores['cuotas'] = 'Seleccione al menos una cuota con punitorios pendientes.';
         }
@@ -63,7 +64,8 @@ class CondonacionService extends BaseService
             $errores['importe'] = 'Ingrese el importe a condonar, mayor que cero.';
         }
         if (($e = Campos::motivo($fundamento)) !== null) {
-            $errores['fundamento'] = 'Indique el fundamento de la condonación (al menos 5 caracteres, A2).';
+            // El largo máximo tiene su propio mensaje: antes se informaba como si faltara el fundamento
+            $errores['fundamento'] = Campos::largo($fundamento) < 5 ? 'Indique el fundamento de la condonación (al menos 5 caracteres, A2).' : 'El fundamento admite hasta 1000 caracteres.';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-38');

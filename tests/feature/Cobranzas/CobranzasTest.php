@@ -326,6 +326,8 @@ final class CobranzasTest extends IntegracionTestCase
         $credito = $this->creditoEnMora();
         $base = ['cliente_id' => (string) $credito['cliente']['id'], 'creditos' => [(string) $credito['id']], 'tasa' => '60', 'cuotas' => '12'];
         $creditos = 'Seleccione uno o más créditos en mora del cliente (RN-70).';
+        $versiones = $this->db->query("SELECT id, numero, vigente_desde, SYSDATETIMEOFFSET() AS ahora FROM dbo.versiones_parametros WHERE tipo = 'Morosidad' ORDER BY id")->getResultArray();
+        $this->assertNotSame([], array_filter($versiones, static fn ($v) => strtotime((string) $v['vigente_desde']) <= time()), 'Parámetros de morosidad vigentes: ' . json_encode($versiones));
 
         $this->rechazos('admin/refinanciaciones/simular', $base, [
             'sin créditos' => [['creditos' => []], 'creditos', $creditos],

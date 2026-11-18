@@ -44,12 +44,14 @@ class Cobros extends BaseController
     public function registrar(): RedirectResponse
     {
         $medios = [];
-        foreach ((array) $this->request->getPost('medios') as $m) {
-            $m = (array) $m;
-            if (trim((string) ($m['importe'] ?? '')) === '' && trim((string) ($m['numero_operacion'] ?? '')) === '') {
+        // H-15: cada fila y cada valor con su forma; una lista o un texto en lugar de una fila se toman como vacíos
+        $filas = $this->request->getPost('medios');
+        foreach (is_array($filas) ? $filas : [] as $m) {
+            $m = is_array($m) ? $m : [];
+            if (Campos::texto($m['importe'] ?? '') === '' && Campos::texto($m['numero_operacion'] ?? '') === '') {
                 continue;
             }
-            $medios[] = ['medio' => (string) ($m['medio'] ?? ''), 'importe' => (string) (Campos::importe($m['importe'] ?? '') ?? '0'), 'numero_operacion' => (string) ($m['numero_operacion'] ?? '')];
+            $medios[] = ['medio' => Campos::texto($m['medio'] ?? ''), 'importe' => (string) (Campos::importe($m['importe'] ?? '') ?? '0'), 'numero_operacion' => Campos::texto($m['numero_operacion'] ?? '')];
         }
         try {
             $r = $this->servicio->registrar(

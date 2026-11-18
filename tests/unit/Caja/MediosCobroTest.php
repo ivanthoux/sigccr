@@ -72,4 +72,16 @@ final class MediosCobroTest extends TestCase
         $this->assertSame([], $r['errores']);
         $this->assertSame('10000.00', $r['medios'][0]['importe']->toFixed(2));
     }
+
+    /** H-26: el número de operación se guarda en VARCHAR(60): hasta 60 caracteres ASCII visibles; el medio se recorta. */
+    public function testNumeroDeOperacion(): void
+    {
+        $total = \App\Libraries\Finanzas\Decimal::of('100');
+        $m = static fn (string $op, string $medio = 'Transferencia'): array => MediosCobro::componer([['medio' => $medio, 'importe' => '100', 'numero_operacion' => $op]], $total);
+        $this->assertSame([], $m(str_repeat('9', 60))['errores']);
+        $this->assertSame([], $m('OP-1', ' Transferencia ')['errores'], 'el medio se recorta');
+        foreach ([str_repeat('9', 61), 'OP-Ñ', 'OP-😀'] as $op) {
+            $this->assertSame(['Medio 1: el número de operación admite hasta 60 letras, números o signos, sin tildes.'], $m($op)['errores'], $op);
+        }
+    }
 }

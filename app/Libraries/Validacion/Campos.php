@@ -91,6 +91,15 @@ final class Campos
         return $r;
     }
 
+    /**
+     * Número de operación o comprobante bancario que se guarda en una columna VARCHAR (H-26): de 1 a $maximo caracteres
+     * ASCII visibles. Una letra con tilde o eñe se guardaría como «?».
+     */
+    public static function operacionValida(string $valor, int $maximo): bool
+    {
+        return $valor !== '' && strlen($valor) <= $maximo && preg_match('/^[\x20-\x7E]+$/', $valor) === 1;
+    }
+
     /** Correo en minúsculas y sin espacios. */
     public static function correo(mixed $valor): string
     {

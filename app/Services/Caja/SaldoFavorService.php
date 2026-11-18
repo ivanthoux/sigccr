@@ -82,17 +82,18 @@ class SaldoFavorService extends BaseService
         if ($fecha === null || $fecha > $this->hoyNegocio()) {
             $errores['fecha_conformidad'] = 'Ingrese la fecha de la solicitud o conformidad del cliente (no posterior a hoy, A3).';
         }
-        if ($medio === '' || mb_strlen($medio) > 100) {
+        // H-16: largos en unidades de NVARCHAR
+        if ($medio === '' || Campos::largo($medio) > 100) {
             $errores['medio_conformidad'] = 'Indique el medio de la solicitud o conformidad del cliente (A3).';
         }
-        if (mb_strlen($observaciones) > 150) {
+        if (Campos::largo($observaciones) > 150) {
             $errores['observaciones'] = 'Las observaciones admiten hasta 150 caracteres.';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-57');
         }
         $constancia = mb_substr(formato_fecha((string) $fecha) . ' · ' . $medio . ($observaciones !== '' ? ' · ' . $observaciones : ''), 0, 300);
-        $seleccion = array_map(static fn ($n) => array_values(array_map('intval', (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
+        $seleccion = array_map(static fn ($n) => array_values(array_map([Campos::class, 'identificador'], (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
 
         return $this->transaccion(function () use ($cajeroId, $clienteId, $seleccion, $constancia): array {
             $saldos = $this->db->query('SELECT * FROM dbo.saldos_a_favor WITH (UPDLOCK, ROWLOCK) WHERE cliente_id = ? ORDER BY fecha, id', [$clienteId])->getResultArray();
