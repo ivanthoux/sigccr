@@ -40,6 +40,7 @@
         "test:unitarias": "phpunit -c phpunit.xml.dist --testsuite Unitarias --no-coverage",
         "test:finanzas": "phpunit -c phpunit.xml.dist --testsuite Finanzas --no-coverage",
         "test:integracion": [
+            "@composer dump-autoload --quiet",
             "bash tests/feature/preparar_base.sh",
             "phpunit -c phpunit.xml.dist --testsuite Integracion --no-coverage"
         ],

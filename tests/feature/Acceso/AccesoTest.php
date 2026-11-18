@@ -99,7 +99,9 @@ final class AccesoTest extends IntegracionTestCase
         $u = $this->cuenta($tipo);
         foreach ([" {$u['clave']}", "{$u['clave']} ", mb_strtoupper($u['clave'])] as $clave) {
             $this->enviar("{$p}/login", ['correo' => $u['correo'], 'contrasena' => $clave]);
-            $this->assertSame(self::RECHAZO, $_SESSION['error'] ?? null, var_export($clave, true));
+            // Desde el tercer fallo el mensaje agrega los intentos que quedan (RN-62)
+            $this->assertStringStartsWith(self::RECHAZO, (string) ($_SESSION['error'] ?? ''), var_export($clave, true));
+            $this->assertArrayNotHasKey('cuenta', $_SESSION);
         }
     }
 

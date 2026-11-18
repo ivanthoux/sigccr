@@ -25,7 +25,7 @@ final class ClasesDeDatos
      * @param array<string, mixed> $c
      * @return list<array{0: string, 1: string, 2: mixed, 3: Esperado}>
      */
-    public static function para(array $c): array
+    public static function para(array $c, bool $http = true): array
     {
         $tipo = (string) $c['tipo'];
         $propias = match ($tipo) {
@@ -47,7 +47,7 @@ final class ClasesDeDatos
             default => throw new \InvalidArgumentException("Tipo sin clases: {$tipo}"),
         };
 
-        return [...self::comunes($c), ...$propias];
+        return [...self::comunes($c, $http), ...$propias];
     }
 
     /**
@@ -56,7 +56,7 @@ final class ClasesDeDatos
      * @param array<string, mixed> $c
      * @return list<array{0: string, 1: string, 2: mixed, 3: Esperado}>
      */
-    public static function comunes(array $c): array
+    public static function comunes(array $c, bool $http = true): array
     {
         $html = '<b>Ana</b><script>alert(1)</script>';
         $sql = "Ana'); DROP TABLE clientes;--";
@@ -85,7 +85,8 @@ final class ClasesDeDatos
         ];
         if ($libre || $c['tipo'] === 'NOM') {
             $casos[] = ['COM-05', 'espacios y saltos de línea', "  Ana \t  María\r\n ", Esperado::acepta('Ana María')];
-            $casos[] = ['COM-06', 'caracteres de control', "Ana\0\x07 María", Esperado::acepta('Ana María')];
+            // Por HTTP, el filtro invalidchars rechaza la petición; dentro del servicio, Campos::texto() los elimina
+            $casos[] = ['COM-06', 'caracteres de control', "Ana\0\x07 María", $http ? Esperado::rechazaPeticion() : Esperado::acepta('Ana María')];
         }
         return $casos;
     }
@@ -154,10 +155,11 @@ final class ClasesDeDatos
         $formato = Esperado::rechaza('Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.');
         $u = Fabrica::sufijo();
         $local64 = str_pad("c{$u}", 64, 'x');
-        // 254 caracteres: 64 de la parte local, la arroba y un dominio de 189 en etiquetas de hasta 63
-        $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 50) . '.prueba.local';
+        // 254 caracteres: 64 de la parte local, la arroba y un dominio de 189 con etiquetas de hasta 63
+        $dominio189 = str_repeat('d', 63) . '.' . str_repeat('e', 63) . '.' . str_repeat('f', 47) . '.prueba.local';
         $c254 = $local64 . '@' . $dominio189;
         $c255 = $local64 . '@g' . $dominio189;
+        assert(strlen($c254) === 254 && strlen($c255) === 255);
 
         return [
             ['COR-01', 'vacío', '', Esperado::rechaza($c['mensajes']['obligatorio'] ?? 'Complete el correo electrónico.')],
@@ -226,11 +228,13 @@ final class ClasesDeDatos
         $otroDv = ($dv + 1) % 10;
         $sinDv = Fabrica::numeroSinVerificador($prefijo);
         $prefijoAjeno = $juridica ? Fabrica::cuitValido('20') : Fabrica::cuitValido('30');
+        // Un número distinto en cada clase aceptada: el CUIT es único entre los clientes (CUI-07)
+        [$g, $e, $p] = [Fabrica::cuitValido($prefijo), Fabrica::cuitValido($prefijo), Fabrica::cuitValido($prefijo)];
 
         return [
-            ['CUI-01', 'con guiones', substr($n, 0, 2) . '-' . substr($n, 2, 8) . '-' . $n[10], Esperado::acepta($n)],
-            ['CUI-01', 'con espacios', substr($n, 0, 2) . ' ' . substr($n, 2, 8) . ' ' . $n[10], Esperado::acepta($n)],
-            ['CUI-01', 'con puntos', substr($n, 0, 2) . '.' . substr($n, 2, 8) . '.' . $n[10], Esperado::acepta($n)],
+            ['CUI-01', 'con guiones', substr($g, 0, 2) . '-' . substr($g, 2, 8) . '-' . $g[10], Esperado::acepta($g)],
+            ['CUI-01', 'con espacios', substr($e, 0, 2) . ' ' . substr($e, 2, 8) . ' ' . $e[10], Esperado::acepta($e)],
+            ['CUI-01', 'con puntos', substr($p, 0, 2) . '.' . substr($p, 2, 8) . '.' . $p[10], Esperado::acepta($p)],
             ['CUI-02', '10 dígitos', substr($n, 0, 10), Esperado::rechaza('El CUIT o CUIL debe tener 11 dígitos.')],
             ['CUI-02', '12 dígitos', $n . '0', Esperado::rechaza('El CUIT o CUIL debe tener 11 dígitos.')],
             ['CUI-02', 'con letra', substr($n, 0, 2) . 'A' . substr($n, 3), Esperado::rechaza('El CUIT o CUIL debe tener 11 dígitos.')],

@@ -171,7 +171,8 @@ class ClienteService extends BaseService
         $documentos = (new LegajoService($this->db))->validarArchivos($archivos, $errores);
         // D-14: el alta solo exige identificar al cliente; la documentación de ingresos la exige cada línea en CU-22
         foreach (RequisitosDocumentales::faltantes(RequisitosDocumentales::identificacion($d['tipo_cliente']), array_column($documentos, 'codigo')) as $falta) {
-            $errores['doc_' . $falta] = 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
+            // H-11: si el archivo se adjuntó y se rechazó, se conserva el motivo (vacío, tamaño, tipo)
+            $errores['doc_' . $falta] ??= 'Adjunte este documento: es obligatorio para identificar al cliente (RN-11).';
         }
         if ($errores !== []) {
             throw new ValidacionException($errores, 'RN-11');

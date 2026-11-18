@@ -145,6 +145,14 @@ class Database extends Config
         // Las migraciones y los seeders se ejecutan con el propietario del esquema: CodeIgniter crea y actualiza la
         // tabla "migrations" con el grupo por defecto, y sigccr_app no tiene permiso CREATE TABLE (4.3.5).
         //   SIGCCR_DB_GRUPO=migraciones php spark migrate --all
+        // H-09: el controlador propio escribe los textos no ASCII como N'...' para no perderlos en las columnas NVARCHAR.
+        // Se aplica también cuando el .env indica SQLSRV.
+        foreach (['default', 'migraciones', 'copias', 'tests'] as $g) {
+            if (($this->{$g}['DBDriver'] ?? '') === 'SQLSRV') {
+                $this->{$g}['DBDriver'] = 'App\\Database\\SQLSRV';
+            }
+        }
+
         // En pruebas, SIGCCR_DB_GRUPO=migraciones prepara la base de pruebas con el propietario (tests/feature/preparar_base.sh)
         $grupo = getenv('SIGCCR_DB_GRUPO');
         if (is_string($grupo) && $grupo !== '' && property_exists($this, $grupo) && is_array($this->{$grupo})) {

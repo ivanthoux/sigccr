@@ -40,7 +40,8 @@ final class ClientesTest extends IntegracionTestCase
             'tipo' => 'TXT', 'obligatorio' => $obligatorio, 'max' => $max,
             'mensajes' => ['obligatorio' => $obligatorioMensaje ?? "Complete {$el}.", 'largo' => ucfirst($el) . " admite hasta {$max} caracteres."],
         ];
-        $pasaporte = static fn (): array => ['tipo_documento' => 'Pasaporte', 'nro_documento' => 'PP' . Fabrica::entre(1000000, 9999999)];
+        // Un pasaporte distinto en cada prueba: el documento es único entre los clientes
+        $pasaporte = ['tipo_documento' => 'Pasaporte', 'nro_documento' => static fn (): string => 'PP' . Fabrica::entre(1000000, 9999999)];
 
         return [
             'nombre' => $nombre('el nombre'),
@@ -60,7 +61,7 @@ final class ClientesTest extends IntegracionTestCase
                 'tipo' => 'CUI', 'obligatorio' => false, 'persona' => 'PersonaHumana',
                 'mensajes' => ['formato' => 'El CUIT o CUIL debe tener 11 dígitos.'],
                 // Con pasaporte, el CUIL no tiene que coincidir con el documento (CUI-06 se prueba aparte)
-                'otros' => $pasaporte(),
+                'otros' => $pasaporte,
             ],
             'fecha_nacimiento' => [
                 'tipo' => 'FEC', 'obligatorio' => true, 'anio_valido' => 1985,
@@ -143,13 +144,13 @@ final class ClientesTest extends IntegracionTestCase
     /** @return array<string, array{0: string, 1: mixed, 2: Esperado, 3: array<string, mixed>}> */
     public static function casosPersonaHumana(): array
     {
-        return self::casosDelCatalogo('IN-09', self::camposPersonaHumana());
+        return self::casosDelCatalogo('IN-09', self::camposPersonaHumana(), false);
     }
 
     /** @return array<string, array{0: string, 1: mixed, 2: Esperado, 3: array<string, mixed>}> */
     public static function casosPersonaJuridica(): array
     {
-        return self::casosDelCatalogo('IN-10', self::camposPersonaJuridica());
+        return self::casosDelCatalogo('IN-10', self::camposPersonaJuridica(), false);
     }
 
     /**
@@ -421,7 +422,9 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertSame('El documento no existe.', $_SESSION['error'] ?? null);
 
         $propio = $this->pedir("admin/clientes/{$b['id']}/documentos/{$docB}");
-        $propio->assertOK();
+        // La descarga se envía como archivo: el cuerpo de la respuesta de prueba queda vacío
+        $this->assertSame(200, $propio->response()->getStatusCode());
+        $this->assertStringContainsString('attachment', $propio->response()->getHeaderLine('Content-Disposition'));
         $this->assertSame(1, $this->contar('registros_auditoria', ['accion' => 'clientes.descargar_documento', 'objeto_id' => (string) $docB]));
     }
 
@@ -455,8 +458,9 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertSame(1, $this->contar('documentos_legajo', ['cliente_id' => $c['id']]), 'El legajo se conserva');
 
         // No aparece entre los activos y no puede ingresar al portal (RN-10)
-        $this->assertStringNotContainsString($c['correo'], (string) $this->pedir('admin/clientes', ['texto' => 'Prueba', 'estado' => 'Activo'])->response()->getBody());
-        $this->assertStringContainsString($c['correo'], (string) $this->pedir('admin/clientes', ['texto' => 'Prueba', 'estado' => 'Desactivado'])->response()->getBody());
+        $enlace = "admin/clientes/{$c['id']}\"";
+        $this->assertStringNotContainsString($enlace, (string) $this->pedir('admin/clientes', ['texto' => 'Prueba', 'estado' => 'Activo'])->response()->getBody());
+        $this->assertStringContainsString($enlace, (string) $this->pedir('admin/clientes', ['texto' => 'Prueba', 'estado' => 'Desactivado'])->response()->getBody());
         $this->sinSesion();
         $this->enviar('portal/login', ['correo' => $c['correo'], 'contrasena' => $c['clave']]);
         $this->assertSame('Usuario o contraseña incorrectos.', $_SESSION['error'] ?? null);
@@ -494,9 +498,11 @@ final class ClientesTest extends IntegracionTestCase
             $r->assertOK();
             $this->assertStringNotContainsString('<script>alert(1)</script>', (string) $r->response()->getBody(), $caso);
         }
-        $this->assertStringNotContainsString($c['datos']['correo'], (string) $this->pedir('admin/clientes', ['texto' => '%'])->response()->getBody());
+        // La búsqueda no muestra el correo: el cliente se identifica por el enlace a su ficha
+        $enlace = "admin/clientes/{$c['id']}\"";
+        $this->assertStringNotContainsString($enlace, (string) $this->pedir('admin/clientes', ['texto' => '%'])->response()->getBody(), 'FIL-03: % no es comodín');
         $documento = number_format((float) $c['datos']['nro_documento'], 0, '', '.');
-        $this->assertStringContainsString($c['datos']['correo'], (string) $this->pedir('admin/clientes', ['documento' => $documento])->response()->getBody(), 'El documento se busca con o sin puntos');
+        $this->assertStringContainsString($enlace, (string) $this->pedir('admin/clientes', ['documento' => $documento])->response()->getBody(), 'El documento se busca con o sin puntos');
     }
 
     public function testLocalidadesPorProvincia(): void

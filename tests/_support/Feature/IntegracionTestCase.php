@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Support\Feature;
 
 use App\Services\Acceso\AccesoService;
+use CodeIgniter\Security\Exceptions\SecurityException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use CodeIgniter\Test\FeatureTestTrait;
@@ -119,7 +120,16 @@ abstract class IntegracionTestCase extends CIUnitTestCase
             $peticion = $peticion->withHeaders(['X-Requested-With' => 'XMLHttpRequest']);
         }
 
-        return $this->controlarRespuesta($peticion->post($ruta, $datos));
+        try {
+            $respuesta = $peticion->post($ruta, $datos);
+        } catch (SecurityException $e) {
+            // El filtro invalidchars rechaza la petición antes del controlador; en producción, con la página 400 (COM-06)
+            $this->assertSame(400, $e->getCode(), $e->getMessage());
+
+            return new TestResponse(service('response')->setStatusCode(400)->setBody(''));
+        }
+
+        return $this->controlarRespuesta($respuesta);
     }
 
     /** @param array<string, mixed> $parametros */
@@ -156,6 +166,11 @@ abstract class IntegracionTestCase extends CIUnitTestCase
     /** El formulario volvió con ese mensaje en el campo. */
     protected function assertCampoRechazado(TestResponse $r, string $campo, ?string $mensaje, string $contexto = ''): void
     {
+        if ($mensaje === Esperado::PETICION) {
+            $this->assertSame(400, $r->response()->getStatusCode(), "{$contexto}: se esperaba el rechazo de la petición");
+
+            return;
+        }
         $errores = (array) ($_SESSION['errores'] ?? []);
         $general = (string) ($_SESSION['error'] ?? '');
         $this->assertTrue($r->isRedirect(), "{$contexto}: se esperaba volver al formulario (estado {$r->response()->getStatusCode()})");
@@ -183,6 +198,10 @@ abstract class IntegracionTestCase extends CIUnitTestCase
             return;
         }
         $g = $guardado === null ? null : (string) $guardado;
+        // SQL Server devuelve los DECIMAL menores que 1 sin el cero inicial (.06)
+        if ($g !== null && preg_match('/^-?\.\d/', $g) === 1) {
+            $g = str_replace('.', '0.', $g);
+        }
         if ($g !== null && is_numeric($esperado) && is_numeric($g) && preg_match('/^-?\d+(\.\d+)?$/', $g) === 1 && preg_match('/^-?\d+(\.\d+)?$/', $esperado) === 1) {
             $this->assertSame(0, bccomp($esperado, $g, 12), "{$contexto}: valor guardado {$g}, se esperaba {$esperado}");
 
@@ -215,7 +234,8 @@ abstract class IntegracionTestCase extends CIUnitTestCase
      */
     protected static function conValor(array $base, string $campo, mixed $valor, array $otros = []): array
     {
-        $datos = $otros + $base;
+        // Un valor de «otros» puede ser una función: se evalúa en cada prueba para obtener un dato único
+        $datos = array_map(static fn ($v) => $v instanceof \Closure ? $v() : $v, $otros) + $base;
         if ($valor === Esperado::AUSENTE) {
             unset($datos[$campo]);
         } else {
@@ -231,11 +251,11 @@ abstract class IntegracionTestCase extends CIUnitTestCase
      * @param array<string, array<string, mixed>> $campos campo => definición (ClasesDeDatos)
      * @return array<string, array{0: string, 1: mixed, 2: Esperado, 3: array<string, mixed>}>
      */
-    protected static function casosDelCatalogo(string $caso, array $campos): array
+    protected static function casosDelCatalogo(string $caso, array $campos, bool $http = true): array
     {
         $r = [];
         foreach ($campos as $campo => $definicion) {
-            foreach (ClasesDeDatos::para($definicion) as $c) {
+            foreach (ClasesDeDatos::para($definicion, $http) as $c) {
                 $nombre = "{$caso} · {$campo} · {$c[0]} {$c[1]}";
                 $i = 2;
                 while (isset($r[$nombre])) {

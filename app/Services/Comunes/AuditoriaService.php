@@ -12,6 +12,9 @@ use App\Services\BaseService;
  */
 class AuditoriaService extends BaseService
 {
+    /** Largo de la columna registros_auditoria.objeto_id (VARCHAR(40)). */
+    private const LARGO_OBJETO_ID = 40;
+
     private const CLAVES_PROHIBIDAS = ['password', 'contrasena', 'clave', 'token', 'codigo', 'autorizacion', 'tarjeta', 'cvv'];
     /** Campos de negocio cuyo nombre contiene una palabra prohibida pero no son secretos (D-48). */
     private const CLAVES_PERMITIDAS = ['codigo', 'codigo_postal', 'es_clave'];
@@ -33,6 +36,12 @@ class AuditoriaService extends BaseService
         // Sin sesión (inicio de sesión, recuperación) el servicio indica la cuenta y el responsable
         $sesion = session_status() === PHP_SESSION_ACTIVE ? session() : null;
         $cuenta = $sesion?->get('cuenta');
+        // H-10: objeto_id admite 40 caracteres; una ruta más larga (acceso denegado) se guarda completa en el detalle
+        $objetoId = $objetoId === null ? null : (string) $objetoId;
+        if ($objetoId !== null && strlen($objetoId) > self::LARGO_OBJETO_ID) {
+            $detalle = ($detalle ?? []) + ['objeto_id' => $objetoId];
+            $objetoId = mb_strcut($objetoId, 0, self::LARGO_OBJETO_ID, 'UTF-8');
+        }
         $this->db->table('registros_auditoria')->insert([
             'fecha_hora' => $this->ahoraUtc(),
             'cuenta_acceso_id' => $cuentaAccesoId ?? $cuenta['id'] ?? null,
@@ -40,7 +49,7 @@ class AuditoriaService extends BaseService
             'proceso' => $proceso,
             'accion' => $accion,
             'objeto_tipo' => $objetoTipo,
-            'objeto_id' => $objetoId === null ? null : (string) $objetoId,
+            'objeto_id' => $objetoId,
             'resultado' => $resultado,
             'motivo' => $motivo,
             'detalle' => $detalle === null ? null : json_encode($this->depurar($detalle), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),

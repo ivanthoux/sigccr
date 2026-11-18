@@ -7,6 +7,9 @@ namespace Tests\Support\Feature;
 /** Resultado esperado de una combinación de campo y clase de dato (D-49). */
 final class Esperado
 {
+    /** Mensaje especial: la petición entera se rechaza con HTTP 400 (filtro invalidchars, COM-06). */
+    public const PETICION = "\u{0}__peticion_400__";
+
     /** Valor especial: el campo no se envía (COM-01). */
     public const AUSENTE = "\u{0}__ausente__";
 
@@ -29,8 +32,18 @@ final class Esperado
         return new self(false, null, $mensaje);
     }
 
+    /** La petición se rechaza con HTTP 400 antes de llegar al controlador (COM-06) y la base no cambia. */
+    public static function rechazaPeticion(): self
+    {
+        return new self(false, null, self::PETICION);
+    }
+
     public function __toString(): string
     {
+        if ($this->mensaje === self::PETICION) {
+            return 'se rechaza la petición (HTTP 400)';
+        }
+
         return $this->acepta ? 'se acepta' . ($this->guardado === null ? '' : " y se guarda «{$this->guardado}»") : "se rechaza: «{$this->mensaje}»";
     }
 }

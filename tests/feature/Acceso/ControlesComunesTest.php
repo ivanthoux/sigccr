@@ -6,6 +6,7 @@ namespace Tests\Feature\Acceso;
 
 use App\Libraries\Seguridad\CatalogoPermisos;
 use CodeIgniter\Exceptions\PageNotFoundException;
+use CodeIgniter\HTTP\Exceptions\BadRequestException;
 use Tests\Support\Feature\IntegracionTestCase;
 
 /**
@@ -110,7 +111,7 @@ final class ControlesComunesTest extends IntegracionTestCase
             $r = $verbo === 'GET' ? $this->pedir($ruta) : $this->enviar($ruta, ['motivo' => 'Prueba sin permiso', 'version_fila' => '1']);
 
             $r->assertStatus(403);
-            $r->assertSee('Acceso no autorizado');
+            $this->assertStringContainsString('Acceso no autorizado', (string) $r->response()->getBody(), "{$rol}: cuerpo de la respuesta 403");
             $this->assertSame($antes + 1, $this->contar('registros_auditoria', ['accion' => 'acceso.denegado']), "{$rol}: falta el registro del rechazo");
             $fila = $this->db->table('registros_auditoria')->where('accion', 'acceso.denegado')->orderBy('id', 'DESC')->get(1)->getRowArray();
             $this->assertSame('Rechazado', $fila['resultado']);
@@ -130,9 +131,10 @@ final class ControlesComunesTest extends IntegracionTestCase
         foreach (['admin/usuarios/abc', 'admin/usuarios/-1', 'admin/usuarios/1.5', "admin/usuarios/1%27", 'admin/clientes/abc/editar', 'admin/lineas/abc'] as $ruta) {
             try {
                 $r = $this->pedir($ruta);
-                $this->assertSame(404, $r->response()->getStatusCode(), $ruta);
-            } catch (PageNotFoundException $e) {
-                $this->assertSame(404, $e->getCode(), $ruta);
+                $this->assertContains($r->response()->getStatusCode(), [400, 404], $ruta);
+            } catch (PageNotFoundException | BadRequestException $e) {
+                // 404 si la ruta no existe; 400 si la dirección tiene caracteres no permitidos (1')
+                $this->assertContains($e->getCode(), [400, 404], $ruta);
                 $this->assertDoesNotMatchRegularExpression('/SQL|dbo\.|\.php/', $e->getMessage(), $ruta);
             }
         }
