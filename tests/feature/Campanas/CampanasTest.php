@@ -44,7 +44,7 @@ final class CampanasTest extends IntegracionTestCase
         $ruta = "portal/ofertas/{$o['id']}/aceptar";
         $base = ['version_fila' => $version, 'alternativa' => $clave];
         [$importe] = explode('|', $clave);
-        $mayor = '501000.00';
+        $mayor = '1501000.00';
 
         $this->assertRechazos($ruta, $base, [
             'alternativa vacía' => [['alternativa' => ''], 'alternativa', 'Elija una de las alternativas permitidas: *'],
@@ -94,7 +94,7 @@ final class CampanasTest extends IntegracionTestCase
     /** IN-61 A2: con el cupo de la campaña agotado, la oferta vence sin generar la solicitud. */
     public function testAceptarSinCupo(): void
     {
-        $o = $this->fabrica->oferta('500000.00', 12, '1.00');
+        $o = $this->fabrica->oferta('1500000.00', 12, '1.00');
         $this->comoUsuario($o['acceso'], 'Cliente');
         $detalle = (new CampanaService($this->db))->ofertaParaCliente($o['cliente']['id'], $o['id']);
         $antes = $this->ultimoId('solicitudes_credito');

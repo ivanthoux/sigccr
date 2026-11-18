@@ -355,7 +355,7 @@ final class Fabrica
      *
      * @return array{id: int, campana_id: int, cliente: array{id: int, datos: array<string, mixed>}, acceso: array<string, mixed>, linea_id: int}
      */
-    public function oferta(string $importeMaximo = '500000.00', int $cuotas = 12, string $capitalAsignado = '100000000.00'): array
+    public function oferta(string $importeMaximo = '1500000.00', int $cuotas = 12, string $capitalAsignado = '100000000.00'): array
     {
         $this->fondos();
         $cliente = $this->clienteParaCredito();

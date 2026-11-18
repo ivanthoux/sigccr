@@ -216,7 +216,7 @@ add('registros_auditoria', 'SS-10', 'RegistroAuditoria', 'Evidencia inalterable 
     ID(True),
     C('fecha_hora', TS, default='SYSDATETIMEOFFSET()', d='Instante de la operación.'),
     C('cuenta_acceso_id', 'INT', null=True, d='Cuenta que ejecutó la operación, sin clave foránea para que la evidencia no dependa de otras tablas; nulo si fue un proceso.'),
-    C('responsable', 'NVARCHAR(150)', d='Nombre del responsable o del proceso, conservado como texto.'),
+    C('responsable', 'NVARCHAR(254)', d='Nombre del responsable, del proceso o el correo de quien opera sin sesión, conservado como texto (migración 33, H-29).'),
     C('proceso', 'VARCHAR(60)', null=True, d='Comando programado que tomó la decisión automática.'),
     C('accion', 'VARCHAR(60)', d='Operación realizada (por ejemplo, solicitud.resolver).'),
     C('objeto_tipo', 'VARCHAR(60)', d='Tabla o clase del objeto afectado.'),

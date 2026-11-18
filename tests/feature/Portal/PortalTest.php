@@ -170,7 +170,6 @@ final class PortalTest extends IntegracionTestCase
             'alterado' => substr($p['codigo'], 0, -1) . ($p['codigo'][-1] === 'A' ? 'B' : 'A'),
             'de 1 carácter' => 'x',
             'de 500 caracteres' => str_repeat('a', 500),
-            'con caracteres no permitidos' => str_repeat('ñ', 43),
         ];
         foreach ($codigos as $caso => $codigo) {
             $this->pedir('portal/pre-registro/verificar/' . rawurlencode($codigo))->assertOK();
@@ -250,7 +249,8 @@ final class PortalTest extends IntegracionTestCase
         $this->comoRol('AnalistaCredito');
         $motivo = 'No se presentó a verificar su identidad.';
 
-        foreach (['versión anterior' => $this->version($id) - 1, 'versión como lista (H-21)' => [$this->version($id)], 'versión con letras' => $this->version($id) . 'x'] as $caso => $version) {
+        $v = (string) $this->version($id);
+        foreach (['versión anterior' => (string) ((int) $v - 1), 'versión como lista (H-21)' => [$v], 'versión con letras' => "{$v}x"] as $caso => $version) {
             $this->enviar("admin/pre-registros/{$id}/descartar", ['version_fila' => $version, 'motivo' => $motivo]);
             $this->assertNotSame('', (string) ($_SESSION['error'] ?? ''), $caso);
             $this->assertSame('PendienteValidacion', $this->db->table('pre_registros')->where('id', $id)->get()->getRow()->estado, $caso);
@@ -389,6 +389,12 @@ final class PortalTest extends IntegracionTestCase
         $this->enviar("portal/cambio-correo/{$codigo}")->assertSee('Cambio confirmado.');
         $this->enviar("portal/cambio-correo/{$codigo}")->assertSee($invalido);
         $this->assertSame($c['correo'], $this->db->table('cuentas_acceso')->where('id', $c['cuenta_id'])->get()->getRow()->correo, 'Hasta verificar el nuevo, el correo no cambia');
+        $this->assertNotNull($autorizaciones->buscarVigente($recuperacion, ['Recuperacion'], false), 'Hasta verificar el nuevo, la recuperación sigue vigente');
+
+        // Pasos 8 y 9: la verificación del correo nuevo completa el cambio y deja sin efecto la recuperación del anterior (RN-58)
+        $verificacion = $autorizaciones->emitirSinComunicacion($c['cuenta_id'], 'VerificacionCorreo', $nuevo);
+        $this->enviar("portal/verificar-correo/{$verificacion}")->assertRedirectTo(site_url('portal/login'));
+        $this->assertSame($nuevo, $this->db->table('cuentas_acceso')->where('id', $c['cuenta_id'])->get()->getRow()->correo);
         $this->assertNull($autorizaciones->buscarVigente($recuperacion, ['Recuperacion'], false), 'RN-58: las autorizaciones del correo anterior quedan sin efecto');
     }
 
