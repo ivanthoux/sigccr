@@ -113,7 +113,7 @@ final class CopiasTest extends IntegracionTestCase
         $this->comoRol('Administrador');
         $id = $this->copiaVerificada();
         $r = $this->enviar("admin/copias/{$id}/descargar");
-        $r->assertOK();
+        $this->assertSame(200, $r->response()->getStatusCode());
         $archivo = (string) $this->db->table('copias_seguridad')->where('id', $id)->get()->getRow()->archivo;
         $this->assertStringContainsString($archivo, $r->response()->getHeaderLine('Content-Disposition'));
         $this->assertSame(1, $this->contar('registros_auditoria', ['accion' => 'copias.descargar', 'objeto_id' => (string) $id, 'resultado' => 'Exitoso']));

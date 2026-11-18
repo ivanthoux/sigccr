@@ -36,7 +36,7 @@ final class ReportesTest extends IntegracionTestCase
     {
         return [
             'vacía' => '', 'como lista' => ['01/01/2026'], 'inválida' => '31/02/2026', 'texto' => 'ayer', 'año 1899' => '31/12/1899',
-            'año 1900' => '01/01/1900', 'año 9999' => '31/12/9999', 'formato ISO' => '2026-01-15', 'texto SQL' => "2026-01-01'; DROP TABLE creditos;--",
+            'año 1900' => '01/01/1900', 'año 2099' => '31/12/2099', 'año 2100 (H-31)' => '01/01/2100', 'año 9999 (H-31)' => '31/12/9999', 'formato ISO' => '2026-01-15', 'texto SQL' => "2026-01-01'; DROP TABLE creditos;--",
         ];
     }
 
@@ -119,8 +119,11 @@ final class ReportesTest extends IntegracionTestCase
             $this->assertStringStartsWith('application/vnd.openxmlformats', $r->response()->getHeaderLine('Content-Type'), $reporte);
             $this->assertStringStartsWith('PK', (string) $r->response()->getBody(), "{$reporte}: el archivo es un xlsx");
         }
-        $this->pedir('admin/reportes/inexistente', ['generar' => '1']);
-        $this->assertSame('El reporte no existe.', (string) ($_SESSION['error'] ?? ''));
+        try {
+            $this->assertSame(404, $this->pedir('admin/reportes/inexistente', ['generar' => '1'])->response()->getStatusCode());
+        } catch (\CodeIgniter\Exceptions\PageNotFoundException $e) {
+            $this->assertSame(404, $e->getCode());
+        }
     }
 
     // ── IN-65 Tablero gerencial (CU-55) ──────────────────────────────────────────────────────────────────────────

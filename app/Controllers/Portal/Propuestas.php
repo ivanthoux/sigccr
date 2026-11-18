@@ -58,7 +58,7 @@ class Propuestas extends BasePortal
     public function aceptar(int $id): RedirectResponse
     {
         try {
-            $r = (new CampanaService())->aceptar($this->clienteId(), $id, $this->enteroPost('version_fila'), $this->campoPost('alternativa'));
+            $r = (new CampanaService())->aceptar($this->clienteId(), $id, $this->enteroPost('version_fila'), trim($this->campoPost('alternativa')));
         } catch (ReglaNegocioException $e) {
             return $this->volverConErrores($e);
         }

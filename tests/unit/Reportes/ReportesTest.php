@@ -108,6 +108,20 @@ final class ReportesTest extends TestCase
         unlink($ruta);
     }
 
+    /** H-31: las fechas del período admiten hasta 2099; con el año 9999 el cálculo salía del rango de fechas. */
+    public function testFechaMaximaDelPeriodo(): void
+    {
+        $this->assertSame('2099-12-31', Periodo::desde(['tipo' => 'dia', 'fecha' => '31/12/2099'], '2026-11-12')['hasta']);
+        foreach ([['tipo' => 'semana', 'fecha' => '31/12/9999'], ['tipo' => 'rango', 'hasta' => '01/01/2100']] as $g) {
+            try {
+                Periodo::desde($g, '2026-11-12');
+                $this->fail('Se esperaba el rechazo de ' . json_encode($g));
+            } catch (\App\Exceptions\ValidacionException $e) {
+                $this->assertContains('Ingrese una fecha válida.', $e->errores);
+            }
+        }
+    }
+
     public function testPeriodoDelRegimen(): void
     {
         // Noviembre de 2026 empieza en domingo: el primer día hábil es el lunes 2
