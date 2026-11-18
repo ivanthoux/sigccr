@@ -168,7 +168,9 @@ final class Campos
         return $valor !== '' && !in_array($valor, self::TIPOS_DOCUMENTO, true) ? 'Seleccione un tipo de documento válido.' : null;
     }
 
-    /** DNI, LC y LE: 6 a 9 dígitos; pasaporte: 5 a 15 letras o dígitos. */
+    /**
+     * DNI, LC y LE: 6 a 8 dígitos, el largo que admite el CUIL (D-53); pasaporte: 5 a 15 letras o dígitos.
+     */
     public static function numeroDocumento(string $tipo, string $numero): ?string
     {
         if ($numero === '') {
@@ -177,8 +179,8 @@ final class Campos
         if ($tipo === 'Pasaporte') {
             return preg_match('/^[A-Z0-9]{5,15}$/', $numero) === 1 ? null : 'El pasaporte debe tener entre 5 y 15 letras o números.';
         }
-        if (preg_match('/^\d{6,9}$/', $numero) !== 1) {
-            return 'El documento debe tener entre 6 y 9 dígitos, sin puntos.';
+        if (preg_match('/^\d{6,8}$/', $numero) !== 1) {
+            return 'El documento debe tener entre 6 y 8 dígitos, sin puntos.';
         }
 
         return (int) $numero === 0 ? 'El número de documento no es válido.' : null;

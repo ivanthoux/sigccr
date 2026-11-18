@@ -56,6 +56,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-50 | 17/11/2026 | Propuesta |
 | D-51 | 17/11/2026 | Propuesta |
 | D-52 | 18/11/2026 | Aceptada |
+| D-53 | 18/11/2026 | Aceptada |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -909,4 +910,18 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 - Plan de pruebas: el punto 7.9.3 pasa de observaciones abiertas a decisiones, y el catálogo de campos del Anexo B se actualiza.
 - Un DNI de 9 dígitos, que el formato admite, no tiene un CUIL que le corresponda: con el CUIL obligatorio no puede darse de alta (se registra en la prueba `testDniDeNueveDigitosSinCuilPosible`).
 - Pendiente de verificación manual: un envío real a un correo con parte local internacional en Mailpit (desarrollo) y en el servidor SMTP de producción, que debe anunciar `SMTPUTF8`.
+
+## D-53 · DNI, LC y LE de 6 a 8 dígitos (RN-07, D-52)
+
+**Contexto.** El número de DNI, LC y LE admitía de 6 a 9 dígitos. El CUIL tiene 8 dígitos centrales, que con DNI deben coincidir con el documento completado con ceros a la izquierda. Desde D-52 (O-04) el CUIL es obligatorio en el alta de una persona humana, por lo que un DNI de 9 dígitos ya no podía darse de alta y recibía un mensaje que no explicaba la causa («El CUIT/CUIL no corresponde al número de documento.»). Los DNI argentinos, incluidos los de extranjeros residentes (rango de 90 a 95 millones), tienen como máximo 8 dígitos; las LC y LE, también.
+
+**Decisión.**
+1. El DNI, la LC y la LE admiten de 6 a 8 dígitos: «El documento debe tener entre 6 y 8 dígitos, sin puntos.». El pasaporte no cambia (5 a 15 letras o números).
+2. La correspondencia entre el CUIL y el número de documento se sigue exigiendo solo con DNI: quien tiene LC o LE suele tener el CUIL generado con otro documento posterior.
+
+**Consecuencias.**
+- Cambia `Campos::numeroDocumento()`, que usan el alta y la modificación de clientes (titular y representante de una persona jurídica), los usuarios internos, el pre-registro y el acceso al portal.
+- Pruebas: `CamposTest`; en integración, las clases DOC-05 (6 y 8 dígitos) y DOC-06 (5, 9 y 10 dígitos), y las pruebas `testDocumentoDeNueveDigitos` y `testDniCortoConSuCuil` de clientes.
+- Plan de pruebas: clases DOC-05 y DOC-06 del Anexo A y campos de documento del Anexo B.
+- Los registros existentes con 9 dígitos, si los hubiera, no se modifican; al editarlos se pide corregir el número.
 

@@ -54,7 +54,7 @@ final class ClientesTest extends IntegracionTestCase
             ],
             'nro_documento' => [
                 'tipo' => 'DOC', 'obligatorio' => true, 'admite_pasaporte' => true,
-                'mensajes' => ['obligatorio' => 'Complete el número de documento.', 'formato' => 'El documento debe tener entre 6 y 9 dígitos, sin puntos.'],
+                'mensajes' => ['obligatorio' => 'Complete el número de documento.', 'formato' => 'El documento debe tener entre 6 y 8 dígitos, sin puntos.'],
                 // Con LE el número tiene el mismo formato que el DNI, sin la correspondencia con el CUIL (CUI-06 se prueba aparte)
                 'otros' => ['tipo_documento' => 'LE'],
             ],
@@ -138,7 +138,7 @@ final class ClientesTest extends IntegracionTestCase
             ],
             'representante_documento' => [
                 'tipo' => 'DOC', 'obligatorio' => true,
-                'mensajes' => ['obligatorio' => 'Complete el documento del representante.', 'formato' => 'El documento debe tener entre 6 y 9 dígitos, sin puntos.'],
+                'mensajes' => ['obligatorio' => 'Complete el documento del representante.', 'formato' => 'El documento debe tener entre 6 y 8 dígitos, sin puntos.'],
             ],
             'representante_cargo' => $texto('el cargo del representante', 80, null, 'El cargo admite hasta 80 caracteres.'),
             'domicilio' => $texto('el domicilio', 200, 'Complete la calle y el número del domicilio legal.'),
@@ -258,10 +258,23 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertErrores(['tipo_cliente' => 'Seleccione el tipo de cliente.'], $sinTipo, 'tipo ausente');
     }
 
-    /** O-04 (D-52): un DNI de 9 dígitos no tiene un CUIL que le corresponda, por lo que no puede darse de alta. */
-    public function testDniDeNueveDigitosSinCuilPosible(): void
+    /** D-53: el DNI, la LC y la LE admiten hasta 8 dígitos, el largo que admite el CUIL. */
+    public function testDocumentoDeNueveDigitos(): void
     {
-        $this->assertErrores(['cuit_cuil' => 'El CUIT/CUIL no corresponde al número de documento.'], ['nro_documento' => '100000001'] + $this->fabrica->datosCliente());
+        foreach (['DNI', 'LC', 'LE'] as $tipo) {
+            $this->assertErrores(['nro_documento' => 'El documento debe tener entre 6 y 8 dígitos, sin puntos.'], ['tipo_documento' => $tipo, 'nro_documento' => '100000001'] + $this->fabrica->datosCliente(), $tipo);
+        }
+    }
+
+    /** D-53: con DNI de 6, 7 u 8 dígitos el CUIL corresponde al número completado con ceros a la izquierda. */
+    public function testDniCortoConSuCuil(): void
+    {
+        foreach ([6 => 100000, 7 => 1000000, 8 => 10000000] as $digitos => $desde) {
+            $dni = $desde + Fabrica::entre(0, 99999);
+            $cuil = self::otroCuilDelDni((string) $dni, '');
+            $this->fabrica->cliente('PersonaHumana', ['tipo_documento' => 'DNI', 'nro_documento' => (string) $dni, 'cuit_cuil' => $cuil]);
+            $this->assertSame(1, $this->db->table('clientes')->where('cuit_cuil', $cuil)->countAllResults(), "{$digitos} dígitos");
+        }
     }
 
     /** REF-01 a REF-05: provincia y localidad del domicilio (D-18). */

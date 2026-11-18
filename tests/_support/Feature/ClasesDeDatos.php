@@ -196,7 +196,7 @@ final class ClasesDeDatos
      */
     private static function documento(array $c): array
     {
-        $digitos = Esperado::rechaza('El documento debe tener entre 6 y 9 dígitos, sin puntos.');
+        $digitos = Esperado::rechaza('El documento debe tener entre 6 y 8 dígitos, sin puntos.');
         $dni = Fabrica::dni();
         $puntos = number_format((float) $dni, 0, '', '.');
 
@@ -204,8 +204,10 @@ final class ClasesDeDatos
             ['DOC-03', 'vacío', '', Esperado::rechaza($c['mensajes']['obligatorio'] ?? 'Complete el número de documento.')],
             ['DOC-04', 'con puntos de miles', $puntos, Esperado::acepta((string) $dni)],
             ['DOC-05', '6 dígitos', (string) (100000 + Fabrica::entre(0, 99999)), Esperado::acepta(null)],
-            ['DOC-05', '9 dígitos', (string) (100000000 + Fabrica::entre(0, 99999)), Esperado::acepta(null)],
+            ['DOC-05', '8 dígitos', (string) (10000000 + Fabrica::entre(0, 99999)), Esperado::acepta(null)],
             ['DOC-06', '5 dígitos', '10000', $digitos],
+            // D-53: un DNI de 9 dígitos no tiene un CUIL que le corresponda
+            ['DOC-06', '9 dígitos', (string) (100000000 + Fabrica::entre(0, 99999)), $digitos],
             ['DOC-06', '10 dígitos', '1000000000', $digitos],
             ['DOC-07', 'punto final', $dni . '.', $digitos],
             ['DOC-07', 'guiones', substr((string) $dni, 0, 2) . '-' . substr((string) $dni, 2, 3) . '-' . substr((string) $dni, 5), $digitos],

@@ -6,6 +6,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Cambiado (documento, D-53)
+- El DNI, la LC y la LE admiten de 6 a 8 dígitos, el largo que admite el CUIL.
+
 ### Cambiado (observaciones O-01 a O-07, D-52)
 - O-01: la TNA de una línea debe ser mayor que cero.
 - O-02 y O-03: un tipo de cliente o de gasto administrativo fuera de la lista, vacío o ausente se rechaza con un mensaje, en lugar de tomarse como persona humana o importe fijo.

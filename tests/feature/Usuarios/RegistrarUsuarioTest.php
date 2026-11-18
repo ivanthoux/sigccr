@@ -40,7 +40,7 @@ final class RegistrarUsuarioTest extends IntegracionTestCase
             ],
             'nro_documento' => [
                 'tipo' => 'DOC', 'obligatorio' => true, 'admite_pasaporte' => true,
-                'mensajes' => ['obligatorio' => 'Complete el número de documento.', 'formato' => 'El documento debe tener entre 6 y 9 dígitos, sin puntos.'],
+                'mensajes' => ['obligatorio' => 'Complete el número de documento.', 'formato' => 'El documento debe tener entre 6 y 8 dígitos, sin puntos.'],
             ],
             'correo' => [
                 'tipo' => 'COR', 'obligatorio' => true,

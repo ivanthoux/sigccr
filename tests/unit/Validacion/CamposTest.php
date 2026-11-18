@@ -68,11 +68,17 @@ final class CamposTest extends TestCase
         $this->assertSame('Seleccione un tipo de documento válido.', Campos::tipoDocumento('CUIT'));
         $this->assertNull(Campos::numeroDocumento('DNI', '28999111'));
         $this->assertNull(Campos::numeroDocumento('LE', '123456'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '12345'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '1234567890'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', 'AB123456'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('28999111.')));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('.28999111')));
+        // D-53: DNI, LC y LE hasta 8 dígitos, el largo que admite el CUIL
+        foreach (['DNI', 'LC', 'LE'] as $tipo) {
+            $this->assertNull(Campos::numeroDocumento($tipo, '99999999'), $tipo);
+            $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento($tipo, '100000001'), $tipo);
+        }
+        $this->assertNull(Campos::numeroDocumento('Pasaporte', '123456789'), 'el pasaporte no cambia');
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '12345'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '1234567890'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', 'AB123456'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('28999111.')));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('.28999111')));
         $this->assertNull(Campos::numeroDocumento('DNI', Campos::documento('28.999.111')));
         $this->assertSame('El número de documento no es válido.', Campos::numeroDocumento('DNI', '000000'));
         $this->assertNull(Campos::numeroDocumento('Pasaporte', 'AAB123456'));
