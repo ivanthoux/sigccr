@@ -73,10 +73,12 @@ final class ValidadorParametrosCampanas
      */
     public static function normalizar(array $d): array
     {
-        $entero = static fn (mixed $v): ?int => ctype_digit($t = trim((string) ($v ?? ''))) && strlen($t) <= 5 ? (int) $t : null;
+        // H-15: un valor enviado como lista se toma como vacío
+        $entero = static fn (mixed $v): ?int => ctype_digit($t = Campos::texto($v)) && strlen($t) <= 5 ? (int) $t : null;
         $categorias = array_values(array_intersect(array_keys(self::categorias()), Campos::lista($d['categorias_admitidas'] ?? [])));
         $canales = array_values(array_intersect(array_keys(self::CANALES), Campos::lista($d['canales'] ?? [])));
-        $factor = Campos::importe($d['factor_cobrabilidad'] ?? '');
+        // Como los demás porcentajes, admite el signo % (PCT-02)
+        $factor = Campos::importe(str_replace('%', '', Campos::texto($d['factor_cobrabilidad'] ?? '')));
 
         return [
             'umbral_disponibilidad' => Campos::importe($d['umbral_disponibilidad'] ?? ''),
@@ -141,7 +143,7 @@ final class ValidadorParametrosCampanas
         if ($p['canales'] === []) {
             $e['canales'] = 'Seleccione al menos un canal de comunicación.';
         }
-        if (mb_strlen((string) $p['mensaje']) > 500) {
+        if (Campos::largo((string) $p['mensaje']) > 500) {
             $e['mensaje'] = 'El mensaje admite hasta 500 caracteres.';
         }
         if (!is_int($p['duracion_dias']) || $p['duracion_dias'] < 1 || $p['duracion_dias'] > 90) {

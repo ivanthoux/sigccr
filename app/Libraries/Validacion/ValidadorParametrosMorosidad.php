@@ -31,8 +31,10 @@ final class ValidadorParametrosMorosidad
      */
     public static function normalizar(array $d): array
     {
-        $pct = static fn (mixed $v, int $escala): ?string => ($n = self::numero($v)) === null ? null : Decimal::of($n)->div(100)->round($escala)->toFixed($escala);
-        $entero = static fn (mixed $v): ?int => ctype_digit($t = trim((string) ($v ?? ''))) && strlen($t) <= 4 ? (int) $t : null;
+        // H-20: el porcentaje admite los decimales que se guardan (escala − 2); antes se redondeaba en silencio
+        $pct = static fn (mixed $v, int $escala): ?string => ($n = self::numero($v, $escala - 2)) === null ? null : Decimal::of($n)->div(100)->toFixed($escala);
+        // H-15: un valor enviado como lista se toma como vacío
+        $entero = static fn (mixed $v): ?int => ctype_digit($t = Campos::texto($v)) && strlen($t) <= 4 ? (int) $t : null;
 
         return [
             'tasa_punitoria_diaria' => $pct($d['tasa_punitoria_diaria'] ?? '', 6),
@@ -115,10 +117,10 @@ final class ValidadorParametrosMorosidad
         ];
     }
 
-    private static function numero(mixed $v): ?string
+    private static function numero(mixed $v, int $decimales): ?string
     {
-        $t = str_replace(',', '.', str_replace([' ', '%'], '', trim((string) ($v ?? ''))));
+        $t = str_replace([' ', '%', ','], ['', '', '.'], Campos::texto($v));
 
-        return preg_match('/^\d{1,3}(\.\d{1,4})?$/', $t) === 1 ? $t : null;
+        return preg_match('/^\d{1,3}(\.\d{1,' . $decimales . '})?$/', $t) === 1 ? $t : null;
     }
 }

@@ -46,7 +46,8 @@ class Parametros extends BaseController
             $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
         }
         $motivo = Campos::texto($this->request->getPost('motivo'));
-        if (($m = Campos::motivo($motivo)) !== null) {
+        // H-19: la columna motivo de versiones_parametros es NVARCHAR(500); antes se admitían 1000 y respondía error 500
+        if (($m = Campos::motivo($motivo, 500)) !== null) {
             $errores['motivo'] = $m;
         }
         try {
@@ -91,7 +92,7 @@ class Parametros extends BaseController
             $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
         }
         $motivo = Campos::texto($this->request->getPost('motivo'));
-        if (($m = Campos::motivo($motivo)) !== null) {
+        if (($m = Campos::motivo($motivo, 500)) !== null) {
             $errores['motivo'] = $m;
         }
         try {
@@ -136,7 +137,7 @@ class Parametros extends BaseController
             $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
         }
         $motivo = Campos::texto($this->request->getPost('motivo'));
-        if (($m = Campos::motivo($motivo)) !== null) {
+        if (($m = Campos::motivo($motivo, 500)) !== null) {
             $errores['motivo'] = $m;
         }
         try {
@@ -180,7 +181,7 @@ class Parametros extends BaseController
             $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige la nueva configuración.';
         }
         $motivo = Campos::texto($this->request->getPost('motivo'));
-        if (($m = Campos::motivo($motivo)) !== null) {
+        if (($m = Campos::motivo($motivo, 500)) !== null) {
             $errores['motivo'] = $m;
         }
         try {

@@ -38,25 +38,27 @@ final class ValidadorParametrosEvaluacion
      */
     public static function normalizar(array $d): array
     {
-        $num = static fn (mixed $v): ?string => self::numero($v);
+        // H-15: un grupo o un valor con otra forma (texto en lugar de lista o al revés) se toma como vacío
+        $de = static fn (mixed $grupo, string $clave): mixed => is_array($grupo) ? ($grupo[$clave] ?? '') : '';
         $entero = static fn (mixed $v): ?int => ($n = self::numero($v)) !== null && preg_match('/^\d+$/', $n) === 1 ? (int) $n : null;
-        $pct = static fn (mixed $v): ?string => ($n = self::numero($v)) === null ? null : Decimal::of($n)->div(100)->round(4)->toFixed(4);
+        // H-20: se guardan 4 decimales del tanto por uno, así que el porcentaje admite 2; antes se redondeaba en silencio
+        $pct = static fn (mixed $v): ?string => ($n = self::numero($v, 2)) === null ? null : Decimal::of($n)->div(100)->toFixed(4);
 
         $pesos = [];
         foreach (array_keys(self::INDICADORES) as $k) {
-            $pesos[$k] = $pct($d['pesos'][$k] ?? '');
+            $pesos[$k] = $pct($de($d['pesos'] ?? [], $k));
         }
         $bcra = [];
         foreach (['1', '2', '3', '4', '5', '6', 'sin_deudas'] as $k) {
-            $bcra[$k] = $entero($d['bcra'][$k] ?? '');
+            $bcra[$k] = $entero($de($d['bcra'] ?? [], (string) $k));
         }
-        $tramos = static function (array $filas, callable $limite) use ($entero): array {
+        $tramos = static function (mixed $filas, callable $limite) use ($entero, $de): array {
             $r = [];
-            foreach ($filas as $f) {
-                if (trim((string) ($f['limite'] ?? '')) === '' && trim((string) ($f['valor'] ?? '')) === '') {
+            foreach (is_array($filas) ? $filas : [] as $f) {
+                if (Campos::texto($de($f, 'limite')) === '' && Campos::texto($de($f, 'valor')) === '') {
                     continue;
                 }
-                $r[] = [$limite($f['limite'] ?? ''), $entero($f['valor'] ?? '')];
+                $r[] = [$limite($de($f, 'limite')), $entero($de($f, 'valor'))];
             }
 
             return $r;
@@ -64,27 +66,27 @@ final class ValidadorParametrosEvaluacion
         $categorias = [];
         $resultados = [];
         foreach (self::CATEGORIAS as $c) {
-            $categorias[$c] = $entero($d['categorias'][$c] ?? '');
-            $resultados[$c] = (string) ($d['resultados'][$c] ?? '');
+            $categorias[$c] = $entero($de($d['categorias'] ?? [], $c));
+            $resultados[$c] = Campos::texto($de($d['resultados'] ?? [], $c));
         }
-        $excluyentes = array_values(array_map('intval', array_filter((array) ($d['situaciones_excluyentes'] ?? []), static fn ($v) => preg_match('/^[1-6]$/', (string) $v) === 1)));
+        $excluyentes = array_values(array_map('intval', array_filter(Campos::lista($d['situaciones_excluyentes'] ?? []), static fn ($v) => preg_match('/^[1-6]$/', $v) === 1)));
         sort($excluyentes);
 
         return [
             'pesos' => $pesos,
             'bcra' => $bcra,
             'comportamiento' => [
-                'tramos' => $tramos((array) ($d['comportamiento']['tramos'] ?? []), $entero),
-                'resto' => $entero($d['comportamiento']['resto'] ?? ''),
-                'sin_antecedentes' => $entero($d['comportamiento']['sin_antecedentes'] ?? ''),
+                'tramos' => $tramos($de($d['comportamiento'] ?? [], 'tramos'), $entero),
+                'resto' => $entero($de($d['comportamiento'] ?? [], 'resto')),
+                'sin_antecedentes' => $entero($de($d['comportamiento'] ?? [], 'sin_antecedentes')),
             ],
             'endeudamiento' => [
-                'tramos' => $tramos((array) ($d['endeudamiento']['tramos'] ?? []), $pct),
-                'resto' => $entero($d['endeudamiento']['resto'] ?? ''),
+                'tramos' => $tramos($de($d['endeudamiento'] ?? [], 'tramos'), $pct),
+                'resto' => $entero($de($d['endeudamiento'] ?? [], 'resto')),
             ],
             'antiguedad' => [
-                'tramos' => $tramos((array) ($d['antiguedad']['tramos'] ?? []), $entero),
-                'resto' => $entero($d['antiguedad']['resto'] ?? ''),
+                'tramos' => $tramos($de($d['antiguedad'] ?? [], 'tramos'), $entero),
+                'resto' => $entero($de($d['antiguedad'] ?? [], 'resto')),
             ],
             'categorias' => $categorias,
             'resultados' => $resultados,
@@ -185,12 +187,11 @@ final class ValidadorParametrosEvaluacion
         }
     }
 
-    private static function numero(mixed $v): ?string
+    private static function numero(mixed $v, int $decimales = 4): ?string
     {
-        $t = str_replace([' ', '%'], '', trim((string) ($v ?? '')));
-        $t = str_replace(',', '.', $t);
+        $t = str_replace([' ', '%', ','], ['', '', '.'], Campos::texto($v));
 
-        return preg_match('/^\d{1,6}(\.\d{1,4})?$/', $t) === 1 ? $t : null;
+        return preg_match('/^\d{1,6}(\.\d{1,' . $decimales . '})?$/', $t) === 1 ? $t : null;
     }
 
     /**
