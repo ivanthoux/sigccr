@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Solicitudes;
 
 use App\Exceptions\ConflictoConcurrenciaException;
+use App\Services\Solicitudes\ContratoService;
 use App\Services\Solicitudes\LiquidacionService;
 use App\Services\Solicitudes\SolicitudService;
 use CodeIgniter\I18n\Time;
@@ -576,6 +577,31 @@ final class SolicitudesTest extends IntegracionTestCase
             'importe como lista' => [['importe_transferencia' => [$b['importe_transferencia']]], 'importe_transferencia', $importe],
             'versión como lista (H-21)' => [['version_fila' => [$b['version_fila']]], '', null],
         ]);
+    }
+
+    /** D-55: sin la declaración jurada PEP en el legajo no se liquida; incorporada, sí (RN-80). */
+    public function testLiquidarExigeLaDeclaracionPep(): void
+    {
+        $s = $this->fabrica->solicitud('AprobadaPendienteLiquidacion');
+        (new ContratoService($this->db))->registrarConstancia($s['id'], Fabrica::archivo('CONTRATO', 'pdf'), self::hoy(), $this->fabrica->responsable());
+        $this->comoRol('Cajero');
+        $datos = (new LiquidacionService($this->db))->datos($s['id']);
+        $this->assertFalse($datos['declaracion_pep'], 'el alta solo adjuntó la identificación');
+        $base = [
+            'version_fila' => (string) $datos['version_fila'], 'documento_verificado' => (string) $s['cliente']['datos']['nro_documento'],
+            'conformidad' => '', 'cbu' => self::cbu(), 'cuit_titular' => (string) $s['cliente']['datos']['cuit_cuil'],
+            'evidencia_titularidad' => 'Constancia de CBU presentada por el titular', 'comprobante' => 'OP-' . Fabrica::sufijo(),
+            'fecha_transferencia' => self::hoy(), 'importe_transferencia' => str_replace('.', ',', $datos['calculo']['neto']->toFixed(2)),
+        ];
+
+        $this->enviar("admin/liquidaciones/{$s['id']}", $base);
+        $this->assertSame('Falta la declaración jurada de persona expuesta políticamente en el legajo del cliente: el Analista debe incorporarla antes de liquidar (RN-80).', $_SESSION['error'] ?? null);
+        $this->assertSame('AprobadaPendienteLiquidacion', $this->estado($s['id']));
+        $this->assertSame(0, $this->contar('liquidaciones', ['solicitud_id' => $s['id']]));
+
+        $this->fabrica->declaracionPep($s['cliente']['id']);
+        $this->assertAceptado($this->enviar("admin/liquidaciones/{$s['id']}", $base));
+        $this->assertSame('Liquidada', $this->estado($s['id']));
     }
 
     public function testLiquidarAceptada(): void

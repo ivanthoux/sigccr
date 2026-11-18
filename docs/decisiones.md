@@ -58,6 +58,10 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-52 | 18/11/2026 | Aceptada |
 | D-53 | 18/11/2026 | Aceptada |
 | D-54 | 18/11/2026 | Aceptada |
+| D-55 | 18/11/2026 | Propuesta |
+| D-56 | 18/11/2026 | Propuesta |
+| D-57 | 18/11/2026 | Propuesta |
+| D-58 | 18/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -943,3 +947,58 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 - Pruebas: `ValidadorLineaTest`, `CajasFondosTest`; en integración, PCT-06 del gasto de otorgamiento (IN-18), IMP-08 e IMP-10 del importe e `testAntiguedadDeUnMovimientoRealizado` (IN-23).
 - Plan de pruebas: filas de los campos en los Anexos B.6 y B.8.
 
+## D-55 · Declaración jurada de persona expuesta políticamente en el legajo, exigida para liquidar (RN-80; CU-11, CU-15, CU-27)
+
+**Contexto.** RN-80 exige registrar la declaración sobre la condición de persona expuesta políticamente (Resolución UIF 35/2023), y CU-11 la registra como una opción en el alta, pero el legajo no guardaba la declaración firmada por el cliente. La cátedra pidió que el documento pueda cargarse en el alta, sin impedirla, y que sea requisito para liquidar un préstamo.
+
+**Decisión.**
+1. **Tipo de documento.** Se agrega «Declaración jurada de persona expuesta políticamente» (`DDJJ_PEP`) para personas humanas y jurídicas. No es documento clave (RN-61).
+2. **Alta y legajo.** El formulario de alta ofrece adjuntarla, opcional, en la documentación respaldatoria. También se incorpora después desde la ficha del cliente, que avisa cuando falta y la propone primero para incorporar.
+3. **Liquidación (CU-27).** No se liquida sin una declaración vigente en el legajo del cliente: la pantalla lo informa y deshabilita el formulario, y el servicio lo rechaza (RN-80), después de controlar la constancia firmada del contrato (RN-78).
+4. **Clientes anteriores.** Los clientes ya registrados la incorporan desde su ficha antes de su próxima liquidación; los créditos ya liquidados no cambian.
+
+**Consecuencias.** Migración 33 (tipo de documento) y `TiposDocumentacionSeeder`. Cambian `RequisitosDocumentales` (`DECLARACION_PEP`), `LegajoService::tieneDocumento()`, `LiquidacionService`, la ficha y el alta del cliente, la pantalla de liquidación y los datos de demostración. Pruebas: integración `testLiquidarExigeLaDeclaracionPep`; E2E R-022 y R-151 (Ana se registra sin la declaración y la incorpora antes de liquidar). Cambian el texto de CU-27 (nueva precondición y paso alternativo) y de CU-11 (documentación del alta).
+
+## D-56 · Modelo de contrato configurable y versionado (CU-106; RN-15, RN-78, RN-79)
+
+**Contexto.** El contrato de préstamo (CU-103, D-31) tenía su texto fijo en la vista. La cátedra pidió que sea configurable, para agregar o quitar cláusulas cuando cambien las normas o las políticas de la entidad.
+
+**Decisión.**
+1. **Modelo de cláusulas.** El contrato es una lista ordenada de cláusulas, cada una con su forma (numerada, sin número o en recuadro), su título y su texto. El texto admite:
+   - variables entre llaves que se reemplazan con los datos del préstamo ({importe}, {cftea}, {cuotas}, {plazo_revocacion}, entre otras 25);
+   - dos bloques en un párrafo propio, el recuadro del costo financiero ({cuadro_cft}) y la tabla del plan de cuotas ({plan_cuotas});
+   - negrita entre dobles asteriscos.
+
+   Las cláusulas numeradas se numeran solas. Las firmas y el lugar y fecha quedan fijos al pie.
+2. **Lo que exige la ley.** No se registra un modelo sin el costo financiero destacado ni el plan de pago (art. 36 de la Ley 24.240), ni sin la cláusula de revocación con su plazo (art. 1110 del Código Civil y Comercial, irrenunciable). Tampoco con variables desconocidas o llaves sin cerrar.
+3. **Versiones (RN-15).** Cada cambio es una versión del grupo de parámetros «Contrato», con fecha de vigencia no retroactiva y motivo; la auditoría guarda cada cláusula que cambió (D-48). Cada contrato guarda la versión vigente al generarse (`contratos_prestamo.version_contrato_id`) y la conserva aunque el modelo cambie después. Sin versiones registradas, y para los contratos anteriores, rige el modelo inicial: el texto con que se construyó el contrato.
+4. **Caso de uso.** CU-106 Configurar Modelo de Contrato, del Gerente, en *Gestión › Modelo de contrato*. Permite cargar el modelo inicial como punto de partida.
+
+**Consecuencias.** Migración 34: tipo «Contrato» en `versiones_parametros` y la columna `version_contrato_id`, con `spec.py`. Componentes nuevos: `ModeloContrato`, la vista parcial `contratos/_clausulas` y la pantalla `parametros/contrato`. Cambian `ContratoService` (`modeloVigente()`, `modelo()`, `valores()`, `registrarModelo()`), `ParametroService::registrarVersion()` (base de comparación de la primera versión), `Admin\Parametros`, el catálogo de permisos (106, Gerente) y el menú. Hay que ejecutar `composer semillas` para el permiso nuevo. Pruebas: unitarias `ModeloContratoTest`; integración IN-55; E2E R-152. Se agrega CU-106 a la matriz 3.6.2 y al catálogo de casos de uso.
+
+## D-57 · Impresión formal: cabecera, fecha y hora de emisión y «Página N de M» (RNF-02; CU-55 a CU-57, CU-65 a CU-71)
+
+**Contexto.** Los informes se imprimen y se guardan en PDF con la vista de impresión del navegador (D-44), sin cabecera institucional, sin fecha y hora en cada hoja y sin numeración. La cátedra pidió mantener el formalismo: fecha y hora de generación, cabeceras y número de página con el total de páginas.
+
+**Decisión.**
+1. **Cada hoja.** Todas las páginas del panel y del portal definen, al imprimirse, las cajas de margen de `@page`:
+   - arriba, la entidad y el título del documento;
+   - abajo, la fecha y hora de emisión con el usuario y «Página N de M».
+
+   Se generan del lado del servidor, con los textos escapados para CSS (`estilo_impresion()`).
+2. **Primera hoja.** Los informes llevan una cabecera formal en la primera hoja, que solo se ve al imprimir (`cabecera_impresion()`): razón social, CUIT y domicilio de la entidad, título, fecha y hora de emisión y usuario. El contrato, los comprobantes y las constancias, que tienen su propio encabezado, llevan solo la cabecera y el pie de cada hoja (marca `.documento-propio`).
+3. **Tablas.** El encabezado de cada tabla se repite en cada hoja y las filas, las tarjetas de indicadores y los títulos no se cortan al pie de una hoja.
+4. **Navegadores.** Chrome y Edge (desde la versión 131) dibujan las cajas de margen. Se verificó con Chromium 153 generando el PDF de un informe de cuatro hojas. Otros navegadores imprimen la cabecera de la primera hoja pero no el pie numerado: para los PDF formales se indica usar Chrome o Edge.
+
+**Consecuencias.** Funciones nuevas en el helper (`texto_css`, `datos_impresion`, `estilo_impresion`, `cabecera_impresion`), las plantillas del panel y del portal y la hoja de estilos de impresión. Sin cambios de esquema. Prueba E2E I-93.
+
+## D-58 · Consulta automática del padrón al ingresar el CUIL (CU-11 A9)
+
+**Contexto.** El alta de una persona humana ya proponía los datos del padrón de ARCA (simulado, D-42), pero solo al pulsar «Consultar el padrón de ARCA». Se pidió que el CUIL cargue el DNI, el nombre y el apellido en el alta.
+
+**Decisión.**
+1. **Consulta automática.** Cuando el CUIL queda completo y es válido (prefijo de persona humana y dígito verificador, el mismo control que el servidor), el formulario consulta el padrón una vez por CUIL. Completa el DNI con su tipo, el nombre, el apellido y, si está vacío, la calle del domicilio fiscal. Un CUIL incompleto o inválido no consulta.
+2. **Datos escritos a mano.** La consulta automática completa los campos vacíos y los que completó una consulta anterior y nadie cambió. Si se corrige el CUIL, se actualizan esos datos sin pisar lo escrito a mano. El botón sigue disponible para volver a consultar y reemplazar los datos.
+3. **Fuente.** Sigue siendo el simulador del padrón (D-42). La conexión real con ARCA requiere el certificado digital y la adhesión al servicio con la clave fiscal de la entidad y queda a definir con la cátedra.
+
+**Consecuencias.** Cambian `clientes.js` y el texto de ayuda del alta. Sin cambios del servidor ni de esquema. Prueba E2E I-92.

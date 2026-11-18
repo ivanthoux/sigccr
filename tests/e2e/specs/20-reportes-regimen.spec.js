@@ -92,6 +92,33 @@ test('I-72 Exportar a Excel', async ({ comoUsuario }) => {
   }
 });
 
+test('I-93 Impresión formal: cabecera, emisión y Página N de M (D-57)', async ({ comoUsuario }) => {
+  const page = await comoUsuario('gerente');
+  await page.goto('/admin/reportes/cartera?generar=1');
+  // Cada hoja: entidad y título arriba; emisión, usuario y «Página N de M» abajo (cajas de margen de @page)
+  const estilo = await page.locator('style[media="print"]').innerHTML();
+  expect(estilo).toContain('counter(page)');
+  expect(estilo).toContain('counter(pages)');
+  expect(estilo).toMatch(/Emitido el \d{2}\/\d{2}\/\d{4} \d{2}:\d{2} por /);
+  // La primera hoja lleva la cabecera formal: solo se ve al imprimir
+  const cabecera = page.locator('.cabecera-impresion');
+  await expect(cabecera).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(cabecera).toBeVisible();
+  await expect(cabecera).toContainText('Emitido el');
+  await expect(page.locator('.lateral')).toBeHidden();
+  // El PDF que genera el navegador numera las hojas
+  const pdf = await page.pdf({ format: 'A4' });
+  expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
+  // El contrato tiene su propio encabezado: sin la cabecera del informe, con la cabecera y el pie de cada hoja
+  const analista = await comoUsuario('analista');
+  await analista.emulateMedia({ media: 'print' });
+  await analista.goto(`/admin/contratos/${await valor('SELECT TOP 1 solicitud_id FROM dbo.contratos_prestamo ORDER BY id')}`);
+  await expect(analista.locator('#titulo-contrato')).toBeVisible();
+  await expect(analista.locator('.cabecera-impresion')).toBeHidden();
+  expect(await analista.locator('style[media="print"]').innerHTML()).toContain('counter(pages)');
+});
+
 test('I-73 Informe de caja diaria como Gerente (CU-56)', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
   await page.goto('/admin/caja-diaria');

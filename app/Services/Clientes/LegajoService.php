@@ -25,6 +25,12 @@ class LegajoService extends BaseService
         return $this->db->table('tipos_documentacion')->select('id, codigo, nombre, aplica_a, es_clave')->where('activo', 1)->orderBy('id')->get()->getResultArray();
     }
 
+    /** El legajo del cliente tiene un documento vigente del tipo indicado (por ejemplo, la declaración PEP, D-55). */
+    public function tieneDocumento(int $clienteId, string $codigo): bool
+    {
+        return in_array($codigo, array_column($this->vigentes($clienteId), 'codigo'), true);
+    }
+
     /**
      * Documentos vigentes del legajo: los que no fueron reemplazados por otro (RN-44).
      *

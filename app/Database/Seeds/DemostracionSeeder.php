@@ -179,6 +179,8 @@ class DemostracionSeeder extends Seeder
         $archivos = [
             ['codigo' => 'DOC_IDENTIDAD', 'nombre' => "DNI_{$apellido}.pdf"] + self::pdf("DNI de {$nombre} {$apellido}"),
             ['codigo' => 'RECIBO_SUELDO', 'nombre' => "recibos_sueldo_{$apellido}.pdf"] + self::pdf("Recibos de sueldo de {$nombre} {$apellido}"),
+            // D-55: la declaración PEP firmada, exigida para liquidar (RN-80)
+            ['codigo' => 'DDJJ_PEP', 'nombre' => "ddjj_pep_{$apellido}.pdf"] + self::pdf("Declaración jurada PEP de {$nombre} {$apellido}"),
         ];
 
         return (int) $this->intentar(fn () => (new ClienteService($this->db))->registrar([

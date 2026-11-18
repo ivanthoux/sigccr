@@ -6,6 +6,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (observaciones de la cátedra del 18/11/2026)
+- D-55: declaración jurada de persona expuesta políticamente en el legajo: opcional en el alta, exigida para
+  liquidar (migración 33).
+- D-56: modelo de contrato configurable y versionado, CU-106 del Gerente (migración 34, permiso 106: ejecutar
+  `composer semillas`).
+- D-57: impresión formal de informes y documentos: entidad y título en cada hoja, fecha y hora de emisión, usuario
+  y «Página N de M».
+- D-58: el alta consulta el padrón al ingresar un CUIL válido y completa el DNI, el nombre y el apellido.
+
 ### Agregado (pruebas de integración, iteración 4)
 - IN-53 a IN-60 (bloque A): pre-registro y su verificación, descarte y alta desde el pre-registro, preferencias de
   comunicación, cambio de correo, pago electrónico desde el portal, comprobantes y consultas de objetos ajenos.
@@ -18,7 +27,7 @@ Auditoría de diseño y accesibilidad de la interfaz (D-47).
 - H-27: en las preferencias de comunicación del portal, un valor fuera de la lista revocaba el consentimiento.
 - H-28: un identificador de la dirección de más de 18 dígitos respondía error 500; los identificadores admiten hasta
   9 dígitos y uno más largo responde 404.
-- H-29: el responsable de la auditoría pasa a NVARCHAR(254), el largo de un correo (migración 33).
+- H-29: el responsable de la auditoría pasa a NVARCHAR(254), el largo de un correo (migración 35).
 - H-30: el régimen informativo rechaza el período 0000-mm y el motivo de rectificación de más de 500 caracteres.
 - H-31: las fechas de los períodos de consulta (reportes, tablero, caja diaria, auditoría) admiten de 1900 a 2099; el
   año 9999 respondía error 500.

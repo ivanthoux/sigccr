@@ -9,11 +9,13 @@ const DOCUMENTOS_POR_CATEGORIA = {
   Empresa: ['ESTATUTO', 'CONST_CUIT', 'ESTADOS_CONTABLES', 'PODER_REPRESENTACION'],
 };
 
-/** Documentos de un cliente: identificación y los de su categoría, como los archivos del Anexo B. */
+/** Documentos de un cliente: identificación, los de su categoría y la declaración PEP, como los archivos del Anexo B. */
 function documentosDe(c) {
   const sufijo = c.apellido || c.cuit;
   const docs = { DOC_IDENTIDAD: [documento(`DNI_${c.tipo === 'PersonaJuridica' ? 'representante_' + c.cuit : sufijo}.pdf`)] };
   for (const codigo of DOCUMENTOS_POR_CATEGORIA[c.categoria || 'Empresa']) docs[codigo] = [documento(`${codigo.toLowerCase()}_${sufijo}.pdf`)];
+  // D-55: la declaración PEP firmada se adjunta en el alta, salvo en los clientes que la incorporan después (sinDeclaracionPep)
+  if (!c.sinDeclaracionPep) docs.DDJJ_PEP = [documento(`ddjj_pep_${sufijo}.pdf`)];
   return docs;
 }
 

@@ -85,7 +85,7 @@ ENUMS = {
     'CriterioComparacion': ['Monto', 'Costo'],
     'TipoAlerta': ['Operativa', 'Vencimiento', 'Integracion', 'Proceso', 'Seguridad'],
     'TipoComunicacion': ['Autorizacion', 'VerificacionCorreo', 'Oferta', 'AvisoObligacion', 'Notificacion'],
-    'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas'],
+    'TipoParametros': ['Evaluacion', 'Estructuracion', 'Morosidad', 'Campanas', 'Contrato'],
     'OrigenCopia': ['Manual', 'Automatica', 'PreviaRestauracion'],
     # técnicas (sin clase de dominio)
     'EstadoNotificacion': ['Pendiente', 'Procesada', 'Descartada', 'Error'],
@@ -216,7 +216,7 @@ add('registros_auditoria', 'SS-10', 'RegistroAuditoria', 'Evidencia inalterable 
     ID(True),
     C('fecha_hora', TS, default='SYSDATETIMEOFFSET()', d='Instante de la operación.'),
     C('cuenta_acceso_id', 'INT', null=True, d='Cuenta que ejecutó la operación, sin clave foránea para que la evidencia no dependa de otras tablas; nulo si fue un proceso.'),
-    C('responsable', 'NVARCHAR(254)', d='Nombre del responsable, del proceso o el correo de quien opera sin sesión, conservado como texto (migración 33, H-29).'),
+    C('responsable', 'NVARCHAR(254)', d='Nombre del responsable, del proceso o el correo de quien opera sin sesión, conservado como texto (migración 35, H-29).'),
     C('proceso', 'VARCHAR(60)', null=True, d='Comando programado que tomó la decisión automática.'),
     C('accion', 'VARCHAR(60)', d='Operación realizada (por ejemplo, solicitud.resolver).'),
     C('objeto_tipo', 'VARCHAR(60)', d='Tabla o clase del objeto afectado.'),
@@ -725,6 +725,7 @@ add('contratos_prestamo', 'SS-04', 'ContratoPrestamo', 'Contrato de préstamo ge
     C('fecha_recepcion', D, null=True, d='Día en que el cliente recibió su ejemplar firmado.'),
     C('fecha_registro', TS, null=True),
     FK('usuario_id', 'usuarios_internos', null=True, d='Analista que incorporó la constancia.'),
+    FK('version_contrato_id', 'versiones_parametros', null=True, d='Modelo de contrato (grupo Contrato) vigente al generarlo; nulo: el modelo inicial (D-56).'),
 ], ck=[('CK_contratos_prestamo_constancia', '(documento_legajo_id IS NULL AND fecha_recepcion IS NULL AND fecha_registro IS NULL AND usuario_id IS NULL) OR (documento_legajo_id IS NOT NULL AND fecha_recepcion IS NOT NULL AND fecha_registro IS NOT NULL AND usuario_id IS NOT NULL)')])
 
 add('liquidaciones', 'SS-04', 'Liquidacion', 'Registro del desembolso. Una sola liquidación por solicitud (RNF-06, RN-25).', [

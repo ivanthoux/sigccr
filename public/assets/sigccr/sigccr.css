@@ -292,7 +292,7 @@ code { color: var(--acento); }
 /* Impresión de comprobantes, constancias y contratos: solo el contenido, a todo el ancho de la hoja y sin barras de
    desplazamiento en las tablas (todas las columnas visibles). */
 @media print {
-    @page { margin: 12mm; }
+    /* Los márgenes y las cajas de cabecera y pie de cada hoja los define estilo_impresion() en la plantilla (D-57) */
     .lateral, .barra-movil, .alert-dismissible .btn-close { display: none !important; }
     .contenido { padding: 0 !important; max-width: none !important; }
     .hoja { box-shadow: none !important; border: 0 !important; padding: 0 !important; margin-bottom: 1rem !important; }
@@ -300,6 +300,15 @@ code { color: var(--acento); }
     .table { font-size: 8.5pt; width: 100% !important; }
     .table th, .table td { padding: 0.15rem 0.25rem !important; }
     .table th { white-space: normal; }
+    /* D-57: informes formales. Cabecera de la primera hoja, encabezados de tabla repetidos en cada hoja y sin cortar
+       filas, tarjetas de indicadores ni títulos al pie de una hoja. */
+    .cabecera-impresion { margin-bottom: 6mm; padding-bottom: 3mm; border-bottom: 1.5pt solid #1d3b37; font-size: 9pt; color: #1f2a28; }
+    .cabecera-impresion .entidad { font-weight: 700; font-size: 11pt; }
+    .cabecera-impresion .titulo-documento { margin: 4mm 0 1mm; font-size: 15pt; font-weight: 700; color: #102a26; }
+    body:has(.documento-propio) .cabecera-impresion { display: none !important; }
+    thead { display: table-header-group; }
+    tr, .border.rounded { break-inside: avoid; }
+    h1, h2, h3, .h5, .h6 { break-after: avoid; }
 }
 
 
