@@ -217,4 +217,28 @@ final class SimulacionTest extends IntegracionTestCase
             $this->assertSame($antes, $this->ultimoId('simulaciones_comparativas'), 'cliente ' . json_encode($valor));
         }
     }
+
+    /**
+     * H-24 y H-25: una línea válida según RN-14 con un gasto de otorgamiento alto produce un CFTEA que no cabe en
+     * DECIMAL(18,12) o un neto negativo. La simulación se rechaza con un mensaje y la comparación la informa como no viable.
+     */
+    public function testLineaConCostoFueraDeLimite(): void
+    {
+        $this->comoRol('AnalistaCredito');
+        $cliente = $this->fabrica->clienteParaCredito();
+        $antes = $this->ultimoId('simulaciones');
+        // H-24: 80 % de gasto más su IVA deja un neto del 3,2 %: el CFTEA no cabe en DECIMAL(18,12)
+        // H-25: 99,9999 % más su IVA supera el capital: no hay neto para desembolsar
+        foreach (['80' => \App\Libraries\Finanzas\Tasas::MENSAJE_FUERA_DE_LIMITE, '99,9999' => \App\Libraries\Finanzas\Tasas::MENSAJE_SIN_NETO] as $gasto => $mensaje) {
+            $extrema = $this->fabrica->linea(['tna' => '500', 'gasto_otorgamiento_pct' => $gasto])['id'];
+            $this->enviar('admin/simulaciones', ['cliente_id' => (string) $cliente['id'], 'linea_id' => (string) $extrema, 'importe' => '500.000,00', 'cantidad_cuotas' => '12']);
+            $this->assertSame($mensaje, $_SESSION['error'] ?? null, "gasto {$gasto} %");
+            $this->assertSame($antes, $this->ultimoId('simulaciones'));
+        }
+
+        $this->assertAceptado($this->enviar('admin/simulaciones/comparar', ['cliente_id' => (string) $cliente['id'], 'importe' => '500.000,00', 'cantidad_cuotas' => '12', 'criterio' => 'Costo']));
+        $c = $this->db->table('simulaciones_comparativas')->where('id', $this->ultimoId('simulaciones_comparativas'))->get()->getRowArray();
+        $this->assertStringContainsString('costo financiero total que el sistema no puede registrar', (string) $c['lineas_no_viables']);
+        $this->assertStringContainsString('no queda nada para desembolsar', (string) $c['lineas_no_viables']);
+    }
 }

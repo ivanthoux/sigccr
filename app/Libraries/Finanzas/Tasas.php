@@ -17,6 +17,23 @@ final class Tasas
 
     private const MAX_ITERACIONES = 200;
 
+    /**
+     * H-24: la TEA y el CFTEA se guardan en DECIMAL(18,12): hasta 999.999,999… (99.999.999 %). Una línea con un gasto
+     * de otorgamiento cercano al 100 % produce un CFTEA mayor, que no se puede registrar.
+     */
+    public const MAXIMO_REGISTRABLE = '999999.999999999999';
+
+    public const MENSAJE_FUERA_DE_LIMITE = 'Las condiciones de la línea producen un costo financiero total que el sistema no puede registrar (más de 99.999.999 % anual): revise el gasto de otorgamiento y la TNA de la línea.';
+
+    /** H-25: el gasto de otorgamiento con su IVA iguala o supera el capital (por ejemplo, 90 % más 21 % de IVA). */
+    public const MENSAJE_SIN_NETO = 'El gasto de otorgamiento de la línea, con su IVA, absorbe todo el importe: no queda nada para desembolsar. Revise el gasto de otorgamiento de la línea.';
+
+    /** H-24: la tasa no cabe en las columnas DECIMAL(18,12). */
+    public static function excedeRegistro(Decimal $tasa): bool
+    {
+        return $tasa->compare(self::MAXIMO_REGISTRABLE) > 0;
+    }
+
     /** TEA = (1 + TNA / 12)^12 − 1. */
     public static function tea(Decimal $tna): Decimal
     {

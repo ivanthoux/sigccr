@@ -397,7 +397,7 @@ final class SolicitudesTest extends IntegracionTestCase
         $this->assertAceptado($this->enviar($ruta, ['medio_conformidad' => ' Digital ', 'observaciones' => str_repeat('o', 498) . '😀'] + $base));
         $this->assertSame('AprobadaPendienteLiquidacion', $this->estado($s['id']));
         $a = $this->db->table('alternativas_financiacion')->where('id', $alternativa)->get()->getRowArray();
-        $this->assertSame(['Confirmada', 'Digital'], [$a['estado'], $a['medio_conformidad']]);
+        $this->assertSame(['Confirmada', 'Digital (correo o portal)'], [$a['estado'], $a['medio_conformidad']], 'se guarda la descripción del medio');
     }
 
     // ── IN-41 Resolver (CU-26) ───────────────────────────────────────────────────────────────────────────────────

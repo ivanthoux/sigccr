@@ -115,7 +115,14 @@ class SimulacionService extends BaseService
                 throw new ValidacionException($v['errores'], 'RN-76');
             }
             $iva = (string) (new ParametroService($this->db))->vigente('Estructuracion')['valores']['alicuota_iva'];
-            $r = Simulador::calcular($version, (string) $v['importe'], (int) $v['cuotas'], $iva, new DateTimeImmutable($this->hoyNegocio()));
+            try {
+                $r = Simulador::calcular($version, (string) $v['importe'], (int) $v['cuotas'], $iva, new DateTimeImmutable($this->hoyNegocio()));
+            } catch (\DomainException) {
+                throw new ReglaNegocioException(\App\Libraries\Finanzas\Tasas::MENSAJE_SIN_NETO, 'RN-14');
+            }
+            if (\App\Libraries\Finanzas\Tasas::excedeRegistro($r['cftea'])) {
+                throw new ReglaNegocioException(\App\Libraries\Finanzas\Tasas::MENSAJE_FUERA_DE_LIMITE, 'RN-14');
+            }
             $ahora = Time::now('UTC');
             $this->db->table('simulaciones')->insert([
                 'cliente_id' => $clienteId,

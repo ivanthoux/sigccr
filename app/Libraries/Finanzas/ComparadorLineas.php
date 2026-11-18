@@ -104,7 +104,18 @@ final class ComparadorLineas
                 continue;
             }
             [$n, $plan] = $elegido;
-            $desembolso = Tasas::desembolso($importe, Decimal::of($l['gasto_otorgamiento_pct']), $alicuotaIva);
+            try {
+                $desembolso = Tasas::desembolso($importe, Decimal::of($l['gasto_otorgamiento_pct']), $alicuotaIva);
+            } catch (\DomainException) {
+                // H-25: sin importe neto positivo no hay desembolso ni costo financiero que calcular
+                $noViables[] = $base + ['motivo' => Tasas::MENSAJE_SIN_NETO];
+                continue;
+            }
+            $cftea = Tasas::cftea($desembolso['neto'], $plan->totales());
+            if (Tasas::excedeRegistro($cftea)) {
+                $noViables[] = $base + ['motivo' => Tasas::MENSAJE_FUERA_DE_LIMITE];
+                continue;
+            }
             $viables[] = $base + [
                 'monto_maximo' => $montoMaximo,
                 'importe' => $importe,
@@ -114,7 +125,7 @@ final class ComparadorLineas
                 'neto' => $desembolso['neto'],
                 'tna' => $tna,
                 'tea' => Tasas::tea($tna),
-                'cftea' => Tasas::cftea($desembolso['neto'], $plan->totales()),
+                'cftea' => $cftea,
                 'plan' => $plan,
                 'nota' => $nota,
             ];
