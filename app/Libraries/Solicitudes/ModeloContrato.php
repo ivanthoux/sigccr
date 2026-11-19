@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Libraries\Solicitudes;
 
+use App\Libraries\Validacion\Campos;
+
 /**
  * Modelo configurable del contrato de préstamo (CU-106, D-56; RN-78, art. 36 de la Ley 24.240).
  *
@@ -93,7 +95,7 @@ final class ModeloContrato
         foreach ($textos as $i => $texto) {
             $t = is_string($texto) ? self::limpiar($texto) : '';
             $titulo = is_string($titulos[$i] ?? null) ? trim((string) preg_replace('/\s+/u', ' ', $titulos[$i])) : '';
-            $estilo = is_string($estilos[$i] ?? null) ? $estilos[$i] : '';
+            $estilo = is_string($estilos[$i] ?? null) ? trim($estilos[$i]) : '';
             if ($t === '' && $titulo === '') {
                 continue;
             }
@@ -128,14 +130,15 @@ final class ModeloContrato
             }
             if ($c['estilo'] === 'numerada' && $c['titulo'] === '') {
                 $e["clausula_{$n}_titulo"] = 'Una cláusula numerada lleva título.';
-            } elseif (mb_strlen($c['titulo']) > self::MAX_TITULO) {
+            } elseif (Campos::largo($c['titulo']) > self::MAX_TITULO) {
+                // H-16: los largos se cuentan como en el resto del sistema (un emoji ocupa dos)
                 $e["clausula_{$n}_titulo"] = 'El título admite hasta ' . self::MAX_TITULO . ' caracteres.';
             }
             if ($c['texto'] === '') {
                 $e["clausula_{$n}_texto"] = 'Escriba el texto de la cláusula.';
                 continue;
             }
-            if (mb_strlen($c['texto']) > self::MAX_TEXTO) {
+            if (Campos::largo($c['texto']) > self::MAX_TEXTO) {
                 $e["clausula_{$n}_texto"] = 'El texto admite hasta ' . number_format(self::MAX_TEXTO, 0, ',', '.') . ' caracteres.';
                 continue;
             }

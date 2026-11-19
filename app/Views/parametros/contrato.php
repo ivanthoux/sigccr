@@ -65,7 +65,7 @@ $this->section('contenido');
                     </div>
                     <div class="col-md-8">
                         <label for="motivo" class="form-label">Motivo del cambio</label>
-                        <textarea class="form-control<?= campo_invalido('motivo') ?>" id="motivo" name="motivo" rows="2" maxlength="1000" placeholder="Por ejemplo: nueva cláusula exigida por la Comunicación «A» …"><?= esc((string) old('motivo')) ?></textarea>
+                        <textarea class="form-control<?= campo_invalido('motivo') ?>" id="motivo" name="motivo" rows="2" maxlength="500" placeholder="Por ejemplo: nueva cláusula exigida por la Comunicación «A» …"><?= esc((string) old('motivo')) ?></textarea>
                         <?= error_campo('motivo') ?>
                     </div>
                 </div>
