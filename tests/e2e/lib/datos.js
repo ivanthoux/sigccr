@@ -1,4 +1,4 @@
-// Datos del Anexo A de la prueba funcional integral (docs/pruebas/prueba_funcional_integral_1_a_3.md).
+// Datos del Anexo A de la prueba funcional integral (docs/pruebas/prueba_funcional_integral_1_a_4.md).
 // El Administrador inicial lo crea tests/e2e/preparar.sh con estos mismos datos.
 
 const usuarios = {

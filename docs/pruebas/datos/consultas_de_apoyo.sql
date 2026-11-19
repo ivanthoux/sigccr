@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SIG-CCR · Consultas de apoyo para la prueba funcional integral (iteraciones 1 a 3)
+   SIG-CCR · Consultas de apoyo para la prueba funcional integral (iteraciones 1 a 4)
    Solo para el entorno de prueba. Reemplazar los valores marcados con «…» y ejecutar
    cada bloque por separado desde el cliente SQL habitual (SQL Server Management Studio o
    Azure Data Studio) conectado a localhost, base sigccr.
@@ -58,4 +58,22 @@ FROM dbo.cuotas q JOIN dbo.creditos c ON c.id = q.credito_id JOIN dbo.clientes c
 WHERE cl.cuit_cuil = @cuil ORDER BY c.numero, q.numero;
 SELECT s.id, s.fecha, s.importe_original, s.importe_disponible, s.importe_reservado
 FROM dbo.saldos_a_favor s JOIN dbo.clientes cl ON cl.id = s.cliente_id WHERE cl.cuit_cuil = @cuil ORDER BY s.fecha;
+GO
+
+-- C.7 Totales para la copia (R-179, R-181) y para el reporte de cobranzas (R-175)
+SELECT
+  (SELECT COUNT(*) FROM dbo.clientes) AS clientes,
+  (SELECT COUNT(*) FROM dbo.creditos) AS creditos,
+  (SELECT COUNT(*) FROM dbo.cuotas WHERE estado = 'Pagada') AS cuotas_pagadas,
+  (SELECT COUNT(*) FROM dbo.cobros) AS cobros,
+  (SELECT COALESCE(SUM(importe), 0) FROM dbo.cobros WHERE estado = 'Confirmado') AS importe_cobros,
+  (SELECT COALESCE(SUM(importe_disponible), 0) FROM dbo.saldos_a_favor) AS saldos_a_favor,
+  (SELECT COUNT(*) FROM dbo.propuestas_refinanciacion) AS propuestas,
+  (SELECT COUNT(*) FROM dbo.ofertas) AS ofertas,
+  (SELECT COUNT(*) FROM dbo.movimientos_fondos) AS movimientos_fondos;
+-- Cobros confirmados del mes en curso (hora de Argentina)
+SELECT COALESCE(SUM(importe), 0) AS total_cobrado_del_mes
+FROM dbo.cobros
+WHERE estado = 'Confirmado'
+  AND CAST(fecha_hora AT TIME ZONE 'Argentina Standard Time' AS date) >= DATEFROMPARTS(YEAR(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time'), MONTH(SYSDATETIMEOFFSET() AT TIME ZONE 'Argentina Standard Time'), 1);
 GO
