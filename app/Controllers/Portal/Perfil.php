@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers\Portal;
 
 use App\Exceptions\ReglaNegocioException;
-use App\Services\Acceso\CambioContrasenaService;
 use App\Services\Clientes\ClienteService;
 use App\Services\Portal\PortalService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -79,16 +78,6 @@ class Perfil extends BasePortal
     /** CU-107 pasos 3 a 7 (A1 a A3). */
     public function guardarContrasena(): RedirectResponse
     {
-        $cuenta = session('cuenta');
-        try {
-            $version = (new CambioContrasenaService())->cambiar((int) $cuenta['id'], $this->campoPost('actual'), $this->campoPost('contrasena'), $this->campoPost('confirmacion'));
-        } catch (ReglaNegocioException $e) {
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-        $cuenta['version_seguridad'] = $version;
-        session()->set('cuenta', $cuenta);
-        session()->regenerate(true);
-
-        return redirect()->route('portal.perfil')->with('exito', 'La contraseña se cambió. Las demás sesiones abiertas con su cuenta se cerraron.');
+        return $this->cambiarContrasena('portal.perfil', 'La contraseña se cambió. Las demás sesiones abiertas con su cuenta se cerraron.');
     }
 }

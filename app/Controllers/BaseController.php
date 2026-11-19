@@ -6,6 +6,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ArchivoLegajo;
 use App\Libraries\Validacion\Campos;
+use App\Services\Acceso\CambioContrasenaService;
 use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\Controller;
@@ -96,6 +97,25 @@ abstract class BaseController extends Controller
      * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
      * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
      */
+    /**
+     * CU-107 (panel y portal): cambia la contraseña de la cuenta con sesión. La sesión toma la versión de seguridad nueva
+     * y un identificador nuevo (ASVS V7.2.4); las demás sesiones de la cuenta se cierran.
+     */
+    protected function cambiarContrasena(string $rutaExito, string $mensajeExito): RedirectResponse
+    {
+        $cuenta = session('cuenta');
+        try {
+            $version = (new CambioContrasenaService())->cambiar((int) $cuenta['id'], $this->campoPost('actual'), $this->campoPost('contrasena'), $this->campoPost('confirmacion'));
+        } catch (ReglaNegocioException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+        $cuenta['version_seguridad'] = $version;
+        session()->set('cuenta', $cuenta);
+        session()->regenerate(true);
+
+        return redirect()->route($rutaExito)->with('exito', $mensajeExito);
+    }
+
     /**
      * Campo del formulario (POST) como texto, sin transformar. Un campo ausente o enviado como lista (campo[]=x) se
      * trata como vacío, para que la validación responda con el mensaje del campo y no con un error del servidor
