@@ -37,6 +37,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         // CU-03: confirmación y cierre de sesión
         $routes->get('salir', 'Admin\Acceso::confirmarCierre', ['as' => 'acceso.salir']);
         $routes->post('salir', 'Admin\Acceso::cerrar');
+        // CU-107: cambiar la propia contraseña (cualquier rol)
+        $routes->get('cuenta/contrasena', 'Admin\Cuenta::contrasena', ['as' => 'panel.cambiar-contrasena']);
+        $routes->post('cuenta/contrasena', 'Admin\Cuenta::guardarContrasena');
 
         // SS-01 Usuarios internos (CU-05 a CU-10, CU-53)
         $routes->group('usuarios', static function (RouteCollection $routes): void {
@@ -308,6 +311,9 @@ $routes->group('portal', static function (RouteCollection $routes): void {
         $routes->post('perfil/preferencias', 'Portal\Perfil::guardarPreferencias');
         $routes->get('perfil/correo', 'Portal\Perfil::correo', ['as' => 'portal.cambiar-correo']);
         $routes->post('perfil/correo', 'Portal\Perfil::solicitarCorreo');
+        // CU-107
+        $routes->get('perfil/contrasena', 'Portal\Perfil::contrasena', ['as' => 'portal.cambiar-contrasena']);
+        $routes->post('perfil/contrasena', 'Portal\Perfil::guardarContrasena');
         // CU-46
         $routes->get('solicitudes', 'Portal\Solicitudes::index', ['as' => 'portal.solicitudes']);
         $routes->get('solicitudes/(:num)', 'Portal\Solicitudes::ver/$1');

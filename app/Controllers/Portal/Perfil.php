@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Portal;
 
 use App\Exceptions\ReglaNegocioException;
+use App\Services\Acceso\CambioContrasenaService;
 use App\Services\Clientes\ClienteService;
 use App\Services\Portal\PortalService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -67,5 +68,27 @@ class Perfil extends BasePortal
         }
 
         return redirect()->route('portal.perfil')->with('exito', 'Le enviamos un enlace a su correo actual. Ábralo dentro de los próximos 30 minutos para confirmar el cambio; después le enviaremos otro al correo nuevo para verificarlo. Hasta entonces su correo no cambia.');
+    }
+
+    /** CU-107 pasos 1 y 2. */
+    public function contrasena(): string
+    {
+        return view('acceso/cambiar_contrasena', ['titulo' => 'Cambiar contraseña', 'base' => 'portal']);
+    }
+
+    /** CU-107 pasos 3 a 7 (A1 a A3). */
+    public function guardarContrasena(): RedirectResponse
+    {
+        $cuenta = session('cuenta');
+        try {
+            $version = (new CambioContrasenaService())->cambiar((int) $cuenta['id'], $this->campoPost('actual'), $this->campoPost('contrasena'), $this->campoPost('confirmacion'));
+        } catch (ReglaNegocioException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+        $cuenta['version_seguridad'] = $version;
+        session()->set('cuenta', $cuenta);
+        session()->regenerate(true);
+
+        return redirect()->route('portal.perfil')->with('exito', 'La contraseña se cambió. Las demás sesiones abiertas con su cuenta se cerraron.');
     }
 }

@@ -25,8 +25,8 @@ final class AutorizacionRutasTest extends CIUnitTestCase
         'admin/login', 'admin/recuperar', 'admin/restablecer/([^/]+)', 'admin/verificar-correo/([^/]+)',
     ];
 
-    /** Rutas del panel que solo exigen sesión (inicio y cierre de sesión, CU-03). */
-    private const SOLO_SESION = ['admin', 'admin/salir'];
+    /** Rutas del panel que solo exigen sesión (inicio, cierre de sesión CU-03 y cambio de contraseña CU-107). */
+    private const SOLO_SESION = ['admin', 'admin/salir', 'admin/cuenta/contrasena'];
 
     private RouteCollection $rutas;
 

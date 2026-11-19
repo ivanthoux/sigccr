@@ -67,6 +67,7 @@ $actual = current_url();
                 <div class="nombre"><?= esc($cuenta['nombre'] ?? '') ?></div>
                 <div><?= esc($cuenta['rol_nombre'] ?? '') ?></div>
                 <button type="button" class="cambiar-tema d-block mt-2" data-cambiar-tema aria-pressed="false"><i class="bi bi-moon-stars me-1" aria-hidden="true"></i>Tema oscuro</button>
+                <a class="d-block mt-2" href="<?= url_to('panel.cambiar-contrasena') ?>"><i class="bi bi-key me-1" aria-hidden="true"></i>Cambiar contraseña</a>
                 <a class="d-inline-block mt-2" href="<?= url_to('acceso.salir') ?>"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión</a>
             </div>
         </div>
