@@ -423,7 +423,7 @@ test('R-170 Consulta de campañas por el Analista (CU-50)', async ({ comoUsuario
   await page.goto('/admin/campanas?estado=Activa');
   await expect(page.locator('main')).toContainText('Personal');
   await page.goto(`/admin/campanas/${campana.id}`);
-  await expect(page.locator('main')).toContainText('Ofertas');
+  await expect(page.locator('main')).toContainText('oferta(s)');
   const cajero = await comoUsuario('cajero');
   expect((await cajero.goto('/admin/campanas')).status()).toBe(403);
 });
