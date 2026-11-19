@@ -18,18 +18,20 @@ $this->section('contenido');
         <p>Personas que dejaron sus datos en el portal. Verifique su identidad en la sucursal y complete el alta.</p>
     </div>
 </div>
-<form method="get" class="hoja p-3 mb-3 d-flex flex-wrap gap-2 align-items-end">
-    <div>
-        <label for="estado" class="form-label small mb-1">Estado</label>
-        <select id="estado" name="estado" class="form-select form-select-sm">
+<form method="get" class="hoja p-3 mb-3" role="search" aria-label="Buscar pre-registros">
+    <div class="row g-2 align-items-end">
+    <div class="col-md-3">
+        <label for="estado" class="form-label small">Estado</label>
+        <select id="estado" name="estado" class="form-select">
             <?php foreach ($estados as $k => $t): ?><option value="<?= $k ?>"<?= $estado === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?>
         </select>
     </div>
-    <div class="flex-grow-1">
-        <label for="texto" class="form-label small mb-1">Nombre, documento, CUIL o correo</label>
-        <input type="search" id="texto" name="texto" class="form-control form-control-sm" value="<?= esc($texto, 'attr') ?>">
+    <div class="col-md">
+        <label for="texto" class="form-label small">Nombre, documento, CUIL o correo</label>
+        <input type="search" id="texto" name="texto" class="form-control" value="<?= esc($texto, 'attr') ?>">
     </div>
-    <button type="submit" class="btn btn-sm btn-primary">Buscar</button>
+    <?= acciones_filtro(limpiar: current_url()) ?>
+    </div>
 </form>
 <?php if ($pre === []): ?>
     <div class="hoja p-4"><p class="mb-0">No hay pre-registros con esos criterios.</p></div>

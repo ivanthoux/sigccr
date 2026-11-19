@@ -62,6 +62,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-56 | 18/11/2026 | Propuesta |
 | D-57 | 18/11/2026 | Propuesta |
 | D-58 | 18/11/2026 | Propuesta |
+| D-59 | 18/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -1002,3 +1003,28 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 3. **Fuente.** Sigue siendo el simulador del padrón (D-42). La conexión real con ARCA requiere el certificado digital y la adhesión al servicio con la clave fiscal de la entidad y queda a definir con la cátedra.
 
 **Consecuencias.** Cambian `clientes.js` y el texto de ayuda del alta. Sin cambios del servidor ni de esquema. Prueba E2E I-92.
+
+## D-59 · Interfaz homogénea: fechas, filtros y ejemplos (RNF-02, RNF-07)
+
+**Contexto.** El recorrido estético del 18/11/2026 (hallazgos H-39 a H-46) encontró la misma tarea resuelta de formas distintas en distintas pantallas:
+- **Fechas:** unas se ingresaban con el selector del navegador (fecha de nacimiento, vigencias, filtros de auditoría y campañas) y otras como texto «dd/mm/aaaa» (filtros de solicitudes, movimientos y comprobantes; calendario, fondos, conformidad del cliente, transferencia del desembolso, asignación de cajas).
+- **Filtros de los listados:** botones con tamaños, textos y ubicaciones distintos, que entre 768 y 991 px se salían del recuadro.
+- **Ejemplos dentro de los campos:** algunos parecían datos ya cargados.
+
+**Decisión.**
+1. **Todas las fechas se ingresan con el selector de fecha del navegador** (`<input type="date">`), que muestra dd/mm/aaaa según el idioma del equipo; los períodos (mes y año) usan el selector de mes. El servidor ya aceptaba aaaa-mm-dd (`Campos::fecha`), así que las reglas no cambian; `fecha_campo()` y `periodo_campo()` preparan el valor del campo.
+2. **Los filtros de los listados usan los mismos botones** (`acciones_filtro()`):
+   - «Limpiar», si hay más de un criterio, y el botón principal con ícono y texto;
+   - van a la derecha, alineados con el borde inferior de los campos, y pasan a otra línea si no entran;
+   - campos de tamaño normal y columnas de fecha más anchas.
+3. **Los ejemplos dentro de los campos empiezan con «Por ejemplo:»**, para que no se confundan con un valor cargado.
+4. **Ajustes de detalle:**
+   - las etiquetas de las listas de datos tienen el mismo peso y la misma separación;
+   - los datos del plan y de la evaluación se rotulan a 13 px;
+   - las etiquetas de estado miden al menos 11 px;
+   - en el cobro, las etiquetas de los medios de pago se ven una sola vez en pantallas anchas.
+
+**Consecuencias.**
+- Las pruebas de punta a punta completan las fechas en aaaa-mm-dd.
+- Ya no se puede escribir un mes inválido como «13/2025»: el selector no lo permite, y el caso se quitó de la prueba de contingencia.
+- El manual de usuario debe mostrar el selector de fecha en las pantallas que cambiaron.

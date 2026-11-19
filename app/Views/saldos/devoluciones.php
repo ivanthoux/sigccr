@@ -20,14 +20,14 @@ $this->section('contenido');
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end" role="search" aria-label="Buscar devoluciones">
     <div class="col-md-2"><label for="numero" class="form-label small">N.º</label><input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" value="<?= esc($filtros['numero'], 'attr') ?>"></div>
     <div class="col-md-4"><label for="texto" class="form-label small">Cliente o CUIT/CUIL</label><input type="text" class="form-control" id="texto" name="texto" value="<?= esc($filtros['texto'], 'attr') ?>"></div>
-    <div class="col-md-2"><label for="fecha" class="form-label small">Autorizada el</label><input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc($filtros['fecha'], 'attr') ?>"></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="fecha" class="form-label small">Autorizada el</label><input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc($filtros['fecha'], 'attr') ?>"></div>
     <div class="col-md-2"><label for="estado" class="form-label small">Estado</label>
         <select class="form-select" id="estado" name="estado">
             <option value="activas"<?= $filtros['estado'] === 'activas' ? ' selected' : '' ?>>En curso</option>
             <option value="todas"<?= $filtros['estado'] === 'todas' ? ' selected' : '' ?>>Todas</option>
             <?php foreach (DevolucionService::ESTADOS as $k => $n): ?><option value="<?= $k ?>"<?= $filtros['estado'] === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
         </select></div>
-    <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+    <?= acciones_filtro(limpiar: current_url()) ?>
 </form>
 <div class="hoja p-3">
     <?php if ($autorizaciones === []): ?>

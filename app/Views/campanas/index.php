@@ -21,16 +21,16 @@ $this->section('contenido');
     </div>
 </div>
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end">
-    <div class="col-6 col-md-2"><label for="numero" class="form-label small mb-1">N.º</label><input type="text" inputmode="numeric" id="numero" name="numero" class="form-control form-control-sm" value="<?= esc($f['numero'], 'attr') ?>"></div>
-    <div class="col-6 col-md-3"><label for="linea" class="form-label small mb-1">Línea</label>
-        <select id="linea" name="linea" class="form-select form-select-sm"><option value="">Todas</option><?php foreach ($lineas as $l): ?><option value="<?= (int) $l['id'] ?>"<?= $f['linea'] === (string) $l['id'] ? ' selected' : '' ?>><?= esc($l['nombre']) ?></option><?php endforeach ?></select></div>
-    <div class="col-6 col-md-2"><label for="estado" class="form-label small mb-1">Estado</label>
-        <select id="estado" name="estado" class="form-select form-select-sm"><option value="">Todos</option><?php foreach (['Activa' => 'Activa', 'Finalizada' => 'Finalizada'] as $k => $t): ?><option value="<?= $k ?>"<?= $f['estado'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?></select></div>
-    <div class="col-6 col-md-2"><label for="desde" class="form-label small mb-1">Activada desde</label><input type="date" id="desde" name="desde" class="form-control form-control-sm" value="<?= esc($f['desde'], 'attr') ?>"></div>
-    <div class="col-6 col-md-2"><label for="hasta" class="form-label small mb-1">hasta</label><input type="date" id="hasta" name="hasta" class="form-control form-control-sm" value="<?= esc($f['hasta'], 'attr') ?>"></div>
-    <div class="col-6 col-md-1"><label for="canal" class="form-label small mb-1">Canal</label>
-        <select id="canal" name="canal" class="form-select form-select-sm"><option value="">Todos</option><?php foreach (C::CANALES as $k => $t): ?><option value="<?= $k ?>"<?= $f['canal'] === $k ? ' selected' : '' ?>><?= esc($t) ?></option><?php endforeach ?></select></div>
-    <div class="col-12 d-flex gap-2 justify-content-end"><a href="<?= url_to('campanas.consultar') ?>" class="btn btn-sm btn-outline-secondary">Limpiar</a><button type="submit" class="btn btn-sm btn-primary">Buscar</button></div>
+    <div class="col-6 col-md-2"><label for="numero" class="form-label small">N.º</label><input type="text" inputmode="numeric" id="numero" name="numero" class="form-control" value="<?= esc($f['numero'], 'attr') ?>"></div>
+    <div class="col-6 col-md-3"><label for="linea" class="form-label small">Línea</label>
+        <select id="linea" name="linea" class="form-select"><option value="">Todas</option><?php foreach ($lineas as $l): ?><option value="<?= (int) $l['id'] ?>"<?= $f['linea'] === (string) $l['id'] ? ' selected' : '' ?>><?= esc($l['nombre']) ?></option><?php endforeach ?></select></div>
+    <div class="col-6 col-md-2"><label for="estado" class="form-label small">Estado</label>
+        <select id="estado" name="estado" class="form-select"><option value="">Todos</option><?php foreach (['Activa' => 'Activa', 'Finalizada' => 'Finalizada'] as $k => $t): ?><option value="<?= $k ?>"<?= $f['estado'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?></select></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Activada desde</label><input type="date" id="desde" name="desde" class="form-control" value="<?= esc($f['desde'], 'attr') ?>"></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">Activada hasta</label><input type="date" id="hasta" name="hasta" class="form-control" value="<?= esc($f['hasta'], 'attr') ?>"></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="canal" class="form-label small">Canal</label>
+        <select id="canal" name="canal" class="form-select"><option value="">Todos</option><?php foreach (C::CANALES as $k => $t): ?><option value="<?= $k ?>"<?= $f['canal'] === $k ? ' selected' : '' ?>><?= esc($t) ?></option><?php endforeach ?></select></div>
+    <?= acciones_filtro(limpiar: url_to('campanas.consultar')) ?>
 </form>
 <?php if ($campanas === []): ?>
     <div class="hoja p-4"><p class="mb-0"><?= $filtrado ? 'No hay campañas que coincidan con los criterios: modifíquelos y vuelva a buscar (A1).' : 'Todavía no se activó ninguna campaña. Se activan solas cuando la proyección de fondos supera el umbral configurado.' ?></p></div>

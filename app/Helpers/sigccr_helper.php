@@ -373,3 +373,43 @@ if (!function_exists('cabecera_impresion')) {
             . '</div>';
     }
 }
+
+if (!function_exists('acciones_filtro')) {
+    /**
+     * Botones de los filtros de búsqueda (D-47): el mismo tamaño, orden y texto en todos los listados. Se ubican a la
+     * derecha, en la misma línea que los campos si hay lugar y debajo si no, alineados con el borde inferior de los
+     * campos. $antes agrega botones propios de la pantalla (por ejemplo, Imprimir) antes de «Limpiar».
+     */
+    function acciones_filtro(?string $limpiar = null, string $texto = 'Buscar', string $icono = 'bi-search', string $antes = ''): string
+    {
+        $limpiarHtml = $limpiar === null ? '' : '<a href="' . esc($limpiar, 'attr') . '" class="btn btn-outline-secondary">Limpiar</a>';
+
+        return '<div class="col-12 col-md-auto ms-auto d-flex flex-wrap gap-2 justify-content-end">' . $antes . $limpiarHtml
+            . '<button type="submit" class="btn btn-primary text-nowrap"><i class="bi ' . esc($icono, 'attr') . ' me-1" aria-hidden="true"></i>'
+            . esc($texto) . '</button></div>';
+    }
+}
+
+if (!function_exists('fecha_campo')) {
+    /**
+     * Valor para un campo de fecha del navegador (<input type="date">), que solo acepta aaaa-mm-dd: convierte una
+     * fecha dd/mm/aaaa o aaaa-mm-dd; si no es una fecha válida devuelve vacío. Así todas las fechas se ingresan igual.
+     */
+    function fecha_campo(?string $valor): string
+    {
+        return \App\Libraries\Validacion\Campos::fecha($valor ?? '') ?? '';
+    }
+}
+
+if (!function_exists('periodo_campo')) {
+    /** Valor para un campo de mes del navegador (<input type="month">, aaaa-mm) a partir de mm/aaaa, mmaaaa o aaaamm. */
+    function periodo_campo(?string $valor): string
+    {
+        $d = preg_replace('/\D/', '', (string) $valor) ?? '';
+        if (preg_match('/^(0[1-9]|1[0-2])(\d{4})$/', $d, $m) === 1) {
+            return $m[2] . '-' . $m[1];
+        }
+
+        return preg_match('/^(\d{4})(0[1-9]|1[0-2])$/', $d, $m) === 1 ? $m[1] . '-' . $m[2] : '';
+    }
+}

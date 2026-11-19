@@ -10,7 +10,7 @@ use App\Libraries\Alertas\OperacionAlerta;
 use App\Services\Reportes\AuditoriaConsultaService as A;
 
 $sel = static function (string $k, string $etiqueta, array $opc, string $todos) use ($f): string {
-    $h = "<div class=\"col-6 col-md-2\"><label for=\"{$k}\" class=\"form-label small mb-1\">{$etiqueta}</label><select id=\"{$k}\" name=\"{$k}\" class=\"form-select form-select-sm\"><option value=\"\">{$todos}</option>";
+    $h = "<div class=\"col-6 col-md-2\"><label for=\"{$k}\" class=\"form-label small\">{$etiqueta}</label><select id=\"{$k}\" name=\"{$k}\" class=\"form-select\"><option value=\"\">{$todos}</option>";
     foreach ($opc as $v => $t) {
         $h .= '<option value="' . esc((string) $v, 'attr') . '"' . ($f[$k] === (string) $v ? ' selected' : '') . '>' . esc(is_array($t) ? $t[0] : $t) . '</option>';
     }
@@ -29,13 +29,13 @@ $this->section('contenido');
     </div>
 </div>
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end" novalidate>
-    <div class="col-6 col-md-2"><label for="desde" class="form-label small mb-1">Desde</label><input type="date" id="desde" name="desde" class="form-control form-control-sm<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'] !== '' ? $f['desde'] : $b['periodo']['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
-    <div class="col-6 col-md-2"><label for="hasta" class="form-label small mb-1">Hasta</label><input type="date" id="hasta" name="hasta" class="form-control form-control-sm<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'] !== '' ? $f['hasta'] : $b['periodo']['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
-    <div class="col-6 col-md-2"><label for="responsable" class="form-label small mb-1">Responsable</label><input type="text" id="responsable" name="responsable" class="form-control form-control-sm" value="<?= esc($f['responsable'], 'attr') ?>" placeholder="Usuario o proceso"></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Desde</label><input type="date" id="desde" name="desde" class="form-control<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'] !== '' ? $f['desde'] : $b['periodo']['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">Hasta</label><input type="date" id="hasta" name="hasta" class="form-control<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'] !== '' ? $f['hasta'] : $b['periodo']['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
+    <div class="col-6 col-md-2"><label for="responsable" class="form-label small">Responsable</label><input type="text" id="responsable" name="responsable" class="form-control" value="<?= esc($f['responsable'], 'attr') ?>" placeholder="Usuario o proceso"></div>
     <?= $sel('categoria', 'Tipo de operación', A::CATEGORIAS, 'Todos') ?>
     <?= $sel('objeto', 'Objeto afectado', A::OBJETOS, 'Todos') ?>
     <?= $sel('resultado', 'Resultado', A::RESULTADOS, 'Todos') ?>
-    <div class="col-12 d-flex gap-2 justify-content-end"><a href="<?= url_to('auditoria.consultar') ?>" class="btn btn-sm btn-outline-secondary">Limpiar</a><button type="submit" class="btn btn-sm btn-primary">Buscar</button></div>
+    <?= acciones_filtro(limpiar: url_to('auditoria.consultar')) ?>
 </form>
 <?php if ($b['filas'] === []): ?>
     <div class="hoja p-4"><p class="mb-0">No hay registros que coincidan con los criterios: modifíquelos y vuelva a buscar (A1).</p></div>

@@ -129,7 +129,7 @@ $this->section('contenido');
             <?php if ($activo && tiene_permiso('clientes.modificar')): ?>
                 <form method="post" action="<?= site_url("admin/clientes/{$id}/documentos") ?>" enctype="multipart/form-data" class="row g-2 align-items-end mt-1">
                     <?= csrf_field() ?>
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <label for="tipo-documento-nuevo" class="form-label small">Agregar documento</label>
                         <select class="form-select" id="tipo-documento-nuevo" data-destino="archivo-nuevo">
                             <?php foreach ($tipos as $t): if (!in_array($t['aplica_a'], ['Ambos', $c['tipo_cliente']], true)) { continue; } ?>
@@ -137,12 +137,12 @@ $this->section('contenido');
                             <?php endforeach ?>
                         </select>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <label for="archivo-nuevo" class="form-label small">Archivos (PDF, JPG o PNG, hasta 5 MB)</label>
                         <input type="file" class="form-control<?= campo_invalido('documentos') ?>" id="archivo-nuevo" name="documentos[<?= esc($preseleccion, 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple required>
                     </div>
-                    <div class="col-md-2 d-grid"><button type="submit" class="btn btn-outline-secondary"><i class="bi bi-upload me-1" aria-hidden="true"></i>Incorporar</button></div>
                     <div class="col-12"><?= error_campo('documentos') ?><?php foreach ($tipos as $t) { echo error_campo('doc_' . $t['codigo']); } ?></div>
+                    <div class="col-12 d-flex justify-content-end"><button type="submit" class="btn btn-outline-secondary"><i class="bi bi-upload me-1" aria-hidden="true"></i>Incorporar</button></div>
                 </form>
             <?php endif ?>
         </section>

@@ -67,7 +67,7 @@ $this->section('contenido');
                 </div>
                 <div class="col-md-4">
                     <label for="medio_conformidad" class="form-label">Medio</label>
-                    <input type="text" class="form-control<?= campo_invalido('medio_conformidad') ?>" id="medio_conformidad" name="medio_conformidad" maxlength="100" value="<?= esc((string) old('medio_conformidad'), 'attr') ?>" placeholder="Presencial, correo electrónico…">
+                    <input type="text" class="form-control<?= campo_invalido('medio_conformidad') ?>" id="medio_conformidad" name="medio_conformidad" maxlength="100" value="<?= esc((string) old('medio_conformidad'), 'attr') ?>" placeholder="Por ejemplo: presencial o correo electrónico">
                     <?= error_campo('medio_conformidad') ?>
                 </div>
                 <div class="col-md-5">

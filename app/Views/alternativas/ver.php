@@ -39,7 +39,7 @@ $this->section('contenido');
         <div class="row g-3">
             <div class="col-md-4">
                 <label for="fecha_conformidad" class="form-label">Fecha de la conformidad</label>
-                <input type="text" class="form-control<?= campo_invalido('fecha_conformidad') ?>" id="fecha_conformidad" name="fecha_conformidad" placeholder="dd/mm/aaaa" value="<?= esc((string) (old('fecha_conformidad') ?? formato_fecha(hoy_negocio())), 'attr') ?>" required>
+                <input type="date" class="form-control<?= campo_invalido('fecha_conformidad') ?>" id="fecha_conformidad" name="fecha_conformidad" value="<?= esc(fecha_campo((string) (old('fecha_conformidad') ?? formato_fecha(hoy_negocio()))), 'attr') ?>" required>
                 <?= error_campo('fecha_conformidad') ?>
             </div>
             <div class="col-md-8">

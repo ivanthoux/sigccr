@@ -55,18 +55,15 @@ $this->section('contenido');
         </div>
         <div class="col-6 col-md-3 col-lg-2">
             <label for="desde" class="form-label small">Registrada desde</label>
-            <input type="text" class="form-control<?= isset($errores['desde']) ? ' is-invalid' : '' ?>" id="desde" name="desde" placeholder="dd/mm/aaaa" value="<?= esc($c('desde'), 'attr') ?>">
+            <input type="date" class="form-control<?= isset($errores['desde']) ? ' is-invalid' : '' ?>" id="desde" name="desde" value="<?= esc(fecha_campo($c('desde')), 'attr') ?>">
             <?php if (isset($errores['desde'])): ?><div class="invalid-feedback"><?= esc($errores['desde']) ?></div><?php endif ?>
         </div>
         <div class="col-6 col-md-3 col-lg-2">
             <label for="hasta" class="form-label small">Registrada hasta</label>
-            <input type="text" class="form-control<?= isset($errores['hasta']) ? ' is-invalid' : '' ?>" id="hasta" name="hasta" placeholder="dd/mm/aaaa" value="<?= esc($c('hasta'), 'attr') ?>">
+            <input type="date" class="form-control<?= isset($errores['hasta']) ? ' is-invalid' : '' ?>" id="hasta" name="hasta" value="<?= esc(fecha_campo($c('hasta')), 'attr') ?>">
             <?php if (isset($errores['hasta'])): ?><div class="invalid-feedback"><?= esc($errores['hasta']) ?></div><?php endif ?>
         </div>
-        <div class="col-md-2 col-lg-5 d-flex gap-2 justify-content-lg-end">
-            <a href="<?= url_to('solicitudes.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('solicitudes.localizar')) ?>
     </div>
 </form>
 <?php if ($solicitudes === []): ?>

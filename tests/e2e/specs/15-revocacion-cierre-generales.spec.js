@@ -155,7 +155,7 @@ test('R-138 Proyección de fondos (CU-92)', async ({ comoUsuario }) => {
   await page.locator('#caracter-Egreso').check();
   await page.locator('#programado').check();
   await page.locator('#importe').fill('30000000');
-  await page.locator('#fecha').fill(fecha(10).split('-').reverse().join('/'));
+  await page.locator('#fecha').fill(fecha(10));
   await page.locator('#concepto').fill('Egreso programado para la proyección');
   await page.getByRole('button', { name: 'Registrar movimiento' }).click();
   await expect(exito(page)).toBeVisible();

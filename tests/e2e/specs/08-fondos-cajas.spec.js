@@ -1,7 +1,7 @@
 // Parte 2, sección 8. Fondos y cajas (CU-85, CU-80, CU-72, CU-31 y CU-81): R-046 a R-052.
 // Las cajas las registra, asigna e inhabilita el Gerente (matriz de permisos 3.6.2).
 const { test, expect } = require('../lib/fixtures');
-const { usuarios, fecha, ddmmaaaa } = require('../lib/datos');
+const { usuarios, fecha } = require('../lib/datos');
 const { valor, cerrarBase } = require('../lib/sistema');
 
 const exito = (page) => page.locator('.alert-success[role="status"]');
@@ -16,7 +16,7 @@ async function movimiento(page, { tipo = 'AporteCapital', caracter = 'Ingreso', 
   await page.locator(`#caracter-${caracter}`).check();
   await page.locator('#programado').setChecked(programado);
   await page.locator('#importe').fill(importe);
-  await page.locator('#fecha').fill(ddmmaaaa(dia));
+  await page.locator('#fecha').fill(dia);
   await page.locator('#concepto').fill(concepto);
   await page.getByRole('button', { name: 'Registrar movimiento' }).click();
 }
@@ -102,7 +102,7 @@ async function asignar(page, caja, cajero) {
   await page.goto('/admin/cajas');
   await desplegar(page.locator(`#cajero-${id}`));
   await page.locator(`#cajero-${id}`).selectOption(String(await idCuenta(cajero)));
-  await page.locator(`#desde-${id}`).fill(ddmmaaaa(fecha()));
+  await page.locator(`#desde-${id}`).fill(fecha());
   await page.locator(`#cajero-${id}`).locator('xpath=ancestor::form').getByRole('button', { name: 'Confirmar asignación' }).click();
 }
 

@@ -21,7 +21,7 @@ $this->section('contenido');
             <label for="texto" class="form-label small">Número de solicitud, cliente o CUIT/CUIL</label>
             <input type="search" class="form-control" id="texto" name="texto" value="<?= esc($texto, 'attr') ?>">
         </div>
-        <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+        <?= acciones_filtro() ?>
     </div>
 </form>
 <?php if ($solicitudes === []): ?>
