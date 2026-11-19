@@ -112,10 +112,16 @@ test('R-155 Consentimiento de comunicaciones comerciales (CU-98)', async ({ brow
   const cuenta = async () => valor("SELECT COUNT(*) FROM dbo.consentimientos WHERE cliente_id = @id AND medio = 'Portal'", { id: await idCliente(ana.cuil) });
   const antes = await cuenta();
   await page.goto('/portal/perfil/preferencias');
-  await page.getByRole('button', { name: 'Revocar el consentimiento' }).click();
-  await expect(exito(page)).toContainText('Consentimiento revocado');
-  await page.getByRole('button', { name: 'Otorgar el consentimiento' }).click();
-  await expect(exito(page)).toContainText('Consentimiento otorgado');
+  // Ana puede tener el consentimiento otorgado o revocado según la prueba anterior: se cambia y se vuelve al estado inicial
+  const revocar = page.getByRole('button', { name: 'Revocar el consentimiento' });
+  const otorgar = page.getByRole('button', { name: 'Otorgar el consentimiento' });
+  const [primero, segundo, textoPrimero, textoSegundo] = (await revocar.count()) > 0
+    ? [revocar, otorgar, 'Consentimiento revocado', 'Consentimiento otorgado']
+    : [otorgar, revocar, 'Consentimiento otorgado', 'Consentimiento revocado'];
+  await primero.click();
+  await expect(exito(page)).toContainText(textoPrimero);
+  await segundo.click();
+  await expect(exito(page)).toContainText(textoSegundo);
   expect(await cuenta()).toBe(antes + 2);
   await page.context().close();
 });
