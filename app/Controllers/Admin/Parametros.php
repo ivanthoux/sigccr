@@ -233,7 +233,9 @@ class Parametros extends BaseController
     public function guardarContrato(): RedirectResponse
     {
         $clausulas = ModeloContrato::normalizar((array) $this->request->getPost());
-        $errores = ModeloContrato::validar($clausulas);
+        $errores = ModeloContrato::completas((array) $this->request->getPost())
+            ? ModeloContrato::validar($clausulas)
+            : ['clausulas' => 'Las cláusulas llegaron incompletas: vuelva a cargar la página e intente de nuevo.'];
         $fecha = Campos::fecha($this->request->getPost('fecha_vigencia'));
         if ($fecha === null) {
             $errores['fecha_vigencia'] = 'Ingrese la fecha desde la que rige el nuevo modelo.';
