@@ -23,6 +23,12 @@ final class CifradoCopia
     /** Clave de las copias derivada de encryption.key, independiente de la que cifra los datos de la aplicación. */
     public static function clave(string $claveAplicacion): string
     {
+        return self::derivar($claveAplicacion, 'sigccr-copias-v1');
+    }
+
+    /** Clave de 256 bits para un uso, derivada con HKDF de encryption.key: cada uso tiene la suya. */
+    public static function derivar(string $claveAplicacion, string $contexto): string
+    {
         if (str_starts_with($claveAplicacion, 'hex2bin:')) {
             $claveAplicacion = (string) hex2bin(substr($claveAplicacion, 8));
         } elseif (str_starts_with($claveAplicacion, 'base64:')) {
@@ -32,7 +38,7 @@ final class CifradoCopia
             throw new RuntimeException('La clave de cifrado (encryption.key) no está configurada.');
         }
 
-        return hash_hkdf('sha256', $claveAplicacion, 32, 'sigccr-copias-v1');
+        return hash_hkdf('sha256', $claveAplicacion, 32, $contexto);
     }
 
     public static function cifrar(string $origen, string $destino, string $clave): void

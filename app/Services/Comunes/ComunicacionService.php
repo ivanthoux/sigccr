@@ -6,6 +6,7 @@ namespace App\Services\Comunes;
 
 use App\Adapters\Comunicaciones\ComunicacionesInterface;
 use App\Adapters\Fabrica;
+use App\Libraries\Comunicaciones\CifradoDatos;
 use App\Libraries\Comunicaciones\PoliticaEnvio;
 use App\Services\BaseService;
 use DateTimeImmutable;
@@ -63,11 +64,19 @@ class ComunicacionService extends BaseService
             'estado' => 'Pendiente',
         ]);
         $id = (int) $this->db->insertID();
-        $cifrado = service('encrypter')->encrypt(json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+        $cifrado = CifradoDatos::cifrar(json_encode($datos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR), (string) config('Encryption')->key);
         // VARBINARY desde texto hexadecimal: el controlador no convierte cadenas a binario de forma implícita
         $this->db->query('UPDATE dbo.comunicaciones SET datos_cifrados = CONVERT(VARBINARY(MAX), CAST(? AS VARCHAR(MAX)), 1) WHERE id = ?', ['0x' . bin2hex($cifrado), $id]);
 
         return $id;
+    }
+
+    /** AES-256-GCM; lo cifrado antes de ASVS V11.3.2 (cifrador de CodeIgniter, sin marca) se descifra como antes. */
+    private function descifrar(string $binario): string
+    {
+        return CifradoDatos::lleva($binario)
+            ? CifradoDatos::descifrar($binario, (string) config('Encryption')->key)
+            : service('encrypter')->decrypt($binario);
     }
 
     /**
@@ -101,7 +110,7 @@ class ComunicacionService extends BaseService
 
             try {
                 $datos = $c['datos_hex'] === null ? [] : json_decode(
-                    service('encrypter')->decrypt((string) hex2bin(substr((string) $c['datos_hex'], 2))),
+                    $this->descifrar((string) hex2bin(substr((string) $c['datos_hex'], 2))),
                     true,
                     512,
                     JSON_THROW_ON_ERROR,
