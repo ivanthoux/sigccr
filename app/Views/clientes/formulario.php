@@ -190,9 +190,13 @@ $this->section('contenido');
             <p class="text-body-secondary small">PDF, JPG o PNG de hasta 5 MB cada uno. Solo es obligatoria la identificación del cliente. La documentación de ingresos puede incorporarse ahora o más adelante: la exige cada línea de crédito al registrar la solicitud (RN-11). Incorporar un documento no equivale a verificarlo.</p>
             <div class="row g-3">
                 <?php foreach ($tipos as $t): ?>
+                    <?php if ($t['codigo'] === RequisitosDocumentales::DECLARACION_PEP) {
+                        $tipoPep = $t; // se adjunta en «Persona expuesta políticamente», junto a la declaración
+
+                        continue;
+                    } ?>
                     <div class="col-md-6" data-aplica="<?= esc($t['aplica_a'], 'attr') ?>">
                         <label for="doc-<?= esc($t['codigo'], 'attr') ?>" class="form-label"><?= esc($t['nombre']) ?> <span class="badge text-bg-light border" data-obligatorio="<?= esc($t['codigo'], 'attr') ?>" hidden>Obligatorio</span></label>
-                        <?php if ($t['codigo'] === RequisitosDocumentales::DECLARACION_PEP): ?><div class="form-text mt-0 mb-1" id="ayuda-doc-pep">Firmada por el cliente. Opcional en el alta; se exige para liquidar un crédito (RN-80).</div><?php endif ?>
                         <input type="file" class="form-control<?= campo_invalido('doc_' . $t['codigo']) ?>" id="doc-<?= esc($t['codigo'], 'attr') ?>" name="documentos[<?= esc($t['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
                         <?= error_campo('doc_' . $t['codigo']) ?>
                     </div>
@@ -216,7 +220,15 @@ $this->section('contenido');
             </div>
         </div>
         <?= error_campo('persona_expuesta') ?>
-        <p class="small text-body-secondary mt-2 mb-0"><?= $c === null ? 'La declaración firmada se adjunta en la documentación, ahora o más adelante: se exige para liquidar. ' : '' ?>Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
+        <?php if ($alta && isset($tipoPep)): ?>
+            <div class="mt-3 col-md-6" data-aplica="<?= esc($tipoPep['aplica_a'], 'attr') ?>">
+                <label for="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" class="form-label"><?= esc($tipoPep['nombre']) ?> <span class="text-body-secondary fw-normal">(opcional en el alta)</span></label>
+                <input type="file" class="form-control<?= campo_invalido('doc_' . $tipoPep['codigo'], 'ayuda-doc-pep') ?>" id="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" name="documentos[<?= esc($tipoPep['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                <div class="form-text" id="ayuda-doc-pep">Firmada por el cliente; PDF, JPG o PNG de hasta 5 MB. Puede adjuntarse ahora o más adelante: se exige para liquidar un crédito.</div>
+                <?= error_campo('doc_' . $tipoPep['codigo']) ?>
+            </div>
+        <?php endif ?>
+        <p class="small text-body-secondary mt-2 mb-0"><?= $c === null && !isset($tipoPep) ? 'La declaración firmada se adjunta en la documentación, ahora o más adelante: se exige para liquidar. ' : '' ?>Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
     </fieldset>
 
     <fieldset class="hoja p-4 mb-3">

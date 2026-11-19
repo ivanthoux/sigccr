@@ -111,6 +111,7 @@ Auditoría de diseño y accesibilidad de la interfaz (D-47).
 - Inicio del panel: «Trabajo pendiente» con las colas que el rol puede atender y el aviso de caja sin abrir.
 
 ### Cambiado
+- Registrar cliente: la declaración jurada de persona expuesta políticamente se adjunta en su propia sección, junto a la respuesta.
 - jQuery y DataTables se cargan solo en las pantallas con tablas paginadas (D-50).
 - Bordes de los campos con contraste de al menos 3:1 en los dos temas (WCAG 1.4.11).
 - Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
