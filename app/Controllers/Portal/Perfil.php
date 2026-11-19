@@ -68,4 +68,16 @@ class Perfil extends BasePortal
 
         return redirect()->route('portal.perfil')->with('exito', 'Le enviamos un enlace a su correo actual. Ábralo dentro de los próximos 30 minutos para confirmar el cambio; después le enviaremos otro al correo nuevo para verificarlo. Hasta entonces su correo no cambia.');
     }
+
+    /** CU-107 pasos 1 y 2. */
+    public function contrasena(): string
+    {
+        return view('acceso/cambiar_contrasena', ['titulo' => 'Cambiar contraseña', 'base' => 'portal']);
+    }
+
+    /** CU-107 pasos 3 a 7 (A1 a A3). */
+    public function guardarContrasena(): RedirectResponse
+    {
+        return $this->cambiarContrasena('portal.perfil', 'La contraseña se cambió. Las demás sesiones abiertas con su cuenta se cerraron.');
+    }
 }

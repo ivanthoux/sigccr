@@ -52,6 +52,7 @@ $this->section('contenido');
                 <dt class="col-5">Domicilio</dt><dd class="col-7"><?= esc($c['domicilio'] . ', ' . $c['localidad'] . ', ' . $c['provincia'] . ' (' . $c['codigo_postal'] . ')') ?></dd>
             </dl>
             <a href="<?= url_to('portal.cambiar-correo') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-envelope me-1" aria-hidden="true"></i>Cambiar correo electrónico</a>
+            <a href="<?= url_to('portal.cambiar-contrasena') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-key me-1" aria-hidden="true"></i>Cambiar contraseña</a>
         </div>
     </section>
     <section class="col-lg-6" aria-labelledby="t-laboral">
