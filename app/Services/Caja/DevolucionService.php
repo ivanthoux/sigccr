@@ -94,8 +94,8 @@ class DevolucionService extends BaseService
     public function anular(int $gerenteId, int $id, int $version, string $motivoTexto): void
     {
         $motivo = Campos::texto($motivoTexto);
-        if (($e = Campos::motivo($motivo)) !== null || mb_strlen($motivo) > 500) {
-            throw new ValidacionException(['motivo_anulacion' => $e ?? 'El motivo admite hasta 500 caracteres.'], 'RN-73');
+        if (($e = Campos::motivo($motivo, 500)) !== null) {
+            throw new ValidacionException(['motivo_anulacion' => $e], 'RN-73');
         }
         $this->transaccion(function () use ($gerenteId, $id, $version, $motivo): void {
             $a = $this->autorizacionBloqueada($id, $version);
