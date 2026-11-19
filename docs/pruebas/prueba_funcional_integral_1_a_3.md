@@ -139,6 +139,7 @@ Como Gerente, con los datos de A.6 y A.7.
 | R-043 | Parámetros de morosidad | Probar los valores inválidos de A.6; guardar los válidos. | «La tasa punitoria diaria debe estar entre 0 % y 1 % por día.», «El tope debe estar entre 0 % y 50 % de la TNA…» y los demás; los válidos crean la versión. | |
 | R-044 | Calendario | Cargar los feriados de A.7 de a uno; repetir uno; cargar una fecha pasada; pegar la carga anual de A.7 (con dos líneas erróneas). | Agrega los válidos; el repetido «…ya está registrada (A2)»; el pasado «…es una fecha pasada (A1)»; la carga anual lista las rechazadas con su motivo. | |
 | R-045 | Baja de un día | Dar de baja el 25/12/2026 y volver a cargarlo. | «Día no hábil dado de baja…»; se vuelve a cargar sin problema. | |
+| R-152 | Modelo de contrato (CU-106, D-56) | Como Gerente, en *Gestión → Modelo de contrato*, agregar la cláusula «Seguro» con el texto «… del préstamo de {monto}» y registrar; corregirla a `{importe}`, subirla un lugar y registrar. Luego quitar la cláusula de `{plan_cuotas}` y registrar. Por último, cargar el modelo inicial y registrarlo. | «Vigente: modelo inicial.» con 11 cláusulas. Con `{monto}`: «Variable desconocida: {monto}», con la cláusula marcada. Corregida: «Se registró la versión 1 del modelo de contrato» y el contrato de una solicitud aprobada muestra la cláusula «Seguro». Sin el plan de cuotas: «Falta {plan_cuotas}». El modelo inicial queda como versión 2. | |
 
 ### 8. Fondos y cajas (CU-85, CU-80, CU-72, CU-31 y CU-81)
 
@@ -217,6 +218,7 @@ En esta sección se liquidan los cinco créditos de la iteración 3. Para cada c
 | R-085 | Plan del Gerente | Liquidar la de Federico sin marcar la conformidad y luego marcándola. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).»; luego liquida. | |
 | R-086 | Créditos de la iteración 3 | Liquidar los de Bruno, Carla, Diego y Julián con A.10 (cada uno con su contrato). | Quedan los créditos A (Ana), B (Bruno), C (Carla), D (Diego) y E (Julián). Anotar sus números en A.10. | |
 | R-087 | Cancelar una solicitud | Confirmar la alternativa de Elena (queda aprobada) y cancelarla con el motivo de A.9 (pide confirmación adicional); intentar cancelar la de Ana. | Se cancela y libera la reserva; la de Ana: «La solicitud ya finalizó: no se puede cancelar.» | |
+| R-151 | Liquidar sin la declaración jurada PEP (RN-80, D-55) | Ana se registró sin la declaración jurada de persona expuesta políticamente. Como Cajero, abrir la liquidación de su solicitud. Luego, como Analista, en la ficha de Ana incorporar `ddjj_pep_Gomez.pdf` como «Declaración jurada de persona expuesta políticamente» y volver a abrir la liquidación. | «Falta la declaración jurada de persona expuesta políticamente…» y el formulario deshabilitado. Incorporada: «Documento incorporado al legajo.», la ficha deja de avisar y la liquidación se habilita. | |
 
 ### 14. Consultas y confirmaciones (CU-29, CU-30, D-24)
 
