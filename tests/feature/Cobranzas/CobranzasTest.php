@@ -460,8 +460,9 @@ final class CobranzasTest extends IntegracionTestCase
         $this->assertRechazos("admin/saldos-favor/autorizaciones/{$autorizacion}/anular", ['version_fila' => $version(), 'motivo_anulacion' => 'El cliente desistió'], [
             'motivo de 4' => [['motivo_anulacion' => 'Baja'], 'motivo_anulacion', null],
             'motivo como lista' => [['motivo_anulacion' => ['El cliente desistió']], 'motivo_anulacion', null],
+            'motivo de 499 y un emoji (501 unidades, G10)' => [['motivo_anulacion' => str_repeat('m', 499) . '😀'], 'motivo_anulacion', 'El motivo admite hasta 500 caracteres.'],
             'versión como lista (H-21)' => [['version_fila' => [$version()]], '', null],
         ], []);
-        $this->assertAceptado($this->enviar("admin/saldos-favor/autorizaciones/{$autorizacion}/anular", ['version_fila' => $version(), 'motivo_anulacion' => 'El cliente desistió']));
+        $this->assertAceptado($this->enviar("admin/saldos-favor/autorizaciones/{$autorizacion}/anular", ['version_fila' => $version(), 'motivo_anulacion' => str_repeat('m', 498) . '😀']), 'motivo de 500 unidades');
     }
 }
