@@ -4,6 +4,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Cambiado
+- SQL Server con versión acumulativa fija (`2022-CU28-ubuntu-22.04`) y reintentos de descarga en la integración continua y en el Dockerfile (D-62).
+- La prueba funcional integral pasa a cubrir las iteraciones 1 a 4 (`prueba_funcional_integral_1_a_4.md`, casos R-153 a R-182), con su automatización en la batería de punta a punta.
+
+### Corregido
+- El motivo de anulación de una devolución, el nombre de un tipo de documento y la evidencia de identidad del cambio de correo miden su largo en unidades UTF-16, como SQL Server (G10).
+- Al restaurar una copia automática se cierran las ejecuciones de procesos que la base copiada tenía «en curso»: antes impedían una segunda restauración durante dos horas.
+
 ## [0.6.0] - 2026-11-19
 
 Transición: la versión incorpora los cambios posteriores al fin de Construcción. Auditoría de diseño y accesibilidad
