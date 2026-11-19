@@ -145,12 +145,15 @@ final class ModeloContratoTest extends IntegracionTestCase
             $datos = self::conValor($datos, 'motivo', $valor, $otros);
             $clave = 'motivo';
         } else {
+            $clave = 'clausula_' . (self::FILA + 1) . "_{$campo}";
             if ($valor === Esperado::AUSENTE) {
+                // H-32: sin un elemento de una de las listas paralelas, las demás se correrían
                 unset($datos[$campo][self::FILA]);
+                $clave = 'clausulas';
+                $esperado = Esperado::rechaza('Las cláusulas llegaron incompletas: vuelva a cargar la página e intente de nuevo.');
             } else {
                 $datos[$campo][self::FILA] = $valor;
             }
-            $clave = 'clausula_' . (self::FILA + 1) . "_{$campo}";
         }
         $antes = $this->ultimoId('versiones_parametros');
         $r = $this->enviar('admin/parametros/contrato', $datos);
@@ -199,10 +202,12 @@ final class ModeloContratoTest extends IntegracionTestCase
         foreach ($casos as $caso => [$clausulas, $clave, $mensaje]) {
             $this->assertCampoRechazado($this->enviar('admin/parametros/contrato', self::formulario($clausulas)), $clave, $mensaje, $caso);
         }
-        // Listas paralelas de distinto largo: la cláusula sin forma se rechaza
-        $corto = self::formulario(ModeloContrato::INICIAL);
-        array_pop($corto['estilo']);
-        $this->assertCampoRechazado($this->enviar('admin/parametros/contrato', $corto), 'clausula_11_estilo', 'Elija la forma de la cláusula.');
+        // H-32: listas paralelas de distinto largo se rechazan completas
+        foreach (['estilo', 'titulo', 'texto'] as $lista) {
+            $corto = self::formulario(ModeloContrato::INICIAL);
+            array_splice($corto[$lista], 4, 1);
+            $this->assertCampoRechazado($this->enviar('admin/parametros/contrato', $corto), 'clausulas', 'Las cláusulas llegaron incompletas: vuelva a cargar la página e intente de nuevo.', $lista);
+        }
         $this->assertSame($antes, $this->ultimoId('versiones_parametros'));
 
         // Las filas vacías se descartan, el texto se guarda sin las líneas vacías de más y el HTML se muestra como texto

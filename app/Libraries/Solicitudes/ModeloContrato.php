@@ -112,6 +112,19 @@ final class ModeloContrato
      * @param list<array{estilo: string, titulo: string, texto: string}> $clausulas
      * @return array<string, string>
      */
+    /**
+     * Las tres listas paralelas del formulario tienen un elemento por cláusula (H-32). Si falta un elemento en una,
+     * las demás se correrían y el título o el texto de una cláusula quedaría en otra.
+     *
+     * @param array<string, mixed> $datos
+     */
+    public static function completas(array $datos): bool
+    {
+        $largos = array_map(static fn (string $k): int => is_array($datos[$k] ?? null) ? count($datos[$k]) : 0, ['estilo', 'titulo', 'texto']);
+
+        return count(array_unique($largos)) === 1;
+    }
+
     public static function validar(array $clausulas): array
     {
         $e = [];
@@ -235,7 +248,9 @@ final class ModeloContrato
     private static function limpiar(string $texto): string
     {
         $t = str_replace(["\r\n", "\r"], "\n", $texto);
-        $t = (string) preg_replace('/[ \t]+\n/u', "\n", $t);
+        // Los espacios y tabulaciones repetidos se reducen a uno: el contrato no los muestra
+        $t = (string) preg_replace('/[ \t]+/u', ' ', $t);
+        $t = (string) preg_replace('/ ?\n ?/u', "\n", $t);
         $t = (string) preg_replace('/\n{3,}/u', "\n\n", $t);
 
         return trim($t);

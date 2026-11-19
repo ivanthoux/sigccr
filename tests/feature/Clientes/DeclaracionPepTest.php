@@ -27,7 +27,6 @@ final class DeclaracionPepTest extends IntegracionTestCase
     {
         $servicio = new ClienteService($this->db);
         $responsable = $this->fabrica->responsable();
-        $identidad = Fabrica::archivosIdentificacion();
         $casos = [
             'vacío' => [Fabrica::archivo(self::PEP, 'vacio', null, 'pep.pdf'), 'El archivo pep.pdf está vacío.'],
             '5 MB + 1 byte' => [Fabrica::archivo(self::PEP, 'pdf', 5 * 1024 * 1024 + 1, 'pep.pdf'), 'El archivo pep.pdf supera los 5 MB.'],
@@ -37,7 +36,7 @@ final class DeclaracionPepTest extends IntegracionTestCase
         foreach ($casos as $caso => [$archivo, $mensaje]) {
             $antes = $this->ultimoId('clientes');
             try {
-                $servicio->registrar($this->fabrica->datosCliente(), [...$identidad, $archivo], $responsable);
+                $servicio->registrar($this->fabrica->datosCliente(), [...Fabrica::archivosIdentificacion(), $archivo], $responsable);
                 $this->fail("{$caso}: se esperaba el rechazo");
             } catch (ValidacionException $e) {
                 $this->assertSame($mensaje, $e->errores['doc_' . self::PEP] ?? null, $caso);
@@ -46,13 +45,13 @@ final class DeclaracionPepTest extends IntegracionTestCase
         }
 
         $legajo = new LegajoService($this->db);
-        $sin = $servicio->registrar($this->fabrica->datosCliente(), $identidad, $responsable);
+        $sin = $servicio->registrar($this->fabrica->datosCliente(), Fabrica::archivosIdentificacion(), $responsable);
         $this->assertFalse($legajo->tieneDocumento($sin, self::PEP), 'Opcional en el alta');
         foreach (['pdf', 'jpg', 'png'] as $tipo) {
-            $con = $servicio->registrar($this->fabrica->datosCliente(), [...$identidad, Fabrica::archivo(self::PEP, $tipo, null, "pep.{$tipo}")], $responsable);
+            $con = $servicio->registrar($this->fabrica->datosCliente(), [...Fabrica::archivosIdentificacion(), Fabrica::archivo(self::PEP, $tipo, null, "pep.{$tipo}")], $responsable);
             $this->assertTrue($legajo->tieneDocumento($con, self::PEP), $tipo);
         }
-        $con = $servicio->registrar($this->fabrica->datosCliente(), [...$identidad, Fabrica::archivo(self::PEP, 'pdf', 5 * 1024 * 1024, 'pep.pdf')], $responsable);
+        $con = $servicio->registrar($this->fabrica->datosCliente(), [...Fabrica::archivosIdentificacion(), Fabrica::archivo(self::PEP, 'pdf', 5 * 1024 * 1024, 'pep.pdf')], $responsable);
         $this->assertTrue($legajo->tieneDocumento($con, self::PEP), '5 MB exactos se aceptan');
     }
 
