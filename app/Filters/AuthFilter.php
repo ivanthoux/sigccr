@@ -51,9 +51,13 @@ class AuthFilter implements FilterInterface
         return null;
     }
 
+    /**
+     * Las páginas y descargas autenticadas no se guardan en la caché del navegador ni de un intermediario: al cerrar la
+     * sesión, el botón «Atrás» no debe mostrar datos del cliente ni del panel (ASVS V14.3.1).
+     */
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
-        return null;
+        return $response->setHeader('Cache-Control', 'no-store')->setHeader('Pragma', 'no-cache');
     }
 
     private function rechazar(RequestInterface $request, string $ambito, ?string $mensaje): ResponseInterface

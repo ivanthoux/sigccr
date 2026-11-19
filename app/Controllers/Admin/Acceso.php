@@ -71,7 +71,8 @@ class Acceso extends BaseController
         $servicio->registrarCierre((int) $cuenta['id'], (string) $cuenta['nombre'], $servicio->tieneJornadaAbierta((int) $cuenta['id']));
         finalizar_sesion();
 
-        return redirect()->route('acceso.login')->with('exito', 'La sesión se cerró correctamente.');
+        // «cache» borra las páginas autenticadas guardadas por el navegador (ASVS V14.3.1); no se pide «storage» para no perder el tema elegido
+        return redirect()->route('acceso.login')->with('exito', 'La sesión se cerró correctamente.')->setHeader('Clear-Site-Data', '"cache"');
     }
 
     /** CU-02 pasos 1 y 2. */
