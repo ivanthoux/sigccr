@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Libraries\Caja;
 
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Validacion\Campos;
 
 /**
  * Composición de un cobro en ventanilla con uno o más medios de pago bancarios (RN-29, RN-77, D-11, D-30).
@@ -35,7 +36,7 @@ final class MediosCobro
         }
         foreach ($medios as $n => $m) {
             $fila = $n + 1;
-            $medio = $m['medio'];
+            $medio = Campos::texto($m['medio'] ?? '');
             if ($medio === 'Efectivo') {
                 $errores[] = "Medio {$fila}: no se reciben pagos en efectivo; el cliente paga por transferencia, depósito o tarjeta (RN-77).";
                 continue;
@@ -49,9 +50,14 @@ final class MediosCobro
                 $errores[] = "Medio {$fila}: el importe debe ser mayor que cero.";
                 continue;
             }
-            $operacion = trim((string) ($m['numero_operacion'] ?? ''));
+            $operacion = Campos::texto($m['numero_operacion'] ?? '');
             if ($operacion === '') {
                 $errores[] = "Medio {$fila}: informe el número de operación o comprobante de " . mb_strtolower(self::MEDIOS[$medio]) . '.';
+                continue;
+            }
+            if (!Campos::operacionValida($operacion, 60)) {
+                // H-26: cobros_medios.numero_operacion es VARCHAR(60): más largo respondía error 500 y una eñe se guardaba como «?»
+                $errores[] = "Medio {$fila}: el número de operación admite hasta 60 letras, números o signos, sin tildes.";
                 continue;
             }
             $clave = $medio . '|' . $operacion;

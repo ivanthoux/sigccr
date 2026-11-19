@@ -24,7 +24,7 @@ $this->section('contenido');
             <div class="row g-2">
                 <?php foreach ($roles as $r): ?>
                     <div class="col-sm-6">
-                        <input type="radio" class="btn-check" name="rol" id="rol-<?= esc($r['codigo'], 'attr') ?>" value="<?= esc($r['codigo'], 'attr') ?>"<?= $elegido === $r['codigo'] ? ' checked' : '' ?>>
+                        <input type="radio" class="btn-check" name="rol" id="rol-<?= esc($r['codigo'], 'attr') ?>" value="<?= esc($r['codigo'], 'attr') ?>"<?= $elegido === $r['codigo'] ? ' checked' : '' ?><?= grupo_invalido('rol') ?>>
                         <label class="btn btn-outline-secondary w-100 text-start" for="rol-<?= esc($r['codigo'], 'attr') ?>"><?= esc($r['nombre']) ?><?= $r['codigo'] === $u['rol'] ? ' (actual)' : '' ?></label>
                     </div>
                 <?php endforeach ?>

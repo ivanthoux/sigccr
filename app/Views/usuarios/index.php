@@ -12,6 +12,7 @@ use App\Services\Usuarios\UsuarioService;
 $this->extend('layouts/panel');
 $this->section('contenido');
 $c = static fn (string $k): string => $criterios[$k] ?? '';
+$hayCriterios = hay_criterios($criterios);
 ?>
 <div class="encabezado">
     <div>
@@ -23,7 +24,8 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
     <?php endif ?>
 </div>
 
-<form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar usuarios">
+<?= view('partials/boton_filtros', ['id' => 'filtros-usuarios', 'que' => 'usuarios', 'abierto' => $hayCriterios]) ?>
+<form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-usuarios" role="search" aria-label="Buscar usuarios">
     <div class="row g-2 align-items-end">
         <div class="col-md-4 col-lg-3">
             <label for="texto" class="form-label small">Nombre o apellido</label>
@@ -55,10 +57,7 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
                 <?php endforeach ?>
             </select>
         </div>
-        <div class="col-md-4 col-lg-12 d-flex gap-2 justify-content-lg-end">
-            <a href="<?= url_to('usuarios.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('usuarios.localizar')) ?>
     </div>
 </form>
 
@@ -68,7 +67,7 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
     </div>
 <?php else: ?>
     <div class="hoja p-3">
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda>
             <thead>
             <tr><th>Apellido y nombre</th><th>Documento</th><th>Correo electrónico</th><th>Rol</th><th>Estado</th></tr>
             </thead>
@@ -76,7 +75,7 @@ $c = static fn (string $k): string => $criterios[$k] ?? '';
             <?php foreach ($usuarios as $u): ?>
                 <tr>
                     <td><a href="<?= site_url('admin/usuarios/' . $u['id']) ?>" class="fw-medium"><?= esc($u['apellido'] . ', ' . $u['nombre']) ?></a></td>
-                    <td><?= esc($u['tipo_documento'] . ' ' . $u['nro_documento']) ?></td>
+                    <td class="text-nowrap"><?= esc($u['tipo_documento'] . ' ' . $u['nro_documento']) ?></td>
                     <td><?= esc($u['correo']) ?></td>
                     <td><?= esc($u['rol_nombre']) ?></td>
                     <td><?= etiqueta_estado_cuenta($u['estado']) ?></td>

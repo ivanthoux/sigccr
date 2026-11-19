@@ -6,7 +6,6 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -23,15 +22,9 @@ class Simulaciones extends BaseController
     /** Pasos 1 a 5: búsqueda del cliente, líneas admitidas y condiciones de la línea elegida. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
-        $texto = trim((string) $this->request->getGet('texto'));
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
-            return view('simulaciones/cliente', [
-                'titulo' => 'Simular crédito',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : array_values(array_filter((new ClienteService())->buscar(['texto' => $texto]), static fn ($c) => $c['estado'] === 'Activo')),
-                'destino' => 'solicitudes.simular',
-            ]);
+            return $this->busquedaCliente('solicitudes.simular', 'Simular crédito', true);
         }
         try {
             $cliente = $this->servicio->cliente($clienteId);
@@ -39,7 +32,7 @@ class Simulaciones extends BaseController
             return redirect()->route('solicitudes.simular')->with('error', $e->getMessage());
         }
         $lineas = $this->servicio->lineasParaCliente($clienteId);
-        $lineaId = (int) $this->request->getGet('linea');
+        $lineaId = $this->enteroGet('linea');
 
         return view('simulaciones/nueva', [
             'titulo' => 'Simular crédito',
@@ -55,10 +48,10 @@ class Simulaciones extends BaseController
     {
         try {
             $id = $this->servicio->simular(
-                (int) $this->request->getPost('cliente_id'),
-                (int) $this->request->getPost('linea_id'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('cantidad_cuotas'),
+                $this->enteroPost('cliente_id'),
+                $this->enteroPost('linea_id'),
+                $this->campoPost('importe'),
+                $this->campoPost('cantidad_cuotas'),
                 (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {

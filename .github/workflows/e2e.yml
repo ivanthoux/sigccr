@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      capturas:
+        description: "Generar las capturas del manual de usuario (rama capturas-manual)"
+        type: boolean
+        default: false
 
 jobs:
   e2e:
@@ -16,15 +21,27 @@ jobs:
     env:
       CI: "1"
       E2E_CONSERVAR: "1"   # la pila queda levantada para mostrar sus registros si algo falla
+      E2E_CAPTURAS: ${{ inputs.capturas && '1' || '' }}
+    permissions:
+      contents: write   # solo para publicar las capturas del manual en su rama
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - name: Pila desde cero, migraciones, semillas y Playwright
         run: bash tests/e2e/ejecutar.sh
 
+      - name: Capturas del manual de usuario (rama capturas-manual)
+        if: always() && inputs.capturas
+        run: |
+          cd tests/e2e/capturas
+          git init -q -b capturas-manual
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" add .
+          git -c user.name="github-actions" -c user.email="github-actions@users.noreply.github.com" commit -q -m "Capturas del manual de usuario (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" capturas-manual
+
       - name: Informe con capturas
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: informe-e2e
           path: |

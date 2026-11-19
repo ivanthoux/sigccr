@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services\Solicitudes;
 
+use App\Libraries\Validacion\Campos;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Finanzas\AmortizacionFrancesa;
+use App\Libraries\Clientes\RequisitosDocumentales;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Solicitudes\Desembolso;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Libraries\Solicitudes\Simulador;
 use App\Services\BaseService;
+use App\Services\Clientes\LegajoService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
 use App\Services\Comunes\ParametroService;
@@ -43,7 +46,7 @@ class LiquidacionService extends BaseService
             ->join('resoluciones r', "r.solicitud_id = s.id AND r.decision = 'Aprobada' AND r.vigente = 1")
             ->where('s.estado', 'AprobadaPendienteLiquidacion');
         foreach (preg_split('/\s+/u', trim($texto), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $p) {
-            ctype_digit($p) ? $b->groupStart()->where('s.numero', (int) $p)->orLike('c.cuit_cuil', $p)->groupEnd() : $b->like('c.denominacion', $p);
+            ctype_digit($p) ? $b->groupStart()->where('s.numero', (int) $p)->orLike('c.cuit_cuil', Campos::literalLike((string) $p))->groupEnd() : $b->like('c.denominacion', Campos::literalLike((string) $p));
         }
 
         return $b->orderBy('r.vence_aprobacion')->get(200)->getResultArray();
@@ -77,6 +80,7 @@ class LiquidacionService extends BaseService
         }
         $s['requiere_conformidad'] = $s['alternativa_id'] !== null && $s['estado_alternativa'] !== 'Confirmada';
         $s['constancia'] = (new ContratoService($this->db))->constanciaRegistrada($solicitudId);
+        $s['declaracion_pep'] = (new LegajoService($this->db))->tieneDocumento((int) $s['cliente_id'], RequisitosDocumentales::DECLARACION_PEP);
         $s['reserva'] = $this->db->query("SELECT TOP (1) importe FROM dbo.afectaciones_fondos WHERE referencia_tipo = 'Solicitud' AND referencia_id = ? AND estado = 'Vigente'", [$solicitudId])->getRowArray()['importe'] ?? null;
 
         return $s;
@@ -135,6 +139,10 @@ class LiquidacionService extends BaseService
             // A4 (D-31): la constancia firmada del contrato debe estar en el legajo (RN-25, RN-78)
             if (!$s['constancia']) {
                 throw new ReglaNegocioException('Falta la constancia firmada del contrato de préstamo en el legajo: el Analista debe incorporarla (CU-103) antes de liquidar (RN-25, RN-78).', 'RN-78');
+            }
+            // D-55: la declaración jurada de persona expuesta políticamente firmada debe estar en el legajo (RN-80)
+            if (!$s['declaracion_pep']) {
+                throw new ReglaNegocioException('Falta la declaración jurada de persona expuesta políticamente en el legajo del cliente: el Analista debe incorporarla antes de liquidar (RN-80).', 'RN-80');
             }
             $neto = $s['calculo']['neto']->toFixed(2);
             $v = Desembolso::validar($datos, $s, $neto, $this->hoyNegocio(), (bool) $s['requiere_conformidad']);

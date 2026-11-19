@@ -124,10 +124,22 @@ final class CapacidadPago
                     $alternativas[] = $alt;
                     continue;
                 }
-                $neto = Tasas::desembolso($importe, $gastoOtorgamientoPct, $alicuotaIva)['neto'];
+                try {
+                    $neto = Tasas::desembolso($importe, $gastoOtorgamientoPct, $alicuotaIva)['neto'];
+                } catch (\DomainException) {
+                    $alt['motivo'] = Tasas::MENSAJE_SIN_NETO;
+                    $alternativas[] = $alt;
+                    continue;
+                }
+                $cftea = Tasas::cftea($neto, $plan->totales());
+                if (Tasas::excedeRegistro($cftea)) {
+                    $alt['motivo'] = Tasas::MENSAJE_FUERA_DE_LIMITE;
+                    $alternativas[] = $alt;
+                    continue;
+                }
                 $alt['viable'] = true;
                 $alt['tea'] = Tasas::tea($tna);
-                $alt['cftea'] = Tasas::cftea($neto, $plan->totales());
+                $alt['cftea'] = $cftea;
                 $alternativas[] = $alt;
             }
         }

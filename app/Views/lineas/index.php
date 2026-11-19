@@ -25,7 +25,8 @@ $this->section('contenido');
     <?php endif ?>
 </div>
 
-<form method="get" action="<?= url_to('lineas.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar líneas">
+<?= view('partials/boton_filtros', ['id' => 'filtros-lineas', 'que' => 'líneas', 'abierto' => $filtrado]) ?>
+<form method="get" action="<?= url_to('lineas.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $filtrado ? ' show' : '' ?>" id="filtros-lineas" role="search" aria-label="Buscar líneas">
     <div class="row g-2 align-items-end">
         <div class="col-md-5">
             <label for="texto" class="form-label small">Nombre o identificación</label>
@@ -45,10 +46,7 @@ $this->section('contenido');
                 <?php foreach ($categorias as $k => $t): ?><option value="<?= $k ?>"<?= $c('categoria') === $k ? ' selected' : '' ?>><?= esc($t) ?></option><?php endforeach ?>
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
-            <a href="<?= url_to('lineas.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Buscar</span></button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('lineas.localizar')) ?>
     </div>
 </form>
 
@@ -56,7 +54,7 @@ $this->section('contenido');
     <div class="hoja p-4"><p class="mb-0"><?= $filtrado ? 'No hay líneas que coincidan con la búsqueda. Pruebe con otros criterios.' : 'Todavía no hay líneas registradas.' ?></p></div>
 <?php else: ?>
     <div class="hoja p-3">
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda>
             <thead><tr><th>Línea</th><th>Identificación</th><th class="text-end">Importe mínimo</th><th class="text-end">Importe máximo</th><th class="text-end">TNA</th><th>Cuotas</th><th>Vigencia</th><th>Versión</th><th>Estado</th></tr></thead>
             <tbody>
             <?php foreach ($lineas as $l): ?>

@@ -46,9 +46,9 @@ class CancelacionesAnticipadas extends BaseController
             $r = (new CancelacionAnticipadaService())->registrar(
                 (int) session('cuenta')['id'],
                 $id,
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('medio'),
-                (string) $this->request->getPost('numero_operacion'),
+                $this->campoPost('importe'),
+                $this->campoPost('medio'),
+                $this->campoPost('numero_operacion'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

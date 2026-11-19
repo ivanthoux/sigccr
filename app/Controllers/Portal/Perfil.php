@@ -30,7 +30,12 @@ class Perfil extends BasePortal
     /** CU-98 pasos 3 a 7 (A1 a A3); la confirmación del paso 4 la pide el formulario (D-24). */
     public function guardarPreferencias(): RedirectResponse
     {
-        $otorgar = $this->request->getPost('comunicaciones') === 'Otorgar';
+        // H-27: un valor fuera de la lista (vacío, otro texto o una lista) revocaba el consentimiento
+        $accion = trim($this->campoPost('comunicaciones'));
+        if (!in_array($accion, ['Otorgar', 'Revocar'], true)) {
+            return redirect()->route('portal.preferencias')->with('error', 'Seleccione otorgar o revocar el consentimiento.');
+        }
+        $otorgar = $accion === 'Otorgar';
         try {
             $r = (new ClienteService())->cambiarConsentimiento($this->clienteId(), $otorgar);
         } catch (ReglaNegocioException $e) {
@@ -56,7 +61,7 @@ class Perfil extends BasePortal
     public function solicitarCorreo(): RedirectResponse
     {
         try {
-            (new ClienteService())->solicitarCambioCorreo($this->clienteId(), (string) $this->request->getPost('correo_nuevo'));
+            (new ClienteService())->solicitarCambioCorreo($this->clienteId(), $this->campoPost('correo_nuevo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConErrores($e);
         }

@@ -58,7 +58,7 @@ class Propuestas extends BasePortal
     public function aceptar(int $id): RedirectResponse
     {
         try {
-            $r = (new CampanaService())->aceptar($this->clienteId(), $id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('alternativa'));
+            $r = (new CampanaService())->aceptar($this->clienteId(), $id, $this->enteroPost('version_fila'), trim($this->campoPost('alternativa')));
         } catch (ReglaNegocioException $e) {
             return $this->volverConErrores($e);
         }
@@ -70,7 +70,7 @@ class Propuestas extends BasePortal
     public function rechazar(int $id): RedirectResponse
     {
         try {
-            (new CampanaService())->rechazar($this->clienteId(), $id, (int) $this->request->getPost('version_fila'));
+            (new CampanaService())->rechazar($this->clienteId(), $id, $this->enteroPost('version_fila'));
         } catch (ReglaNegocioException $e) {
             return $this->volverA('portal.propuestas', $e);
         }

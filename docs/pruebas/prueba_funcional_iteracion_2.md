@@ -127,7 +127,7 @@ El cierre de la caja (CU-36) se prueba en la sección 6.
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| G-35 | Alternativas generadas | En la solicitud de Ana (G-25), abrir Alternativas. | La capacidad de pago ($ 360.000 menos las cuotas vigentes), el monto máximo financiable, la combinación pedida en primer lugar y las demás por importe descendente; las descartadas al final con su motivo. | |
+| G-35 | Alternativas generadas | En la solicitud de Ana (G-25), abrir Alternativas. | La capacidad de pago ($ 360.000 menos las cuotas vigentes), el monto máximo financiable, la combinación pedida en primer lugar y las demás por importe descendente; las descartadas al final con su motivo. Sobre la tabla, la TNA, la TEA y la vigencia comunes a todas; solo la pedida tiene el botón principal (D-47). | |
 | G-36 | Detalle de la alternativa | Abrir una alternativa viable. | El plan de cuotas completo (francés), el gasto de otorgamiento, el neto a desembolsar, TEA, CFTEA y la fecha de vencimiento de la alternativa. | |
 | G-37 | Validaciones de la conformidad | Confirmar sin fecha, con fecha futura, con fecha anterior a la generación y sin medio. | Cada error junto a su campo («…no puede ser futura.», «…no puede ser anterior a la generación de la alternativa.», «Seleccione el medio de la conformidad.»). | |
 | G-38 | Aprobación automática | Confirmar la alternativa pedida con la fecha de hoy y el medio «Presencial, con firma del cliente». | «Alternativa confirmada y solicitud aprobada automáticamente. La aprobación vence el …: antes de esa fecha debe liquidarse (CU-27).»; en Fondos, el disponible baja en el neto a desembolsar y aparece la reserva. | |

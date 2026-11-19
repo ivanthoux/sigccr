@@ -35,6 +35,6 @@ $plan = $calculo['plan'];
             </tr>
         <?php endforeach ?>
         </tbody>
-        <tfoot><tr><th colspan="2">Totales</th><th class="importe"><?= esc(formato_importe($plan->totalCapital(), false)) ?></th><th class="importe"><?= esc(formato_importe($plan->totalIntereses(), false)) ?></th><th colspan="2"></th><th class="importe"><?= esc(formato_importe($plan->totalAPagar(), false)) ?></th></tr></tfoot>
+        <tfoot><tr><th scope="row" colspan="2">Totales</th><td class="importe fw-semibold"><?= esc(formato_importe($plan->totalCapital(), false)) ?></td><td class="importe fw-semibold"><?= esc(formato_importe($plan->totalIntereses(), false)) ?></td><td colspan="2"></td><td class="importe fw-semibold"><?= esc(formato_importe($plan->totalAPagar(), false)) ?></td></tr></tfoot>
     </table>
 </div>

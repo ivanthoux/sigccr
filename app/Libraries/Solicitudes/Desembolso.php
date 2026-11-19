@@ -42,24 +42,29 @@ final class Desembolso
         if ($requiereConformidad && empty($d['conformidad'])) {
             $e['conformidad'] = 'El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).';
         }
-        $cbu = preg_replace('/\D/', '', (string) ($d['cbu'] ?? '')) ?? '';
+        // H-15: un valor enviado como lista llega vacío
+        $cbu = preg_replace('/\D/', '', Campos::crudo($d['cbu'] ?? '')) ?? '';
         if (!self::cbuValido($cbu)) {
             $e['cbu'] = 'Ingrese un CBU válido de 22 dígitos.';
         } elseif (self::esCvu($cbu)) {
             $e['cbu'] = 'Es un CVU de una billetera virtual: el desembolso se transfiere solo a una cuenta bancaria del cliente, con CBU (D-27).';
         }
-        $titular = preg_replace('/\D/', '', (string) ($d['cuit_titular'] ?? '')) ?? '';
+        $titular = preg_replace('/\D/', '', Campos::crudo($d['cuit_titular'] ?? '')) ?? '';
         if ($titular === '' || $titular !== (string) $cliente['cuit_cuil']) {
             $e['cuit_titular'] = $cliente['cuit_cuil'] === null
                 ? 'El cliente no tiene CUIT/CUIL registrado: regístrelo antes de transferir (CU-12).'
                 : 'El titular de la cuenta debe ser el cliente (' . self::guiones((string) $cliente['cuit_cuil']) . '): no se admiten cuentas de terceros (RN-25).';
         }
         $evidencia = Campos::texto($d['evidencia_titularidad'] ?? '');
-        if (mb_strlen($evidencia) < 10) {
+        if (Campos::largo($evidencia) < 10) {
             $e['evidencia_titularidad'] = 'Describa cómo verificó la titularidad de la cuenta (al menos 10 caracteres).';
+        } elseif (Campos::largo($evidencia) > 500) {
+            // Va a la auditoría: sin límite, un texto de cualquier tamaño quedaba en el registro
+            $e['evidencia_titularidad'] = 'La descripción de la verificación admite hasta 500 caracteres.';
         }
         $numero = Campos::texto($d['comprobante'] ?? '');
-        if ($numero === '' || mb_strlen($numero) > 60) {
+        // H-17: el comprobante se guarda en VARCHAR(100): el número de operación admite solo caracteres ASCII visibles
+        if ($numero === '' || strlen($numero) > 60 || preg_match('/^[\x20-\x7E]+$/', $numero) !== 1) {
             $e['comprobante'] = 'Ingrese el número de operación de la transferencia.';
         }
         $fecha = Campos::fecha($d['fecha_transferencia'] ?? '');

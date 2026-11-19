@@ -33,11 +33,11 @@ final class ValidadorLinea
             $humana ? array_keys(RequisitosDocumentales::CATEGORIAS['PersonaHumana']) : [],
             $juridica ? array_keys(RequisitosDocumentales::CATEGORIAS['PersonaJuridica']) : [],
         );
-        $categorias = array_values(array_intersect(array_unique(array_map('strval', (array) ($d['categorias'] ?? []))), $posibles));
+        $categorias = array_values(array_intersect(array_unique(Campos::lista($d['categorias'] ?? [])), $posibles));
         $requisitos = [];
         foreach ((array) ($d['requisitos'] ?? []) as $cat => $codigos) {
             if (in_array((string) $cat, $categorias, true)) {
-                $requisitos[(string) $cat] = array_values(array_unique(array_map('strval', (array) $codigos)));
+                $requisitos[(string) $cat] = array_values(array_unique(Campos::lista($codigos)));
             }
         }
 
@@ -53,6 +53,8 @@ final class ValidadorLinea
             'gasto_otorgamiento_pct' => self::porcentaje($d['gasto_otorgamiento_pct'] ?? ''),
             // D-28: el gasto administrativo es un importe fijo o un porcentaje del capital en cada cuota
             'tipo_gasto_administrativo' => $porcentual,
+            // O-03 (D-52): un valor fuera de la lista se rechaza en lugar de tomarse como importe fijo
+            'tipo_gasto_valido' => in_array($t('tipo_gasto_administrativo'), ['Fijo', 'Porcentual'], true),
             'gasto_administrativo_texto' => $porcentual === 'Porcentual' ? '0' : $t('gasto_administrativo_cuota'),
             'gasto_administrativo_cuota' => $porcentual === 'Porcentual' ? '0.00' : Campos::importe($d['gasto_administrativo_cuota'] ?? ''),
             'gasto_administrativo_pct_texto' => $porcentual === 'Porcentual' ? $t('gasto_administrativo_pct') : '',
@@ -102,13 +104,17 @@ final class ValidadorLinea
         $r['tna'] = [
             Campos::obligatorio($d['tna_texto'], 'la TNA'),
             $d['tna_texto'] !== '' && $d['tna'] === null ? 'Ingrese la TNA en porcentaje, por ejemplo 65 o 65,5.' : null,
+            // O-01 (D-52): una línea sin interés no es un producto de crédito del sistema
+            $d['tna'] !== null && !Decimal::of($d['tna'])->isPositive() ? 'La TNA debe ser mayor que cero.' : null,
             $d['tna'] !== null && Decimal::of($d['tna'])->compare(5) > 0 ? 'La TNA no puede superar el 500 %.' : null,
         ];
         $r['gasto_otorgamiento_pct'] = [
             Campos::obligatorio($d['gasto_otorgamiento_texto'], 'el gasto de otorgamiento (0 si no tiene)'),
             $d['gasto_otorgamiento_texto'] !== '' && $d['gasto_otorgamiento_pct'] === null ? 'Ingrese el gasto de otorgamiento en porcentaje del capital.' : null,
-            $d['gasto_otorgamiento_pct'] !== null && Decimal::of($d['gasto_otorgamiento_pct'])->compare(1) >= 0 ? 'El gasto de otorgamiento debe ser menor que el 100 % del capital.' : null,
+            // D-54: hasta 50 %; antes se admitía hasta 99,9999 % y con el IVA no quedaba neto para desembolsar (H-24, H-25)
+            $d['gasto_otorgamiento_pct'] !== null && Decimal::of($d['gasto_otorgamiento_pct'])->compare('0.5') > 0 ? 'El gasto de otorgamiento no puede superar el 50 % del capital.' : null,
         ];
+        $r['tipo_gasto_administrativo'] = [($d['tipo_gasto_valido'] ?? true) ? null : 'Seleccione cómo se cobra el gasto administrativo.'];
         $r['gasto_administrativo_cuota'] = $d['tipo_gasto_administrativo'] === 'Porcentual' ? [] : [
             Campos::obligatorio($d['gasto_administrativo_texto'], 'el gasto administrativo por cuota (0 si no tiene)'),
             $d['gasto_administrativo_texto'] !== '' && $d['gasto_administrativo_cuota'] === null ? 'Ingrese un importe válido, por ejemplo 500,00.' : null,

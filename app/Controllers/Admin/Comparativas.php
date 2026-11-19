@@ -6,7 +6,6 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\ComparativaService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -17,15 +16,9 @@ class Comparativas extends BaseController
     /** Pasos 1 a 3: cliente y datos opcionales del pedido. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
-        $texto = trim((string) $this->request->getGet('texto'));
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
-            return view('simulaciones/cliente', [
-                'titulo' => 'Simular todas las líneas',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : array_values(array_filter((new ClienteService())->buscar(['texto' => $texto]), static fn ($c) => $c['estado'] === 'Activo')),
-                'destino' => 'simulaciones.comparar',
-            ]);
+            return $this->busquedaCliente('simulaciones.comparar', 'Simular todas las líneas', true);
         }
         try {
             $simulaciones = new SimulacionService();
@@ -42,10 +35,10 @@ class Comparativas extends BaseController
     {
         try {
             $id = (new ComparativaService())->simular(
-                (int) $this->request->getPost('cliente_id'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('cantidad_cuotas'),
-                (string) $this->request->getPost('criterio'),
+                $this->enteroPost('cliente_id'),
+                $this->campoPost('importe'),
+                $this->campoPost('cantidad_cuotas'),
+                $this->campoPost('criterio'),
                 (int) session('cuenta')['id'],
             );
         } catch (ReglaNegocioException $e) {

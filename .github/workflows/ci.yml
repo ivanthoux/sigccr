@@ -10,10 +10,10 @@ jobs:
     name: Motor financiero y calidad de código
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
       - name: PHP 8.3 con bcmath e intl
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
         with:
           php-version: "8.3"
           extensions: bcmath, intl, mbstring
@@ -61,3 +61,65 @@ jobs:
       - name: PHPStan
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
         continue-on-error: true   # se vuelve obligatorio cuando la estructura base esté versionada
+
+  integracion:
+    # D-51: cada campo con cada clase de dato y los controles comunes, contra SQL Server (plan de pruebas 7.9)
+    name: Integración contra SQL Server
+    runs-on: ubuntu-24.04
+    env:
+      SIGCCR_DB_HOST: localhost
+      SIGCCR_CREAR_INICIOS: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Contraseñas de esta ejecución (aleatorias, no se guardan en el repositorio)
+        run: |
+          for v in MSSQL_SA_PASSWORD OWNER_PASSWORD APP_PASSWORD; do
+            clave="Ci$(openssl rand -hex 12)!9"
+            echo "::add-mask::${clave}"
+            echo "${v}=${clave}" >> "$GITHUB_ENV"
+          done
+
+      - name: SQL Server 2022
+        run: |
+          docker run -d --name mssql -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
+            -e MSSQL_SA_PASSWORD -e MSSQL_COLLATION=Modern_Spanish_CI_AI mcr.microsoft.com/mssql/server:2022-latest
+          for i in $(seq 1 60); do
+            docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q 'SELECT 1' -b -o /dev/null && exit 0
+            sleep 2
+          done
+          docker logs mssql | tail -20
+          exit 1
+
+      - name: Controlador ODBC 18 de Microsoft (lo requiere la extensión sqlsrv)
+        run: |
+          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+          sudo apt-get update -q
+          sudo ACCEPT_EULA=Y apt-get install -y -q msodbcsql18 unixodbc-dev
+
+      - name: PHP 8.3 con sqlsrv
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring, sqlsrv
+          coverage: none
+          tools: composer:v2
+
+      - name: sqlcmd
+        run: |
+          curl --proto =https --tlsv1.2 -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
+          sqlcmd --version
+
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress
+
+      - name: Configuración (.env de ejemplo con la base en localhost y las contraseñas de esta ejecución)
+        run: |
+          cp env.sigccr.example .env
+          sed -i -E 's/^(database\.[a-z]+\.hostname) = db$/\1 = localhost/; s/^app\.forceGlobalSecureRequests = true/app.forceGlobalSecureRequests = false/' .env
+          sed -i -E "s/^database\.default\.password = .*/database.default.password = ${APP_PASSWORD}/; s/^database\.migraciones\.password = .*/database.migraciones.password = ${OWNER_PASSWORD}/" .env
+          php spark key:generate --force
+
+      - name: Pruebas de integración (base sigccr_pruebas desde cero)
+        run: composer test:integracion

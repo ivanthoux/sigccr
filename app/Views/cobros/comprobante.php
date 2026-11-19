@@ -13,6 +13,7 @@ $etiquetas = ['Punitorio' => 'Punitorios', 'InteresOrdinario' => 'Interés', 'Ga
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
+<span class="documento-propio" hidden></span><?php // D-57: con encabezado propio; al imprimir lleva solo la cabecera y el pie de cada hoja ?>
 <nav aria-label="Ruta" class="mb-2 d-print-none"><a href="<?= url_to('cobros.emitir-comprobante') ?>"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Comprobantes de pago</a></nav>
 <div class="encabezado">
     <div>

@@ -1,49 +1,90 @@
 # Registro de decisiones
 
-Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su estado de validación con el director. D-01 a D-08 fueron validadas el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores y se aplican; quedan pendientes de ratificación por el director y, si las objeta, se reemplazan por decisiones nuevas; su contenido está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
+Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su justificación, con los criterios de la sección siguiente que la sostienen. Toda la construcción se apoyó en ellas.
+
+**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-61), después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
+
+El contenido de cada decisión está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
 | ID | Fecha | Estado |
 |---|---|---|
-| D-01 | 23/10/2026 | Validada (24/10/2026) |
-| D-02 | 23/10/2026 | Validada (24/10/2026) |
-| D-03 | 23/10/2026 | Validada (24/10/2026) |
-| D-04 | 23/10/2026 | Validada (24/10/2026) |
-| D-05 | 23/10/2026 | Validada (24/10/2026) |
-| D-06 | 23/10/2026 | Validada (24/10/2026) |
-| D-07 | 23/10/2026 | Validada (24/10/2026) |
-| D-08 | 23/10/2026 | Validada (24/10/2026) |
-| D-09 | 27/10/2026 | Validada (29/10/2026) |
-| D-10 | 27/10/2026 | Validada (29/10/2026) |
-| D-11 | 27/10/2026 | Validada (29/10/2026) |
-| D-12 | 27/10/2026 | Validada (29/10/2026) |
-| D-13 | 27/10/2026 | Validada (29/10/2026) |
-| D-14 | 28/10/2026 | Validada (29/10/2026) |
-| D-15 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-16 | 29/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-17 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-18 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-19 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-20 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-21 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-22 | 30/10/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-23 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-24 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-25 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-26 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-27 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-28 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-29 | 03/11/2026 | Aceptada (06/11/2026), pendiente de ratificación |
-| D-30 | 06/11/2026 | Propuesta |
-| D-31 | 06/11/2026 | Propuesta |
-| D-32 | 07/11/2026 | Propuesta |
-| D-33 | 07/11/2026 | Propuesta |
-| D-34 | 07/11/2026 | Propuesta |
-| D-35 | 08/11/2026 | Propuesta |
-| D-36 | 08/11/2026 | Propuesta |
-| D-37 | 08/11/2026 | Propuesta |
-| D-38 | 08/11/2026 | Propuesta |
-| D-39 | 10/11/2026 | Propuesta |
-| D-40 | 10/11/2026 | Aceptada (10/11/2026) |
+| D-01 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-02 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-03 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-04 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-05 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-06 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-07 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-08 | 23/10/2026 | Validada por el director (24/10/2026) |
+| D-09 | 27/10/2026 | Validada por el director (29/10/2026) |
+| D-10 | 27/10/2026 | Validada por el director (29/10/2026) |
+| D-11 | 27/10/2026 | Validada por el director (29/10/2026) |
+| D-12 | 27/10/2026 | Validada por el director (29/10/2026) |
+| D-13 | 27/10/2026 | Validada por el director (29/10/2026) |
+| D-14 | 28/10/2026 | Validada por el director (29/10/2026) |
+| D-15 | 29/10/2026 | Validada (19/11/2026) |
+| D-16 | 29/10/2026 | Validada (19/11/2026) |
+| D-17 | 30/10/2026 | Validada (19/11/2026) |
+| D-18 | 30/10/2026 | Validada (19/11/2026) |
+| D-19 | 30/10/2026 | Validada (19/11/2026) |
+| D-20 | 30/10/2026 | Validada (19/11/2026) |
+| D-21 | 30/10/2026 | Validada (19/11/2026) |
+| D-22 | 30/10/2026 | Validada (19/11/2026) |
+| D-23 | 03/11/2026 | Validada (19/11/2026) |
+| D-24 | 03/11/2026 | Validada (19/11/2026) |
+| D-25 | 03/11/2026 | Validada (19/11/2026) |
+| D-26 | 03/11/2026 | Validada (19/11/2026) |
+| D-27 | 03/11/2026 | Validada (19/11/2026) |
+| D-28 | 03/11/2026 | Validada (19/11/2026) |
+| D-29 | 03/11/2026 | Validada (19/11/2026) |
+| D-30 | 06/11/2026 | Validada (19/11/2026) |
+| D-31 | 06/11/2026 | Validada (19/11/2026) |
+| D-32 | 07/11/2026 | Validada (19/11/2026) |
+| D-33 | 07/11/2026 | Validada (19/11/2026) |
+| D-34 | 07/11/2026 | Validada (19/11/2026) |
+| D-35 | 08/11/2026 | Validada (19/11/2026) |
+| D-36 | 08/11/2026 | Validada (19/11/2026) |
+| D-37 | 08/11/2026 | Validada (19/11/2026) |
+| D-38 | 08/11/2026 | Validada (19/11/2026) |
+| D-39 | 10/11/2026 | Validada (19/11/2026) |
+| D-40 | 10/11/2026 | Validada (19/11/2026) |
+| D-41 | 12/11/2026 | Validada (19/11/2026) |
+| D-42 | 12/11/2026 | Validada (19/11/2026) |
+| D-43 | 12/11/2026 | Validada (19/11/2026) |
+| D-44 | 12/11/2026 | Validada (19/11/2026) |
+| D-45 | 12/11/2026 | Validada (19/11/2026) |
+| D-46 | 17/11/2026 | Validada (19/11/2026) |
+| D-47 | 17/11/2026 | Validada (19/11/2026) |
+| D-48 | 17/11/2026 | Validada (19/11/2026) |
+| D-49 | 17/11/2026 | Validada (19/11/2026) |
+| D-50 | 17/11/2026 | Validada (19/11/2026) |
+| D-51 | 17/11/2026 | Validada (19/11/2026) |
+| D-52 | 18/11/2026 | Validada (19/11/2026) |
+| D-53 | 18/11/2026 | Validada (19/11/2026) |
+| D-54 | 18/11/2026 | Validada (19/11/2026) |
+| D-55 | 18/11/2026 | Validada (19/11/2026) |
+| D-56 | 18/11/2026 | Validada (19/11/2026) |
+| D-57 | 18/11/2026 | Validada (19/11/2026) |
+| D-58 | 18/11/2026 | Validada (19/11/2026) |
+| D-59 | 18/11/2026 | Validada (19/11/2026) |
+| D-60 | 19/11/2026 | Validada (19/11/2026) |
+| D-61 | 19/11/2026 | Validada (19/11/2026) |
+
+## Criterios de decisión
+
+Cada decisión se tomó cuando el análisis aprobado no definía algo, cuando la construcción o las pruebas mostraron una contradicción, o cuando la cátedra o el director pidieron un cambio. Para elegir entre las alternativas se aplicaron, en este orden de prioridad, los criterios siguientes. La justificación de cada decisión indica cuáles la sostienen.
+
+| Criterio | Qué se busca | Fuentes |
+|---|---|---|
+| **C1 · Cumplimiento normativo** | Que el sistema no permita operar fuera de la ley ni de las normas del BCRA y la UIF. Ante una duda, gana la interpretación más protectora para el cliente. | Ley 24.240 (art. 36), Código Civil y Comercial (arts. 903, 1110 a 1112), Ley 25.345 (art. 1), Ley 25.326, Resoluciones UIF 200/2024 y 35/2023, normas del BCRA de protección del usuario y de la Central de Deudores; estudio normativo de la sección 1.8. |
+| **C2 · Exactitud financiera** | Cálculos reproducibles al centavo con una planilla independiente: sin punto flotante, con un único redondeo y con el mismo resultado en cada ejecución. | RN-50, RN-63, casos CP-F01 a CP-F30 y planilla de referencia (R3). |
+| **C3 · Integridad y consistencia de los datos** | Que ninguna operación deje datos a medias, que dos usuarios no puedan aplicar la misma operación dos veces y que un cambio de parámetros no altere lo ya operado. | RN-15, RN-24, RNF-06; transacciones, bloqueos y `version_fila`. |
+| **C4 · Seguridad** | Mínimo privilegio, control de acceso en el servidor, datos personales protegidos y ninguna confianza en lo que llega desde fuera sin verificarlo. | RNF-01, RNF-11 a RNF-14; OWASP ASVS nivel 1. |
+| **C5 · Trazabilidad** | Que cada operación sensible deje evidencia de quién, cuándo, sobre qué y con qué resultado, y que la historia no se borre ni se reescriba. | RN-45, RNF-16. |
+| **C6 · Usabilidad y accesibilidad** | Que cada rol haga su tarea con la menor cantidad de pasos y errores, con WCAG 2.2 AA. | RNF-02, pruebas U-01 a U-29. |
+| **C7 · Alcance y simplicidad** | Resolver lo necesario para el alcance del proyecto y su plazo, sin dependencias ni mecanismos que no se usan, y diferir lo que no cabe registrándolo como fuera del alcance. | Programa de 2.2, riesgos de 2.4. |
+| **C8 · Verificabilidad** | Que cada regla quede cubierta por una prueba automática trazable a su caso de prueba, y que lo documentado sea lo construido. | RNF-15, plan de pruebas. |
+| **C9 · Coherencia con el análisis aprobado** | Hacer el cambio mínimo sobre los casos de uso, las reglas y el modelo, conservar la arquitectura MVC por servicios y registrar todo desvío. | Proceso Unificado: los desvíos de la construcción vuelven al análisis por este registro. |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -53,11 +94,15 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Implementado en `CapacidadPago::capitalMaximo` (caso CP-F17). Texto de CU-87 paso 3 corregido.
 
+**Justificación** (C2, C9, C8). Con la fórmula del análisis, la alternativa del monto máximo superaba siempre la capacidad de pago y CU-87 nunca podía ofrecerla. La corrección se deduce del propio sistema francés, al incluir el IVA del interés de la primera cuota, y se comprueba con el plan real (caso CP-F17). Corrige el análisis sin cambiar el caso de uso.
+
 ## D-02 · Valores de ejemplo para los parámetros «definidos por la entidad» (3.5.1)
 
 **Decisión.** Tasa punitoria diaria 0,12 %; refinanciación con TNA entre 30 % y 80 % y hasta 36 cuotas; campañas: umbral de disponibilidad $ 5.000.000, proyección a 30 días, factor de cobrabilidad 0,90, reserva mínima $ 1.000.000, capital máximo $ 3.000.000 y 15 días de duración.
 
 **Consecuencias.** Cargados por `ParametrosInicialesSeeder` e incorporados como valores iniciales en 3.5.1. Se modifican con CU-51 y CU-60 sin cambiar código.
+
+**Justificación** (C8, C7). El análisis dejaba esos valores «definidos por la entidad», y sin valores el sistema no puede ejecutarse ni probarse. Se eligieron valores verosímiles para una prestadora no bancaria. Como todos se modifican desde CU-51 y CU-60 con una nueva versión, no condicionan a la entidad que lo adopte.
 
 ## D-03 · Conexión con SQL Server sin cifrar dentro de la red interna de Docker
 
@@ -67,11 +112,15 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Vista de despliegue (4.4.5) y su diagrama actualizados.
 
+**Justificación** (C4, C7). El puerto de SQL Server no se publica y el tráfico no sale de la red interna de Docker, así que en desarrollo el cifrado no protege de un atacante real y obliga a gestionar certificados en cada equipo. En producción, donde la base puede estar en otro servidor, se exige TLS con un certificado de confianza.
+
 ## D-04 · Prelación del concepto no capitalizable (RN-29, RN-70)
 
 **Decisión.** En las cuotas de una refinanciación, el concepto no capitalizable se imputa después del IVA y antes del capital.
 
 **Consecuencias.** `Imputador::PRELACION`; valor `NoCapitalizable` agregado a `ConceptoDeuda` (4.1.1); prelación de RN-29 actualizada.
+
+**Justificación** (C1, C2). El concepto no capitalizable reúne intereses, gastos e IVA ya devengados que se difirieron al refinanciar. Imputarlo antes del capital respeta el art. 903 del Código Civil y Comercial (el pago a cuenta se imputa primero a intereses) y la prelación de RN-29, y evita que el cliente amortice capital mientras conserva una deuda de intereses.
 
 ## D-05 · Valores de las enumeraciones complementarias (4.1.1)
 
@@ -79,19 +128,27 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Restricciones CHECK del esquema (4.3).
 
+**Justificación** (C3, C9). Las restricciones CHECK necesitan valores concretos para que la base rechace un estado inválido aunque falle una validación del código. Se tomaron del vocabulario de los casos de uso, de modo que la base valida exactamente los estados que describe el análisis.
+
 ## D-06 · Dependencias SS-06 → SS-03 y SS-08 → SS-02 (3.7.1)
 
 **Decisión.** Se agregan a la descripción de subsistemas: el crédito conserva la versión de condiciones de su línea y las ofertas se dirigen a clientes.
 
+**Justificación** (C9). Las dependencias surgen de las claves foráneas del modelo de datos. Documentarlas mantiene la descripción de subsistemas coherente con lo que realmente se construyó.
+
 ## D-07 · Claves foráneas reubicadas y referencias genéricas (4.3.1)
 
 **Decisión.** Las claves foráneas siguen el sentido de las dependencias entre subsistemas. Cuando una asociación del dominio va en sentido contrario, la clave se ubica en el subsistema dependiente (`liquidaciones.credito_id`, `ofertas.solicitud_id`, `clientes.cuenta_cliente_id`) o se reemplaza por una referencia genérica validada por el servicio (`afectaciones_fondos`, `comunicaciones`, identificadores de usuario en SS-10).
+
+**Justificación** (C3, C9, C7). Respetar el sentido de las dependencias evita ciclos entre subsistemas, que habrían impedido construirlos en iteraciones sucesivas. Donde la asociación del dominio va en sentido contrario, la referencia genérica validada por el servicio conserva la integridad sin acoplar los subsistemas.
 
 ## D-08 · Redondeo directo de los importes exigibles (RN-50)
 
 **Decisión.** Los importes exigibles (interés de cada cuota, IVA, gastos de otorgamiento) se redondean a dos decimales desde el valor exacto, sin pasar por cuatro decimales, para evitar el doble redondeo. Los cuatro decimales se usan en los resultados que se acumulan antes de exigirse (tramos de punitorios).
 
 **Consecuencias.** `AmortizacionFrancesa`, `Punitorios`; criterio agregado a RN-50.
+
+**Justificación** (C2, C8). Redondear primero a cuatro decimales y después a dos produce diferencias de un centavo frente a la planilla de referencia. Un único redondeo desde el valor exacto es el criterio habitual del cálculo financiero y hace los importes reproducibles. Los cuatro decimales se conservan solo donde se acumulan valores antes de exigirlos.
 
 ## D-09 · Importe mínimo y máximo prestable de cada línea (RN-76)
 
@@ -101,6 +158,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Sin cambios de esquema. `ValidadorLinea` (C06) y `ComparadorLineas` aplican la regla; el formulario de CU-16/CU-17 muestra el ejemplo de la línea de motos.
 
+**Justificación** (C9, C8). El director pidió límites prestables por línea. El análisis ya los tenía, pero repartidos en varios casos de uso, y por eso no se percibían. Una regla propia los hace visibles y verificables, y un solo validador los aplica en todas las operaciones.
+
 ## D-10 · Simulación comparativa de todas las líneas (CU-99)
 
 **Contexto.** Se pidió un caso de uso para el cliente que se presenta sin saber qué tipo de crédito busca: simular todas las líneas a la vez para ver cuál le presta más o cuál le conviene.
@@ -108,6 +167,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** Nuevo CU-99 Simular Todas las Líneas de Crédito (Analista de Crédito, SS-04). Con una sola capacidad de pago (CU-87 pasos 1 y 2) calcula, para cada línea activa y vigente: si el cliente es elegible (RN-75); el monto máximo prestable (D-01 limitado por RN-76); y una alternativa recomendada con el importe pedido (o el máximo) en la menor cantidad de cuotas que entra en la capacidad, que es la de menor costo total. Marca la línea de **mayor monto** y la de **menor CFTEA** (desempate: menor total a pagar) y ordena por el criterio que elija el Analista. Cada alternativa recomendada se guarda como una simulación vinculada a la comparativa, que puede formalizarse con CU-22. Es preliminar (RN-17): no consulta la Central de Deudores.
 
 **Consecuencias.** Tabla `simulaciones_comparativas` y columnas `simulaciones.simulacion_comparativa_id` y `posicion` (migración 10). Lógica en `ComparadorLineas` con 8 pruebas. Permiso `solicitudes.simular-comparativa` para el Analista (matriz 3.6.2). La pantalla se construye en la iteración 2, junto con CU-21.
+
+**Justificación** (C9, C1, C7). Responde a un pedido de la presentación para el cliente que no sabe qué línea le conviene. Reutiliza el cálculo de capacidad y el motor existentes, y no consulta la Central de Deudores (RN-17), porque una simulación no debe generar consultas sin una solicitud. Los criterios «mayor monto» y «menor CFTEA» son los que el cliente entiende, y el CFTEA es el indicador de costo que exigen las normas de transparencia.
 
 ## D-11 · Cobro con varios medios de pago (RN-29)
 
@@ -117,6 +178,10 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Tabla `cobros_medios`; `cobros` pierde `medio` y `numero_operacion` y gana `cambio`; `movimientos_caja.cobro_medio_id` (migración 10). Lógica en `MediosCobro` con 7 pruebas. Cambian RN-29, RN-73, CU-33, CU-35, CU-36, CU-37, CU-56 y el modelo de dominio (`MedioCobro`).
 
+**Justificación** (C9, C3). Responde al pedido de pagar una cuota con varios medios. Cada medio genera su movimiento de caja, de modo que la conciliación de cada medio se mantiene exacta. El tratamiento del efectivo de esta decisión quedó reemplazado por D-30.
+
+**Reemplazo.** El tratamiento del efectivo y del cambio fue reemplazado por D-30.
+
 ## D-12 · Pago parcial ordinario de cuotas (RN-29)
 
 **Contexto.** RN-29 excluía el pago de una fracción de cuota; solo había imputaciones parciales excepcionales (RN-56, RN-57). El director preguntó si se contempla el pago parcial. Se decidió habilitarlo siempre en ventanilla.
@@ -124,6 +189,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** El cobro ordinario admite cualquier importe mayor que cero que no supere el total exigible de las cuotas seleccionadas (consecutivas desde la más antigua de cada crédito). Se imputa por antigüedad y por la prelación de RN-29; la cuota alcanzada parcialmente sigue Pendiente o Vencida por su saldo, conserva su vencimiento y su mora. Los punitorios corren sobre el capital vencido que quede pendiente (RN-34), y la tolerancia se evalúa sobre la fecha en que la cuota se cancela por completo (RN-53). El pago parcial no es una cancelación anticipada parcial: no reduce intereses ni recalcula el plan (1.5.2). En el portal (CU-49) se mantienen las órdenes por cuotas completas en esta versión.
 
 **Consecuencias.** `Imputador::imputar` admite importes menores al total y rechaza los mayores; nueva función `saldoDespues`; 3 pruebas nuevas. La columna `imputaciones.parcial_excepcional` pasa a llamarse `parcial` (migración 10). Cambian RN-29, RN-53, RN-56, RN-57, CU-33 (A1) y el glosario.
+
+**Justificación** (C2, C1, C9). El director pidió admitir pagos parciales. No se recalcula el plan para no confundirlo con la cancelación anticipada, que la Ley 24.240 trata aparte y con reducción de intereses (D-38). La tolerancia se evalúa sobre la cancelación completa para que un pago mínimo no evite la mora.
 
 ## D-13 · Parámetros del motor de evaluación editables por la prestadora (CU-58)
 
@@ -133,6 +200,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** `ValidadorParametrosEvaluacion` con 6 pruebas; pantalla CU-58 en el panel (`admin/parametros/evaluacion`) y `ParametroService::registrarVersion`. Sin cambios de esquema.
 
+**Justificación** (C3, C5, C9). La prestadora debe poder aplicar su propia política de riesgo. Las validaciones impiden un modelo incoherente, como pesos que no suman 100 % o cortes que no descienden, y cada cambio es una versión con fecha y motivo, de modo que las evaluaciones ya hechas conservan los parámetros con que se hicieron (RN-15).
+
 ## D-14 · Documentación exigida por la línea: créditos solo con DNI (RN-11)
 
 **Contexto.** En la presentación se discutió que muchas prestadoras otorgan préstamos de bajo monto pidiendo solo el documento de identidad. La v8 permitía configurar la documentación por línea, pero el alta del cliente (CU-11 A4) exigía la documentación base de su categoría de ingresos (por ejemplo, los tres últimos recibos de sueldo), así que un cliente que se presentaba solo con su DNI no podía registrarse.
@@ -140,6 +209,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** Se separan dos momentos. En el alta del cliente solo es obligatoria su identificación: documento de identidad para la persona humana; constancia de CUIT, documento del representante e instrumento de representación para la persona jurídica. La documentación de ingresos la define cada versión de condiciones de la línea y se exige al registrar la solicitud (CU-22) y se verifica en CU-23. La documentación base de RN-11 pasa a ser la que el sistema propone al configurar una línea; la línea puede quitarla y exigir solo el documento de identidad, que es obligatorio en todas. El riesgo de una línea «solo con DNI» se controla con la evaluación del BCRA (RN-69), la capacidad de pago sobre ingresos declarados y el importe máximo de la línea (RN-76).
 
 **Consecuencias.** Sin cambios de esquema (`requisitos_documentales` ya es por versión y categoría). `RequisitosDocumentales`: `identificacion()`, `sugeridos()`, `faltantes()` sobre una lista y `exigidosPorLinea()` para CU-22 y CU-23; `ClienteService::registrar` exige solo la identificación; `ValidadorLinea` exige el documento de identidad en cada categoría. Cambian RN-11, CU-11 (paso 3 y A4, A8), CU-16 (paso 2 y A3), CU-22 (paso 8 y A4) y CU-23 (paso 3).
+
+**Justificación** (C1, C9). Los créditos de bajo monto se otorgan en el mercado con el documento de identidad. La identificación del cliente sigue siendo obligatoria (Resolución UIF 200/2024). El riesgo se controla con la evaluación del BCRA, la capacidad de pago y el importe máximo de la línea, sin exigir documentación que el producto no necesita.
 
 ## D-15 · Persistencia desde los servicios con el Query Builder, sin modelos por tabla (4.4.2, 4.4.3)
 
@@ -149,6 +220,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Sin cambios de esquema. `app/Models` queda vacío y no existe `app/Entities`. Se mantienen RNF-05 (sin reglas en controladores ni vistas) y RNF-12 (sin concatenar datos del usuario en el SQL). Cambian 4.4.2 (fila Persistencia e Imagen 47) y 4.4.3 (filas de controladores, filtros, bibliotecas, excepciones, vistas, adjuntos y pruebas) en la v10.
 
+**Justificación** (C3, C7, C4). Los modelos de CodeIgniter no expresan los bloqueos de fila ni las actualizaciones condicionadas por versión que exige el control de concurrencia (RN-24, RNF-06), y habrían duplicado la lógica de BaseService. Sin esa capa intermedia, el modelo del patrón MVC queda formado por los servicios y las bibliotecas de reglas, que es donde ya estaba la lógica de negocio. Las consultas parametrizadas evitan la inyección de SQL (RNF-12).
+
 ## D-16 · Activación del portal al verificar el correo del cliente (CU-04, CU-11)
 
 **Contexto.** En la prueba funcional de la iteración 1, el cliente recién registrado abría el enlace de verificación del correo y la pantalla solo le confirmaba la verificación: para definir su contraseña debía ir por su cuenta a «Activar o rehabilitar acceso», volver a ingresar su documento y su correo y esperar un segundo correo. El recorrido se percibía como un bloqueo («me pide verificar el correo y no me deja crear la contraseña»). Además, el correo usaba la plantilla de los usuarios internos.
@@ -156,6 +229,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** Al confirmar el correo desde el enlace (CU-11 paso 8), si la cuenta del cliente está Pendiente de activación, o Desactivada con el cliente activo en el padrón, el sistema emite en ese momento la autorización de activación o de rehabilitación y lleva al cliente directamente a definir su contraseña (CU-04 paso 7). La autorización no se envía por correo, porque el cliente acaba de demostrar que lo controla con otra autorización de un solo uso (RN-03); se aplican las mismas reglas del paso 4 (RN-10, RN-62) y queda auditada. Si la cuenta ya está habilitada (cambio de correo, CU-12), la verificación termina en el inicio de sesión. La activación desde «Activar o rehabilitar acceso» con documento y correo se mantiene para quien no tenga el enlace. El correo de verificación de los clientes tiene su propia plantilla, que anticipa este paso.
 
 **Consecuencias.** Sin cambios de esquema. `AutorizacionService::emitirSinComunicacion()`, `ActivacionService::continuarTrasVerificacion()` y la plantilla `verificacion_correo_cliente`. Cambian CU-04 (A6, activación desde la verificación del correo), CU-11 (paso 8) y la tabla de realizaciones de 4.5.1 en la v11.
+
+**Justificación** (C6, C4). La prueba funcional mostró que el cliente se quedaba sin saber cómo seguir después de verificar el correo. Abrir el enlace de verificación ya demuestra que controla ese correo, así que emitir en ese momento la autorización de activación no reduce la seguridad de RN-03 y elimina un paso.
 
 ## D-17 · Evaluación automática en dos transacciones y registro de la contingencia (CU-86, CU-25)
 
@@ -170,6 +245,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 
 **Consecuencias.** Sin cambios de esquema. `EvaluacionService`, comando `evaluacion:ejecutar` (cada 5 minutos en el planificador), `AntecedentesBcra`, `DimensionesEvaluacion`, `Contingencia` y el adaptador `BcraInformacionCrediticia` (API pública de la Central de Deudores, `sigccr.adaptadorInformacionCrediticia = real`). Cambian el diagrama de estados de la solicitud de 4.2.3 (nueva transición), el de la evaluación de 4.2.4 (EnProceso → NoCompletada por error interno o interrupción), CU-86 (A7) y CU-25 (paso 7, resultado registrado).
 
+**Justificación** (C3, C9). Una consulta externa de hasta 30 segundos dentro de una transacción habría bloqueado la solicitud y, con varios Analistas, provocado esperas y bloqueos mutuos. Separar la consulta en dos transacciones y bloquear siempre en el mismo orden evita ambos problemas, y los estados de recuperación hacen que el proceso se reanude solo.
+
 ## D-18 · Domicilio del cliente con provincia y localidad (CU-11, CU-12)
 
 **Contexto.** En la prueba de la iteración 2 se observó que el domicilio del cliente era un único texto libre. Una sucursal atiende clientes de varias localidades cercanas, a veces de otra provincia: por ejemplo, desde Apóstoles (Misiones) se atiende a Azara y San José, en Misiones, y a Colonia Liebig, en Corrientes. Con un texto libre no se puede saber con certeza de qué localidad es cada cliente, ni agruparlos para reportes o campañas.
@@ -177,6 +254,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 **Decisión.** El domicilio se compone de provincia, localidad, código postal (opcional) y calle y número. La provincia y la localidad se eligen de un catálogo y son obligatorias en el alta (CU-11) y en cada modificación (CU-12). Los clientes registrados antes del cambio conservan su domicilio y completan la localidad en su próxima modificación. El catálogo usa los códigos oficiales: las provincias, con su código INDEC, y las localidades, del catálogo de localidades censales del Servicio de Normalización de Datos Geográficos (georef, datos.gob.ar). La instalación carga las 24 jurisdicciones y una lista base de localidades (las capitales, la zona de Apóstoles y el Gran Resistencia). El comando `php spark geografia:importar` incorpora el catálogo completo, descargado o desde un archivo; puede repetirse y no elimina localidades que ya estén en uso. El código postal admite los cuatro dígitos o el CPA de ocho caracteres.
 
 **Consecuencias.** Migración 13: tablas `provincias` y `localidades` en SS-10 y columnas `clientes.localidad_id` y `clientes.codigo_postal`; `domicilio` conserva la calle y el número. Queda en 75 tablas. `CatalogoGeografico` (con 6 pruebas), `GeografiaService`, `GeografiaSeeder` y el comando `geografia:importar`. El formulario del cliente carga las localidades al elegir la provincia. Cambian CU-11 (paso 3), CU-12, el modelo de dominio (`Cliente` con `Localidad`), 4.3 (tablas de SS-10 y SS-02, totales) y el glosario.
+
+**Justificación** (C3, C6). Un domicilio en texto libre no permite saber con certeza de qué localidad es el cliente ni agruparlo para reportes o campañas. Los catálogos oficiales (INDEC y el Servicio de Normalización de Datos Geográficos) dan códigos estables. Se mantienen los domicilios anteriores y se completan en la próxima modificación.
 
 ## D-19 · Alternativas de financiación, aprobación automática y reserva de fondos (CU-87, CU-64, CU-79)
 
@@ -209,6 +288,8 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 - `ComparativaService` (CU-99, con `ComparadorLineas`).
 
 CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay viables, deriva a resolución (A6). Hasta construir CU-85 (D05), los fondos de la entidad se registran como movimientos de fondos. Cambian CU-87 (paso 5), CU-79 (pasos 7 a 9) y RN-41 (importe de la reserva).
+
+**Justificación** (C2, C3, C6). Combinar todos los plazos producía decenas de alternativas, imposibles de comparar para el cliente; los plazos habituales las reducen a una cantidad manejable. La reserva es por el neto, porque es lo que sale de los fondos, y el bloqueo de aplicación impide que dos aprobaciones usen el mismo dinero. La aprobación automática se limita a condiciones verificables, sin parámetros que el análisis no definía.
 
 ## D-20 · Plan de la aprobación gerencial, conformidad al liquidar e identidad del destinatario (CU-26, CU-27, CU-28)
 
@@ -248,6 +329,8 @@ CU-86 genera las alternativas al resultar favorable la evaluación y, si no hay 
 
 El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye en D05; hasta entonces se puede liquidar por transferencia. Cambian CU-26 (A8), CU-27 (pasos 4 y 6, A7) y RN-22.
 
+**Justificación** (C1, C3, C5). Completa lo que el modelo no registraba, para que toda liquidación tenga un plan referenciado, la conformidad del cliente (RN-22) y la identidad del destinatario verificada (RN-25). Transferir solo a un CBU válido cuyo titular es el cliente previene desembolsos a terceros.
+
 ## D-21 · Vigencia de las asignaciones de caja y corrección de movimientos de fondos (CU-72, CU-80, CU-85)
 
 **Contexto.** Al construir cajas y fondos (D05) se encontraron cuatro diferencias entre los casos de uso y el esquema:
@@ -274,6 +357,8 @@ El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye
 - Pantallas Mi caja, Cajas y Fondos.
 
 `LiquidacionService` usa `CajaService::jornadaOperable`. Cambian CU-72 (A5), CU-80 (paso 2), CU-85 (A2, A3), RN-28 y el modelo de datos (4.3).
+
+**Justificación** (C3, C5). Resuelve inconsistencias entre los casos de uso y el esquema. Corregir un movimiento con un movimiento inverso vinculado conserva la historia: ningún registro se edita ni se borra, que es lo que exige un registro de fondos auditable.
 
 ## D-22 · Parámetros de estructuración, vencimientos automáticos y calendario operativo (CU-59, CU-89, CU-82)
 
@@ -314,6 +399,8 @@ El desembolso en efectivo requiere la apertura de caja (CU-31), que se construye
 
 Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
+**Justificación** (C3, C7). Define lo que el análisis enumeraba sin valores, con el mínimo necesario para operar. Procesar cada vencimiento en su propia transacción hace que la falla de uno no detenga a los demás, y el orden entre el vencimiento de la aprobación y el de la evaluación resuelve el caso en que coinciden (RN-49).
+
 ## D-23 · Ajustes de validación y de presentación observados en la presentación del 02/11/2026 (CU-16, CU-17, CU-21, CU-26, CU-99)
 
 **Contexto.** En la presentación del avance se observó que:
@@ -330,6 +417,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Cambian `ValidadorLinea`, `SimulacionService::perfil`, la vista parcial del plan, la de resolución y la descarga de documentos (`?ver=1` los muestra en el navegador). Cambian RN-14 y CU-16, CU-17, CU-21, CU-26 y CU-99.
 
+**Justificación** (C6, C9). Atiende las observaciones de la presentación del 02/11. Un mínimo igual al máximo deja una línea sin rango, que suele ser un error de carga. Mostrar los datos del cliente en la simulación, sin consultar la Central de Deudores, sustenta la operación sin generar consultas externas.
+
 ## D-24 · Confirmación de cambios con solicitudes en trámite (CU-17, CU-58, CU-59)
 
 **Contexto.** Una nueva versión de condiciones de una línea o de los parámetros de evaluación o estructuración no altera las operaciones ya generadas (RN-15), pero quien la registra no sabe cuántas solicitudes en trámite quedan con la versión anterior.
@@ -337,6 +426,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 **Decisión.** Si hay solicitudes en trámite (estados no finales) con la versión vigente de la línea, o cualquier solicitud en trámite al cambiar los parámetros de evaluación o de estructuración, el sistema informa cuántas son, explica que conservan su versión y exige marcar una confirmación antes de registrar el cambio. Sin solicitudes en trámite, el cambio se registra directamente.
 
 **Consecuencias.** `LineaService::modificar` recibe la confirmación; el controlador de parámetros cuenta las solicitudes en trámite (`ParametroService::solicitudesEnTramite`). Se agrega un paso alternativo a CU-17, CU-58 y CU-59.
+
+**Justificación** (C6, C5). Una nueva versión no altera las solicitudes en trámite (RN-15), pero quien la registra no lo sabía. Informar cuántas son y pedir una confirmación hace visible el impacto y evita cambios accidentales.
 
 ## D-25 · Catálogo de documentación configurable (CU-100; CU-11, CU-16, CU-17)
 
@@ -349,6 +440,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Tabla `documentacion_sugerida` (migración 15), `DocumentacionService`, pantalla «Documentación exigible» y `RequisitosDocumentales::validarSugeridos`. La lista inicial pasa a `RequisitosDocumentales::SUGERIDOS_INICIALES` y la carga la instalación. Cambian RN-11, la matriz de participación (3.6.2) y el modelo de datos (4.3).
 
+**Justificación** (C3, C9). Responde al pedido de agregar documentos al catálogo. Los tipos se desactivan en lugar de eliminarse, porque los legajos y las versiones de condiciones los referencian.
+
 ## D-26 · Categorías del monotributo (CU-101; CU-11, CU-12)
 
 **Contexto.** Para un cliente monotributista el sistema no registra su categoría del Régimen Simplificado, que acota sus ingresos.
@@ -358,6 +451,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 2. **Cliente monotributista.** Al registrarlo o modificarlo se informa su categoría, obligatoria desde esta decisión. Doce veces los ingresos mensuales declarados no pueden superar el tope de la categoría vigente: los ingresos que se declaran son netos y el tope es de ingresos brutos, así que superarlo indica una inconsistencia.
 
 **Consecuencias.** Tabla `categorias_monotributo` y columna `clientes.categoria_monotributo` (migración 15), `CategoriasMonotributo`, `MonotributoService` y la pantalla «Categorías del monotributo». Cambian CU-11 y CU-12 (validación), la matriz de participación y el modelo de datos.
+
+**Justificación** (C1, C3). La categoría del monotributo acota los ingresos que el cliente puede declarar. La escala se versiona porque ARCA la actualiza cada semestre, y el control de coherencia entre los ingresos y el tope detecta declaraciones inconsistentes.
 
 ## D-27 · Desembolso solo por transferencia a una cuenta bancaria del cliente (CU-27; cobros de la iteración 3)
 
@@ -369,6 +464,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Cambian `Desembolso` (un solo medio, `esCvu`), `LiquidacionService` (sin egreso de caja) y la pantalla de liquidación. Las liquidaciones en efectivo ya registradas se conservan. Cambian CU-27 (pasos 5 y A4), RN-28 y el alcance de CU-31, CU-32, CU-33 y CU-36, que se revisan en la iteración 3.
 
+**Justificación** (C1, C4). El art. 1 de la Ley 25.345 priva de efectos a los pagos de más de $ 1.000 hechos fuera de los medios bancarios, lo que alcanza a prácticamente cualquier desembolso. El director pidió además transferir solo a cuentas bancarias, sin CVU. El desembolso por transferencia a un CBU del cliente cumple ambas cosas y deja evidencia del pago.
+
 ## D-28 · Gasto administrativo fijo o porcentual (CU-16, CU-17; CU-21, CU-87, CU-99, CU-27)
 
 **Contexto.** RN-68 define el gasto administrativo como un importe fijo por cuota. En la presentación se pidió que la línea pueda definirlo también como porcentaje.
@@ -379,6 +476,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 3. **Versiones anteriores.** Las versiones registradas antes de esta decisión son de importe fijo.
 
 **Consecuencias.** Columnas `versiones_condiciones.tipo_gasto_administrativo` y `gasto_administrativo_pct` con su restricción de consistencia (migración 15). Componente `GastoAdministrativo`, usado por `Simulador`, `CapacidadPago`, `ComparadorLineas`, `Estructurador` y `LiquidacionService`, con 4 pruebas nuevas. Cambian RN-68, CU-16 y CU-17 (paso de condiciones), el modelo de datos y los casos de prueba del motor financiero.
+
+**Justificación** (C1, C2). Responde al pedido de un gasto administrativo porcentual. Se mantiene constante la cuota del sistema francés, se fija un tope del 10 % para evitar costos desproporcionados y el gasto integra el CFTEA, de modo que el cliente ve el costo total.
 
 ## D-29 · Requerimientos nuevos diferidos a la iteración 3
 
@@ -396,6 +495,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Se agregan casos de uso al SS-02 (pre-registro), al SS-04 (constancia firmada) y un adaptador al SS-11. Se replanifica la iteración 3.
 
+**Justificación** (C7, C9). Son requerimientos de valor, pero incorporarlos en plena iteración 2 habría comprometido su Control. Siguiendo la planificación por riesgo y valor del Proceso Unificado, se replanificó la iteración 3 y se precisaron después en D-31 y D-42.
+
 ## D-30 · Caja y cobros sin efectivo (CU-31 a CU-37, CU-56, CU-97; RN-28, RN-29, RN-32)
 
 **Contexto.** D-27 eliminó el efectivo del desembolso y difirió a la iteración 3 el rediseño de la caja. El art. 1 de la Ley 25.345 impide recibir pagos de más de $ 1.000 en efectivo, y la presentación pidió que todo pago se haga por medios bancarios.
@@ -407,6 +508,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 4. **Registros anteriores.** Las columnas del efectivo, el cambio y el fondo inicial se conservan para los registros anteriores; la migración de la iteración 3 impide nuevos valores.
 
 **Consecuencias.** Cambian `CajaService` (`abrir()` sin fondo, `cerrar()` con la conciliación), `MediosCobro` (sin efectivo ni cambio; la suma de los medios debe igualar el importe), `ReglasCaja` (`totalesPorMedio()` y `validarConciliacion()` en lugar del arqueo) y las pantallas de caja. La migración 16 agrega `conciliaciones_jornada` y restricciones WITH NOCHECK sobre `jornadas_caja`, `cobros`, `cobros_medios`, `movimientos_caja` y `liquidaciones`. Cambian CU-31 a CU-33, CU-35, CU-36, CU-56, CU-67, CU-77, CU-97, RN-28, RN-29 y RN-32 (documento v12).
+
+**Justificación** (C1, C3). Es la consecuencia de D-27 y de la Ley 25.345 sobre los cobros: sin efectivo, el arqueo pierde sentido y se reemplaza por la conciliación de cada medio con el extracto o el resumen del procesador, que es el control que corresponde a pagos bancarios.
 
 ## D-31 · Contrato, revocación, identificación del cliente y régimen informativo (CU-102 a CU-105; RN-77 a RN-84)
 
@@ -422,6 +525,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Nuevos RF-19, RNF-17, GLO-75 a GLO-84, clases ContratoPrestamo, Revocacion y SituacionDeudor, y tablas en las iteraciones 3 y 4. Fuentes de los diagramas de estados en `docs/diseno/estados` y de secuencia de la iteración 2 en `docs/diseno/iteracion-2`.
 
+**Justificación** (C1, C5). El estudio normativo identificó obligaciones que el análisis no cubría: el contrato con el contenido del art. 36 de la Ley 24.240, la revocación de los arts. 1110 a 1112 del Código Civil y Comercial, la identificación de la Resolución UIF 200/2024 y el régimen informativo de la Central de Deudores. Sin ellas, el sistema permitiría otorgar créditos fuera de la ley.
+
 ## D-32 · Cobro de cuotas en ventanilla y su anulación (CU-33, CU-35, CU-32, CU-37)
 
 **Contexto.** CU-33 indica el orden de imputación dentro de una cuota (RN-29), pero no entre cuotas de distintos créditos, ni cómo se exigen los punitorios que CU-88 devenga con cuatro decimales, ni cuándo cambia el estado del crédito.
@@ -435,6 +540,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Pendiente.** La advertencia de cuotas incluidas en una orden de pago electrónico (A6) y la reversión por la pasarela (CU-37 A3) se incorporan con los pagos electrónicos (E03).
 
 **Consecuencias.** Sin cambios de esquema. Componentes nuevos: `CobroCuotas` (con 9 pruebas) y `CobroService`; controlador `Admin\Cobros` y consulta de jornadas en `Admin\Cajas`.
+
+**Justificación** (C2, C3, C5). Fija el orden de imputación entre cuotas y créditos por antigüedad, como RN-29 dentro de cada cuota. La anulación devuelve cada concepto lo imputado y conserva el dinero recibido como saldo a favor, porque el pago existió y no puede borrarse.
 
 ## D-33 · Cálculo de los intereses punitorios (CU-60, CU-88, CU-33)
 
@@ -450,6 +557,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Sin cambios de esquema (usa `tramos_punitorios`, `cuotas.punitorio_pendiente` y `creditos.tolerancia_dias`). Componentes nuevos: `ValidadorParametrosMorosidad`, `PunitorioService`, el comando `cartera:punitorios` y la línea habilitada del crontab.
 
+**Justificación** (C2, C1). Un proceso diario que registra un tramo por día y calcula los días faltantes hace el cálculo reproducible aunque el proceso no corra algún día. Calcular hasta el día del pago antes de cobrar hace que el cliente pague exactamente lo devengado. La tasa de cada día es la vigente al cierre, con el tope de RN-35 sobre la tasa del crédito.
+
 ## D-34 · Importe y registro de la revocación (CU-102, RN-79)
 
 **Contexto.** El art. 1112 del Código Civil y Comercial obliga a restituir lo recibido; RN-79 agrega el interés compensatorio devengado y excluye gastos y comisiones. Faltaba precisar sobre qué capital se calcula, hasta qué día y cómo entra el dinero.
@@ -463,6 +572,7 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Migración 19 y componentes `Revocacion` (con 3 pruebas), `RevocacionService` y `Admin\Revocaciones`; permiso 102 del Cajero. Se agrega el estado Revocado al diagrama de 4.2.7, ya incluido en la v12.
 
+**Justificación** (C1, C2). El art. 1112 del Código Civil y Comercial obliga a restituir lo recibido, y RN-79 excluye gastos y comisiones. El capital es el neto desembolsado, porque es lo que el cliente recibió, y el IVA del interés se cobra porque es un impuesto, no un gasto.
 
 ## D-35 · Órdenes y confirmación de pagos electrónicos (CU-34, CU-38, CU-90, CU-91; RN-30, RN-54 a RN-57)
 
@@ -479,6 +589,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Migración 20 (`ordenes_pago_electronico.url_pago`). Componentes nuevos: `PagoElectronico` (con 3 pruebas), `PagoElectronicoService`, `Admin\PagosElectronicos`, `Api\Webhooks\Pasarela`, `Simulador\Pasarela` y los comandos `pagos:notificaciones` y `pagos:conciliar`, con sus líneas del crontab. `CobroService::imputar()` pasa a ser compartido por ambos canales, y CU-33 advierte las cuotas incluidas en una orden pendiente (A6).
 
+**Justificación** (C4, C3). Confiar en el cuerpo de la notificación permitiría confirmar pagos falsos. Por eso el sistema solo registra la notificación y confirma con una consulta a la pasarela (RN-30). El identificador externo único impide procesar dos veces la misma transacción, y la conciliación periódica cubre las notificaciones que no llegan.
+
 ## D-36 · Circuito de refinanciación y condonación de punitorios (CU-39 a CU-44, CU-74, CU-96; RN-36 a RN-38, RN-70)
 
 **Contexto.** RN-36 y RN-70 fijan qué se refinancia y cuándo una propuesta queda Observada, pero no cómo se detecta que la deuda varió si los punitorios siguen creciendo después del corte, qué crédito recibe el nuevo plan ni cómo se trata el IVA de los punitorios condonados.
@@ -494,6 +606,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Migración 21: columnas de composición en `simulaciones_refinanciacion`, tabla `simulaciones_refinanciacion_cuotas`, `propuestas_cuotas.punitorio`, datos de cancelación en `propuestas_refinanciacion`, `aceptaciones_refinanciacion.fecha_constancia` y `punitorios_incorporados`, `condonaciones.cliente_id` y `condonaciones_cuotas.iva`. Componentes nuevos: `DeudaRefinanciable` y `Condonacion` (con 6 pruebas), `RefinanciacionService`, `CondonacionService`, `Admin\Refinanciaciones` y `Admin\Condonaciones`. CU-89 vence las propuestas. La cancelación anticipada (CU-97, E07) deberá llamar también a `observarPorCuotas()`.
 
+**Justificación** (C2, C3, C5). Los punitorios siguen creciendo después del corte, y tomar ese aumento como una variación habría dejado Observada casi toda propuesta. La variación se define sobre los conceptos que el cliente puede cambiar con un pago, y la aplicación se hace en una sola transacción. La condonación reduce el IVA en la misma proporción, para no cobrar IVA sobre un punitorio condonado.
+
 ## D-37 · Aplicación y devolución de saldos a favor (CU-76 a CU-78; RN-57, RN-73, RN-77)
 
 **Contexto.** RN-57 y RN-73 fijan quién aplica o devuelve un saldo a favor y con qué garantías, pero un cliente puede tener varios saldos de orígenes distintos, la autorización del esquema se refiere a un solo saldo y la pasarela es el único medio que admite devoluciones automáticas.
@@ -507,6 +621,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Fondos.** Los saldos a favor no integran los fondos hasta que se aplican (RN-57): la disponibilidad deja de descontar las devoluciones completadas, que se descontaban sin haberse sumado.
 
 **Consecuencias.** Migración 22: constancia de la solicitud, entidad, evidencia y anulación en `autorizaciones_devolucion`; importe, cuenta, fecha y detalle en `ejecuciones_devolucion`. La interfaz de la pasarela suma `devolver()` y `consultarDevolucion()`, y el simulador, la página `simulador/devoluciones`. Componentes nuevos: `SaldoAFavor` y `Devolucion` (con 4 pruebas), `SaldoFavorService`, `DevolucionService` y `Admin\SaldosFavor`. `CobroService::imputar()` admite el origen de la aplicación de saldo y `CobroService::seleccionar()` concentra la selección de cuotas de CU-33, CU-34 y CU-76; la búsqueda del cliente de las operaciones que parten de él pasa a `BaseController::clienteSeleccionado()`.
+
+**Justificación** (C3, C4, C1). Una autorización por saldo, con su reserva, impide devolver dos veces el mismo importe. El destino sigue al origen: la pasarela devuelve sobre su transacción, y el resto se transfiere a un CBU verificado del cliente, nunca a un tercero.
 
 ## D-38 · Cancelación anticipada, proyección de fondos y cierre de los vencimientos (CU-97, CU-92, CU-89, CU-81; RN-39, RN-67)
 
@@ -522,6 +638,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Migración 23 (`cancelaciones_anticipadas`). Componentes nuevos: `CancelacionAnticipada::distribuir()` (con 1 prueba nueva; otra para el pago parcial previo), `CancelacionAnticipadaService`, `Admin\CancelacionesAnticipadas`, `FondosService::proyectar()` y el comando `fondos:proyectar` (06:00, línea del crontab habilitada). `CobroService::asentarVentanilla()` concentra el registro del cobro en ventanilla con medios, movimientos de caja y comprobante.
 
+**Justificación** (C1, C2). La Ley 24.240 da derecho a la cancelación anticipada con la reducción de los intereses no devengados. El cálculo suma el concepto no capitalizable diferido, que es deuda ya devengada. La operación no se anula, porque la reducción aplicada no se puede reconstruir desde las imputaciones.
+
 ## D-39 · Pruebas de punta a punta automatizadas (RNF-15, plan de pruebas)
 
 **Contexto.** Las pruebas unitarias cubren el motor financiero y las reglas, pero no ejecutan SQL Server, la sesión ni las pantallas. La prueba funcional se hacía solo a mano. La primera instalación desde cero en la integración continua mostró defectos que ninguna de las dos detectaba: la migración 19 fallaba con la base vacía, faltaban permisos DELETE del rol de la aplicación, no se podía desactivar una cuenta sin contraseña y el mensaje del cierre de sesión se perdía.
@@ -534,6 +652,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Flujo `.github/workflows/e2e.yml`. `AdministradorInicialSeeder` acepta `SIGCCR_ADMIN_*`. `verificar.py` controla los permisos DELETE. La batería crece por iteración junto con la prueba integral.
 
+**Justificación** (C8). La primera instalación desde cero mostró defectos que ni las pruebas unitarias ni la prueba manual detectaban. Una batería contra la pila completa, con cada prueba trazada a un caso aprobado, los detecta antes de cada versión y sostiene la regla de que se corrige el sistema o el documento, nunca solo la prueba.
+
 ## D-40 · El enlace de activación verifica el correo del cliente (CU-04, RN-10)
 
 **Contexto.** CU-04 exigía que el correo ingresado coincidiera con un correo ya verificado. El cliente verifica su correo solo con el enlace que recibe en el alta (CU-11), y el panel no permite reenviarlo. Si el cliente no abría ese enlace a tiempo, o lo perdía porque la entidad lo desactivó y reactivó (CU-13 invalida sus autorizaciones), no podía activar ni rehabilitar el portal. Lo detectaron las pruebas de punta a punta (R-028 y R-030).
@@ -542,6 +662,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** `ReglasActivacion::evaluar()` deja de exigir la verificación (prueba nueva). `ActivacionService::definirContrasena()` marca el correo verificado. Hay que actualizar el texto de CU-04 (paso 4) en el documento.
 
+**Justificación** (C6, C4). Exigir un correo previamente verificado dejaba sin salida al cliente que había perdido el primer enlace. El enlace se envía al correo de la cuenta, así que usarlo demuestra que el cliente lo controla, el mismo criterio que la recuperación de acceso (CU-02).
+
 ## D-41 · La batería de punta a punta se ejecuta al cierre de la iteración (D-39, plan de pruebas)
 
 **Contexto.** Con D-39 la batería E2E corría en cada *pull request* y en cada cambio de `develop`. Instala la pila desde cero y tarda unos 15 minutos, así que cada cambio intermedio de una iteración esperaba la batería completa, aunque la prueba de aceptación de cada Control se hace sobre el incremento cerrado.
@@ -549,6 +671,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 **Decisión.** El flujo `E2E` se ejecuta en el *pull request* de `develop` a `main` que publica la versión de cada iteración, y a pedido (*Run workflow*) cuando se quiere comprobar un estado intermedio. Durante la iteración, cada *pull request* se controla con el flujo `CI`: pruebas unitarias del motor financiero y de las reglas, autorización de cada ruta con cada rol, sintaxis y análisis estático (SonarCloud). Las pruebas E2E de los casos nuevos se escriben durante la iteración y se ejecutan juntas al cierre.
 
 **Consecuencias.** `.github/workflows/e2e.yml` cambia sus disparadores. La versión no se publica en `main` sin la batería aprobada, de modo que cada Control sigue respaldado por la batería completa y por la prueba funcional manual.
+
+**Justificación** (C7, C8). Quince minutos de batería en cada cambio intermedio frenaban la iteración sin aportar, porque la aceptación se hace sobre el incremento cerrado. Cada cambio sigue controlado por las pruebas unitarias, las de rutas y las de integración, y ninguna versión se publica sin la batería completa aprobada.
 
 ## D-42 · Portal de autogestión: acceso a la información propia, cambio de correo y pre-registro (SS-07; CU-45 a CU-49, CU-75, CU-98, CU-104; RN-01, RN-58, RN-64)
 
@@ -566,6 +690,10 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 
 **Consecuencias.** Migración 26 y `spec.py`. Componentes nuevos: `PortalService`, `PreRegistroService`, `ReglasPortal`, `ValidadorPreRegistro`, `AccesoAjenoException`, `PadronInterface` y `SimuladorPadron`; controladores `Portal\Perfil`, `Solicitudes`, `EstadoCuenta`, `Comprobantes`, `Pagos`, `CambioCorreo`, `PreRegistro` y `Admin\PreRegistros`; plantillas de correo `cambio_correo`, `verificacion_correo_nuevo` y `verificacion_pre_registro`. `ClienteService` suma `cambiarConsentimiento()`, `solicitarCambioCorreo()` y `confirmarCambioCorreo()`. Pruebas `tests/unit/Portal/PortalTest.php` y `tests/rutas/VistasPortalTest.php`.
 
+**Justificación** (C4, C5). Tomar el cliente de la sesión y nunca de la petición impide acceder a datos ajenos cambiando un identificador (control de acceso, OWASP A01). Responder lo mismo ante un objeto inexistente que ante uno ajeno evita revelar qué existe, y cada intento queda auditado.
+
+**Reemplazo.** El punto 8 (padrón de ARCA simulado) fue reemplazado por D-60: la consulta por CUIT o CUIL usa la Central de Deudores del BCRA y propone solo la denominación.
+
 ## D-43 · Campañas crediticias: activación por proyección, ofertas desde la capacidad de pago y aceptación desde el portal (SS-08; CU-43 A5, CU-50 a CU-52, CU-92 a CU-94; RN-18, RN-39 a RN-43, RN-64, RN-66)
 
 **Contexto.** El esquema de SS-08 (campañas y ofertas) y la proyección de fondos (CU-92) existían desde la iteración 3, pero la proyección solo registraba si correspondía activar o cerrar. Faltaba definir los parámetros que rigen las campañas, cómo se calcula cada oferta, cómo se registra la solicitud que origina un cliente sin un Analista y cómo se integra el compromiso de fondos con la reserva de la aprobación.
@@ -579,6 +707,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 6. **Consulta (CU-50 y CU-43 A5).** El Gerente y el Analista consultan las campañas con sus condiciones, ofertas, comunicaciones, respuestas, solicitudes y resultados (aceptación, capital solicitado y colocado). El cliente consulta desde el portal sus propuestas de refinanciación, sin acceso a las de otros clientes.
 
 **Consecuencias.** Migración 27 y `spec.py`. Componentes nuevos: `CampanaService`, `ReglasCampanas`, `ValidadorParametrosCampanas`, el comando `campanas:cerrar` (habilitado en el planificador), los controladores `Admin\Campanas` y `Portal\Propuestas`, `Admin\Parametros::campanas` y la plantilla `oferta_crediticia`. Cambios: `FondosService` (activación y cierre desde la proyección, compromiso y su conversión), `SolicitudService::registrar()` (origen y usuario opcional) y `SimulacionService` (usuario opcional y versión vigente de una línea). Pruebas `tests/unit/Campanas/CampanasTest.php` y `tests/rutas/VistasCampanasTest.php`.
+
+**Justificación** (C1, C2, C3). Activar campañas solo cuando la proyección muestra fondos libres evita prometer dinero que la entidad no tiene. Las ofertas se envían solo a quien dio su consentimiento (RN-64, Ley 25.326). La aceptación convierte el compromiso en reserva sin un segundo descuento.
 
 ## D-44 · Reportes, auditoría y régimen informativo: estructura común, exportación y aproximaciones (SS-09; CU-55 a CU-57, CU-65 a CU-71; SS-06: CU-105; RN-45, RN-47, RN-74, RN-84)
 
@@ -595,6 +725,8 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
 8. **Régimen informativo (CU-105).** El temporizador `regimen:generar` corre todos los días a las 7 y, desde el primer día hábil del mes, genera el mes anterior una sola vez (A1). Si falla, el período queda sin archivo y se reintenta al día siguiente (A3). Los deudores son los clientes con créditos Activos o En mora liquidados hasta el cierre del mes. Sus días de atraso son los de la cuota impaga más antigua vencida hasta el cierre, y la situación sale de RN-84. Se usa el estado de las cuotas al generar, de modo que un pago registrado entre el cierre y la generación reduce el atraso informado. El archivo tiene un formato propio separado por punto y coma: una cabecera y una línea por deudor con CUIT/CUIL, denominación, situación, saldo, días de atraso y cantidad de créditos. Se guarda con su SHA-256. La adaptación al diseño de registro vigente de la Central de Deudores queda fuera del alcance. El Gerente puede generar un mes cerrado o rectificarlo con un motivo: se agrega una versión y la anterior queda *Rectificado*. Se agrega el permiso `regimen.consultar` (CU-105) al Gerente.
 
 **Consecuencias.** Migración 28 (`regimenes_informativos` y `situaciones_deudor`) y `spec.py`. Componentes nuevos: `ReporteService`, `AuditoriaConsultaService`, `RegimenService`, las bibliotecas `Periodo`, `Indicadores`, `Xlsx`, `Exportacion` y `ReglasRegimen`, el comando `regimen:generar` (habilitado en el planificador), los controladores `Admin\Tablero`, `Admin\Reportes`, `Admin\CajaDiaria`, `Admin\Auditoria` y `Admin\Regimen`, y el helper `valor_reporte()`. La matriz 3.6.2 del documento suma CU-105 al Gerente; hay que ejecutar `composer semillas` para actualizar los permisos. Pruebas `tests/unit/Reportes/ReportesTest.php` y `tests/rutas/VistasReportesTest.php`.
+
+**Justificación** (C7, C8). Una estructura común para los siete reportes reduce el código y hace homogénea su impresión y exportación, sin agregar bibliotecas. Los saldos se informan a la fecha de generación porque el modelo no guarda el estado diario de las cuotas, y la pantalla lo aclara. El diseño de registro oficial del régimen informativo queda fuera del alcance, porque lo presenta la entidad.
 
 ## D-45 · Copias de seguridad y restauración: ejecución en el contenedor de procesos, cifrado propio y catálogo fuera de la base (SS-11; CU-61 a CU-63; RN-45, RNF-10, RNF-13, RNF-16)
 
@@ -647,3 +779,429 @@ Cambian CU-59 (paso 2), CU-89 (pasos 4 y 5), CU-82 y CU-29 (paso 2).
   - el planificador, `crear_base.sql`, `inicializar.sh`, `env.sigccr.example` y el README.
 - En una instalación existente basta con volver a ejecutar `docker/inicializar.sh`, que agrega la configuración `database.copias.*` al `.env` y crea el inicio de sesión.
 - Pruebas: `tests/unit/Copias/CopiasTest.php` y `tests/rutas/VistasCopiasTest.php`.
+
+**Justificación** (C4, C3, C5). SQL Server Express no tiene agente ni cifrado de copias, y no corresponde darle a PHP-FPM permisos para restaurar. Un proceso separado con su propio inicio de sesión aplica el mínimo privilegio, el cifrado autenticado protege la copia fuera del servidor y el catálogo fuera de la base sobrevive a la restauración que la reemplaza.
+
+## D-46 · Pruebas de rendimiento y redacción de RNF-07 según lo construido (RNF-03, RNF-06, RNF-07, RNF-10)
+
+**Contexto.** RNF-03 exige que las búsquedas de clientes y el registro de cobros respondan en menos de dos segundos en el percentil 95, con 20.000 clientes, 30.000 créditos, 300.000 cuotas, 10 usuarios concurrentes y un servidor de 4 vCPU y 8 GB, y prevé verificarlo con Apache JMeter. RNF-06 pide pruebas de concurrencia que intenten dos resoluciones simultáneas sobre un mismo objeto. RNF-07 indicaba que los listados de volumen creciente usarían DataTables con procesamiento del lado del servidor (búsqueda, paginación y ordenamiento por AJAX). Lo construido resuelve la búsqueda y el filtrado en el servidor, pero entrega un conjunto acotado de resultados que DataTables pagina y ordena en el navegador.
+
+**Decisión.**
+1. **RNF-07 se ajusta a lo construido.** Los listados de volumen creciente resuelven la búsqueda y los filtros en el servidor, con consultas parametrizadas, y devuelven un conjunto acotado: hasta 500 clientes, y hasta 200 solicitudes, cobros u órdenes de pago, ordenados por relevancia o fecha. El registro de auditoría se pagina en el servidor de a 50 registros. Sin criterios, cada listado muestra los registros más recientes. DataTables ordena y pagina en el navegador el conjunto recibido, sin nuevas peticiones. Los listados de volumen acotado (parámetros, cajas, líneas) se presentan completos. Se verifica con la prueba de carga RP-05: percentil 95 menor a dos segundos con el volumen de RNF-03. El procesamiento por AJAX no mejora el tiempo de respuesta con estos topes y agrega una interfaz de datos que proteger y probar.
+2. **Volumen de referencia.** `RendimientoSeeder` carga con SQL masivo 20.000 clientes, 30.000 créditos liquidados de 10 cuotas (300.000 cuotas, con uno de cada siete créditos en mora) y los usuarios de la carga. No pasa por los servicios: son datos de prueba con dígitos verificadores válidos, no operaciones reales, y solo se cargan en la pila de pruebas.
+3. **Escenarios (JMeter).** Una carga mixta de 10 usuarios durante 10 minutos: 3 Analistas que buscan clientes por apellido, documento y CUIL y consultan las solicitudes (RP-01, RP-05); 6 Cajeros que buscan al cliente, abren su deuda y registran el cobro de la cuota más antigua (RP-02, RP-03, RP-05); y un Gerente con el tablero y los reportes de cartera y morosidad. Cada usuario hace una pausa de 2 a 7 segundos entre operaciones. RP-06 envía al mismo tiempo dos cobros de la misma cuota y dos anulaciones del mismo cobro. RP-07 mide los procesos automáticos con todo el volumen.
+4. **Entorno.** El flujo *Rendimiento* de GitHub Actions (a pedido, y en los cambios de las pruebas) levanta la pila con la batería de punta a punta (datos base), pasa la aplicación a modo producción, limita los contenedores a 4 vCPU y 8 GB en total (base 2 vCPU y 4 GB, aplicación 1,5 y 3 GB, web 0,5 y 1 GB) y ejecuta JMeter en el mismo equipo, que le resta capacidad: un resultado favorable ahí lo es con margen en un servidor dedicado. Los resultados se publican en la rama `rendimiento-resultados`.
+5. **Criterios.** Percentil 95 menor a 2.000 ms y a lo sumo 1 % de errores en las operaciones de RNF-03 y RNF-07; en RP-06, un solo cobro y una sola anulación registrados. El tablero y los reportes se miden y se informan sin criterio, porque ningún requisito fija su tiempo; RP-07 se informa como referencia de RNF-10.
+6. **Correcciones que surgieron de las mediciones.**
+   - *Reporte de cartera.* Traía a PHP todos los créditos para agruparlos y superaba el búfer de 10 MB del controlador `sqlsrv` (error 500). Ahora agrupa en SQL Server por estado, línea y pertenencia al período, el detalle se limita a 1.000 créditos y la evolución se consulta aparte. El búfer de consultas sube a 50 MB (`sqlsrv.ClientBufferMaxKBSize`) como margen para las exportaciones.
+   - *Bloqueos mutuos.* Con seis Cajeros simultáneos, SQL Server eligió como víctima, en algunos casos, la actualización de los tramos punitorios que hace la consulta de deuda (0,4 % de errores). `BaseService::transaccion` reintenta hasta tres veces la transacción más externa cuando el motor informa un bloqueo mutuo (error 1205, SQLSTATE 40001), con una espera breve y creciente, y lo registra como advertencia. Las transacciones anidadas no se reintentan: el reintento corresponde a la que abrió la unidad de trabajo.
+   - *Prueba E2E del calendario (R-044).* Usaba fechas fijas a 45 días que podían coincidir con las de la carga anual; ahora elige días libres.
+
+**Consecuencias.** Componentes nuevos: `RendimientoSeeder` y `DatosDePruebaException`, `tests/rendimiento/` (`generar_planes.py`, `carga.jmx`, `concurrencia.jmx`, `ejecutar.sh`, `evaluar.py`) y el flujo `.github/workflows/rendimiento.yml`. Cambian `ReporteService::cartera`, `BaseService::transaccion`, `docker/php/php.ini`, RNF-07 (descripción y verificación) y el plan de pruebas (nivel Rendimiento y carga, casos RP-01 a RP-07). Los resultados se documentan en `docs/pruebas/prueba_rendimiento.md`.
+
+**Justificación** (C8, C9, C7). La prueba de carga demostró que la búsqueda y el filtrado en el servidor, con un conjunto acotado, cumplen RNF-03 sin procesamiento por AJAX. Documentar lo construido, con su verificación, es preferible a agregar una interfaz de datos que proteger y probar sin mejorar el tiempo de respuesta.
+
+## D-47 · Ajustes de la interfaz según la auditoría de diseño y accesibilidad (RNF-02, RNF-07; CU-01, CU-31, CU-47, CU-54, CU-55, CU-64)
+
+**Contexto.** El 17/11/2026 se auditó la interfaz completa con la herramienta de diseño *impeccable*, en escritorio y a 375 px. Se recorrieron más de 80 pantallas de las cuatro iteraciones, con los roles Administrador, Gerente, Analista, Cajero y Cliente. La auditoría registró 35 hallazgos, todos documentados con su evidencia en `hallazgos_frontend_impeccable.md`:
+- 4 incumplían WCAG 2.2 AA: el foco poco visible sobre la barra lateral, tablas que ensanchaban la página en el celular, campos sin etiqueta y botones con contraste insuficiente;
+- otros mostraban al cliente códigos internos o dejaban sin una acción principal clara las pantallas de uso diario.
+
+La mayoría se corrigió sin cambiar el comportamiento (PR #171 a #174). Algunas correcciones cambian la organización de pantallas que el tribunal ya vio, y se registran aquí.
+
+**Decisión.**
+1. **Una sola regla común para las tablas.** Toda tabla del contenido se desplaza dentro de su recuadro en pantallas angostas. Si una vista no la envolvió en `.table-responsive`, `sigccr.js` la envuelve al cargar. Las celdas numéricas no se cortan, y los textos ocultos para lectores de pantalla quedan dentro del recuadro.
+2. **Los colores de Bootstrap pasan por la identidad.** Los botones contorneados, los estados, los textos de error y los códigos usan el verde, el rojo y la tinta del sistema. Ningún color de interfaz queda con contraste menor a 4,5:1. Todos los colores de `sigccr.css` se declaran como variables de la paleta; las etiquetas de advertencia e información usan el ámbar y la tinta con texto blanco.
+3. **Los listados con filtros del servidor no repiten el buscador de DataTables.** Respetan el orden del servidor cuando muestran «los más recientes», y en el celular pliegan los filtros detrás de «Filtrar». Lo aplican clientes, usuarios, solicitudes y líneas.
+4. **Una sola acción principal por zona de trabajo.**
+   - En las alternativas de financiación, solo la alternativa pedida tiene botón principal. La TNA, la TEA y la vigencia, iguales para todas, se informan una vez.
+   - En Mi caja, la acción principal pasa a ser «Registrar cobro», la tarea del turno; «Cerrar caja» queda como secundaria.
+5. **El portal no muestra códigos internos.** Las referencias a casos de uso, reglas y flujos alternativos («CU-47», «RN-36», «A1») se quitan de los textos del portal y quedan en los comentarios del código. En el panel se conservan como ayuda para el personal y para la trazabilidad del trabajo.
+6. **Los procesos automáticos se muestran con un nombre legible.** Por ejemplo, «Proceso automático: Evaluación automática». El registro de auditoría conserva el nombre técnico del comando.
+7. **El inicio del portal resume la cuenta.** El cliente ve primero el próximo vencimiento y su importe, el saldo deudor, las cuotas vencidas si las tiene y el botón «Pagar cuotas»; los accesos quedan debajo. El resumen usa la misma consulta del estado de cuenta (CU-47), pero no registra una consulta de auditoría, porque el cliente no la pidió. Si falla, el inicio se muestra sin el resumen.
+8. **El tablero gerencial destaca cuatro indicadores clave** sobre los bloques de detalle: índice de morosidad, saldo deudor, cobros confirmados y disponible para nuevas colocaciones. La efectividad de cobranza aclara su base (lo vencido en el período, RN-74 b).
+9. **El inicio del panel muestra el trabajo pendiente del rol** antes del índice de funciones. Cada cola aparece solo si la cuenta tiene el permiso para atenderla y tiene al menos un caso: solicitudes para resolver, créditos para liquidar, evaluaciones en contingencia, legajos por verificar, solicitudes devueltas, pre-registros por validar, propuestas de refinanciación y devoluciones por ejecutar. Al cajero se le avisa si su caja no está abierta o si sigue abierta la jornada de un día anterior. Cada línea lleva al listado ya filtrado. Es una consulta: no cambia estados ni registra auditoría.
+10. **Una sola búsqueda de cliente (CU-54).** Todas las operaciones que parten de un cliente (simulación, comparativa, solicitud, cobro, revocación, cancelación, condonación, saldos, refinanciación, orden de pago) usan la misma pantalla y el mismo método del controlador base, `busquedaCliente()`. La simulación, la comparativa y la solicitud muestran solo clientes activos.
+
+**Consecuencias.**
+- Cambian `sigccr.css` y `sigccr.js`.
+- Helpers nuevos o modificados:
+  - `campo_invalido()`, que ahora recibe el id de la ayuda;
+  - `grupo_invalido()`, `hay_criterios()`, `recurso()` y `etiqueta_proceso()`;
+  - `menu_panel()`, con un ícono por opción.
+- Vistas nuevas o modificadas:
+  - la vista parcial `partials/boton_filtros.php`;
+  - las de listados, alternativas, Mi caja, parámetros de evaluación, búsqueda de cliente, cancelación anticipada, cobro en ventanilla, historiales, estado de cuenta e inicio del portal, y tablero.
+- Servicios y controladores:
+  - `PortalService::estadoCuenta()` admite no registrar la auditoría;
+  - `PendientesService` (nuevo) arma el trabajo pendiente del inicio del panel;
+  - `BaseController::busquedaCliente()` reemplaza las búsquedas de cliente repetidas en seis controladores;
+  - el controlador `Portal\Inicio` pasa el resumen a la vista.
+- Los CSS y JS del sistema se sirven con su fecha de modificación como versión, para que el navegador no use copias viejas.
+- Las pruebas de vistas (`tests/rutas`) verifican el trabajo pendiente del inicio del panel, el resumen del portal, los indicadores del tablero y los textos sin códigos internos.
+- Cambian textos que las pruebas funcionales esperan:
+  - «Cuotas pendientes» en lugar de «Impagas»;
+  - el responsable de los procesos automáticos;
+  - el importe precargado de la cancelación anticipada;
+  - los medios de cobro «Sin usar».
+- El manual de usuario debe actualizar sus capturas cuando se cierre la interfaz.
+
+**Justificación** (C6). La auditoría encontró incumplimientos de WCAG 2.2 AA y pantallas sin una acción principal clara. Las correcciones aplican el criterio de RNF-02 de forma homogénea en todo el sistema y quitan del portal los códigos internos, que el cliente no tiene por qué entender.
+
+## D-48 · Auditoría de modificaciones con el valor anterior y el nuevo de cada campo (RN-45, CU-57; RNF-14)
+
+**Contexto.** La cátedra pidió que la auditoría de cada modificación guarde el estado anterior y el estado nuevo de cada campo modificado. RN-45 ya exigía el «estado anterior y nuevo cuando corresponda», pero cada operación lo registraba a su manera:
+- la modificación de clientes y usuarios guardaba el valor anterior y el nuevo, cada una con su propio formato;
+- la nueva versión de una línea guardaba solo algunos valores nuevos;
+- los parámetros guardaban solo el número de la versión;
+- los cambios de estado guardaban uno de los dos valores, o ninguno.
+
+Además, el filtro de datos sensibles (RNF-14) ocultaba campos que no lo son, como el código postal, el código del tipo de documento y la marca de documento clave, porque su nombre contiene «codigo» o «clave».
+
+**Decisión.**
+1. **Formato común.** Toda modificación registra, en el detalle del registro, la clave `cambios` con cada campo que cambió y su valor anterior y nuevo: `{"campo": {"anterior": …, "nuevo": …}}`. Solo se registran los campos que cambiaron. Los demás datos de la operación (versión creada, solicitudes afectadas, medio) quedan junto a ellos.
+2. **Comparación (`Cambios`).** Un valor vacío y uno nulo son iguales. Los números se comparan por su valor (0,600000 = 0,6) y los lógicos, como 1 y 0. Los documentos y los códigos postales se comparan como texto. Los datos anidados, como los pesos del modelo de evaluación, se comparan uno por uno, con la ruta separada por puntos. Las listas, como las categorías admitidas o los escalones, se comparan completas.
+3. **Operaciones alcanzadas.**
+
+   | Operación | Qué se registra |
+   |---|---|
+   | Usuarios (CU-06, CU-08, CU-09, CU-10, verificación del correo) | Cada dato modificado, el rol, el estado y el correo |
+   | Clientes (CU-12, CU-13, CU-14, CU-98, verificación del correo) | Cada dato modificado, con la localidad por su nombre y provincia; el estado, el consentimiento comercial y el correo |
+   | Líneas de crédito (CU-17, CU-18, CU-19) | Cada condición de la versión vigente frente a la nueva, con las tasas en porcentaje; el nombre, la descripción, las categorías y la documentación exigida por categoría; el estado al suspender o reactivar |
+   | Parámetros (CU-51, CU-58 a CU-60) | Cada parámetro de la versión anterior del grupo frente a la nueva |
+   | Catálogo de documentación (CU-100) | Los datos del tipo de documento y la documentación sugerida por categoría |
+   | Escala del monotributo (CU-101) | El tope anterior y el nuevo de cada categoría |
+   | Cajas y fondos (CU-72, CU-81, CU-85) | El estado de la caja, el fin de la asignación y el estado del movimiento de fondos |
+   | Calendario operativo (CU-82) | La baja de un día, con su descripción y su tipo anteriores |
+
+   Las altas registran los datos creados, como hasta ahora. Las transiciones de las operaciones del circuito crediticio no se incluyen: solicitudes, créditos, cobros y refinanciaciones ya conservan su historia en sus propias tablas (resoluciones, imputaciones, versiones de propuestas, anulaciones).
+4. **Consulta (CU-57).** El detalle del registro presenta la tabla «Campos modificados», con el campo por su nombre legible, el valor anterior y el valor nuevo, y debajo los demás datos registrados. Los registros anteriores a esta decisión se presentan de la misma forma cuando tienen el valor anterior y el nuevo con alguno de los formatos que se usaban; no se modifican, porque la tabla de auditoría no admite cambios.
+5. **Datos sensibles.** El filtro de RNF-14 sigue omitiendo contraseñas, tokens, autorizaciones y datos de tarjetas. Exceptúa por su nombre exacto el código postal, el código del tipo de documento y la marca de documento clave.
+
+**Consecuencias.**
+- Componentes nuevos: `App\Libraries\Auditoria\Cambios`, con sus pruebas en `tests/unit/Auditoria/CambiosTest.php`, y `AuditoriaService::registrarCambios()`.
+- Cambian `UsuarioService`, `ClienteService`, `LineaService`, `ParametroService`, `DocumentacionService`, `MonotributoService`, `CajaService`, `FondosService`, `CalendarioService` y la vista del detalle de auditoría.
+- Sin cambios de esquema.
+- Pruebas de punta a punta:
+  - R-034 verifica que la nueva versión de la línea Personal registra solo el cambio de la TNA (70,00 % a 72,00 %);
+  - I-75 verifica que el detalle muestra la tabla.
+- Hay que actualizar la redacción de RN-45 y de CU-57, paso 6, en el documento del Trabajo Final.
+
+**Justificación** (C5). La cátedra pidió conservar el valor anterior y el nuevo de cada campo modificado, que RN-45 ya exigía pero cada operación registraba a su manera. Un formato común permite consultar cualquier modificación de la misma forma, y los registros anteriores se presentan sin modificarse, porque la auditoría no admite cambios.
+
+## D-49 · Correo de desarrollo con Mailpit (RNF-09; CU-95)
+
+**Contexto.** En desarrollo, el simulador de comunicaciones guarda cada correo en `writable/correos` y para verlo hay que ejecutar `php spark sigccr:correos`, que muestra el asunto y el enlace pero no el correo como lo recibe el destinatario. El adaptador SMTP real ya existía (`SmtpComunicaciones`), pero solo se podía usar con un proveedor externo, que exige una cuenta y credenciales y entrega los correos de prueba a direcciones reales o a un servicio de terceros.
+
+**Decisión.**
+1. **Servidor local.** El entorno de desarrollo incorpora Mailpit, un servidor SMTP de pruebas que recibe los correos sin entregarlos y los muestra en una página web (`http://localhost:8025`). Es el servicio `mailpit` del `docker-compose.yml`, con el perfil `correo`: se levanta una vez con `docker compose --profile correo up -d` y no forma parte de la instalación de producción. La página solo se publica para el propio equipo (127.0.0.1); el SMTP (puerto 1025) queda en la red interna de Docker. Los correos se conservan en el volumen `correos` hasta un máximo de 1.000.
+2. **Configuración.** El `.env` de desarrollo usa el adaptador real con `sigccr.smtpHost = mailpit`, el puerto 1025 y sin cifrado (`env.sigccr.example`). Así se prueba el mismo envío por SMTP que en producción, con las plantillas y los enlaces reales; en producción cambian solo el servidor y las credenciales del proveedor.
+3. **Simulador.** Se conserva para la batería de punta a punta y para probar los errores de envío (direcciones `falla.transitoria@`, `falla.definitiva@` e `incierto@`). Si el `.env` está en SMTP, `tests/e2e/ejecutar.sh` usa el simulador mientras corre y restaura el `.env` al terminar.
+4. **Identificador del mensaje.** La prueba con Mailpit mostró que CodeIgniter reemplazaba el `Message-ID` con uno propio, de modo que el identificador de la operación no llegaba al proveedor y un reintento podía entregarse dos veces. `CorreoConIdentificador` conserva el identificador de la operación como `Message-ID`, como prevé RNF-09.
+
+**Consecuencias.** Cambian `docker-compose.yml` (servicio `mailpit` y volumen `correos`), `env.sigccr.example`, el README, `tests/e2e/ejecutar.sh` y el comando `sigccr:correos`, que indica dónde ver los correos cuando el envío es por SMTP. Componente nuevo: `CorreoConIdentificador`, con su prueba en `SmtpComunicacionesTest`. Sin cambios de esquema ni de casos de uso.
+
+**Justificación** (C4, C8). Un servidor SMTP de pruebas permite verificar el mismo envío que en producción, con las plantillas y los enlaces reales, sin entregar datos de prueba a direcciones reales ni a un servicio de terceros (Ley 25.326).
+
+## D-50 · Tema oscuro y carga de las tablas solo donde se usan (RNF-02, RNF-07, RNF-13)
+
+**Contexto.** Después de la auditoría de diseño (D-47) quedaron dos mejoras fuera del alcance de la entrega: un tema oscuro y no cargar jQuery y DataTables en las pantallas que no tienen tablas con paginación. WCAG 2.2 AA no exige un tema oscuro; es una preferencia de comodidad para quien trabaja con poca luz o es sensible al brillo. jQuery (85 KB) y DataTables con sus estilos (117 KB) se descargaban y ejecutaban en todas las pantallas del panel, aunque solo siete listados y el plan de cuotas largo los usan.
+
+**Decisión.**
+
+1. **Tema oscuro con la misma identidad.**
+   - Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el botón «Tema oscuro» (barra lateral del panel y barra del portal); la elección se guarda en el navegador.
+   - El tema se aplica antes de cargar los estilos, para que la página no aparezca un instante con el otro.
+   - Los colores salen de las mismas variables de `sigccr.css`: superficies de tinta muy oscura, textos, enlaces y estados en tonos claros. Todos los textos miden al menos 4,5:1 y los bordes de los campos al menos 3:1 (WCAG 1.4.3 y 1.4.11).
+   - Las etiquetas de estado conservan el verde, el rojo, el ámbar y la tinta con texto blanco.
+   - El borde de los campos pasa a un gris más oscuro en los dos temas (3,1:1 o más sobre la hoja y el papel): con el anterior medía 1,3:1 en el claro, por debajo del mínimo de WCAG 1.4.11 que la auditoría de D-47 no había detectado.
+   - Al imprimir (contratos, comprobantes, informes) se usa siempre el tema claro.
+2. **jQuery y DataTables solo donde se usan.** `sigccr.js` los carga cuando el panel tiene una tabla `data-tabla` o un plan de más de 12 cuotas. Si no se pudieran cargar, la tabla se muestra completa, sin paginar, dentro de su recuadro desplazable.
+
+**Consecuencias.**
+- Nuevos: la vista parcial `partials/tema.php` y el botón del tema en las plantillas del panel y del portal.
+- La pantalla de acceso sigue el tema elegido, sin botón propio.
+- El portal no carga DataTables, como antes.
+- Las vistas no deben usar jQuery: el único uso (el encabezado CSRF de `$.ajax`) se configura al cargarlo.
+- Pruebas: casos U-26 a U-29 de la prueba de usabilidad y accesibilidad. Se ejecutaron en Docker el 17/11/2026 con Analista, Gerente y Cliente, sin fallas de contraste en las pantallas medidas.
+- El manual de usuario debe mencionar el botón del tema.
+
+**Justificación** (C6, C7). El tema oscuro es una comodidad para quien trabaja con poca luz, y se implementó con los mismos contrastes mínimos de WCAG. Cargar jQuery y DataTables solo donde se usan ahorra unos 200 KB en la mayoría de las pantallas.
+
+## D-51 · Pruebas de integración por campo y por clase de dato, con una base de pruebas aislada (RNF-01, RNF-06, RNF-12, RNF-15; plan de pruebas)
+
+**Contexto.** El plan de pruebas (versión 1.1) tiene estos niveles automáticos:
+- los casos de referencia del motor financiero y las pruebas unitarias, sin base de datos;
+- la autorización de cada ruta con cada rol (C10), que lee la configuración de rutas sin ejecutar las peticiones;
+- la batería de punta a punta con Playwright (D-39), que automatiza 208 casos funcionales y se ejecuta al cierre de cada iteración (D-41).
+
+Ningún nivel verifica de forma sistemática cada campo de cada formulario con cada tipo de dato. Los casos funcionales prueban algunos valores inválidos por formulario; el resto de las combinaciones (límites de largo, formatos alternativos, valores fuera del catálogo, un campo enviado como lista, caracteres especiales) no se prueba en ningún nivel. Tampoco se verifican en el servidor, durante la iteración, situaciones que el navegador no muestra: una petición sin token CSRF, un permiso faltante con su registro en la auditoría, una versión de fila vieja o un identificador de otro cliente escrito en la dirección.
+
+La revisión del código para armar este nivel encontró que hoy no se puede ejecutar ninguna prueba de integración:
+- la base `sigccr_pruebas` del grupo `tests` no existe, porque `crear_base.sql` solo crea `sigccr`;
+- el grupo `tests` no tiene credenciales en `phpunit.xml.dist` ni en `env.sigccr.example`;
+- en el entorno `testing`, la variable `SIGCCR_DB_GRUPO` puede cambiar el grupo por defecto, y los grupos `migraciones` y `copias` siguen apuntando a `sigccr` y a `master`, así que una prueba podría escribir en la base de desarrollo.
+
+También encontró una prueba de ejemplo del appstarter (`tests/session/ExampleSessionTest.php`) en la suite `App`, y al escribir las pruebas de la iteración 1 aparecieron ocho defectos (punto 7.9.4 del plan):
+- H-01: un campo enviado como lista (`nombre[]=x`) producía «Array to string conversion» y un error del servidor en lugar del mensaje de validación, en todos los formularios y búsquedas;
+- H-02: los caracteres de control, como el carácter nulo, se guardaban;
+- H-03: el largo se contaba con `mb_strlen()`, pero NVARCHAR cuenta un emoji como dos unidades, así que un texto con emoji en el largo máximo pasaba la validación y fallaba al guardarse;
+- H-04: el mensaje de `ConflictoConcurrenciaException` mostraba al usuario el nombre interno de la tabla (RNF-12);
+- H-05: un formulario vencido o sin token CSRF mostraba el mensaje del framework en inglés;
+- H-06: la recuperación de acceso y la activación del portal aceptaban correos sin punto en el dominio, a diferencia del alta;
+- H-07: al asignar un rol (CU-10) el valor no se recortaba, a diferencia del registro (CU-05);
+- H-08: la posibilidad de escribir en la base de desarrollo desde las pruebas, descripta arriba.
+
+La primera ejecución contra SQL Server (1220 pruebas, 109 con diferencias) encontró cinco defectos más:
+- H-09: los textos con caracteres fuera de Latin-1 (emoji, «ł», «ș») se guardaban como «?» en las columnas NVARCHAR, porque CodeIgniter escribe los literales sin el prefijo N y SQL Server los convierte a la página de códigos de la intercalación;
+- H-10: un acceso denegado a una ruta de más de 40 caracteres excedía la columna objeto_id de la auditoría y respondía error 500 en lugar de 403;
+- H-11: el motivo del rechazo de un archivo del legajo se reemplazaba por «Adjunte este documento»;
+- H-12: la búsqueda de líneas tomaba %, _ y [ como comodines;
+- H-13: las páginas de error 400, 404 y de error general se mostraban en inglés.
+
+El resto de las diferencias eran errores de las pruebas (comparación de decimales, largos de correo, datos repetidos entre pruebas) y un resultado mal previsto en el catálogo: por HTTP, un carácter de control lo rechaza el filtro invalidchars de CodeIgniter con la página 400 antes de llegar a la validación (COM-06).
+
+No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro cliente ni asignación masiva de campos.
+
+**Decisión.**
+1. **Catálogo de campos.** El plan incorpora un catálogo con cada campo de cada formulario: tipo de dato, obligatoriedad, límites, formato, valores admitidos y regla de negocio. El catálogo se obtiene de los validadores (`Campos`, `ValidadorUsuarioInterno`, `ValidadorCliente`, `ValidadorLinea` y los demás) y de las columnas del modelo de datos. Es la fuente de los resultados esperados.
+2. **Clases de datos por tipo.** Cada tipo de dato tiene un juego fijo de clases de equivalencia y valores límite: vacío, solo espacios, campo ausente, campo enviado como lista, caracteres especiales, texto con código HTML o SQL, el largo máximo y el siguiente, formatos alternativos, valores fuera del catálogo, fechas imposibles y límites de importes, cuotas, edades y porcentajes. Cada combinación de campo y clase tiene un resultado esperado: el valor se acepta (y cómo queda guardado) o se rechaza (con qué mensaje y en qué campo).
+3. **Controles comunes a cada operación.** Cada operación que escribe se prueba además sin sesión, sin el permiso, sin token CSRF, con `version_fila` vieja o ausente (RN-24), con un identificador inexistente, negativo o de texto, con campos extra que deben ignorarse y con el objeto en un estado que no admite la operación.
+4. **Qué se verifica.** En cada prueba, la respuesta HTTP, el mensaje y el campo marcado, y el resultado en la base: la fila guardada con su valor normalizado, la ausencia de cambios cuando se rechaza (`dontSeeInDatabase`) y el registro de auditoría sin datos sensibles (RN-45, RNF-14). Como el acceso a datos está en los servicios y no hay modelos de CodeIgniter, el borrado lógico es el cambio de estado (cliente Desactivado, usuario Desactivado, línea Suspendida) y no `deleted_at`. El registro de clientes exige adjuntar el documento de identidad (RN-11), y PHPUnit no puede simular la subida de un archivo por HTTP: sus clases de datos se ejecutan contra `ClienteService::registrar`, la operación que llama el controlador, con la misma validación y transacción, y la petición HTTP se verifica con los controles comunes.
+5. **Sin repetir otros niveles.** Las pruebas de integración no repiten los recorridos funcionales que automatiza la batería de punta a punta; verifican los campos y los controles de los puntos 2 y 3.
+6. **Trazabilidad (D-39).** Cada formulario tiene un caso IN-xx en el plan, que remite a sus filas del catálogo. Las pruebas se generan a partir del catálogo: cada combinación de campo y clase es una prueba con el identificador del caso, el campo y la clase (por ejemplo, «IN-12 · cuit_cuil · verificador incorrecto»). Una diferencia entre el catálogo y el sistema se resuelve corrigiendo el sistema o el catálogo, nunca solo la prueba.
+7. **Una base limpia por ejecución.** Un script recrea `sigccr_pruebas` desde cero al comienzo de cada ejecución: aplica las migraciones con el propietario del esquema y carga `SigccrSeeder`. Se descarta `$refresh = true` de `DatabaseTestTrait`, que deshace y vuelve a aplicar las 30 migraciones antes de cada prueba y multiplicaría el tiempo de la suite.
+8. **Aislamiento por datos propios.** Cada prueba crea sus usuarios, clientes y líneas con identificadores únicos, generados con dígitos verificadores válidos y dominios ficticios, sin usar los datos del Anexo A. Las aserciones se limitan a esos registros; ninguna prueba depende del orden de ejecución ni de los datos de otra.
+9. **Mismos permisos que la aplicación.** Las peticiones se ejecutan con `sigccr_app` (rol `rol_sigccr_app`) sobre `sigccr_pruebas`; las migraciones y las semillas, con el propietario.
+10. **Protección de la base de desarrollo.** En el entorno `testing`, `Config\Database` dirige todos los grupos a `sigccr_pruebas` y no acepta otro grupo por `SIGCCR_DB_GRUPO`.
+11. **Ejecución.** En desarrollo, con `composer test:integracion` en el contenedor `app` (`docker exec`). En la integración continua, en cada *pull request*, con SQL Server como servicio del flujo `CI`, para que los defectos de campos y controles se detecten durante la iteración y no recién al cierre.
+12. **Alcance por etapas.** Primero la iteración 1 (acceso al panel y al portal, usuarios, clientes, líneas, alertas y comunicaciones); después las iteraciones 2, 3 y 4, con el mismo método.
+
+**Consecuencias.**
+- Plan de pruebas, versión 1.2:
+  - el nivel «Integración» en la tabla del punto 2;
+  - la base de pruebas en el punto 3;
+  - la aclaración sobre los datos en el punto 5;
+  - la línea del nivel en el punto 6;
+  - el punto 7.9 con los casos IN-xx;
+  - el Anexo B con las clases de datos por tipo y el catálogo de campos.
+- Componentes nuevos:
+  - `docker/db/crear_base_pruebas.sql` y `tests/feature/preparar_base.sh`;
+  - `tests/_support/Feature/IntegracionTestCase.php`, con el inicio de sesión por rol, el token CSRF y HTTPS;
+  - `tests/_support/Feature/Fabrica.php`, que genera los datos de cada prueba;
+  - `tests/_support/Feature/CatalogoCampos.php` y `ClasesDeDatos.php`, que generan las combinaciones;
+  - las pruebas de `tests/feature/` por módulo.
+- Cambian:
+  - `phpunit.xml.dist`, con la suite `Integracion` y las credenciales del grupo `tests`;
+  - `composer.json`, con el script `test:integracion` y el espacio de nombres `Tests\Feature\`;
+  - `Config\Database`;
+  - `Campos` (`texto()`, `lista()`, `crudo()` y `largo()`) y `BaseController` (`campoPost()`, `campoGet()` y `filtrosBusqueda()`), que usan los 35 controladores que leían la entrada con `(string)` o `strval` (H-01 a H-03);
+  - el mensaje de `ConflictoConcurrenciaException` (H-04);
+  - el controlador `App\Database\SQLSRV`, que escribe los textos no ASCII como N'...' (H-09), `AuditoriaService` (H-10), `ClienteService::registrar()` (H-11), `LineaService::buscar()` (H-12) y `app/Language/es/Errors.php` (H-13);
+  - `app/Language/es/Security.php` (H-05), la validación del correo en `Admin\Acceso`, `Portal\Acceso` y `Portal\Activacion` (H-06) y `UsuarioService::asignarRol()` (H-07);
+  - `.github/workflows/ci.yml`, con el servicio de SQL Server y el paso de integración.
+- Se elimina `tests/session/ExampleSessionTest.php`.
+- La iteración 1 suma 1310 pruebas automáticas (IN-01 a IN-22 e IN-C01 a IN-C14).
+- Pendiente: usar `Campos::largo()` en las validaciones de largo de las iteraciones 2 a 4 que todavía cuentan con `mb_strlen()` (caja, devoluciones, evaluación, resolución, refinanciación), al construir su catálogo.
+- Riesgo aceptado: los datos de las pruebas se acumulan en `sigccr_pruebas` durante una ejecución; se descartan al recrear la base en la ejecución siguiente.
+
+**Justificación** (C8, C4). Ningún nivel probaba cada campo con cada clase de dato ni los controles que el navegador no muestra, y la revisión encontró trece defectos que lo confirman. La base aislada, recreada en cada ejecución, impide que una prueba escriba en la base de desarrollo, y las pruebas generadas desde el catálogo de campos mantienen la trazabilidad con el plan.
+
+## D-52 · Resolución de las observaciones O-01 a O-07 de las pruebas de integración (RN-07, RN-14, RN-80, D-28; plan de pruebas 7.9.3)
+
+**Contexto.** Al construir las pruebas de integración de la iteración 1 (D-51) aparecieron siete comportamientos que no eran defectos, porque el sistema hacía lo que el código establecía, pero que ninguna regla de negocio definía. Se registraron como observaciones en el punto 7.9.3 del plan de pruebas para que se decidiera cada una:
+- O-01: la TNA admitía 0 %;
+- O-02: un tipo de cliente fuera de la lista se registraba como persona humana;
+- O-03: un tipo de gasto administrativo fuera de la lista se registraba como importe fijo;
+- O-04: el CUIL de una persona humana era opcional en el alta;
+- O-05: los correos con caracteres no ASCII se rechazaban;
+- O-06: la fecha de nacimiento no tenía edad máxima;
+- O-07: los ingresos declarados admitían 0.
+
+**Decisión.**
+1. **O-01.** La TNA de una línea debe ser mayor que cero: «La TNA debe ser mayor que cero.». Una línea sin interés no es un producto de crédito del sistema y suele ser un error de carga.
+2. **O-02.** Un tipo de cliente fuera de la lista (`PersonaHumana`, `PersonaJuridica`), vacío o ausente se rechaza: «Seleccione el tipo de cliente.». Al modificar un cliente rige su tipo actual, como hasta ahora.
+3. **O-03.** Un tipo de gasto administrativo fuera de la lista (`Fijo`, `Porcentual`), vacío o ausente se rechaza: «Seleccione cómo se cobra el gasto administrativo.».
+4. **O-04.** El CUIL o CUIT es obligatorio en el alta de una persona humana: «Complete el CUIL o CUIT.». Los clientes registrados antes de esta decisión lo completan al modificar sus datos o al registrar una solicitud (RN-80), donde ya se exigía.
+5. **O-05.** Se admiten los correos internacionales:
+   - parte local con letras no ASCII (RFC 6531), hasta 64 octetos en UTF-8 (RFC 5321): 64 letras ASCII o 32 eñes;
+   - dominio internacional (IDN), que se valida en su forma punycode (UTS 46) y debe tener al menos un punto;
+   - el largo total sigue limitado a 254 unidades, como la columna `NVARCHAR(254)`;
+   - el correo se guarda como se escribió, en minúsculas y sin espacios.
+   Para enviarlos, `SmtpComunicaciones` convierte el dominio a punycode, y `CorreoConIdentificador` valida la parte local internacional y pide la extensión `SMTPUTF8` en el `MAIL FROM` cuando algún destinatario la necesita. Si el servidor no la admite, el envío se clasifica como fallo transitorio (RNF-09) y se reintenta según la política de envío.
+6. **O-06.** La edad de una persona humana no puede superar 110 años: «Revise la fecha de nacimiento: la edad no puede superar 110 años.». 110 años cumplidos se aceptan.
+7. **O-07.** Los ingresos declarados deben ser mayores que cero: «Los ingresos declarados deben ser mayores que cero.».
+
+**Consecuencias.**
+- Cambian:
+  - `ValidadorLinea` (O-01, O-03) y `ValidadorCliente` (O-02, O-04, O-06, O-07);
+  - `Campos::formatoCorreo()`, con `dominioAscii()` y `correoParaEnvio()` nuevos (O-05), que usan el alta de usuarios y de clientes, el pre-registro, el cambio de correo del portal, la recuperación de acceso, la activación y `AdministradorInicialSeeder`;
+  - `CorreoConIdentificador` y `SmtpComunicaciones` (O-05).
+- Pruebas:
+  - unitarias: `ClientesTest`, `ValidadorLineaTest`, `CamposTest` y `SmtpComunicacionesTest`, con una conversación SMTP simulada que verifica el `MAIL FROM ... SMTPUTF8` y el rechazo del servidor;
+  - de integración: las clases COR-06 y COR-08 con correos internacionales, la clase CUI-08 (vacío), la edad máxima en FEC-05 y FEC-08, el cero en IMP-05 y PCT-03 según el campo, y los valores fuera de la lista en SEL-03, que ya no se normalizan.
+- Plan de pruebas: el punto 7.9.3 pasa de observaciones abiertas a decisiones, y el catálogo de campos del Anexo B se actualiza.
+- Un DNI de 9 dígitos, que el formato admite, no tiene un CUIL que le corresponda: con el CUIL obligatorio no puede darse de alta (se registra en la prueba `testDniDeNueveDigitosSinCuilPosible`).
+- Pendiente de verificación manual: un envío real a un correo con parte local internacional en Mailpit (desarrollo) y en el servidor SMTP de producción, que debe anunciar `SMTPUTF8`.
+
+**Justificación** (C3, C9, C6). Eran comportamientos que ninguna regla definía. Se resolvieron con el criterio de negocio de una prestadora: una línea sin interés, unos ingresos de cero o una edad mayor a 110 años son, casi siempre, errores de carga. Los correos internacionales se admiten según los RFC vigentes, para no rechazar direcciones válidas.
+
+## D-53 · DNI, LC y LE de 6 a 8 dígitos (RN-07, D-52)
+
+**Contexto.** El número de DNI, LC y LE admitía de 6 a 9 dígitos. El CUIL tiene 8 dígitos centrales, que con DNI deben coincidir con el documento completado con ceros a la izquierda. Desde D-52 (O-04) el CUIL es obligatorio en el alta de una persona humana, por lo que un DNI de 9 dígitos ya no podía darse de alta y recibía un mensaje que no explicaba la causa («El CUIT/CUIL no corresponde al número de documento.»). Los DNI argentinos, incluidos los de extranjeros residentes (rango de 90 a 95 millones), tienen como máximo 8 dígitos; las LC y LE, también.
+
+**Decisión.**
+1. El DNI, la LC y la LE admiten de 6 a 8 dígitos: «El documento debe tener entre 6 y 8 dígitos, sin puntos.». El pasaporte no cambia (5 a 15 letras o números).
+2. La correspondencia entre el CUIL y el número de documento se sigue exigiendo solo con DNI: quien tiene LC o LE suele tener el CUIL generado con otro documento posterior.
+
+**Consecuencias.**
+- Cambia `Campos::numeroDocumento()`, que usan el alta y la modificación de clientes (titular y representante de una persona jurídica), los usuarios internos, el pre-registro y el acceso al portal.
+- Pruebas: `CamposTest`; en integración, las clases DOC-05 (6 y 8 dígitos) y DOC-06 (5, 9 y 10 dígitos), y las pruebas `testDocumentoDeNueveDigitos` y `testDniCortoConSuCuil` de clientes.
+- Plan de pruebas: clases DOC-05 y DOC-06 del Anexo A y campos de documento del Anexo B.
+- Los registros existentes con 9 dígitos, si los hubiera, no se modifican; al editarlos se pide corregir el número.
+
+**Justificación** (C3, C1). Ningún DNI argentino, incluidos los de extranjeros residentes, tiene más de ocho dígitos, y con el CUIL obligatorio un documento de nueve dígitos no podía darse de alta y recibía un mensaje que no explicaba la causa. El límite deja un mensaje claro y coherente con el CUIL.
+
+## D-54 · Límites del gasto de otorgamiento y de los movimientos de fondos (RN-14, RN-71, CU-16, CU-85)
+
+**Contexto.** Las pruebas de integración de la iteración 2 dejaron tres comportamientos que ninguna regla definía:
+- el gasto de otorgamiento de una línea admitía hasta 99,9999 %, pero con el IVA desde 82,64 % no queda neto para desembolsar y con valores más bajos el CFTEA no cabe en sus columnas (H-24, H-25);
+- un movimiento de fondos realizado admitía cualquier fecha desde 1900;
+- un movimiento de fondos admitía importes de hasta 17 dígitos: dos ingresos así dejan un disponible que ya no se puede escribir como importe.
+
+**Decisión.**
+1. El gasto de otorgamiento de una línea admite hasta 50 % del capital, incluido: «El gasto de otorgamiento no puede superar el 50 % del capital.». Las líneas anteriores con un gasto mayor siguen funcionando: al simular se rechazan con el mensaje de H-24 o H-25 y en la comparación y las alternativas figuran como no viables.
+2. Un movimiento de fondos realizado puede tener hasta un año de antigüedad: «La fecha del movimiento no puede tener más de un año de antigüedad.». Un aporte más antiguo se registra como saldo inicial. Un movimiento programado no tiene límite hacia adelante.
+3. Un movimiento de fondos admite hasta $ 1.000.000.000,00: «El importe de un movimiento no puede superar $ 1.000.000.000,00.». Un aporte mayor se registra en varios movimientos.
+
+**Consecuencias.**
+- Cambian `ValidadorLinea` y `ReglasCaja::validarMovimiento()` (constante `IMPORTE_MAXIMO_MOVIMIENTO`).
+- Pruebas: `ValidadorLineaTest`, `CajasFondosTest`; en integración, PCT-06 del gasto de otorgamiento (IN-18), IMP-08 e IMP-10 del importe e `testAntiguedadDeUnMovimientoRealizado` (IN-23).
+- Plan de pruebas: filas de los campos en los Anexos B.6 y B.8.
+
+**Justificación** (C2, C3). Un gasto de otorgamiento mayor al 82,64 % deja un neto negativo, y los importes o las fechas implausibles exceden las columnas o distorsionan la disponibilidad. Los límites impiden valores que rompen los cálculos, sin restringir operaciones reales.
+
+## D-55 · Declaración jurada de persona expuesta políticamente en el legajo, exigida para liquidar (RN-80; CU-11, CU-15, CU-27)
+
+**Contexto.** RN-80 exige registrar la declaración sobre la condición de persona expuesta políticamente (Resolución UIF 35/2023), y CU-11 la registra como una opción en el alta, pero el legajo no guardaba la declaración firmada por el cliente. La cátedra pidió que el documento pueda cargarse en el alta, sin impedirla, y que sea requisito para liquidar un préstamo.
+
+**Decisión.**
+1. **Tipo de documento.** Se agrega «Declaración jurada de persona expuesta políticamente» (`DDJJ_PEP`) para personas humanas y jurídicas. No es documento clave (RN-61).
+2. **Alta y legajo.** El formulario de alta ofrece adjuntarla, opcional, en la documentación respaldatoria. También se incorpora después desde la ficha del cliente, que avisa cuando falta y la propone primero para incorporar.
+3. **Liquidación (CU-27).** No se liquida sin una declaración vigente en el legajo del cliente: la pantalla lo informa y deshabilita el formulario, y el servicio lo rechaza (RN-80), después de controlar la constancia firmada del contrato (RN-78).
+4. **Clientes anteriores.** Los clientes ya registrados la incorporan desde su ficha antes de su próxima liquidación; los créditos ya liquidados no cambian.
+
+**Consecuencias.** Migración 33 (tipo de documento) y `TiposDocumentacionSeeder`. Cambian `RequisitosDocumentales` (`DECLARACION_PEP`), `LegajoService::tieneDocumento()`, `LiquidacionService`, la ficha y el alta del cliente, la pantalla de liquidación y los datos de demostración. Pruebas: integración `testLiquidarExigeLaDeclaracionPep`; E2E R-022 y R-151 (Ana se registra sin la declaración y la incorpora antes de liquidar). Cambian el texto de CU-27 (nueva precondición y paso alternativo) y de CU-11 (documentación del alta).
+
+**Justificación** (C1, C6). La Resolución UIF 35/2023 exige la declaración jurada sobre la condición de persona expuesta políticamente, y la cátedra pidió que sea requisito para liquidar. Exigirla al liquidar, y no en el alta, no bloquea el registro del cliente y la asegura en el momento en que la entidad asume el riesgo.
+
+## D-56 · Modelo de contrato configurable y versionado (CU-106; RN-15, RN-78, RN-79)
+
+**Contexto.** El contrato de préstamo (CU-103, D-31) tenía su texto fijo en la vista. La cátedra pidió que sea configurable, para agregar o quitar cláusulas cuando cambien las normas o las políticas de la entidad.
+
+**Decisión.**
+1. **Modelo de cláusulas.** El contrato es una lista ordenada de cláusulas, cada una con su forma (numerada, sin número o en recuadro), su título y su texto. El texto admite:
+   - variables entre llaves que se reemplazan con los datos del préstamo ({importe}, {cftea}, {cuotas}, {plazo_revocacion}, entre otras 25);
+   - dos bloques en un párrafo propio, el recuadro del costo financiero ({cuadro_cft}) y la tabla del plan de cuotas ({plan_cuotas});
+   - negrita entre dobles asteriscos.
+
+   Las cláusulas numeradas se numeran solas. Las firmas y el lugar y fecha quedan fijos al pie.
+2. **Lo que exige la ley.** No se registra un modelo sin el costo financiero destacado ni el plan de pago (art. 36 de la Ley 24.240), ni sin la cláusula de revocación con su plazo (art. 1110 del Código Civil y Comercial, irrenunciable). Tampoco con variables desconocidas o llaves sin cerrar.
+3. **Versiones (RN-15).** Cada cambio es una versión del grupo de parámetros «Contrato», con fecha de vigencia no retroactiva y motivo; la auditoría guarda cada cláusula que cambió (D-48). Cada contrato guarda la versión vigente al generarse (`contratos_prestamo.version_contrato_id`) y la conserva aunque el modelo cambie después. Sin versiones registradas, y para los contratos anteriores, rige el modelo inicial: el texto con que se construyó el contrato.
+4. **Caso de uso.** CU-106 Configurar Modelo de Contrato, del Gerente, en *Gestión › Modelo de contrato*. Permite cargar el modelo inicial como punto de partida.
+
+**Consecuencias.** Migración 34: tipo «Contrato» en `versiones_parametros` y la columna `version_contrato_id`, con `spec.py`. Componentes nuevos: `ModeloContrato`, la vista parcial `contratos/_clausulas` y la pantalla `parametros/contrato`. Cambian `ContratoService` (`modeloVigente()`, `modelo()`, `valores()`, `registrarModelo()`), `ParametroService::registrarVersion()` (base de comparación de la primera versión), `Admin\Parametros`, el catálogo de permisos (106, Gerente) y el menú. Hay que ejecutar `composer semillas` para el permiso nuevo. Pruebas: unitarias `ModeloContratoTest`; integración IN-71; E2E R-152. Se agrega CU-106 a la matriz 3.6.2 y al catálogo de casos de uso.
+
+**Justificación** (C1, C3, C5). Las cláusulas cambian con las normas y con la política de la entidad, y con un texto fijo cada cambio requería modificar el código. El modelo versionado permite adaptarlo sin programar, cada contrato conserva el texto con que se generó (RN-15) y la validación impide registrar un modelo sin las cláusulas que exige la ley.
+
+## D-57 · Impresión formal: cabecera, fecha y hora de emisión y «Página N de M» (RNF-02; CU-55 a CU-57, CU-65 a CU-71)
+
+**Contexto.** Los informes se imprimen y se guardan en PDF con la vista de impresión del navegador (D-44), sin cabecera institucional, sin fecha y hora en cada hoja y sin numeración. La cátedra pidió mantener el formalismo: fecha y hora de generación, cabeceras y número de página con el total de páginas.
+
+**Decisión.**
+1. **Cada hoja.** Todas las páginas del panel y del portal definen, al imprimirse, las cajas de margen de `@page`:
+   - arriba, la entidad y el título del documento;
+   - abajo, la fecha y hora de emisión con el usuario y «Página N de M».
+
+   Se generan del lado del servidor, con los textos escapados para CSS (`estilo_impresion()`).
+2. **Primera hoja.** Los informes llevan una cabecera formal en la primera hoja, que solo se ve al imprimir (`cabecera_impresion()`): razón social, CUIT y domicilio de la entidad, título, fecha y hora de emisión y usuario. El contrato, los comprobantes y las constancias, que tienen su propio encabezado, llevan solo la cabecera y el pie de cada hoja (marca `.documento-propio`).
+3. **Tablas.** El encabezado de cada tabla se repite en cada hoja y las filas, las tarjetas de indicadores y los títulos no se cortan al pie de una hoja.
+4. **Navegadores.** Chrome y Edge (desde la versión 131) dibujan las cajas de margen. Se verificó con Chromium 153 generando el PDF de un informe de cuatro hojas. Otros navegadores imprimen la cabecera de la primera hoja pero no el pie numerado: para los PDF formales se indica usar Chrome o Edge.
+
+**Consecuencias.** Funciones nuevas en el helper (`texto_css`, `datos_impresion`, `estilo_impresion`, `cabecera_impresion`), las plantillas del panel y del portal y la hoja de estilos de impresión. Sin cambios de esquema. Prueba E2E I-93.
+
+**Justificación** (C5, C6). Un documento impreso se usa como evidencia fuera del sistema, así que debe identificar la entidad, el documento, quién lo emitió y cuándo, y mostrar si está completo («Página N de M»). La cátedra lo pidió expresamente.
+
+## D-58 · Consulta automática del padrón al ingresar el CUIL (CU-11 A9)
+
+**Contexto.** El alta de una persona humana ya proponía los datos del padrón de ARCA (simulado, D-42), pero solo al pulsar «Consultar el padrón de ARCA». Se pidió que el CUIL cargue el DNI, el nombre y el apellido en el alta.
+
+**Decisión.**
+1. **Consulta automática.** Cuando el CUIL queda completo y es válido (prefijo de persona humana y dígito verificador, el mismo control que el servidor), el formulario consulta el padrón una vez por CUIL. Completa el DNI con su tipo, el nombre, el apellido y, si está vacío, la calle del domicilio fiscal. Un CUIL incompleto o inválido no consulta.
+2. **Datos escritos a mano.** La consulta automática completa los campos vacíos y los que completó una consulta anterior y nadie cambió. Si se corrige el CUIL, se actualizan esos datos sin pisar lo escrito a mano. El botón sigue disponible para volver a consultar y reemplazar los datos.
+3. **Fuente.** Sigue siendo el simulador del padrón (D-42). La conexión real con ARCA requiere el certificado digital y la adhesión al servicio con la clave fiscal de la entidad y queda a definir con la cátedra.
+
+**Consecuencias.** Cambian `clientes.js` y el texto de ayuda del alta. Sin cambios del servidor ni de esquema. Prueba E2E I-92.
+
+**Justificación** (C6). Completar los datos al ingresar el CUIL ahorra un paso y errores de transcripción, sin pisar lo que el Analista escribió a mano. Su fuente y lo que completa los precisa D-60.
+
+**Reemplazo.** Los puntos 1 (lo que se completa) y 3 (fuente) fueron reemplazados por D-60: ya no se completa el domicilio, la fuente es la Central de Deudores del BCRA y también se consulta el CUIT de una persona jurídica.
+
+## D-59 · Interfaz homogénea: fechas, filtros y ejemplos (RNF-02, RNF-07)
+
+**Contexto.** El recorrido estético del 18/11/2026 (hallazgos H-39 a H-46) encontró la misma tarea resuelta de formas distintas en distintas pantallas:
+- **Fechas:** unas se ingresaban con el selector del navegador (fecha de nacimiento, vigencias, filtros de auditoría y campañas) y otras como texto «dd/mm/aaaa» (filtros de solicitudes, movimientos y comprobantes; calendario, fondos, conformidad del cliente, transferencia del desembolso, asignación de cajas).
+- **Filtros de los listados:** botones con tamaños, textos y ubicaciones distintos, que entre 768 y 991 px se salían del recuadro.
+- **Ejemplos dentro de los campos:** algunos parecían datos ya cargados.
+
+**Decisión.**
+1. **Todas las fechas se ingresan con el selector de fecha del navegador** (`<input type="date">`), que muestra dd/mm/aaaa según el idioma del equipo; los períodos (mes y año) usan el selector de mes. El servidor ya aceptaba aaaa-mm-dd (`Campos::fecha`), así que las reglas no cambian; `fecha_campo()` y `periodo_campo()` preparan el valor del campo.
+2. **Los filtros de los listados usan los mismos botones** (`acciones_filtro()`):
+   - «Limpiar», si hay más de un criterio, y el botón principal con ícono y texto;
+   - van a la derecha, alineados con el borde inferior de los campos, y pasan a otra línea si no entran;
+   - campos de tamaño normal y columnas de fecha más anchas.
+3. **Los ejemplos dentro de los campos empiezan con «Por ejemplo:»**, para que no se confundan con un valor cargado.
+4. **Ajustes de detalle:**
+   - las etiquetas de las listas de datos tienen el mismo peso y la misma separación;
+   - los datos del plan y de la evaluación se rotulan a 13 px;
+   - las etiquetas de estado miden al menos 11 px;
+   - en el cobro, las etiquetas de los medios de pago se ven una sola vez en pantallas anchas.
+
+**Consecuencias.**
+- Las pruebas de punta a punta completan las fechas en aaaa-mm-dd.
+- Ya no se puede escribir un mes inválido como «13/2025»: el selector no lo permite, y el caso se quitó de la prueba de contingencia.
+- El manual de usuario debe mostrar el selector de fecha en las pantallas que cambiaron.
+
+**Justificación** (C6). La misma tarea resuelta de formas distintas obliga a aprender cada pantalla y produce errores, como escribir una fecha en el formato equivocado. El selector de fecha del navegador valida la fecha y la muestra según el idioma del equipo, y los mismos botones de filtro en todos los listados hacen predecible la interfaz.
+
+## D-60 · Consulta por CUIT o CUIL con la Central de Deudores del BCRA (CU-11 A9; reemplaza el punto 8 de D-42 y los puntos 1 y 3 de D-58)
+
+**Contexto.** El alta proponía los datos de un padrón de ARCA simulado (D-42, D-58), incluido un domicilio fiscal inventado por el simulador. La conexión real con el padrón de ARCA (`ws_sr_padron_a13`) requiere el certificado digital y la adhesión al servicio con la clave fiscal de la entidad, que el proyecto no tiene. La Central de Deudores del BCRA, que el sistema ya consulta en la evaluación crediticia (CU-86), es pública y devuelve la denominación de la persona junto con sus deudas («PEREZ GOMEZ ANA MARIA»), pero no su domicilio ni otros datos. Responde «no encontrado» para quien no tiene deudas informadas.
+
+**Decisión.**
+1. **Fuente.** La consulta usa la Central de Deudores del BCRA (`GET Deudas/{cuit}`), con un solo intento y la espera de `sigccr.tiempoEsperaExterno`, porque el Analista está esperando. El simulador se conserva para desarrollo y pruebas y responde de la misma forma; se elige con `sigccr.adaptadorPadron` (`real` o `simulador`).
+2. **Qué se propone.**
+   - Persona humana: el DNI son los ocho dígitos centrales del CUIL, sin los ceros de la izquierda. De la denominación, la primera palabra se propone como apellido y el resto como nombre, con mayúscula inicial. El servicio no separa el apellido del nombre, así que un apellido compuesto lo corrige el Analista, y el aviso se lo recuerda.
+   - Persona jurídica: la razón social, tal como la informa el servicio.
+   - Nada más: el domicilio, el empleo y los demás datos los completa el Analista. El sistema no los inventa.
+3. **Sin datos.** Si la persona no está en el servicio, o el servicio no responde, se muestra solo «No es posible obtener los datos de esta persona.». El DNI que sale del CUIL se propone igual, porque no depende de la consulta. La auditoría distingue *Sin datos* de *Fallido*.
+4. **Sin cambios** en la consulta automática (D-58, punto 2) ni en el botón, que sigue disponible para volver a consultar y reemplazar los datos.
+
+**Consecuencias.** Componentes nuevos: `BcraPadron` y `DatosPadron`. Cambian `PadronInterface` (devuelve la denominación), `SimuladorPadron`, `Fabrica::padron()`, `Admin\Clientes::padron()`, `clientes.js` y el formulario del alta, cuyo botón pasa a «Consultar los datos del CUIT/CUIL». Sin cambios de esquema. Pruebas: unitarias `Tests\Unit\Clientes\PadronTest`; integración IN-14 (`testConsultaPorCuitPropone`); E2E I-09, I-10 e I-92. Cambia el texto de CU-11 A9 y de ACT-10 en el documento del Trabajo Final.
+
+**Justificación** (C7, C1, C4, C9). Es la única fuente oficial disponible sin la clave fiscal de la entidad, y ya forma parte del sistema. Proponer solo lo que informa el servicio evita cargar datos falsos en el legajo de un cliente, que la identificación de la Resolución UIF 200/2024 exige verificados por el Analista. Su límite, que solo encuentra a quien tiene deudas informadas, se acepta porque el dato es una ayuda de carga y no un requisito del alta. El adaptador queda detrás de la misma interfaz (RNF-05), así que la conexión con el padrón de ARCA puede reemplazarlo cuando la entidad tenga el certificado.
+
+## D-61 · El monitoreo de operaciones inusuales de la UIF queda fuera del alcance (RN-80; 1.3)
+
+**Contexto.** La normativa de prevención del lavado de activos y la financiación del terrorismo exige a los sujetos obligados, además de identificar a sus clientes, monitorear sus operaciones con un enfoque basado en riesgo, detectar las inusuales y reportar las sospechosas a la UIF. Al planificar la iteración 4 se previó un perfil de riesgo del cliente con alertas de operaciones inusuales, que no se construyó.
+
+**Decisión.**
+1. **Fuera del alcance.** El sistema no construye el monitoreo transaccional: matrices y perfiles de riesgo, reglas de detección de operaciones inusuales, análisis de las alertas ni reportes de operaciones sospechosas a la UIF. Se registra como exclusión del alcance en el documento del Trabajo Final.
+2. **Lo que sí aporta el sistema** como base para que la entidad cumpla con sus propios procedimientos:
+   - la identificación completa del cliente (RN-80, Resolución UIF 200/2024);
+   - la declaración jurada de persona expuesta políticamente en el legajo, exigida para liquidar (D-55), con una alerta al Gerente cuando el cliente se declara expuesto;
+   - el registro de auditoría de cada operación (RN-45) y los reportes de cartera, cobranzas y operaciones (SS-09), que permiten reconstruir el comportamiento de cada cliente.
+
+**Consecuencias.** Sin cambios en el sistema. Cambia la sección de alcance del documento del Trabajo Final, con la exclusión, y se quita del programa la tarea del perfil de riesgo.
+
+**Justificación** (C7, C1). Un monitoreo útil requiere definir la matriz de riesgo de la entidad, los umbrales de cada regla y el circuito de análisis y reporte con su oficial de cumplimiento, que dependen de la política de cada entidad y exceden el alcance y el plazo de un trabajo final. Construir reglas genéricas daría una falsa apariencia de cumplimiento. Dejarlo explícitamente fuera del alcance, con la información que el sistema sí conserva, es la forma honesta de tratar la obligación.

@@ -30,7 +30,7 @@ class PreRegistro extends BaseController
             return redirect()->back()->withInput()->with('error', $e->getMessage());
         }
 
-        return view('portal/pre_registro_enviado', ['titulo' => 'Verifique su correo', 'correo' => (string) $this->request->getPost('correo')]);
+        return view('portal/pre_registro_enviado', ['titulo' => 'Verifique su correo', 'correo' => $this->campoPost('correo')]);
     }
 
     /** Paso 6: la confirmación se hace con un botón, para que un antivirus que abre el enlace no lo consuma. */

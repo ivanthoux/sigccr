@@ -32,7 +32,7 @@ echo view('refinanciaciones/_resumen', ['p' => $p, 'accion' => 'Cancelar']);
                 </div>
                 <div class="col-md-5">
                     <label for="medio_desistimiento" class="form-label">Medio</label>
-                    <input type="text" class="form-control<?= campo_invalido('medio_desistimiento') ?>" id="medio_desistimiento" name="medio_desistimiento" maxlength="100" value="<?= esc((string) old('medio_desistimiento'), 'attr') ?>" placeholder="Nota firmada, correo electrónico…">
+                    <input type="text" class="form-control<?= campo_invalido('medio_desistimiento') ?>" id="medio_desistimiento" name="medio_desistimiento" maxlength="100" value="<?= esc((string) old('medio_desistimiento'), 'attr') ?>" placeholder="Por ejemplo: nota firmada o correo electrónico">
                     <?= error_campo('medio_desistimiento') ?>
                 </div>
             </div>

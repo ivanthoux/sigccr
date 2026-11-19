@@ -31,6 +31,7 @@ $requisitos = RequisitosDocumentales::IDENTIFICACION;
 $campo = static fn (string $nombre, string $etiqueta, string $html, string $ayuda = '', string $col = 'col-md-6'): string =>
     "<div class=\"{$col}\"><label for=\"{$nombre}\" class=\"form-label\">{$etiqueta}</label>{$html}" . error_campo($nombre) . ($ayuda !== '' ? "<div class=\"form-text\">{$ayuda}</div>" : '') . '</div>';
 $texto = static fn (string $nombre, int $max, string $extra = '') => "<input type=\"text\" class=\"form-control" . campo_invalido($nombre) . "\" id=\"{$nombre}\" name=\"{$nombre}\" maxlength=\"{$max}\" value=\"" . esc($v($nombre), 'attr') . "\" {$extra}>";
+$numerico = 'inputmode="numeric"';
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -68,7 +69,19 @@ $this->section('contenido');
 
     <fieldset class="hoja p-4 mb-3">
         <legend class="h5">Identificación</legend>
-        <div class="row g-3" data-solo="PersonaHumana">
+        <div class="row g-3">
+            <?php // O-04 (D-52): obligatorio en el alta; un cliente anterior sin CUIL lo completa al modificar o al solicitar ?>
+            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL</span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, $numerico), '11 dígitos, con o sin guiones.' . ($alta ? '' : '<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>'), 'col-md-6') ?>
+            <?php if ($alta): ?>
+                <div class="col-md-6">
+                    <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
+                    <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar los datos del CUIT/CUIL</button>
+                    <?php // D-60: solo la denominación (Central de Deudores del BCRA) y el DNI del CUIL; el resto lo carga el Analista ?>
+                    <output class="form-text d-block" data-padron-resultado><span data-solo="PersonaHumana">Al ingresar un CUIL válido se completan el DNI, el nombre y el apellido, para que los confirme.</span><span data-solo="PersonaJuridica">Al ingresar un CUIT válido se completa la razón social, para que la confirme.</span> El domicilio y los demás datos se cargan a mano (A9).</output>
+                </div>
+            <?php endif ?>
+        </div>
+        <div class="row g-3 mt-0" data-solo="PersonaHumana">
             <?= $campo('nombre', 'Nombre', $texto('nombre', 80)) ?>
             <?= $campo('apellido', 'Apellido', $texto('apellido', 80)) ?>
             <div class="col-md-3">
@@ -78,9 +91,9 @@ $this->section('contenido');
                 </select>
                 <?= error_campo('tipo_documento') ?>
             </div>
-            <?= $campo('nro_documento', 'Número de documento', $texto('nro_documento', 15, 'inputmode="numeric"'), 'Sin puntos.', 'col-md-4') ?>
+            <?= $campo('nro_documento', 'Número de documento', $texto('nro_documento', 15, $numerico), 'Sin puntos.', 'col-md-4') ?>
             <?= $campo('fecha_nacimiento', 'Fecha de nacimiento', '<input type="date" class="form-control' . campo_invalido('fecha_nacimiento') . '" id="fecha_nacimiento" name="fecha_nacimiento" value="' . esc($v('fecha_nacimiento'), 'attr') . '">', '', 'col-md-5') ?>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label for="estado_civil" class="form-label">Estado civil <span class="text-body-secondary fw-normal">(opcional)</span></label>
                 <select class="form-select<?= campo_invalido('estado_civil') ?>" id="estado_civil" name="estado_civil">
                     <option value="">Sin informar</option>
@@ -88,22 +101,13 @@ $this->section('contenido');
                 </select>
                 <?= error_campo('estado_civil') ?>
             </div>
-            <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-4') ?>
+            <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-6') ?>
             <datalist id="nacionalidades"><option value="Argentina"><option value="Boliviana"><option value="Brasileña"><option value="Chilena"><option value="Paraguaya"><option value="Peruana"><option value="Uruguaya"><option value="Venezolana"></datalist>
         </div>
-        <div class="row g-3" data-solo="PersonaJuridica">
+        <div class="row g-3 mt-0" data-solo="PersonaJuridica">
             <?= $campo('razon_social', 'Razón social', $texto('razon_social', 200), '', 'col-md-8') ?>
             <?= $campo('fecha_constitucion', 'Fecha de constitución', '<input type="date" class="form-control' . campo_invalido('fecha_constitucion') . '" id="fecha_constitucion" name="fecha_constitucion" value="' . esc($v('fecha_constitucion'), 'attr') . '">', '', 'col-md-4') ?>
             <?= $campo('actividad_principal', 'Actividad principal', $texto('actividad_principal', 150), '', 'col-12') ?>
-        </div>
-        <div class="row g-3 mt-0">
-            <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL <span class="text-body-secondary fw-normal">(opcional en el alta; obligatorio para solicitar crédito)</span></span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, 'inputmode="numeric"'), '11 dígitos, con o sin guiones.', 'col-md-6') ?>
-            <?php if ($alta): ?>
-                <div class="col-md-6 d-flex flex-column justify-content-end" data-solo="PersonaHumana">
-                    <button type="button" class="btn btn-outline-secondary align-self-start" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
-                    <div class="form-text" data-padron-resultado role="status">Propone el nombre, el documento y el domicilio fiscal del CUIL para que los confirme (A9).</div>
-                </div>
-            <?php endif ?>
         </div>
     </fieldset>
 
@@ -111,7 +115,7 @@ $this->section('contenido');
         <legend class="h5">Representante</legend>
         <div class="row g-3">
             <?= $campo('representante_nombre', 'Nombre y apellido', $texto('representante_nombre', 150), '', 'col-md-6') ?>
-            <?= $campo('representante_documento', 'DNI', $texto('representante_documento', 15, 'inputmode="numeric"'), '', 'col-md-3') ?>
+            <?= $campo('representante_documento', 'DNI', $texto('representante_documento', 15, $numerico), '', 'col-md-3') ?>
             <?= $campo('representante_cargo', 'Cargo', $texto('representante_cargo', 80), '', 'col-md-3') ?>
         </div>
     </fieldset>
@@ -129,7 +133,7 @@ $this->section('contenido');
                     <div class="form-text">El cambio de correo en sucursal exige comprobar presencialmente el documento y la identidad (RN-58).</div>
                 </div>
             <?php endif ?>
-            <div class="col-12"><h3 class="h6 mb-0 mt-1"><span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span></h3></div>
+            <div class="col-12"><h2 class="h6 mb-0 mt-1"><span data-solo="PersonaHumana">Domicilio</span><span data-solo="PersonaJuridica">Domicilio legal</span></h2></div>
             <?php $provincia = (string) $v('provincia_id'); $localidad = (string) $v('localidad_id'); ?>
             <div class="col-md-4">
                 <label for="provincia_id" class="form-label">Provincia</label>
@@ -181,9 +185,17 @@ $this->section('contenido');
     <?php if ($alta): ?>
         <fieldset class="hoja p-4 mb-3" id="documentacion">
             <legend class="h5">Documentación respaldatoria</legend>
+            <?php if (!empty(session('errores'))): ?>
+                <div class="alert alert-warning py-2 small" role="status">Si había elegido archivos, vuelva a adjuntarlos: el navegador no los conserva cuando el formulario vuelve con observaciones.</div>
+            <?php endif ?>
             <p class="text-body-secondary small">PDF, JPG o PNG de hasta 5 MB cada uno. Solo es obligatoria la identificación del cliente. La documentación de ingresos puede incorporarse ahora o más adelante: la exige cada línea de crédito al registrar la solicitud (RN-11). Incorporar un documento no equivale a verificarlo.</p>
             <div class="row g-3">
                 <?php foreach ($tipos as $t): ?>
+                    <?php if ($t['codigo'] === RequisitosDocumentales::DECLARACION_PEP) {
+                        $tipoPep = $t; // se adjunta en «Persona expuesta políticamente», junto a la declaración
+
+                        continue;
+                    } ?>
                     <div class="col-md-6" data-aplica="<?= esc($t['aplica_a'], 'attr') ?>">
                         <label for="doc-<?= esc($t['codigo'], 'attr') ?>" class="form-label"><?= esc($t['nombre']) ?> <span class="badge text-bg-light border" data-obligatorio="<?= esc($t['codigo'], 'attr') ?>" hidden>Obligatorio</span></label>
                         <input type="file" class="form-control<?= campo_invalido('doc_' . $t['codigo']) ?>" id="doc-<?= esc($t['codigo'], 'attr') ?>" name="documentos[<?= esc($t['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
@@ -209,7 +221,15 @@ $this->section('contenido');
             </div>
         </div>
         <?= error_campo('persona_expuesta') ?>
-        <p class="small text-body-secondary mt-2 mb-0">Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
+        <?php if ($alta && isset($tipoPep)): ?>
+            <div class="mt-3 col-md-6" data-aplica="<?= esc($tipoPep['aplica_a'], 'attr') ?>">
+                <label for="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" class="form-label">Declaración jurada firmada <span class="text-body-secondary fw-normal">(opcional en el alta)</span></label>
+                <input type="file" class="form-control<?= campo_invalido('doc_' . $tipoPep['codigo'], 'ayuda-doc-pep') ?>" id="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" name="documentos[<?= esc($tipoPep['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                <div class="form-text" id="ayuda-doc-pep">Firmada por el cliente; PDF, JPG o PNG de hasta 5 MB. Puede adjuntarse ahora o más adelante: se exige para liquidar un crédito.</div>
+                <?= error_campo('doc_' . $tipoPep['codigo']) ?>
+            </div>
+        <?php endif ?>
+        <p class="small text-body-secondary mt-2 mb-0"><?= $c === null && !isset($tipoPep) ? 'La declaración firmada se adjunta en la documentación, ahora o más adelante: se exige para liquidar. ' : '' ?>Si se declara expuesta, el Gerente recibe una alerta para aplicar la debida diligencia reforzada.<?= $c !== null && $c['persona_expuesta'] === null ? ' Este cliente se registró antes de la regla: complete la declaración.' : '' ?></p>
     </fieldset>
 
     <fieldset class="hoja p-4 mb-3">
@@ -237,5 +257,5 @@ $this->section('contenido');
 
 <?php $this->section('scripts') ?>
 <script type="application/json" id="requisitos-documentales"><?= json_encode($requisitos, JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
-<script src="<?= base_url('assets/sigccr/clientes.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/clientes.js') ?>"></script>
 <?php $this->endSection() ?>

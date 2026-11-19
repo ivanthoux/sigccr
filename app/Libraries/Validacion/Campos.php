@@ -12,10 +12,92 @@ final class Campos
 {
     public const TIPOS_DOCUMENTO = ['DNI', 'LC', 'LE', 'Pasaporte'];
 
-    /** Recorta y colapsa los espacios internos. */
+    /**
+     * Recorta y colapsa los espacios internos. Un valor que no es texto ni número (por ejemplo, un campo enviado como
+     * lista: nombre[]=x) se trata como vacío, y los caracteres de control se eliminan: la tabulación y los saltos de
+     * línea cuentan como espacios (D-51, clases COM-02, COM-05 y COM-06).
+     */
     public static function texto(mixed $valor): string
     {
-        return trim(preg_replace('/\s+/u', ' ', (string) ($valor ?? '')) ?? '');
+        if (!is_scalar($valor)) {
+            return '';
+        }
+        $t = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', (string) $valor) ?? '';
+
+        return trim(preg_replace('/\s+/u', ' ', $t) ?? '');
+    }
+
+    /**
+     * Lista de valores de un formulario (casillas múltiples, campo[]): solo los elementos que son texto o número,
+     * como texto. Un valor suelto se toma como lista de un elemento; uno anidado (campo[][]=x) se descarta (D-51).
+     *
+     * @return list<string>
+     */
+    public static function lista(mixed $valor): array
+    {
+        $r = [];
+        foreach (is_array($valor) ? $valor : ($valor === null || $valor === '' ? [] : [$valor]) as $v) {
+            if (is_scalar($v)) {
+                $r[] = (string) $v;
+            }
+        }
+
+        return $r;
+    }
+
+    /**
+     * Texto para buscar con like() del Query Builder como texto literal: CodeIgniter agrega ESCAPE '!' pero no escapa
+     * los comodines del valor, así que «%» devolvía todos los registros (D-51, H-12, clase FIL-03).
+     */
+    public static function literalLike(string $texto): string
+    {
+        return str_replace(['!', '%', '_', '['], ['!!', '!%', '!_', '!['], $texto);
+    }
+
+    /** Valor de un formulario como texto sin transformar (contraseñas): un valor que no es texto se trata como vacío. */
+    public static function crudo(mixed $valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
+    }
+
+    /**
+     * Identificador o versión enviado en un formulario: entero positivo de hasta 9 dígitos, con espacios en los
+     * extremos admitidos; cualquier otra cosa (lista, vacío, signo, decimales, letras) vale 0 (H-21).
+     */
+    public static function identificador(mixed $valor): int
+    {
+        $t = trim(self::crudo($valor));
+
+        return preg_match('/^\d{1,9}$/', $t) === 1 ? (int) $t : 0;
+    }
+
+    /**
+     * Texto recortado a $maximo unidades de NVARCHAR (un emoji ocupa dos), sin partir un carácter. Para los resúmenes
+     * que se guardan en una columna más corta que el texto completo (por ejemplo, el motivo de una transición).
+     */
+    public static function recortar(string $valor, int $maximo): string
+    {
+        if (self::largo($valor) <= $maximo) {
+            return $valor;
+        }
+        $r = '';
+        foreach (mb_str_split($valor) as $c) {
+            if (self::largo($r . $c) > $maximo) {
+                break;
+            }
+            $r .= $c;
+        }
+
+        return $r;
+    }
+
+    /**
+     * Número de operación o comprobante bancario que se guarda en una columna VARCHAR (H-26): de 1 a $maximo caracteres
+     * ASCII visibles. Una letra con tilde o eñe se guardaría como «?».
+     */
+    public static function operacionValida(string $valor, int $maximo): bool
+    {
+        return $valor !== '' && strlen($valor) <= $maximo && preg_match('/^[\x20-\x7E]+$/', $valor) === 1;
     }
 
     /** Correo en minúsculas y sin espacios. */
@@ -47,9 +129,19 @@ final class Campos
         return $valor === '' ? "Complete {$nombreCampo}." : null;
     }
 
+    /**
+     * Largo de un texto como lo mide SQL Server en una columna NVARCHAR (unidades UTF-16): las letras con tilde y la
+     * eñe cuentan uno, y un emoji u otro carácter fuera del plano básico, dos. Con mb_strlen() un texto con emoji
+     * pasaba la validación y fallaba al guardarse (D-51, clase TXT-05).
+     */
+    public static function largo(string $valor): int
+    {
+        return intdiv(strlen((string) mb_convert_encoding($valor, 'UTF-16LE', 'UTF-8')), 2);
+    }
+
     public static function largoMaximo(string $valor, int $maximo, string $nombreCampo): ?string
     {
-        return mb_strlen($valor) > $maximo ? ucfirst($nombreCampo) . " admite hasta {$maximo} caracteres." : null;
+        return self::largo($valor) > $maximo ? ucfirst($nombreCampo) . " admite hasta {$maximo} caracteres." : null;
     }
 
     /** Nombres y apellidos: letras (con tildes y ñ), espacios, apóstrofo, guion y punto. */
@@ -65,16 +157,50 @@ final class Campos
         return self::largoMaximo($valor, 80, $nombreCampo);
     }
 
+    /**
+     * Correo con formato válido (O-05, D-52): admite direcciones internacionales, con letras no ASCII en la parte local
+     * (RFC 6531) o en el dominio (IDN, que se valida en su forma punycode). El dominio debe tener al menos un punto y
+     * el largo total no puede superar 254 unidades, como la columna NVARCHAR(254). La parte local admite hasta 64
+     * octetos (RFC 5321, 4.5.3.1.1): 64 letras ASCII o 32 eñes, que ocupan dos octetos cada una en UTF-8.
+     */
     public static function formatoCorreo(string $valor): ?string
     {
         if ($valor === '') {
             return null;
         }
-        if (mb_strlen($valor) > 254 || filter_var($valor, FILTER_VALIDATE_EMAIL) === false || !str_contains(substr($valor, strrpos($valor, '@') ?: 0), '.')) {
-            return 'Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.';
+        $error = 'Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.';
+        $arroba = strrpos($valor, '@');
+        if ($arroba === false || $arroba > 64 || self::largo($valor) > 254) {
+            return $error;
+        }
+        $dominio = self::dominioAscii(substr($valor, $arroba + 1));
+        if ($dominio === null || !str_contains($dominio, '.')) {
+            return $error;
         }
 
-        return null;
+        return filter_var(substr($valor, 0, $arroba) . '@' . $dominio, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE) === false ? $error : null;
+    }
+
+    /** Dominio de un correo en ASCII (punycode para un dominio internacional); null si no es un dominio válido. */
+    public static function dominioAscii(string $dominio): ?string
+    {
+        if ($dominio === '' || preg_match('/^[\x00-\x7F]+$/', $dominio) === 1) {
+            return $dominio === '' ? null : $dominio;
+        }
+        $ascii = idn_to_ascii($dominio, IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46);
+
+        return $ascii === false ? null : $ascii;
+    }
+
+    /** Correo con el dominio en ASCII, para enviarlo por SMTP (la parte local se conserva). */
+    public static function correoParaEnvio(string $correo): string
+    {
+        $arroba = strrpos($correo, '@');
+        if ($arroba === false) {
+            return $correo;
+        }
+
+        return substr($correo, 0, $arroba) . '@' . (self::dominioAscii(substr($correo, $arroba + 1)) ?? substr($correo, $arroba + 1));
     }
 
     public static function tipoDocumento(string $valor): ?string
@@ -82,7 +208,9 @@ final class Campos
         return $valor !== '' && !in_array($valor, self::TIPOS_DOCUMENTO, true) ? 'Seleccione un tipo de documento válido.' : null;
     }
 
-    /** DNI, LC y LE: 6 a 9 dígitos; pasaporte: 5 a 15 letras o dígitos. */
+    /**
+     * DNI, LC y LE: 6 a 8 dígitos, el largo que admite el CUIL (D-53); pasaporte: 5 a 15 letras o dígitos.
+     */
     public static function numeroDocumento(string $tipo, string $numero): ?string
     {
         if ($numero === '') {
@@ -91,8 +219,8 @@ final class Campos
         if ($tipo === 'Pasaporte') {
             return preg_match('/^[A-Z0-9]{5,15}$/', $numero) === 1 ? null : 'El pasaporte debe tener entre 5 y 15 letras o números.';
         }
-        if (preg_match('/^\d{6,9}$/', $numero) !== 1) {
-            return 'El documento debe tener entre 6 y 9 dígitos, sin puntos.';
+        if (preg_match('/^\d{6,8}$/', $numero) !== 1) {
+            return 'El documento debe tener entre 6 y 8 dígitos, sin puntos.';
         }
 
         return (int) $numero === 0 ? 'El número de documento no es válido.' : null;
@@ -145,14 +273,15 @@ final class Campos
     }
 
     /** Texto de motivo de una operación (auditoría): entre 5 y 1000 caracteres. */
-    public static function motivo(string $valor): ?string
+    public static function motivo(string $valor, int $maximo = 1000): ?string
     {
-        $largo = mb_strlen($valor);
+        $largo = self::largo($valor);
         if ($largo < 5) {
             return 'Indique el motivo de la operación (al menos 5 caracteres).';
         }
 
-        return $largo > 1000 ? 'El motivo admite hasta 1000 caracteres.' : null;
+        // H-14: el máximo es el de la columna donde se guarda; nunca se recorta en silencio
+        return $largo > $maximo ? "El motivo admite hasta {$maximo} caracteres." : null;
     }
 
     /**

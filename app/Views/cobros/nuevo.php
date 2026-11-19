@@ -80,7 +80,7 @@ $this->section('contenido');
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
                     <label for="importe" class="form-label">Importe a cobrar</label>
-                    <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc((string) old('importe'), 'attr') ?>" aria-describedby="ayuda-importe">
+                    <input type="text" class="form-control<?= campo_invalido('importe', 'ayuda-importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc((string) old('importe'), 'attr') ?>">
                     <div id="ayuda-importe" class="form-text">Vacío cobra el total. Un importe menor se imputa por antigüedad y la última cuota queda con saldo (D-12).</div>
                     <?= error_campo('importe') ?>
                 </div>
@@ -91,17 +91,19 @@ $this->section('contenido');
                 <?php for ($i = 0; $i < 3; $i++): $mo = (array) ($mediosOld[$i] ?? []); ?>
                     <div class="row g-2 mb-2 align-items-end">
                         <div class="col-md-4">
-                            <label class="form-label small" for="medio-<?= $i ?>">Medio <?= $i + 1 ?></label>
+                            <label class="form-label small<?= $i > 0 ? ' etiqueta-repetida' : '' ?>" for="medio-<?= $i ?>">Medio <?= $i + 1 ?></label>
                             <select class="form-select" id="medio-<?= $i ?>" name="medios[<?= $i ?>][medio]">
-                                <?php foreach (MediosCobro::MEDIOS as $k => $n): ?><option value="<?= $k ?>"<?= ($mo['medio'] ?? 'Transferencia') === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
+                                <?php // Los medios 2 y 3 empiezan «Sin usar»: si no, parecía que el cobro tenía tres pagos ?>
+                                <?php if ($i > 0): ?><option value=""<?= ($mo['medio'] ?? '') === '' ? ' selected' : '' ?>>Sin usar</option><?php endif ?>
+                                <?php foreach (MediosCobro::MEDIOS as $k => $n): ?><option value="<?= $k ?>"<?= ($mo['medio'] ?? ($i === 0 ? 'Transferencia' : '')) === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small" for="medio-importe-<?= $i ?>">Importe</label>
+                            <label class="form-label small<?= $i > 0 ? ' etiqueta-repetida' : '' ?>" for="medio-importe-<?= $i ?>">Importe</label>
                             <input type="text" class="form-control" id="medio-importe-<?= $i ?>" name="medios[<?= $i ?>][importe]" inputmode="decimal" value="<?= esc((string) ($mo['importe'] ?? ''), 'attr') ?>"<?= $i === 0 ? ' data-cobro-primer-medio' : '' ?>>
                         </div>
                         <div class="col-md-5">
-                            <label class="form-label small" for="medio-operacion-<?= $i ?>">N.º de operación o comprobante</label>
+                            <label class="form-label small<?= $i > 0 ? ' etiqueta-repetida' : '' ?>" for="medio-operacion-<?= $i ?>">N.º de operación o comprobante</label>
                             <input type="text" class="form-control" id="medio-operacion-<?= $i ?>" name="medios[<?= $i ?>][numero_operacion]" maxlength="60" value="<?= esc((string) ($mo['numero_operacion'] ?? ''), 'attr') ?>">
                         </div>
                     </div>
@@ -115,5 +117,5 @@ $this->section('contenido');
         </section>
     </form>
 <?php endif ?>
-<script src="<?= base_url('assets/sigccr/cobros.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/cobros.js') ?>"></script>
 <?php $this->endSection() ?>

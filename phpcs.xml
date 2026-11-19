@@ -4,6 +4,8 @@
     <file>app</file>
     <file>tests/unit</file>
     <file>tests/rutas</file>
+    <file>tests/feature</file>
+    <file>tests/_support/Feature</file>
     <exclude-pattern>app/Views/*</exclude-pattern>
     <exclude-pattern>app/Config/*</exclude-pattern>
     <arg name="extensions" value="php"/>

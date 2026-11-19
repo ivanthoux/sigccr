@@ -44,13 +44,13 @@ $this->section('contenido');
         </div>
         <div class="col-md-8">
             <label for="nro_documento" class="form-label">Número de documento</label>
-            <input type="text" class="form-control<?= campo_invalido('nro_documento') ?>" id="nro_documento" name="nro_documento" required maxlength="15" inputmode="numeric" autocomplete="off" value="<?= esc($v('nro_documento'), 'attr') ?>" aria-describedby="ayudaDocumento">
+            <input type="text" class="form-control<?= campo_invalido('nro_documento', 'ayudaDocumento') ?>" id="nro_documento" name="nro_documento" required maxlength="15" inputmode="numeric" autocomplete="off" value="<?= esc($v('nro_documento'), 'attr') ?>">
             <?= error_campo('nro_documento') ?>
             <div class="form-text" id="ayudaDocumento">Sin puntos ni espacios.</div>
         </div>
         <div class="col-12">
             <label for="correo" class="form-label">Correo electrónico</label>
-            <input type="email" class="form-control<?= campo_invalido('correo') ?>" id="correo" name="correo" required maxlength="254" autocomplete="off" value="<?= esc($v('correo'), 'attr') ?>" aria-describedby="ayudaCorreo">
+            <input type="email" class="form-control<?= campo_invalido('correo', 'ayudaCorreo') ?>" id="correo" name="correo" required maxlength="254" autocomplete="off" value="<?= esc($v('correo'), 'attr') ?>">
             <?= error_campo('correo') ?>
             <div class="form-text" id="ayudaCorreo"><?= $nuevo
                 ? 'Se usa para iniciar sesión y para recuperar el acceso.'
@@ -63,7 +63,7 @@ $this->section('contenido');
                     <div class="row g-2">
                         <?php foreach ($roles as $r): ?>
                             <div class="col-sm-6">
-                                <input type="radio" class="btn-check" name="rol" id="rol-<?= esc($r['codigo'], 'attr') ?>" value="<?= esc($r['codigo'], 'attr') ?>"<?= $v('rol') === $r['codigo'] ? ' checked' : '' ?> required>
+                                <input type="radio" class="btn-check" name="rol" id="rol-<?= esc($r['codigo'], 'attr') ?>" value="<?= esc($r['codigo'], 'attr') ?>"<?= $v('rol') === $r['codigo'] ? ' checked' : '' ?> required<?= grupo_invalido('rol') ?>>
                                 <label class="btn btn-outline-secondary w-100 text-start" for="rol-<?= esc($r['codigo'], 'attr') ?>"><?= esc($r['nombre']) ?></label>
                             </div>
                         <?php endforeach ?>

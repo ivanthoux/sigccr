@@ -86,7 +86,8 @@ class RevocacionService extends BaseService
         } elseif ($fecha > $this->hoyNegocio()) {
             $e['fecha_comunicacion'] = 'La fecha de la comunicación no puede ser futura.';
         }
-        if (mb_strlen($medio) < 3 || mb_strlen($medio) > 60) {
+        // H-16: largo en unidades de NVARCHAR(60); un emoji en el límite respondía error 500
+        if (Campos::largo($medio) < 3 || Campos::largo($medio) > 60) {
             $e['medio_comunicacion'] = 'Indique el medio por el que la comunicó (por ejemplo: presencial, correo electrónico, carta documento).';
         }
         if ($e !== []) {
@@ -136,10 +137,11 @@ class RevocacionService extends BaseService
     /** CU-102 pasos 6 a 8 (A2, A3): transferencia de restitución recibida; el crédito queda Revocado. */
     public function confirmar(int $creditoId, string $operacionTexto, string $importeTexto, int $usuarioId): void
     {
-        $operacion = trim($operacionTexto);
+        $operacion = Campos::texto($operacionTexto);
         $importe = Campos::importe($importeTexto);
         $e = [];
-        if ($operacion === '' || mb_strlen($operacion) > 60) {
+        // H-26: se guarda en cobros_medios.numero_operacion, VARCHAR(60)
+        if (!Campos::operacionValida($operacion, 60)) {
             $e['numero_operacion'] = 'Informe el número de operación de la transferencia recibida.';
         }
         if ($importe === null) {

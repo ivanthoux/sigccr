@@ -129,7 +129,7 @@ class DevolucionService extends BaseService
             $b->where('a.id', (int) $f['numero']);
         }
         if (($f['texto'] ?? '') !== '') {
-            $b->groupStart()->like('cl.denominacion', (string) $f['texto'])->orLike('cl.cuit_cuil', preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto'])->groupEnd();
+            $b->groupStart()->like('cl.denominacion', Campos::literalLike((string) $f['texto']))->orLike('cl.cuit_cuil', Campos::literalLike((string) preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto']))->groupEnd();
         }
         $estado = (string) ($f['estado'] ?? 'activas');
         if ($estado === 'activas') {

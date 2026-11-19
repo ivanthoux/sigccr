@@ -26,14 +26,14 @@ class Condonaciones extends BaseController
     /** CU-44 pasos 6 a 10 (A1, A2). */
     public function condonar(): RedirectResponse
     {
-        $clienteId = (int) $this->request->getPost('cliente_id');
+        $clienteId = $this->enteroPost('cliente_id');
         try {
             $r = (new CondonacionService())->condonar(
                 (int) session('cuenta')['id'],
                 $clienteId,
                 (array) $this->request->getPost('cuotas'),
-                (string) $this->request->getPost('importe'),
-                (string) $this->request->getPost('fundamento'),
+                $this->campoPost('importe'),
+                $this->campoPost('fundamento'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

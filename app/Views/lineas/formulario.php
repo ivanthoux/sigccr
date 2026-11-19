@@ -76,8 +76,8 @@ $this->section('contenido');
         <legend class="h5">Importes y plazos prestables</legend>
         <p class="small text-body-secondary">El importe mínimo y máximo acotan las simulaciones, las solicitudes, las alternativas automáticas y las ofertas de esta línea (RN-76). Por ejemplo, una línea para motos podría prestar entre $ 300.000 y $ 1.500.000.</p>
         <div class="row g-3">
-            <?= $campo('monto_minimo', 'Importe mínimo prestable', $conPrefijo('monto_minimo', 'inputmode="decimal" required placeholder="300.000,00"'), '', 'col-md-6') ?>
-            <?= $campo('monto_maximo', 'Importe máximo prestable', $conPrefijo('monto_maximo', 'inputmode="decimal" required placeholder="1.500.000,00"'), '', 'col-md-6') ?>
+            <?= $campo('monto_minimo', 'Importe mínimo prestable', $conPrefijo('monto_minimo', 'inputmode="decimal" required placeholder="Por ejemplo: 300.000,00"'), '', 'col-md-6') ?>
+            <?= $campo('monto_maximo', 'Importe máximo prestable', $conPrefijo('monto_maximo', 'inputmode="decimal" required placeholder="Por ejemplo: 1.500.000,00"'), '', 'col-md-6') ?>
             <?= $campo('cuotas_minimas', 'Cantidad mínima de cuotas', $entrada('cuotas_minimas', 'inputmode="numeric" min="1" max="120" required', 'number'), '', 'col-6 col-md-3') ?>
             <?= $campo('cuotas_maximas', 'Cantidad máxima de cuotas', $entrada('cuotas_maximas', 'inputmode="numeric" min="1" max="120" required', 'number'), '', 'col-6 col-md-3') ?>
         </div>
@@ -202,5 +202,5 @@ $this->section('contenido');
 </form>
 <?php $this->endSection() ?>
 <?php $this->section('scripts') ?>
-<script src="<?= base_url('assets/sigccr/lineas.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/lineas.js') ?>"></script>
 <?php $this->endSection() ?>

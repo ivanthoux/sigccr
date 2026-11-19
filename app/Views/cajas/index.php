@@ -25,12 +25,12 @@ $this->section('contenido');
         <div class="row g-3">
             <div class="col-md-3">
                 <label for="codigo" class="form-label">Código</label>
-                <input type="text" class="form-control<?= $abierto === 'alta' ? campo_invalido('codigo') : '' ?>" id="codigo" name="codigo" maxlength="10" placeholder="CAJA-01" value="<?= esc($abierto === 'alta' ? (string) old('codigo') : '', 'attr') ?>" required>
+                <input type="text" class="form-control<?= $abierto === 'alta' ? campo_invalido('codigo') : '' ?>" id="codigo" name="codigo" maxlength="10" placeholder="Por ejemplo: CAJA-01" value="<?= esc($abierto === 'alta' ? (string) old('codigo') : '', 'attr') ?>" required>
                 <?= $abierto === 'alta' ? error_campo('codigo') : '' ?>
             </div>
             <div class="col-md-4">
                 <label for="denominacion" class="form-label">Denominación</label>
-                <input type="text" class="form-control<?= $abierto === 'alta' ? campo_invalido('denominacion') : '' ?>" id="denominacion" name="denominacion" maxlength="60" placeholder="Caja 1 – Casa central" value="<?= esc($abierto === 'alta' ? (string) old('denominacion') : '', 'attr') ?>" required>
+                <input type="text" class="form-control<?= $abierto === 'alta' ? campo_invalido('denominacion') : '' ?>" id="denominacion" name="denominacion" maxlength="60" placeholder="Por ejemplo: Caja 1 – Casa central" value="<?= esc($abierto === 'alta' ? (string) old('denominacion') : '', 'attr') ?>" required>
                 <?= $abierto === 'alta' ? error_campo('denominacion') : '' ?>
             </div>
             <div class="col-md-5">
@@ -76,12 +76,12 @@ $this->section('contenido');
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small" for="desde-<?= $id ?>">Desde</label>
-                            <input type="text" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('desde') : '' ?>" id="desde-<?= $id ?>" name="desde" placeholder="dd/mm/aaaa" value="<?= esc(formato_fecha(hoy_negocio()), 'attr') ?>">
+                            <input type="date" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('desde') : '' ?>" id="desde-<?= $id ?>" name="desde" value="<?= esc(fecha_campo(formato_fecha(hoy_negocio())), 'attr') ?>">
                             <?= $abierto === "asignar-{$id}" ? error_campo('desde') : '' ?>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label small" for="hasta-<?= $id ?>">Hasta <span class="text-body-secondary">(opcional)</span></label>
-                            <input type="text" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('hasta') : '' ?>" id="hasta-<?= $id ?>" name="hasta" placeholder="dd/mm/aaaa">
+                            <input type="date" class="form-control form-control-sm<?= $abierto === "asignar-{$id}" ? campo_invalido('hasta') : '' ?>" id="hasta-<?= $id ?>" name="hasta">
                             <?= $abierto === "asignar-{$id}" ? error_campo('hasta') : '' ?>
                         </div>
                         <div class="col-12"><button type="submit" class="btn btn-sm btn-primary">Confirmar asignación</button></div>

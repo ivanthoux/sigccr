@@ -23,15 +23,15 @@ $this->section('contenido');
     <button type="button" class="btn btn-outline-secondary d-print-none" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button>
 </div>
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end d-print-none" novalidate>
-    <div class="col-6 col-md-2"><label for="desde" class="form-label small mb-1">Fecha</label><input type="date" id="desde" name="desde" class="form-control form-control-sm<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'] !== '' ? $f['desde'] : $i['periodo']['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
-    <div class="col-6 col-md-2"><label for="hasta" class="form-label small mb-1">hasta <span class="text-body-secondary">(opcional)</span></label><input type="date" id="hasta" name="hasta" class="form-control form-control-sm<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
-    <div class="col-6 col-md-3"><label for="caja" class="form-label small mb-1">Caja</label>
-        <select id="caja" name="caja" class="form-select form-select-sm"><option value="">Todas</option><?php foreach ($opciones['cajas'] as $c): ?><option value="<?= (int) $c['id'] ?>"<?= $f['caja'] === (string) $c['id'] ? ' selected' : '' ?>><?= esc($c['nombre']) ?></option><?php endforeach ?></select></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Fecha</label><input type="date" id="desde" name="desde" class="form-control<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'] !== '' ? $f['desde'] : $i['periodo']['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">hasta <span class="text-body-secondary">(opcional)</span></label><input type="date" id="hasta" name="hasta" class="form-control<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
+    <div class="col-6 col-md-3"><label for="caja" class="form-label small">Caja</label>
+        <select id="caja" name="caja" class="form-select"><option value="">Todas</option><?php foreach ($opciones['cajas'] as $c): ?><option value="<?= (int) $c['id'] ?>"<?= $f['caja'] === (string) $c['id'] ? ' selected' : '' ?>><?= esc($c['nombre']) ?></option><?php endforeach ?></select></div>
     <?php if (!$soloCajero): ?>
-        <div class="col-6 col-md-3"><label for="cajero" class="form-label small mb-1">Cajero</label>
-            <select id="cajero" name="cajero" class="form-select form-select-sm"><option value="">Todos</option><?php foreach ($opciones['cajeros'] as $c): ?><option value="<?= (int) $c['id'] ?>"<?= $f['cajero'] === (string) $c['id'] ? ' selected' : '' ?>><?= esc($c['nombre']) ?></option><?php endforeach ?></select></div>
+        <div class="col-6 col-md-3"><label for="cajero" class="form-label small">Cajero</label>
+            <select id="cajero" name="cajero" class="form-select"><option value="">Todos</option><?php foreach ($opciones['cajeros'] as $c): ?><option value="<?= (int) $c['id'] ?>"<?= $f['cajero'] === (string) $c['id'] ? ' selected' : '' ?>><?= esc($c['nombre']) ?></option><?php endforeach ?></select></div>
     <?php endif ?>
-    <div class="col d-flex gap-2 justify-content-end"><a href="<?= url_to('cajas.informe-diario') ?>" class="btn btn-sm btn-outline-secondary">Hoy</a><button type="submit" class="btn btn-sm btn-primary">Consultar</button></div>
+    <?= acciones_filtro(texto: 'Consultar', icono: 'bi-arrow-repeat', antes: '<a href="' . url_to('cajas.informe-diario') . '" class="btn btn-outline-secondary">Hoy</a>') ?>
 </form>
 <?php if ($i['aviso'] !== null): ?><div class="alert alert-warning"><?= esc($i['aviso']) ?></div><?php endif ?>
 <?php if ($i['jornadas'] === []): ?>

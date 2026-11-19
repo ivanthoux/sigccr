@@ -35,15 +35,15 @@ class SaldosFavor extends BaseController
     /** CU-76 pasos 5 a 10 (A3, A5). */
     public function aplicar(): RedirectResponse
     {
-        $clienteId = (int) $this->request->getPost('cliente_id');
+        $clienteId = $this->enteroPost('cliente_id');
         try {
             $r = (new SaldoFavorService())->aplicar(
                 (int) session('cuenta')['id'],
                 $clienteId,
                 (array) $this->request->getPost('cuotas'),
-                (string) $this->request->getPost('fecha_conformidad'),
-                (string) $this->request->getPost('medio_conformidad'),
-                (string) $this->request->getPost('observaciones'),
+                $this->campoPost('fecha_conformidad'),
+                $this->campoPost('medio_conformidad'),
+                $this->campoPost('observaciones'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
@@ -88,7 +88,7 @@ class SaldosFavor extends BaseController
     public function anular(int $id): RedirectResponse
     {
         try {
-            (new DevolucionService())->anular((int) session('cuenta')['id'], $id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo_anulacion'));
+            (new DevolucionService())->anular((int) session('cuenta')['id'], $id, $this->enteroPost('version_fila'), $this->campoPost('motivo_anulacion'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -101,7 +101,7 @@ class SaldosFavor extends BaseController
     {
         $f = [];
         foreach (['numero', 'texto', 'fecha'] as $k) {
-            $f[$k] = trim((string) $this->request->getGet($k));
+            $f[$k] = trim($this->campoGet($k));
         }
         $f['estado'] = (string) ($this->request->getGet('estado') ?: 'activas');
 
@@ -124,9 +124,9 @@ class SaldosFavor extends BaseController
     public function ejecutar(int $id): RedirectResponse
     {
         try {
-            $r = (new DevolucionService())->ejecutar((int) session('cuenta')['id'], $id, (int) $this->request->getPost('version_fila'), [
-                'numero_operacion' => (string) $this->request->getPost('numero_operacion'), 'fecha' => (string) $this->request->getPost('fecha'),
-                'importe' => (string) $this->request->getPost('importe'), 'cbu' => (string) $this->request->getPost('cbu'),
+            $r = (new DevolucionService())->ejecutar((int) session('cuenta')['id'], $id, $this->enteroPost('version_fila'), [
+                'numero_operacion' => $this->campoPost('numero_operacion'), 'fecha' => $this->campoPost('fecha'),
+                'importe' => $this->campoPost('importe'), 'cbu' => $this->campoPost('cbu'),
             ]);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

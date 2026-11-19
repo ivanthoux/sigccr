@@ -24,7 +24,7 @@ class Monotributo extends BaseController
     public function registrar(): RedirectResponse
     {
         try {
-            $desde = (new MonotributoService())->registrarEscala((string) $this->request->getPost('vigente_desde'), (array) $this->request->getPost('topes'));
+            $desde = (new MonotributoService())->registrarEscala($this->campoPost('vigente_desde'), (array) $this->request->getPost('topes'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

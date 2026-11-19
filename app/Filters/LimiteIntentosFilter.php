@@ -21,7 +21,7 @@ class LimiteIntentosFilter implements FilterInterface
             return null;
         }
         $cfg = config('Sigccr');
-        $clave = 'login_' . md5((string) $request->getIPAddress());
+        $clave = 'login_' . hash('sha256', (string) $request->getIPAddress());
         // check(clave, capacidad, segundos): admite $intentosPorIp solicitudes por ventana
         if (service('throttler')->check($clave, $cfg->intentosPorIp, $cfg->ventanaIntentos) === false) {
             // CU-01 A4: rechazo genérico y registro en auditoría

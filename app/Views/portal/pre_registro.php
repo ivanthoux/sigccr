@@ -39,7 +39,7 @@ $this->section('contenido');
     </div>
     <div class="mb-2">
         <label for="cuit_cuil" class="form-label">CUIL</label>
-        <input type="text" class="form-control<?= campo_invalido('cuit_cuil') ?>" id="cuit_cuil" name="cuit_cuil" inputmode="numeric" maxlength="13" required placeholder="20-12345678-3" value="<?= esc((string) old('cuit_cuil'), 'attr') ?>">
+        <input type="text" class="form-control<?= campo_invalido('cuit_cuil') ?>" id="cuit_cuil" name="cuit_cuil" inputmode="numeric" maxlength="13" required placeholder="Por ejemplo: 20-12345678-3" value="<?= esc((string) old('cuit_cuil'), 'attr') ?>">
         <?= error_campo('cuit_cuil') ?>
     </div>
     <div class="mb-2">

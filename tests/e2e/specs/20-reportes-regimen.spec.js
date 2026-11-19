@@ -92,6 +92,33 @@ test('I-72 Exportar a Excel', async ({ comoUsuario }) => {
   }
 });
 
+test('I-93 Impresión formal: cabecera, emisión y Página N de M (D-57)', async ({ comoUsuario }) => {
+  const page = await comoUsuario('gerente');
+  await page.goto('/admin/reportes/cartera?generar=1');
+  // Cada hoja: entidad y título arriba; emisión, usuario y «Página N de M» abajo (cajas de margen de @page)
+  const estilo = await page.locator('style[media="print"]').innerHTML();
+  expect(estilo).toContain('counter(page)');
+  expect(estilo).toContain('counter(pages)');
+  expect(estilo).toMatch(/Emitido el \d{2}\/\d{2}\/\d{4} \d{2}:\d{2} por /);
+  // La primera hoja lleva la cabecera formal: solo se ve al imprimir
+  const cabecera = page.locator('.cabecera-impresion');
+  await expect(cabecera).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(cabecera).toBeVisible();
+  await expect(cabecera).toContainText('Emitido el');
+  await expect(page.locator('.lateral')).toBeHidden();
+  // El PDF que genera el navegador numera las hojas
+  const pdf = await page.pdf({ format: 'A4' });
+  expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
+  // El contrato tiene su propio encabezado: sin la cabecera del informe, con la cabecera y el pie de cada hoja
+  const analista = await comoUsuario('analista');
+  await analista.emulateMedia({ media: 'print' });
+  await analista.goto(`/admin/contratos/${await valor('SELECT TOP 1 solicitud_id FROM dbo.contratos_prestamo ORDER BY id')}`);
+  await expect(analista.locator('#titulo-contrato')).toBeVisible();
+  await expect(analista.locator('.cabecera-impresion')).toBeHidden();
+  expect(await analista.locator('style[media="print"]').innerHTML()).toContain('counter(pages)');
+});
+
 test('I-73 Informe de caja diaria como Gerente (CU-56)', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
   await page.goto('/admin/caja-diaria');
@@ -118,6 +145,12 @@ test('I-75 Registro de auditoría (CU-57)', async ({ comoUsuario }) => {
   await page.locator('main tbody a').first().click();
   await expect(page.locator('main')).toContainText('Proceso automático');
   await expect(page.locator('main')).toContainText('(A4)');
+  // D-48: el detalle de una modificación presenta el valor anterior y el nuevo de cada campo (línea Personal, R-034)
+  const modificacion = await valor("SELECT MIN(id) FROM dbo.registros_auditoria WHERE accion = 'lineas.modificar' AND JSON_VALUE(detalle, '$.cambios.tna.nuevo') = '72,00 %'");
+  await page.goto(`/admin/auditoria/${modificacion}`);
+  const tabla = page.getByRole('table', { name: 'Valor anterior y valor nuevo de cada campo modificado' });
+  await expect(page.getByRole('heading', { name: 'Campos modificados' })).toBeVisible();
+  await expect(tabla.getByRole('row', { name: /TNA\s+70,00 %\s+72,00 %/ })).toBeVisible();
   await page.goto('/admin/auditoria?responsable=nadie-con-este-nombre');
   await expect(page.locator('main')).toContainText('(A1)');
   await page.goto('/admin/auditoria?desde=2026-11-10&hasta=2026-11-01');

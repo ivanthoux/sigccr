@@ -57,13 +57,13 @@ $this->section('contenido');
             <div class="row g-3">
                 <div class="col-md-3">
                     <label for="tasa" class="form-label">TNA (%)</label>
-                    <input type="text" class="form-control<?= campo_invalido('tasa') ?>" id="tasa" name="tasa" inputmode="decimal" value="<?= esc((string) old('tasa'), 'attr') ?>" aria-describedby="ayuda-tasa">
+                    <input type="text" class="form-control<?= campo_invalido('tasa', 'ayuda-tasa') ?>" id="tasa" name="tasa" inputmode="decimal" value="<?= esc((string) old('tasa'), 'attr') ?>">
                     <div id="ayuda-tasa" class="form-text">Entre <?= esc(formato_porcentaje($limites['tasa_minima'])) ?> y <?= esc(formato_porcentaje($limites['tasa_maxima'])) ?>.</div>
                     <?= error_campo('tasa') ?>
                 </div>
                 <div class="col-md-3">
                     <label for="cuotas" class="form-label">Cantidad de cuotas</label>
-                    <input type="text" class="form-control<?= campo_invalido('cuotas') ?>" id="cuotas" name="cuotas" inputmode="numeric" value="<?= esc((string) old('cuotas'), 'attr') ?>" aria-describedby="ayuda-cuotas">
+                    <input type="text" class="form-control<?= campo_invalido('cuotas', 'ayuda-cuotas') ?>" id="cuotas" name="cuotas" inputmode="numeric" value="<?= esc((string) old('cuotas'), 'attr') ?>">
                     <div id="ayuda-cuotas" class="form-text">Hasta <?= (int) $limites['cuotas_maximas'] ?>. Primer vencimiento a los 30 días de la aplicación.</div>
                     <?= error_campo('cuotas') ?>
                 </div>

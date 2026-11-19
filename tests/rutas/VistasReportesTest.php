@@ -107,6 +107,11 @@ final class VistasReportesTest extends CIUnitTestCase
         $t = ['periodo' => Periodo::desde([], '2026-11-12'), 'grupos' => $grupos, 'aviso' => 'No se registraron operaciones en el período (A1).'];
         $html = view('reportes/tablero', ['titulo' => 'Tablero', 'f' => ['tipo' => 'mes', 'fecha' => '', 'desde' => '', 'hasta' => ''], 't' => $t]);
         $this->assertStringContainsString('Grupo morosidad', $html);
+        $this->assertStringNotContainsString('Indicadores clave', $html, 'Sin indicadores clave no se muestra la franja destacada');
+        $grupos[1][2][] = ['Índice de morosidad', '8.24', 'porcentaje'];
+        $conClave = view('reportes/tablero', ['titulo' => 'Tablero', 'f' => ['tipo' => 'mes', 'fecha' => '', 'desde' => '', 'hasta' => ''], 't' => ['grupos' => $grupos] + $t]);
+        $this->assertStringContainsString('Indicadores clave', $conClave);
+        $this->assertSame(2, substr_count($conClave, 'Índice de morosidad'), 'Destacado arriba y en su bloque');
         $this->assertStringContainsString('(A1)', $html);
         foreach (ReporteService::REPORTES as [, , $permiso]) {
             $this->assertStringContainsString(url_to($permiso), $html);
@@ -178,7 +183,8 @@ final class VistasReportesTest extends CIUnitTestCase
         $html = view('regimen/index', ['titulo' => 'Régimen', 'regimenes' => [$fila, ['id' => 2, 'version' => 1, 'estado' => 'Rectificado', 'usuario' => null, 'proceso' => 'regimen:generar', 'motivo' => null] + $fila]]);
         $this->assertStringContainsString('name="periodo"', $html);
         $this->assertStringContainsString('name="motivo"', $html);
-        $this->assertStringContainsString('Temporizador (regimen:generar)', $html);
+        $this->assertStringContainsString('Proceso automático: Régimen informativo', $html);
+        $this->assertStringNotContainsString('regimen:generar', $html);
         $this->assertStringContainsString(site_url('admin/regimen/3/archivo'), $html);
         $deudores = [['cliente_id' => 5, 'cuit_cuil' => '27394445520', 'denominacion' => 'Díaz, Martina', 'dias_atraso' => 123, 'situacion' => 3, 'saldo' => '750.50', 'creditos' => 2]];
         $r = $fila + ['deudores' => $deudores, 'por_situacion' => [1 => [1, '5000.00'], 2 => [0, '0.00'], 3 => [1, '750.50'], 4 => [0, '0.00'], 5 => [0, '0.00']], 'versiones' => [['id' => 2, 'version' => 1, 'estado' => 'Rectificado'], ['id' => 3, 'version' => 2, 'estado' => 'Vigente']]];

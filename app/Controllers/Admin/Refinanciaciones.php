@@ -28,7 +28,7 @@ class Refinanciaciones extends BaseController
     {
         $f = [];
         foreach (['numero', 'texto', 'estado', 'desde', 'hasta'] as $k) {
-            $f[$k] = trim((string) $this->request->getGet($k));
+            $f[$k] = trim($this->campoGet($k));
         }
         $errores = [];
         try {
@@ -60,10 +60,10 @@ class Refinanciaciones extends BaseController
         try {
             $id = $this->servicio->simular(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 (array) $this->request->getPost('creditos'),
-                (string) $this->request->getPost('tasa'),
-                (string) $this->request->getPost('cuotas'),
+                $this->campoPost('tasa'),
+                $this->campoPost('cuotas'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
@@ -137,9 +137,9 @@ class Refinanciaciones extends BaseController
             $r = $this->servicio->resolver(
                 (int) session('cuenta')['id'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
-                (string) $this->request->getPost('decision'),
-                (string) $this->request->getPost('fundamento'),
+                $this->enteroPost('version_fila'),
+                $this->campoPost('decision'),
+                $this->campoPost('fundamento'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
@@ -161,10 +161,10 @@ class Refinanciaciones extends BaseController
             $r = $this->servicio->aplicar(
                 (int) session('cuenta')['id'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
-                (string) $this->request->getPost('fecha_constancia'),
-                (string) $this->request->getPost('medio'),
-                (string) $this->request->getPost('observaciones'),
+                $this->enteroPost('version_fila'),
+                $this->campoPost('fecha_constancia'),
+                $this->campoPost('medio'),
+                $this->campoPost('observaciones'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
@@ -187,10 +187,10 @@ class Refinanciaciones extends BaseController
                 (int) session('cuenta')['id'],
                 (string) session('cuenta')['rol'],
                 $id,
-                (int) $this->request->getPost('version_fila'),
-                (string) $this->request->getPost('motivo'),
-                (string) $this->request->getPost('fecha_desistimiento'),
-                (string) $this->request->getPost('medio_desistimiento'),
+                $this->enteroPost('version_fila'),
+                $this->campoPost('motivo'),
+                $this->campoPost('fecha_desistimiento'),
+                $this->campoPost('medio_desistimiento'),
             );
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);

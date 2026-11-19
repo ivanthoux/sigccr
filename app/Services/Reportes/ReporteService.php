@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Reportes;
 
+use App\Libraries\Validacion\Campos;
 use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Campanas\ReglasCampanas;
@@ -74,21 +75,39 @@ class ReporteService extends BaseService
     private function cartera(array $p, array $f): array
     {
         [$filtro, $b] = $this->filtroCredito($f);
-        $creditos = $this->q(
-            'SELECT c.id, c.numero, c.estado, c.capital, c.cantidad_cuotas, c.fecha_liquidacion, cl.denominacion, l.nombre AS linea, ' . self::RIESGO . ' AS riesgo, '
-            . "COALESCE(x.capital, 0) AS capital_pendiente, COALESCE(x.interes, 0) AS interes_pendiente, COALESCE(x.punitorio, 0) AS punitorio_pendiente, COALESCE(x.gastos, 0) AS gastos_pendiente, COALESCE(x.vencido, 0) AS capital_vencido "
-            . 'FROM dbo.creditos c ' . self::LINEA . ' JOIN dbo.clientes cl ON cl.id = c.cliente_id '
-            . 'OUTER APPLY (SELECT SUM(q.capital_pendiente) AS capital, SUM(q.interes_pendiente) AS interes, SUM(q.punitorio_pendiente + q.iva_punitorio_pendiente) AS punitorio, '
+        // Los totales se agregan en la base: con el volumen de RNF-03 (30.000 créditos) traer cada crédito a PHP excede
+        // el búfer del controlador de SQL Server y la memoria de la petición. Solo el detalle trae filas, hasta 1.000.
+        $local = "CAST(SWITCHOFFSET(c.fecha_liquidacion, '-03:00') AS date)";
+        $enPeriodo = "CASE WHEN {$local} BETWEEN CAST(? AS date) AND CAST(? AS date) THEN 1 ELSE 0 END";
+        $pendientes = 'OUTER APPLY (SELECT SUM(q.capital_pendiente) AS capital, SUM(q.interes_pendiente) AS interes, SUM(q.punitorio_pendiente + q.iva_punitorio_pendiente) AS punitorio, '
             . 'SUM(q.gastos_pendiente + q.iva_pendiente + q.no_capitalizable_pendiente) AS gastos, '
             . 'SUM(CASE WHEN DATEDIFF(day, q.vencimiento, CAST(? AS date)) > t.tolerancia THEN q.capital_pendiente ELSE 0 END) AS vencido '
             // SQL Server no admite una referencia externa junto con columnas de q dentro de un agregado (error 8124)
-            . "FROM dbo.cuotas q CROSS APPLY (SELECT c.tolerancia_dias AS tolerancia) t WHERE q.credito_id = c.id AND q.estado IN ('Pendiente', 'Vencida')) x WHERE 1 = 1" . $filtro . ' ORDER BY c.numero',
+            . "FROM dbo.cuotas q CROSS APPLY (SELECT c.tolerancia_dias AS tolerancia) t WHERE q.credito_id = c.id AND q.estado IN ('Pendiente', 'Vencida')) x";
+        $grupos = $this->q(
+            'SELECT c.estado, l.nombre AS linea, per.en_periodo, COUNT(*) AS creditos, SUM(c.capital) AS capital, '
+            . 'SUM(COALESCE(x.capital, 0)) AS capital_pendiente, SUM(COALESCE(x.interes, 0)) AS interes_pendiente, SUM(COALESCE(x.punitorio, 0)) AS punitorio_pendiente, '
+            . 'SUM(COALESCE(x.gastos, 0)) AS gastos_pendiente, SUM(COALESCE(x.vencido, 0)) AS capital_vencido '
+            . 'FROM dbo.creditos c ' . self::LINEA . " CROSS APPLY (SELECT {$enPeriodo} AS en_periodo) per {$pendientes} WHERE 1 = 1" . $filtro
+            . ' GROUP BY c.estado, l.nombre, per.en_periodo ORDER BY l.nombre',
+            [$p['desde'], $p['hasta'], $this->hoy, ...$b],
+        );
+        $creditos = $this->q(
+            'SELECT TOP (1000) c.numero, c.estado, c.capital, c.fecha_liquidacion, cl.denominacion, l.nombre AS linea, ' . self::RIESGO . ' AS riesgo, '
+            . 'COALESCE(x.capital, 0) AS capital_pendiente, COALESCE(x.vencido, 0) AS capital_vencido '
+            . 'FROM dbo.creditos c ' . self::LINEA . " JOIN dbo.clientes cl ON cl.id = c.cliente_id {$pendientes} WHERE 1 = 1" . $filtro . ' ORDER BY c.numero',
             [$this->hoy, ...$b],
         );
+        // Evolución: solo la fecha y el capital de los créditos liquidados en el período
+        $delPeriodo = $this->q(
+            'SELECT c.fecha_liquidacion, c.capital FROM dbo.creditos c ' . self::LINEA . " WHERE {$local} BETWEEN CAST(? AS date) AND CAST(? AS date)" . $filtro,
+            [$p['desde'], $p['hasta'], ...$b],
+        );
         $estadosFiltro = (string) ($f['estado'] ?? '');
-        $vigentes = array_filter($creditos, static fn ($c) => in_array($c['estado'], ['Activo', 'EnMora'], true));
-        $delPeriodo = array_filter($creditos, fn ($c) => $this->enPeriodo((string) $c['fecha_liquidacion'], $p));
+        $vigentes = array_filter($grupos, static fn ($g) => in_array($g['estado'], ['Activo', 'EnMora'], true));
+        $periodo = array_filter($grupos, static fn ($g) => (int) $g['en_periodo'] === 1);
         $suma = static fn (array $filas, string $k): string => Decimal::sum(array_map(static fn ($x) => Decimal::of((string) $x[$k]), $filas))->toFixed(2);
+        $cuenta = static fn (array $filas): int => array_sum(array_map(static fn ($x) => (int) $x['creditos'], $filas));
         $capitalPendiente = $suma($vigentes, 'capital_pendiente');
         $vencido = $suma($vigentes, 'capital_vencido');
         $saldo = Decimal::of($capitalPendiente)->add($suma($vigentes, 'interes_pendiente'))->add($suma($vigentes, 'punitorio_pendiente'))->add($suma($vigentes, 'gastos_pendiente'))->toFixed(2);
@@ -96,32 +115,32 @@ class ReporteService extends BaseService
         $estados = ['Activo' => 'Activos', 'EnMora' => 'En mora', 'Cancelado' => 'Cancelados', 'Refinanciado' => 'Refinanciados', 'Revocado' => 'Revocados'];
         $porEstado = [];
         foreach ($estados as $k => $t) {
-            $g = array_filter($creditos, static fn ($c) => $c['estado'] === $k);
-            $porEstado[] = [$t, count($g), $suma($g, 'capital'), $suma($g, 'capital_pendiente')];
+            $g = array_filter($grupos, static fn ($x) => $x['estado'] === $k);
+            $porEstado[] = [$t, $cuenta($g), $suma($g, 'capital'), $suma($g, 'capital_pendiente')];
         }
         $porLinea = [];
-        foreach ($creditos as $c) {
-            $l = $porLinea[$c['linea']] ?? [$c['linea'], 0, 0, '0', '0', '0'];
-            $l[1]++;
-            if (in_array($c['estado'], ['Activo', 'EnMora'], true)) {
-                $l[2]++;
-                $l[4] = Decimal::of($l[4])->add((string) $c['capital_pendiente'])->toFixed(2);
-                $l[5] = Decimal::of($l[5])->add((string) $c['capital_vencido'])->toFixed(2);
+        foreach ($grupos as $g) {
+            $l = $porLinea[$g['linea']] ?? [$g['linea'], 0, 0, '0', '0', '0'];
+            $l[1] += (int) $g['creditos'];
+            if (in_array($g['estado'], ['Activo', 'EnMora'], true)) {
+                $l[2] += (int) $g['creditos'];
+                $l[4] = Decimal::of($l[4])->add((string) $g['capital_pendiente'])->toFixed(2);
+                $l[5] = Decimal::of($l[5])->add((string) $g['capital_vencido'])->toFixed(2);
             }
-            if ($this->enPeriodo((string) $c['fecha_liquidacion'], $p)) {
-                $l[3] = Decimal::of($l[3])->add((string) $c['capital'])->toFixed(2);
+            if ((int) $g['en_periodo'] === 1) {
+                $l[3] = Decimal::of($l[3])->add((string) $g['capital'])->toFixed(2);
             }
-            $porLinea[$c['linea']] = $l;
+            $porLinea[$g['linea']] = $l;
         }
         $evolucion = $this->evolucion($p, $delPeriodo, 'fecha_liquidacion', ['cantidad' => null, 'capital' => 'capital']);
 
         return [
             'filtros' => $this->descripcionFiltros($f),
-            'aviso' => $creditos === [] ? 'No se registraron créditos con los criterios seleccionados: los indicadores figuran en cero (A1).' : null,
+            'aviso' => $grupos === [] ? 'No se registraron créditos con los criterios seleccionados: los indicadores figuran en cero (A1).' : null,
             'kpis' => [
-                ['Créditos otorgados en el período', count($delPeriodo), 'entero'],
-                ['Capital colocado en el período', $suma($delPeriodo, 'capital'), 'importe'],
-                ['Créditos activos (al día y en mora)', count($vigentes), 'entero'],
+                ['Créditos otorgados en el período', $cuenta($periodo), 'entero'],
+                ['Capital colocado en el período', $suma($periodo, 'capital'), 'importe'],
+                ['Créditos activos (al día y en mora)', $cuenta($vigentes), 'entero'],
                 ['Saldo deudor total', $saldo, 'importe'],
                 ['Capital pendiente', $capitalPendiente, 'importe'],
                 ['Intereses ordinarios pendientes', $suma($vigentes, 'interes_pendiente'), 'importe'],
@@ -135,7 +154,7 @@ class ReporteService extends BaseService
                 ['titulo' => 'Distribución por línea de crédito', 'columnas' => [['Línea', 'texto'], ['Créditos', 'entero'], ['Vigentes', 'entero'], ['Colocado en el período', 'importe'], ['Capital pendiente', 'importe'], ['Capital vencido', 'importe']], 'filas' => array_values($porLinea)],
                 ['titulo' => 'Evolución del período', 'columnas' => [['Intervalo', 'texto'], ['Créditos otorgados', 'entero'], ['Capital colocado', 'importe']], 'filas' => $evolucion],
                 ['titulo' => 'Créditos', 'columnas' => [['N.º', 'entero'], ['Cliente', 'texto'], ['Línea', 'texto'], ['Riesgo', 'texto'], ['Liquidación', 'fecha'], ['Capital', 'importe'], ['Estado', 'texto'], ['Capital pendiente', 'importe'], ['Capital vencido', 'importe']],
-                    'filas' => array_map(static fn ($c) => [(int) $c['numero'], $c['denominacion'], $c['linea'], $c['riesgo'] ?? '—', $c['fecha_liquidacion'], $c['capital'], $estados[$c['estado']] ?? $c['estado'], $c['capital_pendiente'], $c['capital_vencido']], array_slice($creditos, 0, 1000))],
+                    'filas' => array_map(static fn ($c) => [(int) $c['numero'], $c['denominacion'], $c['linea'], $c['riesgo'] ?? '—', $c['fecha_liquidacion'], $c['capital'], $estados[$c['estado']] ?? $c['estado'], $c['capital_pendiente'], $c['capital_vencido']], $creditos)],
             ],
         ];
     }
@@ -631,7 +650,7 @@ class ReporteService extends BaseService
             ['Flujo de caja', 'cobranzas', [['Ingresos (cobros y aportes)', $ingresos->toFixed(2), 'importe'], ['Egresos (desembolsos y gastos)', $egresos->toFixed(2), 'importe'], ['Saldo del período', $ingresos->sub($egresos)->toFixed(2), 'importe']]],
             ['Cartera crediticia', 'cartera', [['Capital colocado', $cartera['Capital colocado en el período'], 'importe'], ['Créditos activos', $cartera['Créditos activos (al día y en mora)'], 'entero'], ['Saldo deudor total', $cartera['Saldo deudor total'], 'importe']]],
             ['Morosidad', 'morosidad', [['Índice de morosidad', $morosidad['Índice de morosidad (RN-74)'], 'porcentaje'], ['Cuotas vencidas', $morosidad['Cuotas vencidas impagas'], 'entero'], ['Capital vencido', $morosidad['Capital vencido'], 'importe'], ['Punitorios acumulados', $morosidad['Intereses punitorios acumulados (con IVA)'], 'importe']]],
-            ['Cobranzas y recupero', 'cobranzas', [['Cobros confirmados', $cobranzas['Total cobrado'], 'importe'], ['Recupero de mora', $cobranzas['Recupero de cartera en mora (RN-74)'], 'importe'], ['Efectividad de cobranza', $cobranzas['Efectividad de cobranza (RN-74)'], 'porcentaje']]],
+            ['Cobranzas y recupero', 'cobranzas', [['Cobros confirmados', $cobranzas['Total cobrado'], 'importe'], ['Recupero de mora', $cobranzas['Recupero de cartera en mora (RN-74)'], 'importe'], ['Efectividad sobre lo vencido en el período', $cobranzas['Efectividad de cobranza (RN-74)'], 'porcentaje']]],
             ['Solicitudes y otorgamientos', 'solicitudes', [['Registradas', $solicitudes['Solicitudes registradas'], 'entero'], ['Aprobadas', $solicitudes['Aprobadas'], 'entero'], ['Rechazadas', $solicitudes['Rechazadas'], 'entero'], ['Liquidadas', $solicitudes['Liquidadas'], 'entero']]],
             ['Refinanciaciones', 'refinanciaciones', [['Registradas', $refin['Propuestas registradas'], 'entero'], ['Aprobadas', $refin['Aprobadas (incluye aplicadas)'], 'entero'], ['Aplicadas', $refin['Aplicadas'], 'entero'], ['Deuda refinanciada', $refin['Deuda refinanciada (capital)'], 'importe']]],
             ['Campañas crediticias', 'campanas', [['Campañas activas', $activas, 'entero'], ['Ofertas emitidas', $campanas['Ofertas emitidas'], 'entero'], ['Aceptadas', $campanas['Aceptadas'], 'entero'], ['Rechazadas', $campanas['Rechazadas'], 'entero'], ['Capital comprometido', $campanas['Capital comprometido'], 'importe']]],
@@ -766,7 +785,7 @@ class ReporteService extends BaseService
             return null;
         }
         $digitos = preg_replace('/\D/', '', $t) ?? '';
-        $b = $this->db->table('clientes c')->select('c.id')->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')->groupStart()->like('c.denominacion', $t);
+        $b = $this->db->table('clientes c')->select('c.id')->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')->groupStart()->like('c.denominacion', Campos::literalLike((string) $t));
         if ($digitos !== '') {
             $b->orWhere('c.cuit_cuil', $digitos)->orWhere('ph.nro_documento', $digitos);
         }

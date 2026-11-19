@@ -24,7 +24,8 @@ $this->section('contenido');
         <a href="<?= url_to('solicitudes.registrar') ?>" class="btn btn-primary"><i class="bi bi-file-earmark-plus me-1" aria-hidden="true"></i>Registrar solicitud</a>
     <?php endif ?>
 </div>
-<form method="get" action="<?= url_to('solicitudes.localizar') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar solicitudes" novalidate>
+<?= view('partials/boton_filtros', ['id' => 'filtros-solicitudes', 'que' => 'solicitudes', 'abierto' => $buscado]) ?>
+<form method="get" action="<?= url_to('solicitudes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $buscado ? ' show' : '' ?>" id="filtros-solicitudes" role="search" aria-label="Buscar solicitudes" novalidate>
     <div class="row g-2 align-items-end">
         <div class="col-sm-4 col-lg-2">
             <label for="numero" class="form-label small">Número</label>
@@ -54,18 +55,15 @@ $this->section('contenido');
         </div>
         <div class="col-6 col-md-3 col-lg-2">
             <label for="desde" class="form-label small">Registrada desde</label>
-            <input type="text" class="form-control<?= isset($errores['desde']) ? ' is-invalid' : '' ?>" id="desde" name="desde" placeholder="dd/mm/aaaa" value="<?= esc($c('desde'), 'attr') ?>">
+            <input type="date" class="form-control<?= isset($errores['desde']) ? ' is-invalid' : '' ?>" id="desde" name="desde" value="<?= esc(fecha_campo($c('desde')), 'attr') ?>">
             <?php if (isset($errores['desde'])): ?><div class="invalid-feedback"><?= esc($errores['desde']) ?></div><?php endif ?>
         </div>
         <div class="col-6 col-md-3 col-lg-2">
             <label for="hasta" class="form-label small">Registrada hasta</label>
-            <input type="text" class="form-control<?= isset($errores['hasta']) ? ' is-invalid' : '' ?>" id="hasta" name="hasta" placeholder="dd/mm/aaaa" value="<?= esc($c('hasta'), 'attr') ?>">
+            <input type="date" class="form-control<?= isset($errores['hasta']) ? ' is-invalid' : '' ?>" id="hasta" name="hasta" value="<?= esc(fecha_campo($c('hasta')), 'attr') ?>">
             <?php if (isset($errores['hasta'])): ?><div class="invalid-feedback"><?= esc($errores['hasta']) ?></div><?php endif ?>
         </div>
-        <div class="col-md-2 col-lg-5 d-flex gap-2 justify-content-lg-end">
-            <a href="<?= url_to('solicitudes.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('solicitudes.localizar')) ?>
     </div>
 </form>
 <?php if ($solicitudes === []): ?>
@@ -73,7 +71,7 @@ $this->section('contenido');
 <?php else: ?>
     <div class="hoja p-3">
         <?php if (!$buscado): ?><p class="small text-body-secondary mb-2">Solicitudes registradas más recientemente.</p><?php endif ?>
-        <table class="table table-hover align-middle mb-0" data-tabla>
+        <table class="table table-hover align-middle mb-0" data-tabla data-sin-busqueda data-orden-servidor>
             <thead><tr><th>N.º</th><th>Cliente</th><th>Línea</th><th class="text-end">Importe</th><th>Cuotas</th><th>Registrada</th><th>Estado</th></tr></thead>
             <tbody>
             <?php foreach ($solicitudes as $s): ?>

@@ -7,6 +7,10 @@ use CodeIgniter\Router\RouteCollection;
  *
  * @var RouteCollection $routes
  */
+// Identificadores en la dirección: hasta 9 dígitos, como Campos::identificador() (H-21). Un número más largo no
+// cabe en una columna INT y, si superaba el entero de PHP, el controlador fallaba con un error 500 (H-28): responde 404.
+$routes->addPlaceholder('num', '[0-9]{1,9}');
+
 // Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
 $routes->get('/', 'Portada::index', ['as' => 'portada']);
 
@@ -64,7 +68,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
             // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
             $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
-            // CU-11 A9: consulta del padrón de ARCA por CUIL
+            // CU-11 A9: nombre o razón social por CUIT/CUIL (Central de Deudores del BCRA, D-60)
             $routes->get('padron', 'Admin\Clientes::padron', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
@@ -234,6 +238,9 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('morosidad', 'Admin\Parametros::guardarMorosidad', ['filter' => 'permiso:parametros.morosidad']);
             $routes->get('campanas', 'Admin\Parametros::campanas', ['as' => 'parametros.campanas', 'filter' => 'permiso:parametros.campanas']);
             $routes->post('campanas', 'Admin\Parametros::guardarCampanas', ['filter' => 'permiso:parametros.campanas']);
+            // CU-106 Configurar Modelo de Contrato (D-56)
+            $routes->get('contrato', 'Admin\Parametros::contrato', ['as' => 'parametros.contrato', 'filter' => 'permiso:parametros.contrato']);
+            $routes->post('contrato', 'Admin\Parametros::guardarContrato', ['filter' => 'permiso:parametros.contrato']);
         });
 
         // SS-11 Copias de seguridad (CU-61 a CU-63; D-45)

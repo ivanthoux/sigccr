@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Clientes\ArchivoLegajo;
+use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\Controller;
@@ -55,10 +56,6 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
-     * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
-     */
-    /**
      * Búsqueda y selección del cliente (CU-54) para las operaciones que parten de él: sin ?cliente= presenta la
      * búsqueda; con él, devuelve los datos del cliente o vuelve a la búsqueda si no existe.
      *
@@ -66,20 +63,86 @@ abstract class BaseController extends Controller
      */
     protected function clienteSeleccionado(string $destino, string $titulo): array|string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => $titulo, 'texto' => $texto, 'destino' => $destino,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
+            return $this->busquedaCliente($destino, $titulo);
         }
         try {
             return (new SimulacionService())->cliente($clienteId);
         } catch (ReglaNegocioException $e) {
             return redirect()->route($destino)->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Pantalla única de búsqueda del cliente (CU-54) con la que empiezan las operaciones sobre un cliente: el mismo
+     * campo, la misma tabla de resultados y la misma forma de elegirlo en todas. $soloActivos deja fuera a los
+     * clientes que no pueden iniciar un crédito (simulación y solicitud); $datos agrega lo propio de la pantalla.
+     *
+     * @param array<string, mixed> $datos
+     */
+    protected function busquedaCliente(string $destino, string $titulo, bool $soloActivos = false, array $datos = []): string
+    {
+        $texto = trim($this->campoGet('texto'));
+        $clientes = $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]);
+        if ($soloActivos) {
+            $clientes = array_values(array_filter($clientes, static fn ($c) => $c['estado'] === 'Activo'));
+        }
+
+        return view('simulaciones/cliente', ['titulo' => $titulo, 'texto' => $texto, 'destino' => $destino, 'clientes' => $clientes] + $datos);
+    }
+
+    /**
+     * Vuelve al formulario con los datos ingresados, el mensaje general y, si corresponde, el error de cada campo
+     * (session('errores')), que las vistas marcan con campo_invalido() y error_campo().
+     */
+    /**
+     * Campo del formulario (POST) como texto, sin transformar. Un campo ausente o enviado como lista (campo[]=x) se
+     * trata como vacío, para que la validación responda con el mensaje del campo y no con un error del servidor
+     * (D-51, clase COM-02).
+     */
+    protected function campoPost(string $campo): string
+    {
+        return Campos::crudo($this->request->getPost($campo));
+    }
+
+    /**
+     * Identificador o versión de fila (POST) como entero. Solo dígitos: ausente, vacío, con otros caracteres o enviado
+     * como lista vale 0, que no corresponde a ningún registro ni a ninguna versión (H-21). Un (int) directo convertía
+     * una lista en 1 y «1abc» en 1, y podía elegir otro registro o pasar el control de versión (RN-24).
+     */
+    protected function enteroPost(string $campo): int
+    {
+        return Campos::identificador($this->request->getPost($campo));
+    }
+
+    /** Identificador de la dirección (GET) como entero, con la regla de enteroPost() (H-21). */
+    protected function enteroGet(string $campo): int
+    {
+        return Campos::identificador($this->request->getGet($campo));
+    }
+
+    /** Parámetro de la dirección (GET) como texto; ausente o enviado como lista, vacío (D-51, clase FIL-02). */
+    protected function campoGet(string $campo): string
+    {
+        return Campos::crudo($this->request->getGet($campo));
+    }
+
+    /**
+     * Filtros de una búsqueda (GET): solo los parámetros admitidos que llegaron, como texto. Uno enviado como lista se
+     * trata como vacío (D-51, clase FIL-02).
+     *
+     * @param list<string> $admitidos
+     * @return array<string, string>
+     */
+    protected function filtrosBusqueda(array $admitidos): array
+    {
+        $filtros = [];
+        foreach (array_intersect_key((array) $this->request->getGet(), array_flip($admitidos)) as $clave => $valor) {
+            $filtros[(string) $clave] = Campos::crudo($valor);
+        }
+
+        return $filtros;
     }
 
     protected function volverConError(ReglaNegocioException $e): RedirectResponse

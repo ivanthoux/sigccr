@@ -99,7 +99,7 @@ Las secciones siguen el orden del circuito. Primero se preparan la caja y los cr
 | H-13 | Selección no consecutiva | Seleccionar la cuota 2 sin la 1. | «Crédito …: la selección debe comenzar por la cuota 1…» (A8, RN-29). | |
 | H-14 | Validaciones del importe y los medios | Con la cuota 1 elegida, probar: importe mayor que el total; importe 0; un medio «Efectivo» (modificando el formulario); sin número de operación; dos medios con el mismo número; medios que no suman el importe. | «El importe a cobrar no puede superar el total de las cuotas seleccionadas…»; «Ingrese un importe a cobrar mayor que cero.»; «…no se reciben pagos en efectivo…»; «…informe el número de operación…»; «…está repetido.»; «Los medios suman $ …: faltan $ …». | |
 | H-15 | Cobro total | Cobrar la cuota 1 completa por transferencia con número de operación. | «Cobro N.º … registrado por $ …: 1 cuota(s) pagada(s).»; se abre el comprobante con el medio, la cuota y sus conceptos. | |
-| H-16 | Cobro parcial | Cobrar $ 1.000 de la cuota 2 dividido en tarjeta de débito y transferencia. | «…0 cuota(s) pagada(s) y la cuota 2 con saldo pendiente (D-12).»; el comprobante muestra los dos medios; la cuota 2 conserva su saldo. | |
+| H-16 | Cobro parcial | Cobrar $ 1.000 de la cuota 2 dividido en tarjeta de débito y transferencia (el medio 2 empieza «Sin usar»: elegir el medio, D-47). | «…0 cuota(s) pagada(s) y la cuota 2 con saldo pendiente (D-12).»; el comprobante muestra los dos medios; la cuota 2 conserva su saldo. | |
 | H-17 | Reemisión del comprobante | En Comprobantes de pago, buscar el cobro de H-15 por número, por cliente y por fecha; reemitirlo e imprimirlo. | Lo encuentra con cada filtro; la reemisión incrementa el contador y aclara que no genera un nuevo cobro (RN-31). | |
 | H-18 | Movimientos de caja | En Movimientos de caja, abrir la jornada del día. | Figuran los cobros de H-15 y H-16, un movimiento por cada medio, con los totales por medio de pago. | |
 
@@ -204,7 +204,7 @@ Se usa el crédito E, sin vencimientos modificados.
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| H-80 | Cálculo | Como Cajero, en Cancelación anticipada, buscar al titular del crédito E y «Calcular». | Detalle: cuotas vencidas actualizadas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) con su IVA, total y la reducción de lo no devengado. Sin comisión (Ley 24.240, art. 36). | |
+| H-80 | Cálculo | Como Cajero, en Cancelación anticipada, buscar al titular del crédito E y «Calcular». | Detalle: cuotas vencidas actualizadas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) con su IVA, total y la reducción de lo no devengado. Sin comisión (Ley 24.240, art. 36). El importe a cobrar se propone con el formato del sistema (por ejemplo, 646.276,76; D-47). | |
 | H-81 | Importe distinto | Registrar con un importe menor que el total. | «El importe debe ser igual al total de la cancelación: $ …. No se admite la cancelación parcial (A3, RN-67).» | |
 | H-82 | Con una orden de pago pendiente | Generar una orden electrónica con una cuota del crédito E y volver a calcular. | Aviso de la orden pendiente y el botón deshabilitado (A4). | |
 | H-83 | Registrar | Vencer o pagar esa orden y registrar la cancelación por el total, por transferencia. | «Crédito cancelado anticipadamente con el cobro N.º …». El comprobante incluye «Cancelación anticipada total…» con la reducción; todas las cuotas quedan Pagadas y el crédito, Cancelado. | |

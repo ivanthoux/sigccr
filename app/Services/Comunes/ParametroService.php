@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Comunes;
 
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Solicitudes\EstadosSolicitud;
 use App\Services\BaseService;
 
@@ -61,17 +62,22 @@ class ParametroService extends BaseService
      * Las operaciones en curso conservan la versión con la que se iniciaron (RN-15, RN-20).
      *
      * @param array<string, mixed> $valores
+     * @param array<string, mixed> $base valores con que se comparan los nuevos en la auditoría si el grupo no tiene
+     *                                   versiones (por ejemplo, el modelo inicial del contrato, D-56)
      * @return array{id: int, numero: int, vigente_desde: string}
      */
-    public function registrarVersion(string $tipo, array $valores, string $fecha, string $motivo, int $usuarioId): array
+    public function registrarVersion(string $tipo, array $valores, string $fecha, string $motivo, int $usuarioId, array $base = []): array
     {
         $hoy = $this->hoyNegocio();
         if ($fecha < $hoy) {
             throw new ReglaNegocioException('La nueva configuración no puede regir desde una fecha anterior a hoy: no se admite retroactividad.');
         }
 
-        return $this->transaccion(function () use ($tipo, $valores, $fecha, $hoy, $motivo, $usuarioId): array {
-            $numero = (int) $this->db->query('SELECT ISNULL(MAX(numero), 0) + 1 AS n FROM dbo.versiones_parametros WITH (UPDLOCK, HOLDLOCK) WHERE tipo = ?', [$tipo])->getRow()->n;
+        return $this->transaccion(function () use ($tipo, $valores, $fecha, $hoy, $motivo, $usuarioId, $base): array {
+            // D-48: la versión anterior del grupo, para registrar el valor anterior y el nuevo de cada parámetro
+            $previa = $this->db->query('SELECT TOP (1) numero, valores FROM dbo.versiones_parametros WITH (UPDLOCK, HOLDLOCK) WHERE tipo = ? ORDER BY numero DESC', [$tipo])->getRowArray();
+            $numero = $previa === null ? 1 : (int) $previa['numero'] + 1;
+            $antes = $previa === null ? $base : (array) json_decode((string) $previa['valores'], true);
             $vigenteDesde = $fecha === $hoy ? $this->ahoraUtc()
                 : \CodeIgniter\I18n\Time::parse($fecha . ' 00:00:00', config('Sigccr')->zonaNegocio)->setTimezone('UTC')->format('Y-m-d H:i:s.vP');
             $this->db->table('versiones_parametros')->insert([
@@ -80,7 +86,9 @@ class ParametroService extends BaseService
                 'motivo' => $motivo, 'usuario_id' => $usuarioId, 'creado_en' => $this->ahoraUtc(),
             ]);
             $id = (int) $this->db->insertID();
-            (new AuditoriaService($this->db))->registrar('parametros.' . strtolower($tipo), 'versiones_parametros', $id, 'Exitoso', $motivo, ['numero' => $numero, 'vigente_desde' => $vigenteDesde]);
+            (new AuditoriaService($this->db))->registrarCambios('parametros.' . strtolower($tipo), 'versiones_parametros', $id, Cambios::entre($antes, $valores), $motivo, [
+                'version_anterior' => $previa === null ? null : (int) $previa['numero'], 'numero' => $numero, 'vigente_desde' => $vigenteDesde,
+            ]);
 
             return ['id' => $id, 'numero' => $numero, 'vigente_desde' => $vigenteDesde];
         });

@@ -25,9 +25,10 @@ final class CalendarioOperativo
         $validas = [];
         $rechazadas = [];
         foreach ($filas as $i => $f) {
-            $texto = trim((string) ($f['fecha'] ?? ''));
+            // H-15 y H-16: textos recortados (una lista llega vacía) y largo en unidades de NVARCHAR
+            $texto = Campos::texto($f['fecha'] ?? '');
             $descripcion = Campos::texto($f['descripcion'] ?? '');
-            $tipo = (string) ($f['tipo'] ?? '');
+            $tipo = Campos::texto($f['tipo'] ?? '');
             if ($texto === '' && $descripcion === '') {
                 continue;
             }
@@ -37,7 +38,7 @@ final class CalendarioOperativo
                 $fecha === null => 'la fecha no es válida (dd/mm/aaaa)',
                 $fecha < $hoy => 'es una fecha pasada (A1)',
                 in_array($fecha, $registradas, true) || in_array($fecha, array_column($validas, 'fecha'), true) => 'ya está registrada (A2)',
-                $descripcion === '' || mb_strlen($descripcion) > 150 => 'falta la descripción (hasta 150 caracteres)',
+                $descripcion === '' || Campos::largo($descripcion) > 150 => 'falta la descripción (hasta 150 caracteres)',
                 !isset(self::TIPOS[$tipo]) => 'el tipo no es válido',
                 default => null,
             };

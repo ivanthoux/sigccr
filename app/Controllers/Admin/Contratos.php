@@ -24,7 +24,7 @@ class Contratos extends BaseController
     /** Paso 1: solicitudes aprobadas pendientes de liquidación y el estado de su constancia. */
     public function index(): string
     {
-        $texto = trim((string) $this->request->getGet('texto'));
+        $texto = trim($this->campoGet('texto'));
 
         return view('contratos/index', ['titulo' => 'Contratos de préstamo', 'texto' => $texto, 'solicitudes' => $this->servicio->pendientes($texto)]);
     }
@@ -55,7 +55,7 @@ class Contratos extends BaseController
             ];
         }
         try {
-            $this->servicio->registrarConstancia($id, $archivo, (string) $this->request->getPost('fecha_recepcion'), (int) session('cuenta')['id']);
+            $this->servicio->registrarConstancia($id, $archivo, $this->campoPost('fecha_recepcion'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

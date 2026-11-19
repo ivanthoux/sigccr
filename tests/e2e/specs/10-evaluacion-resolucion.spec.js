@@ -1,7 +1,7 @@
 // Parte 2, secciones 11 y 12. Evaluación crediticia, alternativas y resolución (CU-86, CU-24, CU-25, CU-87, CU-64,
 // CU-79 y CU-26): R-064 a R-079.
 const { test, expect, enviarConfirmando } = require('../lib/fixtures');
-const { clientes, parametros, fecha, ddmmaaaa } = require('../lib/datos');
+const { clientes, parametros, fecha } = require('../lib/datos');
 const { consulta, valor, cerrarBase } = require('../lib/sistema');
 const f = require('../lib/flujo');
 
@@ -86,7 +86,7 @@ test('R-068 Contingencia por servicio no disponible', async ({ comoUsuario }) =>
 test('R-069 Registrar la evaluación de contingencia (CU-25)', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const id = await solicitudDe(ines);
-  const mesPasado = fecha(-31).slice(0, 7).split('-').reverse().join('/');
+  const mesPasado = fecha(-31).slice(0, 7); // campo de mes del navegador: aaaa-mm
   const registrar = async ({ periodo = mesPasado, situacion = '1', monto = '180000', justificacion = 'Situación 1 en una sola entidad, sin atrasos, con ingresos estables' } = {}) => {
     await page.goto(`/admin/solicitudes/${id}/contingencia`);
     for (const ant of await page.locator('input[name="antecedentes[]"]').all()) if (await ant.isEnabled()) await ant.check();
@@ -100,7 +100,7 @@ test('R-069 Registrar la evaluación de contingencia (CU-25)', async ({ comoUsua
     await page.getByRole('button', { name: 'Registrar evaluación de contingencia' }).click();
     await page.waitForLoadState();
   };
-  for (const invalido of [{ periodo: '13/2025' }, { periodo: '01/2020' }, { situacion: '7' }, { monto: '' }, { justificacion: 'Ok' }]) {
+  for (const invalido of [{ periodo: '2020-01' }, { situacion: '7' }, { monto: '' }, { justificacion: 'Ok' }]) {
     await registrar(invalido);
     await expect(page.locator('.invalid-feedback, .alert-danger').first(), JSON.stringify(invalido)).toBeVisible();
     expect(await f.estadoSolicitud(id)).toBe('PendienteContingencia');
@@ -151,7 +151,7 @@ test('R-074 Confirmación simultánea', async ({ comoUsuario }) => {
   const otra = await page.context().newPage();
   for (const p of [page, otra]) {
     await p.goto(url);
-    await p.locator('#fecha_conformidad').fill(ddmmaaaa(fecha()));
+    await p.locator('#fecha_conformidad').fill(fecha());
     await p.locator('#medio_conformidad').selectOption('PresencialFirma');
   }
   await page.getByRole('button', { name: 'Confirmar alternativa' }).click();

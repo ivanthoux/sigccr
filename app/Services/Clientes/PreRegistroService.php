@@ -141,7 +141,7 @@ class PreRegistroService extends BaseService
         $t = Campos::texto($texto);
         if ($t !== '') {
             $digitos = preg_replace('/\D/', '', $t) ?? '';
-            $b->groupStart()->like('p.apellido', $t)->orLike('p.nombre', $t)->orLike('p.correo', $t);
+            $b->groupStart()->like('p.apellido', Campos::literalLike((string) $t))->orLike('p.nombre', Campos::literalLike((string) $t))->orLike('p.correo', Campos::literalLike((string) $t));
             if ($digitos !== '') {
                 $b->orWhere('p.nro_documento', $digitos)->orWhere('p.cuit_cuil', $digitos);
             }
@@ -206,7 +206,8 @@ class PreRegistroService extends BaseService
     public function descartar(int $id, int $versionLeida, string $motivoTexto, int $usuarioId): void
     {
         $motivo = Campos::texto($motivoTexto);
-        $error = Campos::motivo($motivo) ?? (mb_strlen($motivo) > 500 ? 'El motivo admite hasta 500 caracteres.' : null);
+        // H-16: el largo se cuenta como lo cuenta NVARCHAR(500)
+        $error = Campos::motivo($motivo, 500);
         if ($error !== null) {
             throw new ValidacionException(['motivo' => $error]);
         }

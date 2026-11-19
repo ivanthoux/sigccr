@@ -4,6 +4,182 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.6.0] - 2026-11-19
+
+Transición: la versión incorpora los cambios posteriores al fin de Construcción. Auditoría de diseño y accesibilidad
+de la interfaz (D-47) e interfaz homogénea (D-59); auditoría de cada modificación campo a campo (D-48); correo de
+desarrollo con Mailpit (D-49); tema oscuro (D-50); pruebas de rendimiento (D-46) y pruebas de integración por campo y
+clase de dato de las cuatro iteraciones contra SQL Server (D-51), con los defectos y las observaciones que
+encontraron (D-52 a D-54); observaciones de la cátedra del 18/11/2026 (D-55 a D-58); consulta por CUIT o CUIL con la
+Central de Deudores del BCRA (D-60); registro de decisiones con criterios y justificación, y todas las decisiones
+validadas; y las correcciones del análisis de SonarQube Cloud. Pruebas automáticas, de integración y de punta a punta
+aprobadas sobre SQL Server.
+
+### Corregido (análisis de SonarQube Cloud)
+- La clave del límite de intentos usa SHA-256 en lugar de MD5.
+- Copias de seguridad sin permisos para otros usuarios: SQL Server pertenece al grupo `www-data`, los archivos quedan
+  en 0640, la carpeta en 2770 y los procesos de copia usan `umask(0007)`, porque los temporales están sin cifrar.
+- Acciones de GitHub fijadas por SHA; `curl` solo por HTTPS en el Dockerfile.
+- Encabezados de fila con `scope` en los totales del plan y de la constancia; `lang` en la página de error; sin
+  `autofocus` en siete formularios; `[[ ]]` en los scripts de shell.
+- Se excluyen del análisis los archivos de CodeIgniter sin cambios y `tests/_local`.
+
+### Documentación
+- Registro de decisiones: criterios de decisión C1 a C9 y la justificación de cada decisión. D-01 a D-14 validadas
+  por el director; D-15 a D-61 validadas el 19/11/2026. D-61: el monitoreo de operaciones inusuales de la UIF queda
+  fuera del alcance.
+
+### Agregado (pruebas de integración de D-55 a D-58)
+- IN-71: modelo de contrato por campo (forma, título y texto de una cláusula, fecha y motivo) y controles del modelo
+  completo; antes IN-55, que ya identifica el descarte del pre-registro.
+- IN-72: declaración jurada PEP en el alta (ARC-01 a ARC-06, opcional) y su incorporación al legajo.
+- IN-73: impresión formal; un título con datos del usuario no sale del estilo de impresión.
+
+### Corregido (H-32 y extensiones)
+- H-32: las cláusulas del modelo de contrato con las listas paralelas incompletas se rechazan; antes podían correrse.
+- H-16 en el título y el texto de las cláusulas; la forma admite espacios en los extremos; el texto reduce los
+  espacios repetidos; el motivo de la pantalla admite 500 caracteres, como el sistema.
+
+### Agregado (observaciones de la cátedra del 18/11/2026)
+- D-55: declaración jurada de persona expuesta políticamente en el legajo: opcional en el alta, exigida para
+  liquidar (migración 33).
+- D-56: modelo de contrato configurable y versionado, CU-106 del Gerente (migración 34, permiso 106: ejecutar
+  `composer semillas`).
+- D-57: impresión formal de informes y documentos: entidad y título en cada hoja, fecha y hora de emisión, usuario
+  y «Página N de M».
+- D-58: el alta consulta el padrón al ingresar un CUIL válido y completa el DNI, el nombre y el apellido.
+
+### Cambiado
+- D-60: la consulta por CUIT o CUIL usa la Central de Deudores del BCRA (`sigccr.adaptadorPadron = real`; el
+  simulador sigue en desarrollo y pruebas). Propone solo el nombre y el apellido o la razón social, y el DNI sale del
+  CUIL; ya no completa el domicilio. Si la persona no está en el servicio, o el servicio no responde, solo informa
+  «No es posible obtener los datos de esta persona.». Funciona también para el CUIT de una persona jurídica.
+
+### Agregado (pruebas de integración, iteración 4)
+- IN-53 a IN-60 (bloque A): pre-registro y su verificación, descarte y alta desde el pre-registro, preferencias de
+  comunicación, cambio de correo, pago electrónico desde el portal, comprobantes y consultas de objetos ajenos.
+- IN-61 a IN-63 (bloque B): aceptar y rechazar una oferta desde el portal y consultar campañas.
+- IN-64 a IN-68 (bloque C): reportes de gestión, tablero, caja diaria, auditoría y régimen informativo.
+- IN-69 y IN-70 (bloque D): solicitar, descargar y confirmar la restauración de una copia de seguridad.
+- Controles comunes del portal (IN-C01 e IN-C03 en cada ruta con sesión de cliente) y de los módulos de la iteración 4.
+
+### Corregido (defectos H-27 a H-31 y extensiones)
+- H-27: en las preferencias de comunicación del portal, un valor fuera de la lista revocaba el consentimiento.
+- H-28: un identificador de la dirección de más de 18 dígitos respondía error 500; los identificadores admiten hasta
+  9 dígitos y uno más largo responde 404.
+- H-29: el responsable de la auditoría pasa a NVARCHAR(254), el largo de un correo (migración 35).
+- H-30: el régimen informativo rechaza el período 0000-mm y el motivo de rectificación de más de 500 caracteres.
+- H-31: las fechas de los períodos de consulta (reportes, tablero, caja diaria, auditoría) admiten de 1900 a 2099; el
+  año 9999 respondía error 500.
+- H-15 en el tablero, H-16 en el descarte de pre-registros y en la descripción de las copias.
+- El período del régimen y la alternativa elegida en una oferta admiten espacios en los extremos.
+
+### Agregado (pruebas de integración, iteración 3)
+- IN-45 a IN-52: cobro en ventanilla, anulación, cancelación anticipada, pago electrónico, revocación,
+  condonación de punitorios, refinanciación y saldo a favor con devolución (2648 pruebas en total).
+
+### Corregido (defecto H-26 y extensiones)
+- H-26: los números de operación (VARCHAR) aceptaban letras con tilde, que se guardaban como «?», y un largo
+  mayor que la columna respondía error 500. Ahora se valida ASCII visible hasta el largo de la columna.
+- H-15, H-16 y H-21 también en cobros, pagos electrónicos, revocación, condonación, refinanciación y saldo a favor.
+
+### Cambiado (límites, D-54)
+- El gasto de otorgamiento de una línea admite hasta 50 % del capital.
+- Un movimiento de fondos realizado puede tener hasta un año de antigüedad y un movimiento admite hasta $ 1.000.000.000,00.
+
+### Agregado (pruebas de integración, iteración 2, bloque B)
+- IN-34 a IN-44: simulación, comparación de líneas, registro, verificación, corrección, contingencia, confirmación,
+  resolución, cancelación, liquidación y constancia del contrato (2447 pruebas en total).
+
+### Corregido (defectos H-21 a H-25)
+- H-21: un identificador o una versión de fila enviado como lista, con letras o con decimales se convertía en otro
+  número (una lista en 1): podía elegir otro registro o pasar el control de versión. Ahora vale 0.
+- H-22: la comparación de líneas fallaba con más de 255 líneas viables (migración 32).
+- H-23: el motivo de la auditoría admite 2000 caracteres, como la justificación y el fundamento (migración 32).
+- H-24 y H-25: una línea con un gasto de otorgamiento alto rompía la simulación y la comparación; ahora se informa.
+- H-15, H-16, H-17 y H-19 también en verificación, contingencia, confirmación, resolución y liquidación.
+
+### Agregado (pruebas de integración, iteración 2, bloque A)
+- IN-23 a IN-33: fondos, cajas, apertura y cierre de la jornada, calendario operativo y los cuatro grupos de
+  parámetros, con cada campo y cada clase de dato (2195 pruebas en total).
+
+### Corregido (defectos H-14 a H-20)
+- H-14: el motivo de fondos se recortaba en silencio a 300 caracteres; ahora se rechaza con el máximo de la columna.
+- H-15: un campo enviado como lista o un grupo de parámetros enviado como texto respondía error 500.
+- H-16: los largos de cajas, fondos, cierre y calendario se contaban en caracteres: un emoji en el límite respondía error 500.
+- H-17: la referencia de un movimiento de fondos pasa a NVARCHAR(100) (migración 31).
+- H-18: una acción de cambio de estado de caja fuera de la lista se rechaza («Seleccione la acción.»).
+- H-19: el motivo de los parámetros admite hasta 500 caracteres, el largo de su columna.
+- H-20: los porcentajes de los parámetros ya no se redondean en silencio: admiten los decimales que se guardan.
+
+### Cambiado (documento, D-53)
+- El DNI, la LC y la LE admiten de 6 a 8 dígitos, el largo que admite el CUIL.
+
+### Cambiado (observaciones O-01 a O-07, D-52)
+- O-01: la TNA de una línea debe ser mayor que cero.
+- O-02 y O-03: un tipo de cliente o de gasto administrativo fuera de la lista, vacío o ausente se rechaza con un mensaje, en lugar de tomarse como persona humana o importe fijo.
+- O-04: el CUIL o CUIT es obligatorio en el alta de una persona humana.
+- O-05: se admiten correos internacionales (parte local no ASCII y dominios IDN); el envío usa el dominio en punycode y pide `SMTPUTF8` cuando la parte local lo necesita.
+- O-06: la edad de una persona humana no puede superar 110 años.
+- O-07: los ingresos declarados deben ser mayores que cero.
+
+### Agregado (pruebas de integración, D-51)
+- Suite `Integracion` (`composer test:integracion`): cada campo de los formularios de la iteración 1 con cada clase de dato de su tipo y los controles comunes de cada operación, contra SQL Server (plan de pruebas 7.9 y Anexo B). 1310 pruebas generadas desde el catálogo de campos, aprobadas sobre SQL Server.
+- Base `sigccr_pruebas` recreada en cada ejecución (`docker/db/crear_base_pruebas.sql`, `tests/feature/preparar_base.sh`) y trabajo `integracion` en el flujo `CI` con SQL Server como servicio.
+
+### Corregido (hallazgos de D-51)
+- H-01: un campo enviado como lista (`campo[]=x`) producía «Array to string conversion» y un error del servidor en lugar del mensaje de validación: `Campos::texto()`, `Campos::lista()` y los métodos `campoPost()`, `campoGet()` y `filtrosBusqueda()` de `BaseController` lo tratan como vacío.
+- H-02: los caracteres de control (por ejemplo, el carácter nulo) se eliminan antes de validar y guardar.
+- H-03: el largo máximo se cuenta como en `NVARCHAR` (un emoji ocupa dos unidades): un texto con emoji en el límite pasaba la validación y fallaba al guardarse.
+- H-04: el mensaje del control de versión de fila ya no muestra el nombre interno de la tabla (RNF-12).
+- H-05: un formulario vencido o enviado sin token CSRF mostraba el mensaje del framework en inglés (`app/Language/es/Security.php`).
+- H-06: la recuperación de acceso y la activación del portal aceptaban correos sin punto en el dominio, a diferencia del alta.
+- H-07: el rol elegido al asignar un rol (CU-10) se recorta como en el registro (CU-05).
+- H-08: en el entorno de pruebas, `Config\Database` dirige todos los grupos a la base de pruebas (también con `SIGCCR_BASE_PRUEBAS=1`, que usa `preparar_base.sh`).
+- H-09: los textos fuera de Latin-1 (emoji, «ł», «ș») se guardaban como «?» en las columnas NVARCHAR: el controlador `App\Database\SQLSRV` los escribe como `N'...'`.
+- H-10: un acceso denegado a una ruta de más de 40 caracteres respondía error 500 en lugar de 403 (auditoría).
+- H-11: el motivo del rechazo de un archivo del legajo se reemplazaba por «Adjunte este documento».
+- H-12: las búsquedas tomaban %, _ y [ como comodines (`Campos::literalLike()` en las 19 búsquedas con `like()`).
+- H-13: las páginas de error 400, 404 y de error general se mostraban en inglés (`app/Language/es/Errors.php`).
+
+### Cambiado (D-51)
+- `composer test` ejecuta la suite `App`, que reúne todas las pruebas que no necesitan la base.
+- Se elimina la prueba de ejemplo del appstarter `tests/session/ExampleSessionTest.php`.
+
+### Agregado
+- Tema oscuro: sigue al sistema operativo o se elige con «Tema oscuro» en la barra lateral y en el portal; se imprime siempre en claro (D-50).
+- Inicio del panel: «Trabajo pendiente» con las colas que el rol puede atender y el aviso de caja sin abrir.
+
+### Cambiado
+- Interfaz homogénea (D-59): todas las fechas con el selector del navegador, los mismos botones en los filtros de los listados, ejemplos con «Por ejemplo:» y ajustes de alineación y tipografía (H-39 a H-46).
+- Registrar cliente: la declaración jurada de persona expuesta políticamente se adjunta en su propia sección, junto a la respuesta.
+- jQuery y DataTables se cargan solo en las pantallas con tablas paginadas (D-50).
+- Bordes de los campos con contraste de al menos 3:1 en los dos temas (WCAG 1.4.11).
+- Una sola pantalla de búsqueda de cliente para todas las operaciones que parten de él.
+- Registrar cliente: el CUIT/CUIL va primero, con «Consultar el padrón de ARCA» a su altura, para completar los datos desde el padrón antes de escribirlos.
+- Etiquetas de advertencia e información con los colores de la identidad; todos los colores del CSS como variables.
+- Mi caja: «Registrar cobro» es la acción principal y «Cerrar caja», la secundaria.
+- Inicio del portal: resumen «Su cuenta hoy», con el próximo vencimiento, el saldo deudor, las cuotas vencidas y «Pagar cuotas».
+- Tablero gerencial: cuatro indicadores clave destacados. La efectividad de cobranza indica su base de cálculo.
+- Alternativas de financiación: la TNA, la TEA y la vigencia se informan una vez y solo la alternativa pedida tiene botón principal.
+- Listados de clientes, usuarios, solicitudes y líneas: un solo buscador, el orden del servidor y filtros plegables en el celular.
+- Menú del panel: un ícono por opción.
+- El portal ya no muestra códigos internos (CU, RN, flujos alternativos). Los procesos automáticos se muestran con un nombre legible.
+
+### Corregido
+- Accesibilidad (WCAG 2.2 AA):
+  - foco visible sobre la barra lateral;
+  - tablas sin desborde a 375 px;
+  - etiquetas en los parámetros de evaluación;
+  - contraste de los botones contorneados y de los códigos;
+  - errores de formulario asociados a cada campo y foco en el primero.
+- Textos y formatos:
+  - el importe de la cancelación anticipada usa el formato del sistema;
+  - los medios de cobro sin usar dicen «Sin usar»;
+  - «Cuotas pendientes» en el estado de cuenta;
+  - el título de la página de acceso no autorizado.
+- Los CSS y JS del sistema se sirven versionados, para que el navegador no use copias viejas.
+
 ## [0.5.0] - 2026-11-16
 
 Fin de Construcción (previsto para el 30/11/2026): iteración 4 completa (SS-07, SS-08, SS-09, SS-11 y el régimen informativo de SS-06). Prueba funcional de la iteración 4 aprobada y batería de punta a punta completa (208 casos) aprobada sobre SQL Server.
@@ -261,7 +437,8 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.5.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.6.0...develop
+[0.6.0]: https://github.com/ivanthoux/sigccr/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ivanthoux/sigccr/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0

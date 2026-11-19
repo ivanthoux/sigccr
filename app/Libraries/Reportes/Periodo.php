@@ -21,6 +21,12 @@ final class Periodo
     public const MAXIMO_DIAS = 732;
 
     /**
+     * Última fecha admitida (H-31): el período se consulta hasta el día siguiente a su fin y la semana o la proyección
+     * pueden pasar al año siguiente; con fechas del año 9999 el cálculo salía del rango de fechas y respondía error 500.
+     */
+    public const FECHA_MAXIMA = '2099-12-31';
+
+    /**
      * @param array<string, mixed> $g tipo, fecha (día, semana, mes o trimestre que la contiene), desde y hasta (rango)
      * @param bool $futuro true para la proyección de fondos: el período no puede empezar antes de hoy (CU-70 A2)
      * @return array{tipo: string, desde: string, hasta: string, etiqueta: string, granularidad: string}
@@ -29,7 +35,7 @@ final class Periodo
     public static function desde(array $g, string $hoy, bool $futuro = false, int $diasPorDefecto = 30): array
     {
         $tipo = isset(self::TIPOS[$g['tipo'] ?? '']) ? (string) $g['tipo'] : ($futuro ? 'rango' : 'mes');
-        $base = trim((string) ($g['fecha'] ?? '')) === '' ? $hoy : Campos::fecha($g['fecha']);
+        $base = trim(Campos::crudo($g['fecha'] ?? '')) === '' ? $hoy : self::fecha($g['fecha']);
         if ($base === null) {
             throw new ValidacionException(['fecha' => 'Ingrese una fecha válida.']);
         }
@@ -63,10 +69,10 @@ final class Periodo
      */
     private static function rango(array $g, string $hoy, bool $futuro, int $diasPorDefecto): array
     {
-        $desdeTexto = trim((string) ($g['desde'] ?? ''));
-        $hastaTexto = trim((string) ($g['hasta'] ?? ''));
-        $desde = $desdeTexto === '' ? ($futuro ? $hoy : (new DateTimeImmutable($hoy))->format('Y-m-01')) : Campos::fecha($desdeTexto);
-        $hasta = $hastaTexto === '' ? ($futuro ? (new DateTimeImmutable($hoy))->modify("+{$diasPorDefecto} days")->format('Y-m-d') : $hoy) : Campos::fecha($hastaTexto);
+        $desdeTexto = trim(Campos::crudo($g['desde'] ?? ''));
+        $hastaTexto = trim(Campos::crudo($g['hasta'] ?? ''));
+        $desde = $desdeTexto === '' ? ($futuro ? $hoy : (new DateTimeImmutable($hoy))->format('Y-m-01')) : self::fecha($desdeTexto);
+        $hasta = $hastaTexto === '' ? ($futuro ? (new DateTimeImmutable($hoy))->modify("+{$diasPorDefecto} days")->format('Y-m-d') : $hoy) : self::fecha($hastaTexto);
         $errores = [];
         if ($desde === null) {
             $errores['desde'] = 'Ingrese una fecha válida.';
@@ -85,6 +91,14 @@ final class Periodo
         }
 
         return [(string) $desde, (string) $hasta];
+    }
+
+    /** Fecha válida entre 1900 y FECHA_MAXIMA (H-31), o null. */
+    private static function fecha(mixed $valor): ?string
+    {
+        $f = Campos::fecha($valor);
+
+        return $f !== null && $f <= self::FECHA_MAXIMA ? $f : null;
     }
 
     public static function etiqueta(string $desde, string $hasta): string

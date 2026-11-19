@@ -1,6 +1,6 @@
 // Circuito de una solicitud en el panel (CU-21 a CU-28), reutilizado por las secciones 9 a 14 y por la iteración 3.
 const { expect } = require('@playwright/test');
-const { fecha, ddmmaaaa } = require('./datos');
+const { fecha } = require('./datos');
 const { documento } = require('./archivos');
 const { spark, valor } = require('./sistema');
 
@@ -59,7 +59,7 @@ function evaluar() {
 async function confirmarPedida(page, solicitudId, { dia = fecha(), medio = 'PresencialFirma' } = {}) {
   await page.goto(`/admin/solicitudes/${solicitudId}/alternativas`);
   await page.locator('main table tbody tr', { hasText: 'Pedida' }).getByRole('link').first().click();
-  await page.locator('#fecha_conformidad').fill(dia ? ddmmaaaa(dia) : '');
+  await page.locator('#fecha_conformidad').fill(dia || '');
   await page.locator('#medio_conformidad').selectOption(medio);
   await page.getByRole('button', { name: 'Confirmar alternativa' }).click();
   await page.waitForLoadState();
@@ -93,7 +93,7 @@ async function liquidar(page, solicitudId, cliente, desembolso, datos = {}) {
   await page.locator('#cuit_titular').fill(d.cuit);
   await page.locator('#evidencia_titularidad').fill(d.evidencia);
   await page.locator('#comprobante').fill(d.comprobante);
-  await page.locator('#fecha_transferencia').fill(d.dia ? ddmmaaaa(d.dia) : '');
+  await page.locator('#fecha_transferencia').fill(d.dia || '');
   await page.locator('#importe_transferencia').fill(d.importe);
   await page.getByRole('button', { name: 'Registrar el desembolso' }).click();
   await page.waitForLoadState();

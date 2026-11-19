@@ -16,7 +16,7 @@ class Alertas extends BaseController
     public function index(): string
     {
         $cuenta = session('cuenta');
-        $filtros = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['estado', 'tipo', 'desde', 'hasta'])));
+        $filtros = $this->filtrosBusqueda(['estado', 'tipo', 'desde', 'hasta']);
         $filtros['estado'] ??= 'Pendiente';
 
         return view('alertas/index', [
@@ -46,7 +46,7 @@ class Alertas extends BaseController
     private function rutasPanel(): array
     {
         return array_map(
-            static fn (string $r): string => str_replace(['([0-9]+)', '(\d+)'], '(:num)', $r),
+            static fn (string $r): string => str_replace(['([0-9]{1,9})', '([0-9]+)', '(\d+)'], '(:num)', $r),
             array_keys(service('routes')->getRoutes('GET')),
         );
     }

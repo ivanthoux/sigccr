@@ -65,6 +65,20 @@ Las migraciones y los seeders se ejecutan con el propietario del esquema (`SIGCC
 
 **Panel administrativo:** `https://localhost/admin/login`, con el correo y la contraseña del Administrador inicial. En desarrollo los correos (por ejemplo, el enlace de recuperación de acceso) no se envían: el simulador los guarda en `writable/correos/` dentro del contenedor. Para ver el último con su enlace: `docker compose exec app php spark sigccr:correos` (o `sigccr:correos 5` para los cinco últimos).
 
+**Correo de desarrollo con Mailpit (D-49):** para ver los correos en el navegador, como los recibiría el destinatario:
+
+1. Levantar Mailpit, una sola vez: `docker compose --profile correo up -d`. Queda activo aunque se reinicie Docker.
+2. En el `.env`, cambiar el correo a SMTP:
+   ```
+   sigccr.adaptadorComunicaciones = real
+   sigccr.smtpHost = mailpit
+   sigccr.smtpPuerto = 1025
+   sigccr.smtpCifrado =
+   ```
+3. Abrir `http://localhost:8025`. Llegan todos los correos del panel, del portal y de los procesos, con sus enlaces; ninguno sale del equipo.
+
+Las direcciones que simulan errores de envío (`falla.transitoria@…`, `falla.definitiva@…`, `incierto@…`) solo funcionan con el simulador: para probarlas se vuelve a `sigccr.adaptadorComunicaciones = simulador`. La batería de punta a punta usa siempre el simulador. Si el `.env` está en SMTP, `tests/e2e/ejecutar.sh` lo cambia mientras corre y lo restaura al terminar.
+
 **Portal de clientes:** un cliente registrado activa su acceso en `https://localhost/portal/activar` con su documento (o CUIT) y su correo verificado (CU-04), y después ingresa en `https://localhost/portal/login` con ese correo y su contraseña (CU-01 a CU-03). La cuenta de un cliente no sirve para el panel ni la de un usuario interno para el portal (RN-08). **Cola de comunicaciones:** el contenedor scheduler ejecuta `comunicaciones:enviar` cada minuto para los reintentos (CU-95); a mano: `docker compose exec app php spark comunicaciones:enviar`. Con `sigccr.adaptadorComunicaciones = real` y los datos `sigccr.smtp*` del `.env`, los correos salen por SMTP.
 
 **Problemas frecuentes**
@@ -95,6 +109,17 @@ php tests/_local/run.php               # ejecutor mínimo sin Composer (usa un r
 ```
 
 `tests/_local/` existe solo para ejecutar las pruebas en un entorno sin Composer ni BCMath; en el proyecto se usa PHPUnit.
+
+## Pruebas de integración (D-51)
+
+```bash
+docker compose exec app composer test:integracion    # recrea sigccr_pruebas y ejecuta la suite Integracion
+docker compose exec app vendor/bin/phpunit -c phpunit.xml.dist --testsuite Integracion --filter IN-09   # un caso
+```
+
+Verifican cada campo de cada formulario con cada clase de dato de su tipo (vacío, enviado como lista, código HTML o SQL, límites de largo, formatos alternativos, valores fuera de catálogo, fechas imposibles, importes y porcentajes límite) y los controles comunes de cada operación (sesión, permiso, token CSRF, versión de fila, identificadores), contra SQL Server. El catálogo de campos y las clases de datos están en el Anexo B del plan de pruebas; cada prueba lleva el identificador de su caso (IN-xx) y la clase (por ejemplo, `IN-09 · cuit_cuil · CUI-04 verificador incorrecto`).
+
+`tests/feature/preparar_base.sh` borra y vuelve a crear la base `sigccr_pruebas` en cada ejecución, aplica las migraciones y carga las semillas. Las pruebas se conectan con el usuario de la aplicación (`sigccr_app`) y, en el entorno de pruebas, `Config\Database` dirige todos los grupos a `sigccr_pruebas`: la base de desarrollo no se toca. La integración continua las ejecuta en cada *pull request* con SQL Server como servicio.
 
 ## Pruebas de punta a punta
 

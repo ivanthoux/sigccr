@@ -8,6 +8,7 @@ use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
 use App\Libraries\Cartera\ReglasRegimen;
 use App\Libraries\Finanzas\Decimal;
+use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
 use App\Services\Comunes\AlertaService;
 use App\Services\Comunes\AuditoriaService;
@@ -48,7 +49,7 @@ class RegimenService extends BaseService
         if (!ReglasRegimen::periodoCerrado($periodo, $hoy)) {
             throw new ValidacionException(['periodo' => 'Seleccione un mes ya cerrado.']);
         }
-        $motivo = trim((string) $motivo);
+        $motivo = Campos::texto((string) $motivo);
 
         $r = $this->transaccion(function () use ($periodo, $usuarioId, $motivo, $proceso): array {
             // Las generaciones simultáneas del mismo período las resuelve UQ_regimenes_periodo_version
@@ -60,6 +61,11 @@ class RegimenService extends BaseService
                 }
                 if ($motivo === '') {
                     throw new ValidacionException(['motivo' => 'Indique el motivo de la rectificación.']);
+                }
+                // H-30: el motivo se guarda en NVARCHAR(500); uno más largo respondía error 500
+                $error = Campos::motivo($motivo, 500);
+                if ($error !== null) {
+                    throw new ValidacionException(['motivo' => $error]);
                 }
                 $this->db->table('regimenes_informativos')->where('id', $anterior['id'])->update(['estado' => 'Rectificado']);
             }

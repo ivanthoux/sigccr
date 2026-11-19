@@ -139,6 +139,7 @@ Como Gerente, con los datos de A.6 y A.7.
 | R-043 | Parámetros de morosidad | Probar los valores inválidos de A.6; guardar los válidos. | «La tasa punitoria diaria debe estar entre 0 % y 1 % por día.», «El tope debe estar entre 0 % y 50 % de la TNA…» y los demás; los válidos crean la versión. | |
 | R-044 | Calendario | Cargar los feriados de A.7 de a uno; repetir uno; cargar una fecha pasada; pegar la carga anual de A.7 (con dos líneas erróneas). | Agrega los válidos; el repetido «…ya está registrada (A2)»; el pasado «…es una fecha pasada (A1)»; la carga anual lista las rechazadas con su motivo. | |
 | R-045 | Baja de un día | Dar de baja el 25/12/2026 y volver a cargarlo. | «Día no hábil dado de baja…»; se vuelve a cargar sin problema. | |
+| R-152 | Modelo de contrato (CU-106, D-56) | Como Gerente, en *Gestión → Modelo de contrato*, agregar la cláusula «Seguro» con el texto «… del préstamo de {monto}» y registrar; corregirla a `{importe}`, subirla un lugar y registrar. Luego quitar la cláusula de `{plan_cuotas}` y registrar. Por último, cargar el modelo inicial y registrarlo. | «Vigente: modelo inicial.» con 11 cláusulas. Con `{monto}`: «Variable desconocida: {monto}», con la cláusula marcada. Corregida: «Se registró la versión 1 del modelo de contrato» y el contrato de una solicitud aprobada muestra la cláusula «Seguro». Sin el plan de cuotas: «Falta {plan_cuotas}». El modelo inicial queda como versión 2. | |
 
 ### 8. Fondos y cajas (CU-85, CU-80, CU-72, CU-31 y CU-81)
 
@@ -193,7 +194,7 @@ Para cada cliente: simular $ 500.000 en 12 cuotas en «Motos», registrar y veri
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| R-071 | Alternativas | Abrir las alternativas de Ana. | Capacidad de pago, monto máximo, la combinación pedida primero y las descartadas con su motivo. | |
+| R-071 | Alternativas | Abrir las alternativas de Ana. | Capacidad de pago, monto máximo, la combinación pedida primero (la única con el botón principal), la TNA, la TEA y la vigencia sobre la tabla, y las descartadas con su motivo (D-47). | |
 | R-072 | Validaciones de la conformidad | Confirmar sin fecha, con fecha futura y sin medio. | Cada error junto a su campo. | |
 | R-073 | Aprobación automática | Confirmar la alternativa pedida con la fecha de hoy y «Presencial, con firma del cliente». | «Alternativa confirmada y solicitud aprobada automáticamente. La aprobación vence el …»; el vencimiento salta feriados y fines de semana (RN-49); Fondos muestra la reserva. | |
 | R-074 | Confirmación simultánea | En otra solicitud, abrir la misma alternativa en dos pestañas y confirmar en ambas. | La segunda informa que la solicitud cambió; hay una sola reserva. | |
@@ -217,13 +218,14 @@ En esta sección se liquidan los cinco créditos de la iteración 3. Para cada c
 | R-085 | Plan del Gerente | Liquidar la de Federico sin marcar la conformidad y luego marcándola. | «El plan lo definió el Gerente: registre la conformidad del cliente antes de liquidar (RN-22).»; luego liquida. | |
 | R-086 | Créditos de la iteración 3 | Liquidar los de Bruno, Carla, Diego y Julián con A.10 (cada uno con su contrato). | Quedan los créditos A (Ana), B (Bruno), C (Carla), D (Diego) y E (Julián). Anotar sus números en A.10. | |
 | R-087 | Cancelar una solicitud | Confirmar la alternativa de Elena (queda aprobada) y cancelarla con el motivo de A.9 (pide confirmación adicional); intentar cancelar la de Ana. | Se cancela y libera la reserva; la de Ana: «La solicitud ya finalizó: no se puede cancelar.» | |
+| R-151 | Liquidar sin la declaración jurada PEP (RN-80, D-55) | Ana se registró sin la declaración jurada de persona expuesta políticamente. Como Cajero, abrir la liquidación de su solicitud. Luego, como Analista, en la ficha de Ana incorporar `ddjj_pep_Gomez.pdf` como «Declaración jurada de persona expuesta políticamente» y volver a abrir la liquidación. | «Falta la declaración jurada de persona expuesta políticamente…» y el formulario deshabilitado. Incorporada: «Documento incorporado al legajo.», la ficha deja de avisar y la liquidación se habilita. | |
 
 ### 14. Consultas y confirmaciones (CU-29, CU-30, D-24)
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
 | R-088 | Buscar solicitudes | Buscar por número, DNI, estado, línea y fechas; probar un rango invertido. | Resultados filtrados; el rango invertido se rechaza (A2). | |
-| R-089 | Ficha completa | Abrir la ficha de la solicitud de Ana. | Datos, historial de estados, evaluación, alternativas, afectaciones de fondos, contrato y liquidación. | |
+| R-089 | Ficha completa | Abrir la ficha de la solicitud de Ana. | Datos, historial de estados (los pasos automáticos como «Proceso automático: Evaluación automática»), evaluación, alternativas, afectaciones de fondos, contrato y liquidación (D-47). | |
 | R-090 | Búsqueda del Cajero | Como Paula, buscar solicitudes y hacer clic en una aprobada y en otra. | La aprobada abre la liquidación; la otra no ofrece un enlace sin permiso. | |
 | R-091 | Confirmación de cambios | Simular y registrar una solicitud de Marcos en «Motos» ($ 500.000, 12 cuotas) y dejarla en trámite; modificar la TNA de «Motos» a 62 % sin y con la confirmación. | «Hay N solicitud(es) en trámite… confirme el cambio…»; confirmado se registra y la solicitud conserva su versión. | |
 
@@ -313,7 +315,7 @@ Con el crédito E de Julián, sin modificar sus vencimientos.
 
 | ID | Caso | Pasos | Resultado esperado | Resultado |
 |---|---|---|---|---|
-| R-132 | Cálculo | Como Paula, en Cancelación anticipada, buscar a Julián y calcular. | Cuotas vencidas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) y su IVA, total y la reducción de lo no devengado; sin comisión. | |
+| R-132 | Cálculo | Como Paula, en Cancelación anticipada, buscar a Julián y calcular. | Cuotas vencidas, capital de las no vencidas, interés de la cuota en curso por los días transcurridos (de 30) y su IVA, total y la reducción de lo no devengado; sin comisión. El importe a cobrar se propone con el formato del sistema (D-47). | |
 | R-133 | Parcial y orden pendiente | Registrar con $ 1.000 menos; generar una orden electrónica de la cuota 1 y volver a calcular. | «El importe debe ser igual al total de la cancelación…»; con la orden, aviso y registro deshabilitado (A4). | |
 | R-134 | Registrar | Vencer la orden (C.2 y `vencimientos:controlar`) y registrar por el total por transferencia (A.16). | «Crédito cancelado anticipadamente con el cobro N.º …»; el comprobante incluye la reducción; cuotas Pagadas y crédito Cancelado. | |
 | R-135 | No se anula y crédito refinanciado | Como Gerente, intentar anular ese cobro; como Paula, calcular la cancelación del crédito F (refinanciado). | «El cobro de una cancelación anticipada no se anula…»; el cálculo del F incluye el no capitalizable de las cuotas no vencidas. | |

@@ -142,9 +142,9 @@ final class AutorizacionRutasTest extends CIUnitTestCase
     {
         return [
             'Administrador' => ['Administrador', ['GET admin/usuarios', 'POST admin/usuarios', 'GET admin/clientes', 'GET admin/alertas'], ['POST admin/clientes', 'POST admin/lineas', 'GET admin/parametros/evaluacion']],
-            'Gerente' => ['Gerente', ['POST admin/lineas', 'POST admin/lineas/([0-9]+)/suspender', 'GET admin/parametros/evaluacion', 'POST admin/clientes/([0-9]+)/desactivar'], ['POST admin/usuarios', 'POST admin/clientes']],
-            'Analista de Crédito' => ['AnalistaCredito', ['POST admin/clientes', 'GET admin/lineas', 'GET admin/lineas/([0-9]+)', 'GET admin/alertas'], ['POST admin/lineas', 'POST admin/lineas/([0-9]+)/editar', 'GET admin/usuarios', 'GET admin/parametros/evaluacion']],
-            'Cajero' => ['Cajero', ['GET admin/clientes', 'GET admin/alertas'], ['GET admin/lineas', 'POST admin/clientes', 'GET admin/usuarios', 'POST admin/clientes/([0-9]+)/desactivar']],
+            'Gerente' => ['Gerente', ['POST admin/lineas', 'POST admin/lineas/([0-9]{1,9})/suspender', 'GET admin/parametros/evaluacion', 'POST admin/clientes/([0-9]{1,9})/desactivar'], ['POST admin/usuarios', 'POST admin/clientes']],
+            'Analista de Crédito' => ['AnalistaCredito', ['POST admin/clientes', 'GET admin/lineas', 'GET admin/lineas/([0-9]{1,9})', 'GET admin/alertas'], ['POST admin/lineas', 'POST admin/lineas/([0-9]{1,9})/editar', 'GET admin/usuarios', 'GET admin/parametros/evaluacion']],
+            'Cajero' => ['Cajero', ['GET admin/clientes', 'GET admin/alertas'], ['GET admin/lineas', 'POST admin/clientes', 'GET admin/usuarios', 'POST admin/clientes/([0-9]{1,9})/desactivar']],
         ];
     }
 

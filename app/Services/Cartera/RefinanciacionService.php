@@ -286,9 +286,9 @@ class RefinanciacionService extends BaseService
         }
         if (($f['texto'] ?? '') !== '') {
             $digitos = preg_replace('/\D/', '', (string) $f['texto']);
-            $b->groupStart()->like('cl.denominacion', (string) $f['texto']);
+            $b->groupStart()->like('cl.denominacion', Campos::literalLike((string) $f['texto']));
             if ($digitos !== '') {
-                $b->orLike('cl.cuit_cuil', $digitos)->orWhere('cl.id IN (SELECT cliente_id FROM dbo.personas_humanas WHERE nro_documento = ' . $this->db->escape($digitos) . ')', null, false);
+                $b->orLike('cl.cuit_cuil', Campos::literalLike((string) $digitos))->orWhere('cl.id IN (SELECT cliente_id FROM dbo.personas_humanas WHERE nro_documento = ' . $this->db->escape($digitos) . ')', null, false);
             }
             $b->groupEnd();
         }
@@ -360,6 +360,7 @@ class RefinanciacionService extends BaseService
     public function resolver(int $gerenteId, int $id, int $version, string $decision, string $fundamentoTexto): array
     {
         $fundamento = Campos::texto($fundamentoTexto);
+        $decision = Campos::texto($decision);
         $errores = [];
         if (!in_array($decision, ['Aprobada', 'Rechazada', 'Observada'], true)) {
             $errores['decision'] = 'Seleccione Aprobar, Rechazar u Observar.';
@@ -447,10 +448,11 @@ class RefinanciacionService extends BaseService
         if ($fecha === null || $fecha > $this->hoyNegocio()) {
             $errores['fecha_constancia'] = 'Ingrese la fecha de la aceptación del cliente (no posterior a hoy).';
         }
-        if ($medio === '' || mb_strlen($medio) > 100) {
+        // H-16: largos en unidades de NVARCHAR
+        if ($medio === '' || Campos::largo($medio) > 100) {
             $errores['medio'] = 'Indique el medio de la aceptación (hasta 100 caracteres).';
         }
-        if (mb_strlen($observaciones) > 500) {
+        if (Campos::largo($observaciones) > 500) {
             $errores['observaciones'] = 'Las observaciones admiten hasta 500 caracteres.';
         }
         if ($errores !== []) {
@@ -548,14 +550,14 @@ class RefinanciacionService extends BaseService
         $medio = Campos::texto($medioTexto);
         $fecha = $tipo === 'Desistimiento' ? Campos::fecha($fechaTexto) : null;
         $errores = [];
-        if (($e = Campos::motivo($motivo)) !== null || mb_strlen($motivo) > 500) {
-            $errores['motivo'] = $e ?? 'El motivo admite hasta 500 caracteres.';
+        if (($e = Campos::motivo($motivo, 500)) !== null) {
+            $errores['motivo'] = $e;
         }
         if ($tipo === 'Desistimiento') {
             if ($fecha === null || $fecha > $this->hoyNegocio()) {
                 $errores['fecha_desistimiento'] = 'Ingrese la fecha de la constancia de desistimiento (no posterior a hoy).';
             }
-            if ($medio === '' || mb_strlen($medio) > 100) {
+            if ($medio === '' || Campos::largo($medio) > 100) {
                 $errores['medio_desistimiento'] = 'Indique el medio por el que el cliente desistió (hasta 100 caracteres).';
             }
         }
@@ -713,7 +715,7 @@ class RefinanciacionService extends BaseService
      */
     private function creditosAdmitidos(int $clienteId, array $creditoIds): array
     {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $creditoIds))));
+        $ids = array_values(array_unique(array_filter(array_map([Campos::class, 'identificador'], $creditoIds))));
         $creditos = array_values(array_filter($this->bloquear('creditos', $ids), static fn ($c) => (int) $c['cliente_id'] === $clienteId && $c['estado'] === 'EnMora'));
         if ($creditos === [] || count($creditos) !== count($ids)) {
             throw new ValidacionException(['creditos' => 'Seleccione uno o más créditos en mora del cliente (RN-70).'], 'RN-70');

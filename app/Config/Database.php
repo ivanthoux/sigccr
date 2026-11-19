@@ -132,17 +132,63 @@ class Database extends Config
     {
         parent::__construct();
 
-        // Durante las pruebas se usa el grupo "tests" para no tocar la base de desarrollo.
-        if (ENVIRONMENT === 'testing') {
+        // Durante las pruebas se usa el grupo "tests" para no tocar la base de desarrollo (D-51): todos los grupos
+        // apuntan a la base de pruebas, de modo que ni SIGCCR_DB_GRUPO ni un componente que pida otro grupo
+        // (por ejemplo, las copias de seguridad) llegan a la base de desarrollo.
+        // SIGCCR_BASE_PRUEBAS=1 aplica el mismo aislamiento fuera de PHPUnit: spark no arranca en el entorno testing, y
+        // tests/feature/preparar_base.sh lo usa para migrar y sembrar la base de pruebas.
+        if (ENVIRONMENT === 'testing' || getenv('SIGCCR_BASE_PRUEBAS') === '1') {
             $this->defaultGroup = 'tests';
+            $this->aislarPruebas();
         }
 
         // Las migraciones y los seeders se ejecutan con el propietario del esquema: CodeIgniter crea y actualiza la
         // tabla "migrations" con el grupo por defecto, y sigccr_app no tiene permiso CREATE TABLE (4.3.5).
         //   SIGCCR_DB_GRUPO=migraciones php spark migrate --all
+        // H-09: el controlador propio escribe los textos no ASCII como N'...' para no perderlos en las columnas NVARCHAR.
+        // Se aplica también cuando el .env indica SQLSRV.
+        foreach (['default', 'migraciones', 'copias', 'tests'] as $g) {
+            if (($this->{$g}['DBDriver'] ?? '') === 'SQLSRV') {
+                $this->{$g}['DBDriver'] = 'App\\Database\\SQLSRV';
+            }
+        }
+
+        // En pruebas, SIGCCR_DB_GRUPO=migraciones prepara la base de pruebas con el propietario (tests/feature/preparar_base.sh)
         $grupo = getenv('SIGCCR_DB_GRUPO');
         if (is_string($grupo) && $grupo !== '' && property_exists($this, $grupo) && is_array($this->{$grupo})) {
             $this->defaultGroup = $grupo;
         }
+    }
+
+    /**
+     * D-51: en el entorno de pruebas todos los grupos usan la base de pruebas, que nunca puede ser la de desarrollo.
+     * Las credenciales que el grupo "tests" no define se toman del grupo de la aplicación (default), de modo que las
+     * pruebas operan con los mismos permisos que la aplicación (rol_sigccr_app); el grupo "migraciones" conserva las
+     * del propietario del esquema para preparar la base.
+     */
+    private function aislarPruebas(): void
+    {
+        $base = (string) $this->tests['database'];
+        if ($base === '' || $base === (string) $this->default['database']) {
+            throw new \RuntimeException('La base de pruebas (database.tests.database) no puede estar vacía ni ser la base de la aplicación.');
+        }
+        // El servidor de la base de pruebas puede indicarse con SIGCCR_DB_HOST (la integración continua usa localhost):
+        // una variable con puntos en el nombre, como database.tests.hostname, no llega a los procesos que lanza bash
+        $servidor = getenv('SIGCCR_DB_HOST');
+        if (is_string($servidor) && $servidor !== '') {
+            $this->tests['hostname'] = $servidor;
+        }
+        foreach (['username', 'password'] as $clave) {
+            if ((string) $this->tests[$clave] === '') {
+                $this->tests[$clave] = $this->default[$clave];
+            }
+        }
+        foreach (['default', 'migraciones', 'copias'] as $grupo) {
+            $this->{$grupo}['database'] = $base;
+            $this->{$grupo}['hostname'] = $this->tests['hostname'];
+            $this->{$grupo}['port'] = $this->tests['port'];
+        }
+        $this->default['username'] = $this->tests['username'];
+        $this->default['password'] = $this->tests['password'];
     }
 }

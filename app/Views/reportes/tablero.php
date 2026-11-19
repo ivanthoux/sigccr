@@ -10,6 +10,17 @@
 use App\Libraries\Reportes\Periodo;
 use App\Services\Reportes\ReporteService;
 
+// Indicadores clave, destacados sobre los bloques de detalle: el Gerente los lee primero (H-35)
+$clave = ['Índice de morosidad', 'Saldo deudor total', 'Cobros confirmados', 'Disponible para nuevas colocaciones'];
+$destacados = [];
+foreach ($t['grupos'] as [$grupo, , $indicadores]) {
+    foreach ($indicadores as [$etiqueta, $valor, $tipo]) {
+        if (in_array($etiqueta, $clave, true)) {
+            $destacados[array_search($etiqueta, $clave, true)] = [$etiqueta, $valor, $tipo];
+        }
+    }
+}
+ksort($destacados);
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -21,14 +32,24 @@ $this->section('contenido');
     <?php if (tiene_permiso('reportes.cartera')): ?><a href="<?= url_to('reportes.index') ?>" class="btn btn-outline-primary">Reportes</a><?php endif ?>
 </div>
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end d-print-none" novalidate>
-    <div class="col-6 col-md-2"><label for="tipo" class="form-label small mb-1">Período</label>
-        <select id="tipo" name="tipo" class="form-select form-select-sm"><?php foreach (Periodo::TIPOS as $k => $txt): ?><option value="<?= $k ?>"<?= $f['tipo'] === $k ? ' selected' : '' ?>><?= esc($txt) ?></option><?php endforeach ?></select></div>
-    <div class="col-6 col-md-2"><label for="fecha" class="form-label small mb-1">Fecha de referencia</label><input type="date" id="fecha" name="fecha" class="form-control form-control-sm<?= campo_invalido('fecha') ?>" value="<?= esc($f['fecha'], 'attr') ?>"><?= error_campo('fecha') ?></div>
-    <div class="col-6 col-md-2"><label for="desde" class="form-label small mb-1">Rango: desde</label><input type="date" id="desde" name="desde" class="form-control form-control-sm<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
-    <div class="col-6 col-md-2"><label for="hasta" class="form-label small mb-1">hasta</label><input type="date" id="hasta" name="hasta" class="form-control form-control-sm<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
-    <div class="col-12 col-md-4 d-flex gap-2 justify-content-end"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button><button type="submit" class="btn btn-sm btn-primary">Actualizar</button></div>
+    <div class="col-6 col-md-2"><label for="tipo" class="form-label small">Período</label>
+        <select id="tipo" name="tipo" class="form-select"><?php foreach (Periodo::TIPOS as $k => $txt): ?><option value="<?= $k ?>"<?= $f['tipo'] === $k ? ' selected' : '' ?>><?= esc($txt) ?></option><?php endforeach ?></select></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="fecha" class="form-label small">Fecha de referencia</label><input type="date" id="fecha" name="fecha" class="form-control<?= campo_invalido('fecha') ?>" value="<?= esc($f['fecha'], 'attr') ?>"><?= error_campo('fecha') ?></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Rango: desde</label><input type="date" id="desde" name="desde" class="form-control<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">Rango: hasta</label><input type="date" id="hasta" name="hasta" class="form-control<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
+    <?= acciones_filtro(texto: 'Actualizar', icono: 'bi-arrow-repeat', antes: '<button type="button" class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir</button>') ?>
 </form>
 <?php if ($t['aviso'] !== null): ?><div class="alert alert-info"><?= esc($t['aviso']) ?></div><?php endif ?>
+<?php if ($destacados !== []): ?>
+    <section class="hoja p-3 mb-3" aria-labelledby="t-clave">
+        <h2 class="visually-hidden" id="t-clave">Indicadores clave</h2>
+        <dl class="indicadores-clave mb-0">
+            <?php foreach ($destacados as [$etiqueta, $valor, $tipo]): ?>
+                <div><dt><?= esc($etiqueta) ?></dt><dd><?= esc(valor_reporte($valor, $tipo, true)) ?></dd></div>
+            <?php endforeach ?>
+        </dl>
+    </section>
+<?php endif ?>
 <div class="row g-3">
     <?php foreach ($t['grupos'] as [$grupo, $reporte, $indicadores]): ?>
         <?php $permiso = ReporteService::REPORTES[$reporte][2]; ?>
@@ -42,7 +63,7 @@ $this->section('contenido');
                     <?php endforeach ?>
                 </dl>
                 <?php if (tiene_permiso($permiso)): ?>
-                    <a class="small d-print-none" href="<?= url_to($permiso) . '?' . esc(http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1])) ?>">Ver el reporte <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                    <a class="small d-print-none" href="<?= url_to($permiso) . '?' . esc(http_build_query($reporte === 'proyeccion' ? ['generar' => 1] : array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1])) ?>">Ver el reporte<span class="visually-hidden"> de <?= esc(mb_strtolower($grupo)) ?></span> <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                 <?php endif ?>
             </section>
         </div>

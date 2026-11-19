@@ -14,6 +14,7 @@ $etiquetas = ['Punitorio' => 'Punitorios', 'InteresOrdinario' => 'Interés', 'Ga
 $this->extend('layouts/portal');
 $this->section('contenido');
 ?>
+<span class="documento-propio" hidden></span><?php // D-57: con encabezado propio; al imprimir lleva solo la cabecera y el pie de cada hoja ?>
 <nav aria-label="Ruta" class="mb-2 d-print-none"><a href="<?= url_to('portal.comprobantes') ?>"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Comprobantes</a></nav>
 <div class="encabezado">
     <div>
@@ -23,7 +24,7 @@ $this->section('contenido');
     <form method="post" action="<?= site_url('portal/comprobantes/' . (int) $c['id'] . '/descargar') ?>" class="d-print-none"><?= csrf_field() ?><button type="submit" class="btn btn-primary"><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar o imprimir</button></form>
 </div>
 <?php if ($c['estado'] === 'Anulado'): ?>
-    <div class="alert alert-danger"><strong>Cobro anulado</strong> el <?= esc(formato_fecha_hora($c['fecha_anulacion'])) ?>: <?= esc((string) $c['motivo_anulacion']) ?>. El importe quedó como saldo a favor (RN-33).</div>
+    <div class="alert alert-danger"><strong>Cobro anulado</strong> el <?= esc(formato_fecha_hora($c['fecha_anulacion'])) ?>: <?= esc((string) $c['motivo_anulacion']) ?>. El importe quedó como saldo a favor.</div>
 <?php endif ?>
 <section class="hoja p-4 mb-3" aria-labelledby="t-pago">
     <h2 class="h5" id="t-pago">Pago del <?= esc(formato_fecha_hora($c['fecha_hora'])) ?></h2>

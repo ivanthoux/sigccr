@@ -38,8 +38,9 @@ final class RevisionLegajo
         $normalizadas = [];
         foreach ($presentados as $ids) {
             foreach ($ids as $docId) {
-                $v = $verificaciones[$docId] ?? [];
-                $res = (string) ($v['resultado'] ?? '');
+                // H-15: un documento o un valor enviado con otra forma (texto en lugar de lista o al revés) se toma como vacío
+                $v = is_array($verificaciones[$docId] ?? null) ? $verificaciones[$docId] : [];
+                $res = Campos::texto($v['resultado'] ?? '');
                 $motivo = Campos::texto($v['motivo'] ?? '');
                 $obs = Campos::texto($v['observacion'] ?? '');
                 if (!isset(self::RESULTADOS_DOCUMENTO[$res])) {
@@ -48,7 +49,7 @@ final class RevisionLegajo
                 }
                 if ($res !== 'Conforme' && !isset(self::MOTIVOS[$motivo])) {
                     $errores["doc_{$docId}"] = 'Indique el motivo de la observación del documento.';
-                } elseif (mb_strlen($obs) > 500) {
+                } elseif (Campos::largo($obs) > 500) {
                     $errores["doc_{$docId}"] = 'La observación admite hasta 500 caracteres.';
                 }
                 $normalizadas[(int) $docId] = ['resultado' => $res, 'motivo' => $res === 'Conforme' ? null : $motivo, 'observacion' => $obs === '' ? null : $obs];
@@ -61,6 +62,7 @@ final class RevisionLegajo
         $todoConforme = $exigidosConformes && array_filter(array_merge([], ...array_values($presentados)), static fn (int $id) => !$conforme($id)) === [];
 
         $texto = Campos::texto($observaciones);
+        $resultado = Campos::texto($resultado);
         if (!in_array($resultado, self::RESULTADOS, true)) {
             $errores['resultado'] = 'Seleccione el resultado de la revisión: verificada, observada o rechazada.';
         } elseif ($resultado === 'Verificada' && !$exigidosConformes) {
@@ -70,12 +72,13 @@ final class RevisionLegajo
         } elseif ($resultado === 'Observada') {
             if ($todoConforme) {
                 $errores['resultado'] = 'Toda la documentación está conforme: corresponde verificar el legajo.';
-            } elseif (mb_strlen($texto) < 10) {
+            } elseif (Campos::largo($texto) < 10) {
                 $errores['observaciones'] = 'Detalle los faltantes o inconsistencias que el cliente debe corregir (al menos 10 caracteres).';
-            } elseif (mb_strlen($texto) > 1000) {
+            } elseif (Campos::largo($texto) > 1000) {
                 $errores['observaciones'] = 'Las observaciones admiten hasta 1000 caracteres.';
             }
-        } elseif ($resultado === 'Rechazada' && ($m = Campos::motivo(Campos::texto($motivoRechazo))) !== null) {
+        } elseif ($resultado === 'Rechazada' && ($m = Campos::motivo(Campos::texto($motivoRechazo), 500)) !== null) {
+            // H-19: la columna motivo_rechazo de revisiones_documentales es NVARCHAR(500)
             $errores['motivo_rechazo'] = 'Indique el motivo del rechazo documental (RN-19). ' . $m;
         }
 

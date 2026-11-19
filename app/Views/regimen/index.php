@@ -18,9 +18,9 @@ $this->section('contenido');
 </div>
 <form method="post" action="<?= url_to('regimen.consultar') ?>" class="hoja p-3 mb-3 row g-2 align-items-end" style="max-width: 56rem" novalidate data-confirmar="¿Genera el régimen informativo del período? Si ya existe, se registra una rectificación y la versión anterior queda como antecedente.">
     <?= csrf_field() ?>
-    <div class="col-6 col-md-3"><label for="periodo" class="form-label small mb-1">Período (mes cerrado)</label><input type="month" id="periodo" name="periodo" max="<?= $mesAnterior ?>" class="form-control form-control-sm<?= campo_invalido('periodo') ?>" value="<?= esc((string) old('periodo', $mesAnterior), 'attr') ?>"><?= error_campo('periodo') ?></div>
-    <div class="col-12 col-md-6"><label for="motivo" class="form-label small mb-1">Motivo <span class="text-body-secondary">(obligatorio para rectificar)</span></label><input type="text" id="motivo" name="motivo" maxlength="500" class="form-control form-control-sm<?= campo_invalido('motivo') ?>" value="<?= esc((string) old('motivo'), 'attr') ?>"><?= error_campo('motivo') ?></div>
-    <div class="col-12 col-md-3 d-flex justify-content-end"><button type="submit" class="btn btn-sm btn-primary">Generar o rectificar</button></div>
+    <div class="col-6 col-md-3"><label for="periodo" class="form-label small">Período (mes cerrado)</label><input type="month" id="periodo" name="periodo" max="<?= $mesAnterior ?>" class="form-control<?= campo_invalido('periodo') ?>" value="<?= esc((string) old('periodo', $mesAnterior), 'attr') ?>"><?= error_campo('periodo') ?></div>
+    <div class="col-12 col-md-6"><label for="motivo" class="form-label small">Motivo <span class="text-body-secondary">(obligatorio para rectificar)</span></label><input type="text" id="motivo" name="motivo" maxlength="500" class="form-control<?= campo_invalido('motivo') ?>" value="<?= esc((string) old('motivo'), 'attr') ?>"><?= error_campo('motivo') ?></div>
+    <div class="col-12 col-md-3 d-flex justify-content-end"><button type="submit" class="btn btn-primary">Generar o rectificar</button></div>
 </form>
 <?php if ($regimenes === []): ?>
     <div class="hoja p-4"><p class="mb-0">Todavía no se generó ningún período.</p></div>
@@ -35,7 +35,7 @@ $this->section('contenido');
                         <td><a href="<?= url_to('regimen.ver', (int) $r['id']) ?>"><?= esc((string) $r['periodo']) ?></a></td>
                         <td><?= (int) $r['version'] ?></td>
                         <td><?= esc(formato_fecha_hora((string) $r['fecha_generacion'])) ?></td>
-                        <td class="small"><?= esc($r['usuario'] ?? ('Temporizador (' . $r['proceso'] . ')')) ?></td>
+                        <td class="small"><?= esc($r['usuario'] ?? etiqueta_proceso($r['proceso'])) ?></td>
                         <td class="importe"><?= (int) $r['cantidad_deudores'] ?></td>
                         <td class="importe"><?= esc(formato_importe((string) $r['saldo_total'], false)) ?></td>
                         <td><?= $r['estado'] === 'Vigente' ? '<span class="badge text-bg-success">Vigente</span>' : 'Rectificado' ?></td>

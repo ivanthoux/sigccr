@@ -26,7 +26,7 @@ class Lineas extends BaseController
     /** CU-20: sin criterios se listan todas las líneas (el catálogo es chico); los filtros acotan el listado. */
     public function index(): string
     {
-        $criterios = array_map('strval', array_intersect_key((array) $this->request->getGet(), array_flip(['texto', 'estado', 'categoria'])));
+        $criterios = $this->filtrosBusqueda(['texto', 'estado', 'categoria']);
 
         return view('lineas/index', [
             'titulo' => 'Líneas de crédito',
@@ -85,10 +85,10 @@ class Lineas extends BaseController
         try {
             $r = $this->servicio->modificar(
                 $id,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 (array) $this->request->getPost(),
-                (string) $this->request->getPost('fecha_vigencia'),
-                (string) $this->request->getPost('motivo'),
+                $this->campoPost('fecha_vigencia'),
+                $this->campoPost('motivo'),
                 $this->request->getPost('confirmar_cambio') === '1',
             );
         } catch (ReglaNegocioException $e) {
@@ -128,7 +128,7 @@ class Lineas extends BaseController
     public function suspender(int $id): RedirectResponse
     {
         try {
-            $continuan = $this->servicio->suspender($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
+            $continuan = $this->servicio->suspender($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -144,7 +144,7 @@ class Lineas extends BaseController
     public function reactivar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->reactivar($id, (int) $this->request->getPost('version_fila'), (string) $this->request->getPost('motivo'));
+            $this->servicio->reactivar($id, $this->enteroPost('version_fila'), $this->campoPost('motivo'));
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

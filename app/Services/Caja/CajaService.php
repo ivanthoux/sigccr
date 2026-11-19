@@ -6,6 +6,7 @@ namespace App\Services\Caja;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Caja\ReglasCaja;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -67,9 +68,15 @@ class CajaService extends BaseService
     public function cambiarEstado(int $cajaId, string $accion, string $motivo): string
     {
         $texto = Campos::texto($motivo);
-        if (($error = Campos::motivo($texto)) !== null) {
-            throw new ValidacionException(['motivo' => $error]);
+        // H-18 (D-52): una acción fuera de la lista se rechaza; antes cualquier valor se tomaba como «rehabilitar»
+        $errores = array_filter([
+            'accion' => in_array(Campos::texto($accion), ['inhabilitar', 'rehabilitar'], true) ? null : 'Seleccione la acción.',
+            'motivo' => Campos::motivo($texto),
+        ]);
+        if ($errores !== []) {
+            throw new ValidacionException($errores);
         }
+        $accion = Campos::texto($accion);
 
         return $this->transaccion(function () use ($cajaId, $accion, $texto): string {
             $c = $this->bloquear('cajas', [$cajaId])[0] ?? null;
@@ -89,7 +96,7 @@ class CajaService extends BaseService
                 }
             }
             $this->db->table('cajas')->where('id', $cajaId)->update(['estado' => $destino]);
-            (new AuditoriaService($this->db))->registrar('cajas.cambiar_estado', 'cajas', $cajaId, 'Exitoso', $texto, ['anterior' => $c['estado'], 'nuevo' => $destino]);
+            (new AuditoriaService($this->db))->registrarCambios('cajas.cambiar_estado', 'cajas', $cajaId, Cambios::campo('estado', $c['estado'], $destino), $texto);
 
             return $destino;
         });
@@ -151,7 +158,7 @@ class CajaService extends BaseService
             throw new ValidacionException(['motivo_fin' => $error]);
         }
         $this->transaccion(function () use ($cajaId, $texto): void {
-            $a = $this->db->query('SELECT id FROM dbo.asignaciones_caja WITH (UPDLOCK) WHERE caja_id = ? AND (hasta IS NULL OR hasta >= CAST(? AS date))', [$cajaId, $this->hoyNegocio()])->getRowArray();
+            $a = $this->db->query('SELECT id, hasta FROM dbo.asignaciones_caja WITH (UPDLOCK) WHERE caja_id = ? AND (hasta IS NULL OR hasta >= CAST(? AS date))', [$cajaId, $this->hoyNegocio()])->getRowArray();
             if ($a === null) {
                 throw new ReglaNegocioException('La caja no tiene una asignación vigente.');
             }
@@ -159,7 +166,8 @@ class CajaService extends BaseService
                 throw new ReglaNegocioException('La caja tiene una jornada abierta: el Cajero debe cerrarla antes de finalizar la asignación (CU-36).');
             }
             $this->terminarAsignacion((int) $a['id']);
-            (new AuditoriaService($this->db))->registrar('cajas.finalizar_asignacion', 'cajas', $cajaId, 'Exitoso', $texto, ['asignacion' => (int) $a['id']]);
+            $hasta = $this->db->table('asignaciones_caja')->select('hasta')->where('id', (int) $a['id'])->get()->getRow()->hasta;
+            (new AuditoriaService($this->db))->registrarCambios('cajas.finalizar_asignacion', 'cajas', $cajaId, Cambios::campo('hasta', $a['hasta'] === null ? null : substr((string) $a['hasta'], 0, 10), substr((string) $hasta, 0, 10)), $texto, ['asignacion' => (int) $a['id']]);
         });
     }
 

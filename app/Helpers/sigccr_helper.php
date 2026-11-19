@@ -21,7 +21,7 @@ if (!function_exists('menu_panel')) {
     /**
      * Secciones y opciones visibles para la cuenta: con permiso y con la ruta ya construida.
      *
-     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, url: string}>}>
+     * @return list<array{titulo: string, icono: string, opciones: list<array{texto: string, icono: string, url: string}>}>
      */
     function menu_panel(): array
     {
@@ -31,7 +31,7 @@ if (!function_exists('menu_panel')) {
             foreach ($s['opciones'] as $o) {
                 $url = route_to($o['ruta']);
                 if ($url !== false && ($o['permiso'] === null || tiene_permiso($o['permiso']))) {
-                    $opciones[] = ['texto' => $o['texto'], 'url' => site_url(ltrim($url, '/'))];
+                    $opciones[] = ['texto' => $o['texto'], 'icono' => $o['icono'] ?? $s['icono'], 'url' => site_url(ltrim($url, '/'))];
                 }
             }
             if ($opciones !== []) {
@@ -40,6 +40,44 @@ if (!function_exists('menu_panel')) {
         }
 
         return $menu;
+    }
+}
+
+if (!function_exists('etiqueta_proceso')) {
+    /**
+     * Nombre legible de un proceso automático (comando programado) para mostrarlo como responsable de una operación:
+     * «Evaluación automática» en lugar de «evaluacion:ejecutar». El registro de auditoría conserva el nombre técnico.
+     */
+    function etiqueta_proceso(?string $proceso): string
+    {
+        $nombre = [
+            'evaluacion:ejecutar' => 'Evaluación automática',
+            'vencimientos:controlar' => 'Control de vencimientos',
+            'cartera:punitorios' => 'Cálculo de punitorios',
+            'regimen:generar' => 'Régimen informativo',
+            'fondos:proyectar' => 'Proyección de fondos',
+            'campanas:cerrar' => 'Cierre de campañas',
+            'pagos:conciliar' => 'Conciliación de pagos',
+            'pagos:notificaciones' => 'Notificaciones de pago',
+            'comunicaciones:enviar' => 'Envío de comunicaciones',
+            'copias:generar' => 'Copia de seguridad',
+            'copias:procesar' => 'Copia de seguridad',
+        ][(string) $proceso] ?? null;
+
+        return 'Proceso automático' . ($nombre !== null ? ': ' . $nombre : '');
+    }
+}
+
+if (!function_exists('recurso')) {
+    /**
+     * URL de un recurso propio de public/ (CSS o JS del sistema) con su fecha de modificación como versión: al publicar
+     * un cambio, el navegador descarga el archivo nuevo en lugar de seguir usando la copia de su caché.
+     */
+    function recurso(string $ruta): string
+    {
+        $archivo = FCPATH . ltrim($ruta, '/');
+
+        return base_url($ruta) . (is_file($archivo) ? '?v=' . filemtime($archivo) : '');
     }
 }
 
@@ -122,10 +160,43 @@ if (!function_exists('etiqueta_estado_cuenta')) {
 }
 
 if (!function_exists('campo_invalido')) {
-    /** Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true' se agrega a class="...". */
-    function campo_invalido(string $campo): string
+    /**
+     * Atributos para un campo con error de validación: ' is-invalid" aria-invalid="true" aria-describedby="error-…' se
+     * agrega a class="...". Si el campo tiene un texto de ayuda, se pasa su id en $ayuda y el campo no declara su propio
+     * aria-describedby: el helper lo emite siempre, con el error primero y la ayuda después (un atributo repetido se
+     * descarta y la ayuda dejaba de leerse justo cuando hay error).
+     */
+    function campo_invalido(string $campo, string $ayuda = ''): string
     {
-        return isset((session('errores') ?? [])[$campo]) ? ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') : '';
+        $ayuda = esc($ayuda, 'attr');
+        if (!isset((session('errores') ?? [])[$campo])) {
+            return $ayuda === '' ? '' : '" aria-describedby="' . $ayuda;
+        }
+
+        return ' is-invalid" aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . ($ayuda === '' ? '' : ' ' . $ayuda);
+    }
+}
+
+if (!function_exists('hay_criterios')) {
+    /**
+     * Si un listado tiene algún criterio de búsqueda aplicado (para mostrar abiertos los filtros plegables).
+     *
+     * @param array<string, mixed> $criterios
+     */
+    function hay_criterios(array $criterios): bool
+    {
+        return array_filter($criterios, static fn ($x): bool => (string) $x !== '') !== [];
+    }
+}
+
+if (!function_exists('grupo_invalido')) {
+    /**
+     * Atributos para cada opción de un grupo de radios con error (por ejemplo, el rol): la marca como inválida y le
+     * asocia el mensaje de error_campo(), para que el lector de pantalla lo lea al llegar al grupo.
+     */
+    function grupo_invalido(string $campo): string
+    {
+        return isset((session('errores') ?? [])[$campo]) ? ' aria-invalid="true" aria-describedby="error-' . esc($campo, 'attr') . '"' : '';
     }
 }
 
@@ -230,5 +301,115 @@ if (!function_exists('valor_reporte')) {
             'fechahora' => formato_fecha_hora((string) $valor),
             default => (string) $valor,
         };
+    }
+}
+
+if (!function_exists('texto_css')) {
+    /** Cadena CSS entre comillas, sin saltos de línea ni forma de cerrar el bloque <style> (D-57). */
+    function texto_css(string $texto): string
+    {
+        return '"' . strtr(trim((string) preg_replace('/\s+/u', ' ', $texto)), ['\\' => '\\\\', '"' => '\"', '<' => '\3C ', '>' => '\3E ']) . '"';
+    }
+}
+
+if (!function_exists('datos_impresion')) {
+    /**
+     * Datos comunes de la impresión formal de un documento (D-57): entidad, título, momento de emisión y usuario.
+     *
+     * @return array{entidad: string, cuit: string, domicilio: string, titulo: string, emitido: string, usuario: string}
+     */
+    function datos_impresion(string $titulo): array
+    {
+        static $emitido = null;
+        $emitido ??= \CodeIgniter\I18n\Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y H:i');
+        $c = config('Sigccr');
+        $cuenta = session('cuenta') ?? [];
+
+        return [
+            'entidad' => $c->entidadRazonSocial, 'cuit' => $c->entidadCuit !== '' ? formato_cuit($c->entidadCuit) : '', 'domicilio' => $c->entidadDomicilio,
+            'titulo' => $titulo, 'emitido' => $emitido, 'usuario' => (string) ($cuenta['nombre'] ?? $cuenta['correo'] ?? ''),
+        ];
+    }
+}
+
+if (!function_exists('estilo_impresion')) {
+    /**
+     * Márgenes de la hoja impresa con la cabecera y el pie de cada página (D-57): la entidad y el título arriba; la
+     * fecha y hora de emisión, el usuario y «Página N de M» abajo. Los navegadores basados en Chromium (Chrome y Edge
+     * desde la versión 131) dibujan estas cajas de margen; los demás imprimen el documento sin ellas.
+     */
+    function estilo_impresion(string $titulo): string
+    {
+        $d = datos_impresion($titulo);
+        $pie = 'Emitido el ' . $d['emitido'] . ($d['usuario'] !== '' ? ' por ' . $d['usuario'] : '') . ' · SIG-CCR';
+        $caja = 'font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #3d4a48;';
+
+        return '<style media="print">@page { margin: 20mm 14mm 18mm 14mm;'
+            . ' @top-left { content: ' . texto_css($d['entidad']) . "; {$caja} vertical-align: bottom; padding-bottom: 3mm; }"
+            . ' @top-right { content: ' . texto_css($d['titulo']) . "; {$caja} vertical-align: bottom; padding-bottom: 3mm; text-align: right; }"
+            . ' @bottom-left { content: ' . texto_css($pie) . "; {$caja} vertical-align: top; padding-top: 3mm; }"
+            . " @bottom-right { content: \"Página \" counter(page) \" de \" counter(pages); {$caja} vertical-align: top; padding-top: 3mm; text-align: right; }"
+            . ' }</style>';
+    }
+}
+
+if (!function_exists('cabecera_impresion')) {
+    /**
+     * Cabecera formal de la primera hoja de un informe impreso (D-57): entidad, título del informe, fecha y hora de
+     * emisión y usuario. Solo se ve al imprimir; los documentos con su propio encabezado (contrato, comprobantes y
+     * constancias) llevan solo la cabecera y el pie de cada página.
+     */
+    function cabecera_impresion(string $titulo): string
+    {
+        $d = datos_impresion($titulo);
+        $identidad = implode(' · ', array_filter([$d['cuit'] !== '' ? 'CUIT ' . $d['cuit'] : '', $d['domicilio']]));
+
+        return '<div class="cabecera-impresion d-none d-print-block">'
+            . '<div class="d-flex justify-content-between align-items-end gap-3">'
+            . '<div><div class="entidad">' . esc($d['entidad']) . '</div>' . ($identidad !== '' ? '<div>' . esc($identidad) . '</div>' : '') . '</div>'
+            . '<div class="text-end">SIG-CCR<br>Sistema Integral de Gestión de Créditos, Cobranzas y Refinanciación</div></div>'
+            . '<div class="titulo-documento">' . esc($d['titulo']) . '</div>'
+            . '<div>Emitido el ' . esc(str_replace(' ', ' a las ', $d['emitido'])) . ($d['usuario'] !== '' ? ' por ' . esc($d['usuario']) : '') . '</div>'
+            . '</div>';
+    }
+}
+
+if (!function_exists('acciones_filtro')) {
+    /**
+     * Botones de los filtros de búsqueda (D-47): el mismo tamaño, orden y texto en todos los listados. Se ubican a la
+     * derecha, en la misma línea que los campos si hay lugar y debajo si no, alineados con el borde inferior de los
+     * campos. $antes agrega botones propios de la pantalla (por ejemplo, Imprimir) antes de «Limpiar».
+     */
+    function acciones_filtro(?string $limpiar = null, string $texto = 'Buscar', string $icono = 'bi-search', string $antes = ''): string
+    {
+        $limpiarHtml = $limpiar === null ? '' : '<a href="' . esc($limpiar, 'attr') . '" class="btn btn-outline-secondary">Limpiar</a>';
+
+        return '<div class="col-12 col-md-auto ms-auto d-flex flex-wrap gap-2 justify-content-end">' . $antes . $limpiarHtml
+            . '<button type="submit" class="btn btn-primary text-nowrap"><i class="bi ' . esc($icono, 'attr') . ' me-1" aria-hidden="true"></i>'
+            . esc($texto) . '</button></div>';
+    }
+}
+
+if (!function_exists('fecha_campo')) {
+    /**
+     * Valor para un campo de fecha del navegador (<input type="date">), que solo acepta aaaa-mm-dd: convierte una
+     * fecha dd/mm/aaaa o aaaa-mm-dd; si no es una fecha válida devuelve vacío. Así todas las fechas se ingresan igual.
+     */
+    function fecha_campo(?string $valor): string
+    {
+        return \App\Libraries\Validacion\Campos::fecha($valor ?? '') ?? '';
+    }
+}
+
+if (!function_exists('periodo_campo')) {
+    /** Valor para un campo de mes del navegador (<input type="month">, aaaa-mm) a partir de mm/aaaa, mmaaaa o aaaamm. */
+    function periodo_campo(?string $valor): string
+    {
+        $d = preg_replace('/\D/', '', (string) $valor) ?? '';
+        if (preg_match('/^(0[1-9]|1[0-2])(\d{4})$/', $d, $m) === 1) {
+            return $m[2] . '-' . $m[1];
+        }
+
+        return preg_match('/^(\d{4})(0[1-9]|1[0-2])$/', $d, $m) === 1 ? $m[1] . '-' . $m[2] : '';
     }
 }

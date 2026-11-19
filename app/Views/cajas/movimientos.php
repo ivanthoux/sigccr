@@ -33,14 +33,14 @@ $this->section('contenido');
                 </select>
             </div>
         <?php endif ?>
-        <div class="col-md-2"><label for="fecha" class="form-label small">Fecha</label><input type="text" class="form-control" id="fecha" name="fecha" placeholder="dd/mm/aaaa" value="<?= esc($f['fecha_texto'], 'attr') ?>"></div>
+        <div class="col-6 col-md-3 col-xl-2"><label for="fecha" class="form-label small">Fecha</label><input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc(fecha_campo($f['fecha_texto']), 'attr') ?>"></div>
         <div class="col-md-2">
             <label for="estado" class="form-label small">Estado</label>
             <select class="form-select" id="estado" name="estado"><option value="">Todos</option>
                 <?php foreach (['Abierta' => 'Abierta', 'Cerrada' => 'Cerrada'] as $k => $n): ?><option value="<?= $k ?>"<?= $f['estado'] === $k ? ' selected' : '' ?>><?= $n ?></option><?php endforeach ?>
             </select>
         </div>
-        <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+        <?= acciones_filtro(limpiar: current_url()) ?>
     </div>
 </form>
 <?php if ($jornadas === []): ?>

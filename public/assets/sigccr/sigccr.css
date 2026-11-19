@@ -23,6 +23,29 @@
     --verde-oscuro: #17603f;
     --rojo: #b42318;
     --ambar: #b54708;
+    /* Derivados de la paleta: fondos suaves y textos oscuros de los avisos, bordes y acentos sobre la tinta */
+    --verde-suave: #e7f3ee;
+    --verde-texto: #134e37;
+    --verde-acento: #5fc49b;
+    --rojo-suave: #fbecea;
+    --rojo-texto: #7a1810;
+    --rojo-oscuro: #912018;
+    --ambar-suave: #fdf1e5;
+    --ambar-texto: #7a3005;
+    --tinta-suave: #e8eef5;
+    --tinta-tenue: #8fa6bd;
+    --tinta-clara: #e8eef4;
+    --borde-control: #7f8d9c;
+    --borde-encabezado: #c5ced8;
+    --superficie-hover: #e9edf1;
+    --blanco: #fff;
+    /* Papeles del tema: superficie de las hojas, títulos, acento y versiones de los estados para usar como texto.
+       En el tema oscuro (D-50) se redefinen abajo; el resto de la hoja de estilos solo usa estas variables. */
+    --superficie: var(--blanco);
+    --titulo: var(--tinta);
+    --acento: var(--tinta-2);
+    --verde-enlace: var(--verde);
+    --rojo-enlace: var(--rojo);
 
     --bs-body-font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --bs-body-font-size: .9375rem;
@@ -35,12 +58,28 @@
     --bs-primary-rgb: 31, 122, 87;
     --bs-border-radius: .375rem;
     --bs-focus-ring-color: rgba(31, 122, 87, .35);
+    /* Estados con los colores de la identidad (etiquetas, textos y bordes de error), no los de Bootstrap */
+    --bs-success: var(--verde);
+    --bs-success-rgb: 31, 122, 87;
+    --bs-danger: var(--rojo);
+    --bs-danger-rgb: 180, 35, 24;
+    --bs-warning: var(--ambar);
+    --bs-warning-rgb: 181, 71, 8;
+    --bs-warning-text-emphasis: var(--ambar-texto);
+    --bs-info: var(--tinta-2);
+    --bs-info-rgb: 35, 71, 107;
+    --bs-secondary-rgb: 83, 98, 113;
+    --bs-form-invalid-color: var(--rojo-enlace);
+    --bs-form-invalid-border-color: var(--rojo-enlace);
 }
 
 body { -webkit-font-smoothing: antialiased; }
-h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--tinta); font-weight: 600; letter-spacing: -.01em; }
-h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
-:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+h1, .h1, h2, .h2, h3, .h3, h4, .h4 { color: var(--titulo); font-weight: 600; letter-spacing: -.01em; }
+h5, .h5, h6, .h6 { color: var(--titulo); font-weight: 600; }
+:focus-visible { outline: 2px solid var(--verde-enlace); outline-offset: 2px; }
+/* Sobre la tinta el verde no llega a 3:1 (WCAG 1.4.11): el foco es claro en la barra lateral, la barra superior
+   y la marca del acceso. */
+.lateral :focus-visible, .barra-movil :focus-visible, .acceso-marca :focus-visible, .portal-barra :focus-visible { outline-color: var(--blanco); }
 
 /* Botones: el verde es la acción principal; el resto, contorno sobrio */
 .btn { font-weight: 500; }
@@ -51,19 +90,30 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     --bs-btn-disabled-bg: var(--verde); --bs-btn-disabled-border-color: var(--verde);
     --bs-btn-focus-shadow-rgb: 31, 122, 87;
 }
-.btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: #b9c3ce; --bs-btn-hover-bg: #e9edf1; --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: #b9c3ce; }
-.form-control:focus, .form-select:focus { border-color: var(--verde); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
+.btn-outline-primary, .btn-outline-success {
+    --bs-btn-color: var(--verde-enlace); --bs-btn-border-color: var(--verde-enlace);
+    --bs-btn-hover-color: var(--blanco); --bs-btn-hover-bg: var(--verde); --bs-btn-hover-border-color: var(--verde);
+    --bs-btn-active-color: var(--blanco); --bs-btn-active-bg: var(--verde-oscuro); --bs-btn-active-border-color: var(--verde-oscuro);
+    --bs-btn-disabled-color: var(--verde-enlace); --bs-btn-disabled-border-color: var(--verde-enlace);
+    --bs-btn-focus-shadow-rgb: 31, 122, 87;
+}
+/* Códigos (de línea, de documento, de evento): en tinta y no en el rosa de Bootstrap, que no llega a 4,5:1 sobre el papel */
+code { color: var(--acento); }
+.btn-outline-secondary { --bs-btn-color: var(--texto); --bs-btn-border-color: var(--borde-control); --bs-btn-hover-bg: var(--superficie-hover); --bs-btn-hover-color: var(--texto); --bs-btn-hover-border-color: var(--borde-control); }
+.form-control:focus, .form-select:focus { border-color: var(--verde-enlace); box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .2); }
 .form-label { font-weight: 500; }
 .alert { border-width: 0 0 0 4px; border-radius: .25rem; }
-.alert-success { --bs-alert-bg: #e7f3ee; --bs-alert-color: #134e37; --bs-alert-border-color: var(--verde); }
-.alert-danger { --bs-alert-bg: #fbecea; --bs-alert-color: #7a1810; --bs-alert-border-color: var(--rojo); }
-.alert-warning { --bs-alert-bg: #fdf1e5; --bs-alert-color: #7a3005; --bs-alert-border-color: var(--ambar); }
-.alert-info { --bs-alert-bg: #e8eef5; --bs-alert-color: var(--tinta); --bs-alert-border-color: var(--tinta-2); }
+.alert-success { --bs-alert-bg: var(--verde-suave); --bs-alert-color: var(--verde-texto); --bs-alert-border-color: var(--verde); }
+.alert-danger { --bs-alert-bg: var(--rojo-suave); --bs-alert-color: var(--rojo-texto); --bs-alert-border-color: var(--rojo); }
+.alert-warning { --bs-alert-bg: var(--ambar-suave); --bs-alert-color: var(--ambar-texto); --bs-alert-border-color: var(--ambar); }
+.alert-info { --bs-alert-bg: var(--tinta-suave); --bs-alert-color: var(--titulo); --bs-alert-border-color: var(--tinta-2); }
 
 /* Importes y tablas con cifras tabulares (RNF-02) */
 .importe, td.importe, th.importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.table { --bs-table-bg: #fff; font-variant-numeric: tabular-nums; }
-.table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: #c5ced8; }
+/* Celdas alineadas a la derecha (porcentajes, cantidades, acciones): un valor como «60,00 %» no se parte en dos renglones */
+.table td.text-end, .table th.text-end { white-space: nowrap; }
+.table { --bs-table-bg: var(--superficie); font-variant-numeric: tabular-nums; }
+.table > thead th { color: var(--texto-2); font-weight: 500; font-size: .8125rem; border-bottom-color: var(--borde-encabezado); }
 
 /* ── Panel: barra lateral de tinta a toda altura ─────────────────────────── */
 .panel { min-height: 100vh; }
@@ -81,25 +131,25 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .marca {
     display: block;
     padding: 1.5rem 1.5rem 1.25rem;
-    color: #fff;
+    color: var(--blanco);
     text-decoration: none;
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
-.marca:hover { color: #fff; }
+.marca:hover { color: var(--blanco); }
 .marca strong { display: block; font-size: 1.625rem; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
 .marca span { display: block; margin-top: .4rem; font-size: .75rem; line-height: 1.35; color: var(--tinta-texto); }
 
 .menu-lateral { padding: .75rem 0; flex: 1; }
-.menu-seccion { padding: 1.1rem 1.5rem .3rem; font-size: .8125rem; font-weight: 500; color: #8fa6bd; }
+.menu-seccion { padding: 1.1rem 1.5rem .3rem; font-size: .8125rem; font-weight: 500; color: var(--tinta-tenue); }
 .menu-opcion {
     display: block;
     padding: .45rem 1.5rem;
-    color: #e8eef4;
+    color: var(--tinta-clara);
     text-decoration: none;
     border-left: 3px solid transparent;
 }
-.menu-opcion:hover { background: var(--tinta-2); color: #fff; }
-.menu-opcion.activa { background: var(--tinta-2); border-left-color: #5fc49b; color: #fff; font-weight: 500; }
+.menu-opcion:hover { background: var(--tinta-2); color: var(--blanco); }
+.menu-opcion.activa { background: var(--tinta-2); border-left-color: var(--verde-acento); color: var(--blanco); font-weight: 500; }
 .menu-opcion .bi { width: 1.25rem; display: inline-block; }
 
 .cuenta {
@@ -107,12 +157,12 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     border-top: 1px solid rgba(255, 255, 255, .08);
     font-size: .8125rem;
 }
-.cuenta .nombre { color: #fff; font-weight: 500; font-size: .875rem; }
+.cuenta .nombre { color: var(--blanco); font-weight: 500; font-size: .875rem; }
 .cuenta a { color: var(--tinta-texto); }
-.cuenta a:hover { color: #fff; }
+.cuenta a:hover { color: var(--blanco); }
 
-.barra-movil { background: var(--tinta); color: #fff; }
-.barra-movil .btn-link { color: #fff; }
+.barra-movil { background: var(--tinta); color: var(--blanco); }
+.barra-movil .btn-link { color: var(--blanco); }
 
 .contenido { flex: 1; min-width: 0; padding: 2rem 2.5rem 3rem; max-width: 84rem; }
 @media (max-width: 991.98px) { .contenido { padding: 1.25rem 1rem 2.5rem; } }
@@ -121,11 +171,14 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .encabezado h1 { font-size: 1.625rem; margin: 0; }
 .encabezado p { margin: .25rem 0 0; color: var(--texto-2); }
 
-.hoja { background: #fff; border: 1px solid var(--linea); border-radius: .5rem; }
+.hoja { background: var(--superficie); border: 1px solid var(--linea); border-radius: .5rem; }
+/* Los textos ocultos para lectores de pantalla (position: absolute) dentro de una tabla desplazable deben quedar
+   recortados por su marco: si no, ensanchan la página en el celular aunque la tabla se desplace. */
+.table-responsive { position: relative; }
 
 /* Pantalla principal: índice de funciones por área */
 .indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1px; background: var(--linea); overflow: hidden; }
-.indice section { padding: 1.25rem 1.5rem; background: #fff; }
+.indice section { padding: 1.25rem 1.5rem; background: var(--superficie); }
 .indice h2 { font-size: 1rem; margin-bottom: .6rem; }
 .indice ul { list-style: none; padding: 0; margin: 0; }
 .indice li + li { margin-top: .3rem; }
@@ -133,7 +186,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 .indice a:hover { text-decoration: underline; }
 
 /* ── Acceso: tinta a la izquierda, formulario a la derecha ───────────────── */
-.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: #fff; }
+.acceso { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); background: var(--superficie); }
 @media (min-width: 992px) { .acceso { grid-template-columns: minmax(22rem, 5fr) 7fr; } }
 .acceso-marca {
     background: var(--tinta);
@@ -143,9 +196,9 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     flex-direction: column;
     justify-content: space-between;
 }
-.acceso-marca strong { display: block; color: #fff; font-size: clamp(3rem, 6vw, 5.25rem); font-weight: 600; letter-spacing: -.035em; line-height: .95; }
+.acceso-marca strong { display: block; color: var(--blanco); font-size: clamp(3rem, 6vw, 5.25rem); font-weight: 600; letter-spacing: -.035em; line-height: .95; }
 .acceso-marca p { max-width: 26rem; margin: 1.25rem 0 0; font-size: 1.0625rem; line-height: 1.5; }
-.acceso-marca small { color: #8fa6bd; }
+.acceso-marca small { color: var(--tinta-tenue); }
 @media (max-width: 991.98px) {
     .acceso-marca { padding: 2rem 1.5rem 1.75rem; }
     .acceso-marca strong { font-size: 2.5rem; }
@@ -159,7 +212,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 
 /* ── Portada pública ─────────────────────────────────────────────────────── */
 .acceso-inicio { text-decoration: none; }
-.acceso-inicio:focus-visible { outline: 2px solid #fff; outline-offset: 4px; border-radius: 2px; }
+.acceso-inicio:focus-visible { outline: 2px solid var(--blanco); outline-offset: 4px; border-radius: 2px; }
 .portada-activar { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--linea); }
 .portada-activar h2 { font-size: 1rem; font-weight: 600; margin-bottom: .35rem; }
 .portada-activar p { color: var(--texto-2); font-size: .9375rem; margin-bottom: .9rem; }
@@ -170,50 +223,71 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 }
 
 /* Campos blancos sobre las hojas; paginación con el verde de la acción principal */
-.form-control, .form-select { background-color: #fff; }
-.pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde); --bs-pagination-hover-color: var(--verde-oscuro); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
-.btn-check:checked + .btn-outline-secondary { background-color: #e7f3ee; border-color: var(--verde); color: var(--texto); font-weight: 600; }
-.btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: #912018; --bs-btn-hover-border-color: #912018; --bs-btn-active-bg: #912018; }
-.btn-outline-danger { --bs-btn-color: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
+.form-control, .form-select { background-color: var(--superficie); }
+/* Borde de los campos con contraste ≥ 3:1 sobre la hoja y el papel, en los dos temas (WCAG 1.4.11); el foco y los
+   estados de validación conservan su color. */
+:is(.form-control, .form-select):not(:focus, .is-invalid, .is-valid) { border-color: var(--borde-control); }
+/* Listas de datos: la misma separación entre filas aunque la etiqueta ocupe dos líneas, y el mismo peso en todas las
+   pantallas (Bootstrap pone las etiquetas en negrita; algunas vistas las tenían en seminegrita). */
+dl.row > dt { font-weight: 500; margin-bottom: .5rem; }
+/* Etiquetas de estado dentro de texto chico: no menos de 11 px. */
+.badge { font-size: max(.75em, .6875rem); }
+/* Renglones repetidos de un mismo formulario (medios de pago): la etiqueta se ve solo en el primero en pantallas
+   anchas, donde los renglones quedan en columnas; en el celular cada campo conserva la suya. Siempre se anuncia. */
+@media (min-width: 768px) {
+    .etiqueta-repetida { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
+}
+.pagination { --bs-pagination-active-bg: var(--verde); --bs-pagination-active-border-color: var(--verde); --bs-pagination-color: var(--verde-enlace); --bs-pagination-hover-color: var(--verde-enlace); --bs-pagination-focus-box-shadow: 0 0 0 .2rem rgba(31, 122, 87, .25); }
+.btn-check:checked + .btn-outline-secondary { background-color: var(--verde-suave); border-color: var(--verde); color: var(--texto); font-weight: 600; }
+.btn-check[aria-invalid="true"] + .btn-outline-secondary { border-color: var(--rojo); }
+.btn-danger { --bs-btn-bg: var(--rojo); --bs-btn-border-color: var(--rojo); --bs-btn-hover-bg: var(--rojo-oscuro); --bs-btn-hover-border-color: var(--rojo-oscuro); --bs-btn-active-bg: var(--rojo-oscuro); }
+.btn-outline-danger { --bs-btn-color: var(--rojo-enlace); --bs-btn-border-color: var(--rojo-enlace); --bs-btn-hover-bg: var(--rojo); --bs-btn-hover-border-color: var(--rojo); }
 
 /* Portal de autogestión del cliente: la misma identidad, con una barra superior en lugar del menú lateral. */
 .portal-ancho { max-width: 960px; margin: 0 auto; padding-left: 1rem; padding-right: 1rem; }
 .portal-barra { background: var(--tinta); color: var(--tinta-texto); padding: .75rem 0; }
-.portal-marca { color: #fff; text-decoration: none; display: flex; align-items: baseline; gap: .6rem; }
-.portal-marca:hover { color: #fff; }
+.portal-marca { color: var(--blanco); text-decoration: none; display: flex; align-items: baseline; gap: .6rem; }
+.portal-marca:hover { color: var(--blanco); }
 .portal-marca strong { font-size: 1.15rem; letter-spacing: .02em; }
 .portal-marca span { color: var(--tinta-texto); font-size: .875rem; }
 .portal-cuenta { font-size: .875rem; }
-.portal-salir { color: #fff; font-size: .875rem; text-decoration: none; white-space: nowrap; }
-.portal-salir:hover { color: #fff; text-decoration: underline; }
+.portal-salir { color: var(--blanco); font-size: .875rem; text-decoration: none; white-space: nowrap; }
+.portal-salir:hover { color: var(--blanco); text-decoration: underline; }
 .portal-contenido { padding-top: 2rem; padding-bottom: 3rem; }
 .funciones-portal { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); list-style: none; padding: 0; margin: 0; }
-.funciones-portal li { background: #fff; border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
-.funciones-portal .bi { color: var(--tinta-2); font-size: 1.25rem; }
+.funciones-portal li { background: var(--superficie); border: 1px solid var(--linea); border-radius: var(--bs-border-radius); padding: 1rem 1.1rem; }
+.funciones-portal .bi { color: var(--acento); font-size: 1.25rem; }
 .funciones-portal h3 { font-size: 1rem; margin: .5rem 0 .25rem; }
 .funciones-portal p { color: var(--texto-2); font-size: .875rem; margin: 0; }
 
 /* ── Simulación y solicitudes (D01) ──────────────────────────────────────── */
 .resumen-plan { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
 .resumen-plan > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
-.resumen-plan dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); text-transform: none; }
+.resumen-plan dt { font-size: .8125rem; font-weight: 500; color: var(--texto-2); text-transform: none; }
 .resumen-plan dd { margin: 0; font-size: 1.0625rem; font-weight: 600; }
 .verificacion-documento { border: 1px solid var(--linea); border-radius: .375rem; padding: .85rem 1rem; margin-bottom: .75rem; }
 .verificacion-documento.con-error { border-color: var(--rojo); }
 .verificacion-documento legend { float: none; width: auto; }
 .opcion-resultado { white-space: normal; height: 100%; }
 .historial-estados li { position: relative; padding: 0 0 .9rem 1.1rem; border-left: 2px solid var(--linea); margin-left: .35rem; }
-.historial-estados li::before { content: ""; position: absolute; left: -.4rem; top: .3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--tinta); }
+.historial-estados li::before { content: ""; position: absolute; left: -.4rem; top: .3rem; width: .7rem; height: .7rem; border-radius: 50%; background: var(--acento); }
 .historial-estados li:last-child { border-left-color: transparent; }
 .list-group { --bs-list-group-active-bg: var(--tinta); --bs-list-group-active-border-color: var(--tinta); }
 .resumen-plan .importe { text-align: left; }
 
+/* Tablero gerencial: indicadores clave sobre los bloques de detalle, con la cifra como protagonista */
+.indicadores-clave { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem 1.5rem; }
+@media (min-width: 1200px) { .indicadores-clave { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.indicadores-clave > div { border-left: 3px solid var(--linea); padding-left: .75rem; }
+.indicadores-clave dt { font-size: .8125rem; font-weight: 500; color: var(--texto-2); }
+.indicadores-clave dd { margin: 0; font-size: 1.25rem; font-weight: 600; color: var(--titulo); font-variant-numeric: tabular-nums; line-height: 1.2; }
+
 /* ── Evaluación crediticia (D02) ─────────────────────────────────────────── */
 .dimensiones-evaluacion { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .75rem 1.25rem; margin: 0 0 1rem; }
 .dimensiones-evaluacion > div { border-left: 3px solid var(--linea); padding-left: .65rem; }
-.dimensiones-evaluacion dt { font-size: .75rem; font-weight: 500; color: var(--texto-2); }
+.dimensiones-evaluacion dt { font-size: .8125rem; font-weight: 500; color: var(--texto-2); }
 .dimensiones-evaluacion dd { margin: 0; font-weight: 600; }
-.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: #fff; background: var(--texto-2); }
+.categoria-riesgo { display: inline-flex; align-items: center; justify-content: center; width: 2.75rem; height: 2.75rem; border-radius: .375rem; font-size: 1.5rem; font-weight: 700; color: var(--blanco); background: var(--texto-2); }
 .categoria-a, .categoria-b { background: var(--verde); }
 .categoria-c { background: var(--ambar); }
 .categoria-d, .categoria-e { background: var(--rojo); }
@@ -228,7 +302,7 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
 /* Impresión de comprobantes, constancias y contratos: solo el contenido, a todo el ancho de la hoja y sin barras de
    desplazamiento en las tablas (todas las columnas visibles). */
 @media print {
-    @page { margin: 12mm; }
+    /* Los márgenes y las cajas de cabecera y pie de cada hoja los define estilo_impresion() en la plantilla (D-57) */
     .lateral, .barra-movil, .alert-dismissible .btn-close { display: none !important; }
     .contenido { padding: 0 !important; max-width: none !important; }
     .hoja { box-shadow: none !important; border: 0 !important; padding: 0 !important; margin-bottom: 1rem !important; }
@@ -236,5 +310,84 @@ h5, .h5, h6, .h6 { color: var(--tinta); font-weight: 600; }
     .table { font-size: 8.5pt; width: 100% !important; }
     .table th, .table td { padding: 0.15rem 0.25rem !important; }
     .table th { white-space: normal; }
+    /* D-57: informes formales. Cabecera de la primera hoja, encabezados de tabla repetidos en cada hoja y sin cortar
+       filas, tarjetas de indicadores ni títulos al pie de una hoja. */
+    .cabecera-impresion { margin-bottom: 6mm; padding-bottom: 3mm; border-bottom: 1.5pt solid #1d3b37; font-size: 9pt; color: #1f2a28; }
+    .cabecera-impresion .entidad { font-weight: 700; font-size: 11pt; }
+    .cabecera-impresion .titulo-documento { margin: 4mm 0 1mm; font-size: 15pt; font-weight: 700; color: #102a26; }
+    body:has(.documento-propio) .cabecera-impresion { display: none !important; }
+    thead { display: table-header-group; }
+    tr, .border.rounded { break-inside: avoid; }
+    h1, h2, h3, .h5, .h6 { break-after: avoid; }
 }
 
+
+/* Etiquetas de estado con texto blanco sobre los tonos de la identidad (contraste ≥ 4,5:1): Bootstrap pone texto
+   negro en las de advertencia e información, que sobre el ámbar y la tinta no se leería. */
+.text-bg-warning { color: var(--blanco) !important; background-color: var(--ambar) !important; }
+.text-bg-info { color: var(--blanco) !important; background-color: var(--tinta-2) !important; }
+/* Las de éxito, error y principal se fijan a los tonos de la identidad: en el tema oscuro las variables -rgb de
+   Bootstrap pasan a tonos claros para los textos, y con texto blanco encima no se leerían. */
+.text-bg-success, .text-bg-primary { color: var(--blanco) !important; background-color: var(--verde) !important; }
+.text-bg-danger { color: var(--blanco) !important; background-color: var(--rojo) !important; }
+
+/* Trabajo pendiente en la pantalla principal del panel (CU-01 paso 6) */
+.pendientes li + li { border-top: 1px solid var(--linea); }
+.pendientes a { display: flex; align-items: center; gap: .75rem; padding: .6rem 0; color: var(--texto); text-decoration: none; }
+.pendientes a:hover span:not(.cantidad) { text-decoration: underline; }
+.pendientes .cantidad { min-width: 2.25rem; padding: .1rem .5rem; border-radius: var(--bs-border-radius); background: var(--tinta-suave); color: var(--titulo); font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+.pendientes i.cantidad { background: var(--ambar-suave); color: var(--ambar-texto); font-size: 1.05rem; }
+.pendientes .bi-chevron-right { color: var(--texto-2); }
+
+/* Selector del tema en la barra lateral y en la barra del portal (D-50) */
+.cambiar-tema { padding: 0; border: 0; background: none; color: var(--tinta-texto); font-size: inherit; text-decoration: underline; }
+.cambiar-tema:hover { color: var(--blanco); }
+
+/* ── Tema oscuro (D-50) ──────────────────────────────────────────────────────
+   Sigue la preferencia del sistema operativo hasta que la persona elige un tema con el selector. Los mismos papeles
+   que el tema claro, con superficies de tinta muy oscura; textos, enlaces y estados en tonos claros para mantener el
+   contraste ≥ 4,5:1 (WCAG 1.4.3) y bordes de campo ≥ 3:1 (1.4.11). Al imprimir se vuelve siempre al tema claro. */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --papel: #0f1720;
+    --superficie: #17212c;
+    --superficie-hover: #22303e;
+    --linea: #2c3b4b;
+    --borde-control: #5b6e82;
+    --borde-encabezado: #3a4b5d;
+    --texto: #e3e9ef;
+    --texto-2: #a3b1bf;
+    --titulo: #eef3f8;
+    --acento: #9cc1e6;
+    --verde-enlace: #5fc49b;
+    --rojo-enlace: #f97066;
+    --verde-suave: #12352a;
+    --verde-texto: #a6e3c8;
+    --rojo-suave: #3d1714;
+    --rojo-texto: #fbb4ad;
+    --ambar-suave: #3b2410;
+    --ambar-texto: #fbcf9b;
+    --tinta-suave: #1d3248;
+
+    --bs-body-color: var(--texto);
+    --bs-body-bg: var(--papel);
+    --bs-emphasis-color: var(--titulo);
+    --bs-secondary-bg: var(--superficie-hover);
+    --bs-tertiary-bg: var(--superficie-hover);
+    --bs-border-color: var(--linea);
+    --bs-secondary-color: var(--texto-2);
+    --bs-link-color-rgb: 95, 196, 155;
+    --bs-link-hover-color-rgb: 140, 214, 184;
+    --bs-primary-rgb: 95, 196, 155;
+    --bs-success-rgb: 95, 196, 155;
+    --bs-danger-rgb: 249, 112, 102;
+    --bs-warning-rgb: 253, 176, 34;
+    --bs-info-rgb: 156, 193, 230;
+    --bs-secondary-rgb: 163, 177, 191;
+    --bs-warning-text-emphasis: var(--ambar-texto);
+}
+[data-bs-theme="dark"] .text-bg-secondary { color: var(--papel) !important; }
+[data-bs-theme="dark"] .text-bg-light { color: var(--texto) !important; background-color: var(--superficie-hover) !important; }
+[data-bs-theme="dark"] .btn-outline-secondary { --bs-btn-hover-bg: var(--superficie-hover); }
+.portal-barra .cambiar-tema { color: var(--blanco); text-decoration: none; }
+.portal-barra .cambiar-tema:hover { text-decoration: underline; }

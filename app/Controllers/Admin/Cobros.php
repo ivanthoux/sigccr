@@ -9,7 +9,6 @@ use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Validacion\Campos;
 use App\Services\Caja\CajaService;
 use App\Services\Caja\CobroService;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -28,17 +27,9 @@ class Cobros extends BaseController
     {
         $usuario = (int) session('cuenta')['id'];
         $jornada = (new CajaService())->jornadaOperable($usuario);
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Cobro en ventanilla',
-                'texto' => $texto,
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-                'destino' => 'cobros.registrar',
-                'jornada' => $jornada,
-            ]);
+            return $this->busquedaCliente('cobros.registrar', 'Cobro en ventanilla', false, ['jornada' => $jornada]);
         }
         try {
             $cliente = (new SimulacionService())->cliente($clienteId);
@@ -53,19 +44,21 @@ class Cobros extends BaseController
     public function registrar(): RedirectResponse
     {
         $medios = [];
-        foreach ((array) $this->request->getPost('medios') as $m) {
-            $m = (array) $m;
-            if (trim((string) ($m['importe'] ?? '')) === '' && trim((string) ($m['numero_operacion'] ?? '')) === '') {
+        // H-15: cada fila y cada valor con su forma; una lista o un texto en lugar de una fila se toman como vacíos
+        $filas = $this->request->getPost('medios');
+        foreach (is_array($filas) ? $filas : [] as $m) {
+            $m = is_array($m) ? $m : [];
+            if (Campos::texto($m['importe'] ?? '') === '' && Campos::texto($m['numero_operacion'] ?? '') === '') {
                 continue;
             }
-            $medios[] = ['medio' => (string) ($m['medio'] ?? ''), 'importe' => (string) (Campos::importe($m['importe'] ?? '') ?? '0'), 'numero_operacion' => (string) ($m['numero_operacion'] ?? '')];
+            $medios[] = ['medio' => Campos::texto($m['medio'] ?? ''), 'importe' => (string) (Campos::importe($m['importe'] ?? '') ?? '0'), 'numero_operacion' => Campos::texto($m['numero_operacion'] ?? '')];
         }
         try {
             $r = $this->servicio->registrar(
                 (int) session('cuenta')['id'],
-                (int) $this->request->getPost('cliente_id'),
+                $this->enteroPost('cliente_id'),
                 (array) $this->request->getPost('cuotas'),
-                (string) $this->request->getPost('importe'),
+                $this->campoPost('importe'),
                 $medios,
             );
         } catch (ReglaNegocioException $e) {
@@ -82,15 +75,15 @@ class Cobros extends BaseController
     {
         $anular = url_is('admin/cobros/anulaciones*');
         $f = [
-            'numero' => preg_replace('/\D/', '', (string) $this->request->getGet('numero')),
-            'texto' => trim((string) $this->request->getGet('texto')),
-            'fecha' => Campos::fecha((string) $this->request->getGet('fecha')),
+            'numero' => preg_replace('/\D/', '', $this->campoGet('numero')),
+            'texto' => trim($this->campoGet('texto')),
+            'fecha' => Campos::fecha($this->campoGet('fecha')),
         ];
         $buscado = $f['numero'] !== '' || $f['texto'] !== '' || $f['fecha'] !== null;
 
         return view('cobros/comprobantes', [
             'titulo' => $anular ? 'Anular cobro' : 'Comprobantes de pago', 'anular' => $anular,
-            'f' => $f + ['fecha_texto' => (string) $this->request->getGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null,
+            'f' => $f + ['fecha_texto' => $this->campoGet('fecha')], 'cobros' => $buscado ? $this->servicio->buscar($f) : null,
         ]);
     }
 
@@ -131,7 +124,7 @@ class Cobros extends BaseController
     public function anular(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->anular($id, (string) $this->request->getPost('motivo'), $this->request->getPost('continuar') === '1', (int) session('cuenta')['id']);
+            $r = $this->servicio->anular($id, $this->campoPost('motivo'), $this->request->getPost('continuar') === '1', (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

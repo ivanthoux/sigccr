@@ -29,14 +29,14 @@ class Pasarela extends BaseController
     public function registrar(string $referencia): RedirectResponse
     {
         $orden = $this->orden($referencia);
-        $estado = (string) $this->request->getPost('estado');
+        $estado = $this->campoPost('estado');
         $estado = in_array($estado, ['approved', 'rejected', 'in_process'], true) ? $estado : 'approved';
-        $importe = str_replace(',', '.', trim((string) $this->request->getPost('importe')));
+        $importe = str_replace(',', '.', trim($this->campoPost('importe')));
         $importe = is_numeric($importe) && (float) $importe > 0 ? number_format((float) $importe, 2, '.', '') : (string) $orden['importe'];
-        $repetir = (string) $this->request->getPost('id_externo');
+        $repetir = $this->campoPost('id_externo');
         $datos = $this->leer();
         $id = $repetir !== '' && isset($datos[$referencia][$repetir]) ? $repetir : 'SIMPAY-' . bin2hex(random_bytes(5));
-        $fecha = trim((string) $this->request->getPost('fecha_efectiva'));
+        $fecha = trim($this->campoPost('fecha_efectiva'));
         $fechaEfectiva = $fecha !== '' ? Time::parse($fecha, config('Sigccr')->zonaNegocio) : Time::now(config('Sigccr')->zonaNegocio);
         $datos[$referencia][$id] = ['id_externo' => $id, 'estado' => $estado, 'importe' => $importe, 'moneda' => 'ARS', 'fecha_efectiva' => $fechaEfectiva->format('c')];
         file_put_contents(WRITEPATH . 'simulador_pasarela.json', json_encode($datos, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
@@ -64,12 +64,12 @@ class Pasarela extends BaseController
     public function configurarDevoluciones(): RedirectResponse
     {
         $datos = SimuladorPasarela::leerDevoluciones();
-        $modo = (string) $this->request->getPost('modo');
+        $modo = $this->campoPost('modo');
         if (in_array($modo, ['approved', 'rejected', 'in_process', 'timeout'], true)) {
             $datos['modo'] = $modo;
         }
-        $operacion = (string) $this->request->getPost('operacion');
-        $estado = (string) $this->request->getPost('estado');
+        $operacion = $this->campoPost('operacion');
+        $estado = $this->campoPost('estado');
         if ($operacion !== '' && isset($datos['devoluciones'][$operacion]) && in_array($estado, ['approved', 'rejected'], true)) {
             $datos['devoluciones'][$operacion]['estado'] = $estado;
             $datos['devoluciones'][$operacion]['id_devolucion'] = $estado === 'approved' ? 'SIMREF-' . bin2hex(random_bytes(4)) : null;

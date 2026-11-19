@@ -61,7 +61,7 @@ class Alternativas extends BaseController
             $r = $this->servicio->confirmar(
                 $solicitudId,
                 $alternativaId,
-                (int) $this->request->getPost('version_fila'),
+                $this->enteroPost('version_fila'),
                 (array) $this->request->getPost(['fecha_conformidad', 'medio_conformidad', 'observaciones']),
                 (int) session('cuenta')['id'],
             );
@@ -77,7 +77,7 @@ class Alternativas extends BaseController
     public function regenerar(int $solicitudId): RedirectResponse
     {
         try {
-            $r = $this->servicio->regenerar($solicitudId, (int) $this->request->getPost('version_fila'), (int) session('cuenta')['id']);
+            $r = $this->servicio->regenerar($solicitudId, $this->enteroPost('version_fila'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return redirect()->to(site_url("admin/solicitudes/{$solicitudId}/alternativas"))->with('error', $e->getMessage());
         }

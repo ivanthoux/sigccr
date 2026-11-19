@@ -20,13 +20,15 @@ $actual = current_url();
     <meta name="csrf-valor" content="<?= esc(csrf_hash()) ?>">
     <title><?= esc(($titulo ?? 'Panel') . ' | SIG-CCR') ?></title>
     <link rel="icon" href="<?= base_url('favicon.ico') ?>">
+    <?= $this->include('partials/tema') ?>
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/vendor/bootstrap-icons/bootstrap-icons.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/sigccr/sigccr.css') ?>">
+        <link rel="stylesheet" href="<?= recurso('assets/sigccr/sigccr.css') ?>">
+    <?php // D-57: cabecera y pie de cada hoja impresa (entidad, título, emisión, «Página N de M») ?>
+    <?= estilo_impresion($titulo ?? 'SIG-CCR') ?>
 </head>
 <body class="panel d-lg-flex">
-<a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-white" href="#contenido">Ir al contenido</a>
+<a class="visually-hidden-focusable position-absolute top-0 start-0 p-2 bg-body" href="#contenido">Ir al contenido</a>
 
 <header class="barra-movil d-flex d-lg-none align-items-center px-2 py-2">
     <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir el menú">
@@ -56,7 +58,7 @@ $actual = current_url();
                     <div class="menu-seccion"><?= esc($seccion['titulo']) ?></div>
                     <?php foreach ($seccion['opciones'] as $o): $activa = str_starts_with($actual, $o['url']); ?>
                         <a class="menu-opcion<?= $activa ? ' activa' : '' ?>" href="<?= esc($o['url'], 'attr') ?>"<?= $activa ? ' aria-current="page"' : '' ?>>
-                            <i class="bi <?= esc($seccion['icono'], 'attr') ?>" aria-hidden="true"></i><?= esc($o['texto']) ?>
+                            <i class="bi <?= esc($o['icono'], 'attr') ?>" aria-hidden="true"></i><?= esc($o['texto']) ?>
                         </a>
                     <?php endforeach ?>
                 <?php endforeach ?>
@@ -64,6 +66,7 @@ $actual = current_url();
             <div class="cuenta">
                 <div class="nombre"><?= esc($cuenta['nombre'] ?? '') ?></div>
                 <div><?= esc($cuenta['rol_nombre'] ?? '') ?></div>
+                <button type="button" class="cambiar-tema d-block mt-2" data-cambiar-tema aria-pressed="false"><i class="bi bi-moon-stars me-1" aria-hidden="true"></i>Tema oscuro</button>
                 <a class="d-inline-block mt-2" href="<?= url_to('acceso.salir') ?>"><i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>Cerrar sesión</a>
             </div>
         </div>
@@ -72,14 +75,13 @@ $actual = current_url();
 
 <main id="contenido" class="contenido" tabindex="-1">
     <?= $this->include('partials/mensajes') ?>
+    <?php // D-57: cabecera formal de la primera hoja impresa; un documento con encabezado propio la omite (.documento-propio) ?>
+    <?= cabecera_impresion($titulo ?? 'SIG-CCR') ?>
     <?= $this->renderSection('contenido') ?>
 </main>
 
-<script src="<?= base_url('assets/vendor/jquery/jquery.min.js') ?>"></script>
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.min.js') ?>"></script>
-<script src="<?= base_url('assets/vendor/datatables/dataTables.bootstrap5.min.js') ?>"></script>
-<script src="<?= base_url('assets/sigccr/sigccr.js') ?>"></script>
+<script src="<?= recurso('assets/sigccr/sigccr.js') ?>" data-tablas></script>
 <?= $this->renderSection('scripts') ?>
 </body>
 </html>

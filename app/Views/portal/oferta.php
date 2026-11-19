@@ -30,7 +30,7 @@ $this->section('contenido');
         <div><dt>TEA</dt><dd><?= esc(formato_porcentaje((string) $o['tea'])) ?></dd></div>
         <div><dt>CFTEA</dt><dd><?= esc(formato_porcentaje((string) $o['cftea'])) ?></dd></div>
     </dl>
-    <p class="small mb-0">Vigente hasta el <?= esc(formato_fecha_hora((string) $o['vence'])) ?>. La cuota estimada es la primera, con el gasto administrativo y el IVA; el costo financiero total incluye el gasto de otorgamiento (RN-63).</p>
+    <p class="small mb-0">Vigente hasta el <?= esc(formato_fecha_hora((string) $o['vence'])) ?>. La cuota estimada es la primera, con el gasto administrativo y el IVA; el costo financiero total incluye el gasto de otorgamiento.</p>
 </section>
 <?php if (!$vigente): ?>
     <div class="alert alert-secondary" style="max-width: 48rem">

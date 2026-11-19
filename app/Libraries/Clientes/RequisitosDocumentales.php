@@ -27,6 +27,12 @@ final class RequisitosDocumentales
         'PersonaJuridica' => ['Empresa' => 'Empresa'],
     ];
 
+    /**
+     * Declaración jurada sobre la condición de persona expuesta políticamente, firmada por el cliente (RN-80, Resolución
+     * UIF 35/2023). Se puede incorporar en el alta o después, y se exige en el legajo para liquidar un crédito (D-55).
+     */
+    public const DECLARACION_PEP = 'DDJJ_PEP';
+
     /** Documentación obligatoria para identificar al cliente en el alta (D-14). */
     public const IDENTIFICACION = [
         'PersonaHumana' => ['DOC_IDENTIDAD'],

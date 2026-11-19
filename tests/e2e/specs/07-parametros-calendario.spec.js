@@ -69,11 +69,57 @@ test('R-043 Parámetros de morosidad', async ({ comoUsuario }) => {
   await expect(exito(page)).toContainText('de los parámetros de morosidad');
 });
 
-// Fechas relativas a hoy, para que la prueba no dependa del día en que se ejecuta
-const feriado1 = fecha(28);
-const feriado2 = fecha(45);
-const cierre = fecha(44);
+// Fechas relativas a hoy, para que la prueba no dependa del día en que se ejecuta. No pueden coincidir con las fechas
+// de la carga anual del año próximo: desde mediados de noviembre, hoy + 45 días puede caer el 01/01
 const anioProximo = Number(fecha().slice(0, 4)) + 1;
+const DE_LA_CARGA = ['01-01', '02-15', '02-16', '03-24', '04-02', '05-01', '05-25', '06-10'];
+const usadas = new Set();
+const libre = (dias) => {
+  let d = dias;
+  while (DE_LA_CARGA.includes(fecha(d).slice(5)) || usadas.has(d)) d++;
+  usadas.add(d);
+  return fecha(d);
+};
+const feriado1 = libre(28);
+const cierre = libre(44);
+const feriado2 = libre(45);
+
+test('R-152 Modelo de contrato (CU-106, D-56)', async ({ comoUsuario }) => {
+  const page = await comoUsuario('gerente');
+  await page.goto('/admin/parametros/contrato');
+  await expect(page.locator('main')).toContainText('Vigente: modelo inicial.');
+  const clausulas = page.locator('[data-clausula]');
+  await expect(clausulas).toHaveCount(11);
+  // Una variable mal escrita se rechaza y el formulario conserva lo escrito
+  await page.getByRole('button', { name: 'Agregar cláusula' }).click();
+  await expect(clausulas).toHaveCount(12);
+  await page.locator('#clausula-12-titulo').fill('Seguro');
+  await page.locator('#clausula-12-texto').fill('Seguro de vida sobre saldo deudor del préstamo de {monto}.');
+  await page.locator('#motivo').fill('Cláusula de seguro de vida pedida por la entidad.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(page.locator('#clausula-12-texto')).toHaveClass(/is-invalid/);
+  await expect(page.locator('main')).toContainText('Variable desconocida: {monto}');
+  // Se corrige, se sube un lugar y se registra la versión 1
+  await page.locator('#clausula-12-texto').fill('Seguro de vida sobre saldo deudor del préstamo de {importe}.');
+  await page.locator('[data-clausula]').nth(11).getByRole('button', { name: 'Subir la cláusula' }).click();
+  await expect(page.locator('#clausula-11-titulo')).toHaveValue('Seguro');
+  await page.locator('#motivo').fill('Cláusula de seguro de vida pedida por la entidad.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(exito(page)).toContainText('Se registró la versión 1 del modelo de contrato');
+  expect(await valor("SELECT COUNT(*) FROM dbo.versiones_parametros WHERE tipo = 'Contrato'")).toBe(1);
+  // Lo exigido por la ley no se puede quitar: sin el plan de cuotas no se registra
+  await page.locator('[data-clausula]', { has: page.locator('textarea', { hasText: '{plan_cuotas}' }) }).getByRole('button', { name: 'Quitar la cláusula' }).click();
+  await page.locator('#motivo').fill('Prueba de una cláusula obligatoria.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(page.locator('main')).toContainText('Falta {plan_cuotas}');
+  // Se vuelve al modelo inicial para el resto de la batería
+  await page.goto('/admin/parametros/contrato?inicial=1');
+  await page.locator('#motivo').fill('Se vuelve al modelo inicial.');
+  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
+  await expect(exito(page)).toContainText('Se registró la versión 2 del modelo de contrato');
+  const analista = await comoUsuario('analista');
+  expect((await analista.goto('/admin/parametros/contrato')).status()).toBe(403);
+});
 
 test('R-044 Calendario operativo', async ({ comoUsuario }) => {
   const page = await comoUsuario('gerente');
@@ -85,16 +131,16 @@ test('R-044 Calendario operativo', async ({ comoUsuario }) => {
     await page.locator('#carga').fill(carga);
     await page.getByRole('button', { name: 'Registrar', exact: true }).click();
   };
-  await agregar(ddmmaaaa(feriado1), 'Feriado de prueba uno');
+  await agregar(feriado1, 'Feriado de prueba uno');
   await expect(exito(page)).toContainText('Se registraron 1 día(s) no hábil(es).');
-  await agregar(ddmmaaaa(feriado2), 'Feriado de prueba dos');
+  await agregar(feriado2, 'Feriado de prueba dos');
   await expect(exito(page)).toContainText('Se registraron 1');
-  await agregar(ddmmaaaa(cierre), 'Cierre anticipado de fin de año', 'CierreEntidad');
+  await agregar(cierre, 'Cierre anticipado de fin de año', 'CierreEntidad');
   await expect(exito(page)).toContainText('Se registraron 1');
 
-  await agregar(ddmmaaaa(feriado1), 'Feriado repetido');
+  await agregar(feriado1, 'Feriado repetido');
   await expect(page.locator('main')).toContainText('ya está registrada (A2)');
-  await agregar(ddmmaaaa(fecha(-9)), 'Fecha pasada');
+  await agregar(fecha(-9), 'Fecha pasada');
   await expect(page.locator('main')).toContainText('es una fecha pasada (A1)');
 
   const carga = [
@@ -123,7 +169,7 @@ test('R-045 Baja de un día no hábil y nueva carga', async ({ comoUsuario }) =>
   const fila = page.locator('main table tbody tr', { hasText: ddmmaaaa(feriado2) });
   await fila.getByRole('button').click();
   await expect(exito(page)).toContainText('Día no hábil dado de baja.');
-  await page.locator('#fecha').fill(ddmmaaaa(feriado2));
+  await page.locator('#fecha').fill(feriado2);
   await page.locator('#descripcion').fill('Feriado de prueba dos');
   await page.getByRole('button', { name: 'Registrar', exact: true }).click();
   await expect(exito(page)).toContainText('Se registraron 1');

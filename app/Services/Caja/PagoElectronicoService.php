@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Caja;
 
+use App\Libraries\Validacion\Campos;
 use App\Adapters\Fabrica;
 use App\Adapters\Pasarela\PasarelaInterface;
 use App\Exceptions\ReglaNegocioException;
@@ -51,7 +52,7 @@ class PagoElectronicoService extends BaseService
      */
     public function generarOrden(?int $usuarioId, int $clienteId, array $seleccion, string $presentado): array
     {
-        $seleccion = array_map(static fn ($n) => array_values(array_map('intval', (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
+        $seleccion = array_map(static fn ($n) => array_values(array_map([Campos::class, 'identificador'], (array) $n)), array_filter($seleccion, static fn ($n) => $n !== [] && $n !== null));
         $orden = $this->transaccion(function () use ($clienteId, $seleccion, $presentado): array {
             $elegidas = (new CobroService($this->db))->seleccionar($clienteId, $seleccion)['cuotas'];
             // A7: una cuota no integra dos órdenes abiertas y vigentes
@@ -119,7 +120,7 @@ class PagoElectronicoService extends BaseService
             $b->where('o.numero', (int) $f['numero']);
         }
         if (($f['texto'] ?? '') !== '') {
-            $b->groupStart()->like('cl.denominacion', (string) $f['texto'])->orLike('cl.cuit_cuil', preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto'])->groupEnd();
+            $b->groupStart()->like('cl.denominacion', Campos::literalLike((string) $f['texto']))->orLike('cl.cuit_cuil', Campos::literalLike((string) preg_replace('/\D/', '', (string) $f['texto']) ?: (string) $f['texto']))->groupEnd();
         }
         if (in_array($f['estado'] ?? '', ['PendienteConfirmacion', 'Confirmada', 'Rechazada', 'EnConciliacion', 'Vencida'], true)) {
             $b->where('o.estado', $f['estado']);

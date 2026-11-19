@@ -6,6 +6,7 @@ namespace App\Services\Usuarios;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Auditoria\Cambios;
 use App\Libraries\Validacion\Campos;
 use App\Libraries\Validacion\ValidadorUsuarioInterno;
 use App\Libraries\Seguridad\ReglasUsuarios;
@@ -49,13 +50,13 @@ class UsuarioService extends BaseService
             ->join('roles r', 'r.id = ui.rol_id');
         // Cada palabra debe aparecer en el nombre o en el apellido ("ana gomez" encuentra a Ana María Gómez)
         foreach (preg_split('/\s+/u', trim($criterios['texto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $palabra) {
-            $b->groupStart()->like('ui.nombre', $palabra)->orLike('ui.apellido', $palabra)->groupEnd();
+            $b->groupStart()->like('ui.nombre', Campos::literalLike((string) $palabra))->orLike('ui.apellido', Campos::literalLike((string) $palabra))->groupEnd();
         }
         if (($criterios['documento'] ?? '') !== '') {
             $b->where('ui.nro_documento', Campos::documentoFlexible($criterios['documento']));
         }
         if (($criterios['correo'] ?? '') !== '') {
-            $b->like('ca.correo', mb_strtolower(trim($criterios['correo'])));
+            $b->like('ca.correo', Campos::literalLike((string) mb_strtolower(trim($criterios['correo']))));
         }
         if (in_array($criterios['rol'] ?? '', ReglasUsuarios::ROLES, true)) {
             $b->where('r.codigo', $criterios['rol']);
@@ -162,12 +163,7 @@ class UsuarioService extends BaseService
             $correoNuevo = $d['correo'] !== $u['correo'] ? $d['correo'] : null;
             $this->verificarUnicidad($correoNuevo, $d['tipo_documento'], $d['nro_documento'], $id);
 
-            $cambios = [];
-            foreach (['nombre', 'apellido', 'tipo_documento', 'nro_documento'] as $c) {
-                if ($d[$c] !== $u[$c]) {
-                    $cambios[$c] = ['anterior' => $u[$c], 'nuevo' => $d[$c]];
-                }
-            }
+            $cambios = Cambios::entre($u, $d, ['nombre', 'apellido', 'tipo_documento', 'nro_documento']);
             if ($cambios === [] && $correoNuevo === null) {
                 throw new ReglaNegocioException('No hay cambios para guardar.');
             }
@@ -180,7 +176,7 @@ class UsuarioService extends BaseService
                 $cambios['correo'] = ['anterior' => $u['correo'], 'nuevo' => "{$correoNuevo} (pendiente de verificación)"];
                 $comunicacionId = (new AutorizacionService($this->db))->emitir($id, 'VerificacionCorreo', $correoNuevo, $d['nombre'], self::RUTA_VERIFICACION);
             }
-            (new AuditoriaService($this->db))->registrar('usuarios.modificar', 'usuarios_internos', $id, 'Exitoso', null, $cambios);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.modificar', 'usuarios_internos', $id, $cambios);
 
             return $comunicacionId;
         });
@@ -209,7 +205,7 @@ class UsuarioService extends BaseService
                 [$correo, $this->ahoraUtc(), $id],
             );
             $autorizaciones->marcarUtilizada((int) $a['id']);
-            (new AuditoriaService($this->db))->registrar('usuarios.verificar_correo', 'usuarios_internos', $id, 'Exitoso', null, ['correo' => ['anterior' => $u['correo'], 'nuevo' => $correo]], null, $id, $correo);
+            (new AuditoriaService($this->db))->registrar('usuarios.verificar_correo', 'usuarios_internos', $id, 'Exitoso', null, ['cambios' => Cambios::campo('correo', $u['correo'], $correo), 'correo_verificado' => true], null, $id, $correo);
         });
     }
 
@@ -262,7 +258,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, ['estado' => 'Desactivada', 'actualizado_en' => $this->ahoraUtc()]);
             $this->db->query('UPDATE dbo.cuentas_acceso SET version_seguridad = version_seguridad + 1 WHERE id = ?', [$id]);
             (new AutorizacionService($this->db))->sustituirVigentes($id);
-            (new AuditoriaService($this->db))->registrar('usuarios.desactivar', 'usuarios_internos', $id, 'Exitoso', $motivo, ['estado_anterior' => $u['estado']]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.desactivar', 'usuarios_internos', $id, Cambios::campo('estado', $u['estado'], 'Desactivada'), $motivo);
         });
     }
 
@@ -283,7 +279,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, [
                 'estado' => $estado, 'intentos_fallidos' => 0, 'inicio_ventana_intentos' => null, 'bloqueada_hasta' => null, 'actualizado_en' => $this->ahoraUtc(),
             ]);
-            (new AuditoriaService($this->db))->registrar('usuarios.reactivar', 'usuarios_internos', $id, 'Exitoso', $motivo, ['estado_nuevo' => $estado]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.reactivar', 'usuarios_internos', $id, Cambios::campo('estado', $u['estado'], $estado), $motivo);
 
             return $estado;
         });
@@ -298,6 +294,8 @@ class UsuarioService extends BaseService
     public function asignarRol(int $id, int $versionLeida, string $rolNuevo, string $motivo): bool
     {
         $motivo = $this->exigirMotivo($motivo);
+        // Igual que en el registro (CU-05): el rol elegido se recorta antes de compararlo (D-51, SEL-04)
+        $rolNuevo = Campos::texto($rolNuevo);
 
         return $this->transaccion(function () use ($id, $versionLeida, $rolNuevo, $motivo): bool {
             $u = $this->obtenerBloqueado($id);
@@ -318,7 +316,7 @@ class UsuarioService extends BaseService
             $this->actualizarConVersion('cuentas_acceso', $id, $versionLeida, ['actualizado_en' => $this->ahoraUtc()]);
             $this->db->query('UPDATE dbo.cuentas_acceso SET version_seguridad = version_seguridad + 1 WHERE id = ?', [$id]);
             $this->db->table('usuarios_internos')->where('id', $id)->update(['rol_id' => $this->rolId($rolNuevo)]);
-            (new AuditoriaService($this->db))->registrar('usuarios.asignar_rol', 'usuarios_internos', $id, 'Exitoso', $motivo, ['rol' => ['anterior' => $u['rol'], 'nuevo' => $rolNuevo]]);
+            (new AuditoriaService($this->db))->registrarCambios('usuarios.asignar_rol', 'usuarios_internos', $id, Cambios::campo('rol', $u['rol'], $rolNuevo), $motivo);
 
             return true;
         });

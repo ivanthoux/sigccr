@@ -44,12 +44,20 @@ final class CamposTest extends TestCase
         $this->assertSame('El nombre admite hasta 80 caracteres.', Campos::nombrePersona(str_repeat('a', 81), 'el nombre'));
     }
 
+    public function testCorreoParaEnvio(): void
+    {
+        $this->assertSame('ana@xn--and-6ma2c.com.ar', Campos::correoParaEnvio('ana@ñandú.com.ar'));
+        $this->assertSame('ñandú@prueba.local', Campos::correoParaEnvio('ñandú@prueba.local'), 'la parte local se conserva');
+        $this->assertSame('ana@prueba.local', Campos::correoParaEnvio('ana@prueba.local'));
+    }
+
     public function testCorreo(): void
     {
-        foreach (['ana@entidad.com.ar', 'a.b+c@dominio.com', 'x@sub.dominio.org'] as $valido) {
+        // O-05 (D-52): se admiten correos internacionales, con la parte local o el dominio no ASCII
+        foreach (['ana@entidad.com.ar', 'a.b+c@dominio.com', 'x@sub.dominio.org', 'ñandú@prueba.local', 'josé.pérez@dominio.com', 'ana@ñandú.com.ar', 'ana@xn--and-6ma2c.com.ar', '用户@例子.广告', str_repeat('ñ', 32) . '@prueba.local', str_repeat('a', 64) . '@prueba.local'] as $valido) {
             $this->assertNull(Campos::formatoCorreo($valido), $valido);
         }
-        foreach (['ana', 'ana@', '@dominio.com', 'ana@dominio', 'ana gomez@dominio.com', 'ana@@dominio.com', str_repeat('a', 250) . '@x.com'] as $invalido) {
+        foreach (['ana', 'ana@', '@dominio.com', 'ana@dominio', 'ana gomez@dominio.com', 'ana@@dominio.com', str_repeat('a', 250) . '@x.com', 'ana@ñandú', 'ana@-ñandú-.com', str_repeat('ñ', 32) . 'a@prueba.local', str_repeat('a', 65) . '@prueba.local', str_repeat('ñ', 64) . '@' . str_repeat('ü', 190) . '.com'] as $invalido) {
             $this->assertSame('Ingrese un correo electrónico válido, por ejemplo nombre@dominio.com.', Campos::formatoCorreo($invalido), $invalido);
         }
     }
@@ -60,11 +68,17 @@ final class CamposTest extends TestCase
         $this->assertSame('Seleccione un tipo de documento válido.', Campos::tipoDocumento('CUIT'));
         $this->assertNull(Campos::numeroDocumento('DNI', '28999111'));
         $this->assertNull(Campos::numeroDocumento('LE', '123456'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '12345'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '1234567890'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', 'AB123456'));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('28999111.')));
-        $this->assertSame('El documento debe tener entre 6 y 9 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('.28999111')));
+        // D-53: DNI, LC y LE hasta 8 dígitos, el largo que admite el CUIL
+        foreach (['DNI', 'LC', 'LE'] as $tipo) {
+            $this->assertNull(Campos::numeroDocumento($tipo, '99999999'), $tipo);
+            $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento($tipo, '100000001'), $tipo);
+        }
+        $this->assertNull(Campos::numeroDocumento('Pasaporte', '123456789'), 'el pasaporte no cambia');
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '12345'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', '1234567890'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', 'AB123456'));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('28999111.')));
+        $this->assertSame('El documento debe tener entre 6 y 8 dígitos, sin puntos.', Campos::numeroDocumento('DNI', Campos::documento('.28999111')));
         $this->assertNull(Campos::numeroDocumento('DNI', Campos::documento('28.999.111')));
         $this->assertSame('El número de documento no es válido.', Campos::numeroDocumento('DNI', '000000'));
         $this->assertNull(Campos::numeroDocumento('Pasaporte', 'AAB123456'));
@@ -94,5 +108,73 @@ final class CamposTest extends TestCase
         $this->assertSame('Indique el motivo de la operación (al menos 5 caracteres).', Campos::motivo('ok'));
         $this->assertNull(Campos::motivo('Licencia prolongada'));
         $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('a', 1001)));
+    }
+
+    /** D-51, COM-02 y COM-06: un campo enviado como lista se trata como vacío y los caracteres de control se eliminan. */
+    public function testValoresQueNoSonTextoYCaracteresDeControl(): void
+    {
+        $this->assertSame('', Campos::texto(['Ana']));
+        $this->assertSame('', Campos::texto(['a' => ['b']]));
+        $this->assertSame('', Campos::correo(['ana@prueba.local']));
+        $this->assertSame('', Campos::documento(['28999111']));
+        $this->assertNull(Campos::importe(['100']));
+        $this->assertNull(Campos::fecha(['2026-01-01']));
+        $this->assertSame('12', Campos::texto(12));
+        $this->assertSame('AnaB', Campos::texto("Ana\0B"));
+        $this->assertSame('Ana B', Campos::texto("Ana\x07 \x1FB"));
+        $this->assertSame('Ana María', Campos::texto("Ana\r\nMaría"));
+        $this->assertSame('', Campos::crudo(['x']));
+        $this->assertSame('  clave con espacios  ', Campos::crudo('  clave con espacios  '));
+    }
+
+    public function testLista(): void
+    {
+        $this->assertSame(['A', 'B'], Campos::lista(['A', ['x'], 'B']));
+        $this->assertSame(['A'], Campos::lista('A'));
+        $this->assertSame([], Campos::lista(null));
+        $this->assertSame([], Campos::lista(''));
+        $this->assertSame(['1'], Campos::lista([1]));
+    }
+
+    /** D-51, TXT-04 y TXT-05: el largo se mide como en NVARCHAR; un emoji ocupa dos unidades. */
+    public function testLargoComoEnLaBase(): void
+    {
+        $this->assertSame(5, Campos::largo('Ñandú'));
+        $this->assertSame(2, Campos::largo('😀'));
+        $this->assertNull(Campos::largoMaximo(str_repeat('ñ', 60), 60, 'la nacionalidad'));
+        $this->assertSame('La nacionalidad admite hasta 60 caracteres.', Campos::largoMaximo(str_repeat('ñ', 59) . '😀', 60, 'la nacionalidad'));
+        $this->assertSame('El motivo admite hasta 1000 caracteres.', Campos::motivo(str_repeat('😀', 501)));
+    }
+
+    /** D-51, H-12 y FIL-03: los comodines de LIKE se buscan como texto (ESCAPE '!'). */
+    public function testLiteralLike(): void
+    {
+        $this->assertSame('!%', Campos::literalLike('%'));
+        $this->assertSame('a!_b', Campos::literalLike('a_b'));
+        $this->assertSame('![a]', Campos::literalLike('[a]'));
+        $this->assertSame('!!', Campos::literalLike('!'));
+        $this->assertSame("O'Brien", Campos::literalLike("O'Brien"));
+    }
+
+    /** H-21: un identificador o una versión solo se acepta con dígitos; cualquier otra cosa vale 0. */
+    public function testIdentificador(): void
+    {
+        foreach (['1' => 1, ' 25 ' => 25, '007' => 7, '999999999' => 999999999] as $valor => $esperado) {
+            $this->assertSame($esperado, Campos::identificador((string) $valor), (string) $valor);
+        }
+        foreach (['', 'abc', '1abc', '1.9', '1,0', '-1', '+1', '1e3', '1000000000', ' ', "1\n2"] as $valor) {
+            $this->assertSame(0, Campos::identificador($valor), json_encode($valor));
+        }
+        foreach ([['1'], [], null, 1.5, 7] as $valor) {
+            $this->assertSame(is_int($valor) ? 7 : 0, Campos::identificador($valor), json_encode($valor));
+        }
+    }
+
+    public function testRecortarEnUnidadesDeNvarchar(): void
+    {
+        $this->assertSame('abc', Campos::recortar('abc', 3));
+        $this->assertSame(str_repeat('a', 499), Campos::recortar(str_repeat('a', 499) . '😀', 500), 'no parte el emoji');
+        $this->assertSame(str_repeat('a', 498) . '😀', Campos::recortar(str_repeat('a', 498) . '😀b', 500));
+        $this->assertSame('ñá', Campos::recortar('ñáé', 2));
     }
 }

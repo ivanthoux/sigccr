@@ -55,7 +55,7 @@ $this->section('contenido');
             <input type="hidden" name="linea_id" value="<?= (int) $linea['id'] ?>">
             <div class="col-sm-6 col-lg-4">
                 <label for="importe" class="form-label">Importe a financiar ($)</label>
-                <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc(old('importe'), 'attr') ?>" required autofocus>
+                <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" value="<?= esc(old('importe'), 'attr') ?>" required>
                 <?= error_campo('importe') ?>
             </div>
             <div class="col-sm-6 col-lg-3">

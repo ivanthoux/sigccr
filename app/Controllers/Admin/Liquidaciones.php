@@ -22,7 +22,7 @@ class Liquidaciones extends BaseController
     /** Pasos 1 y 2. */
     public function index(): string
     {
-        $texto = trim((string) $this->request->getGet('texto'));
+        $texto = trim($this->campoGet('texto'));
 
         return view('liquidaciones/index', ['titulo' => 'Liquidar créditos aprobados', 'texto' => $texto, 'solicitudes' => $this->servicio->pendientes($texto)]);
     }
@@ -49,7 +49,7 @@ class Liquidaciones extends BaseController
     public function liquidar(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->liquidar($id, (int) $this->request->getPost('version_fila'), (array) $this->request->getPost(), (int) session('cuenta')['id']);
+            $r = $this->servicio->liquidar($id, $this->enteroPost('version_fila'), (array) $this->request->getPost(), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }

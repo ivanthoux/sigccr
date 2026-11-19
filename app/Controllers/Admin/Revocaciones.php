@@ -8,7 +8,6 @@ use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
 use App\Services\Caja\CajaService;
 use App\Services\Cartera\RevocacionService;
-use App\Services\Clientes\ClienteService;
 use App\Services\Solicitudes\SimulacionService;
 use CodeIgniter\HTTP\RedirectResponse;
 
@@ -25,14 +24,9 @@ class Revocaciones extends BaseController
     /** Pasos 1 y 2: cliente (CU-54) y sus créditos con el plazo de revocación. */
     public function index(): string|RedirectResponse
     {
-        $clienteId = (int) $this->request->getGet('cliente');
+        $clienteId = $this->enteroGet('cliente');
         if ($clienteId === 0) {
-            $texto = trim((string) $this->request->getGet('texto'));
-
-            return view('simulaciones/cliente', [
-                'titulo' => 'Revocación del préstamo', 'texto' => $texto, 'destino' => 'creditos.revocar',
-                'clientes' => $texto === '' ? [] : (new ClienteService())->buscar(['texto' => $texto]),
-            ]);
+            return $this->busquedaCliente('creditos.revocar', 'Revocación del préstamo');
         }
         try {
             $cliente = (new SimulacionService())->cliente($clienteId);
@@ -62,7 +56,7 @@ class Revocaciones extends BaseController
     public function registrar(int $id): RedirectResponse
     {
         try {
-            $r = $this->servicio->registrar($id, (string) $this->request->getPost('fecha_comunicacion'), (string) $this->request->getPost('medio_comunicacion'), (int) session('cuenta')['id']);
+            $r = $this->servicio->registrar($id, $this->campoPost('fecha_comunicacion'), $this->campoPost('medio_comunicacion'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
@@ -76,7 +70,7 @@ class Revocaciones extends BaseController
     public function confirmar(int $id): RedirectResponse
     {
         try {
-            $this->servicio->confirmar($id, (string) $this->request->getPost('numero_operacion'), (string) $this->request->getPost('importe'), (int) session('cuenta')['id']);
+            $this->servicio->confirmar($id, $this->campoPost('numero_operacion'), $this->campoPost('importe'), (int) session('cuenta')['id']);
         } catch (ReglaNegocioException $e) {
             return $this->volverConError($e);
         }
