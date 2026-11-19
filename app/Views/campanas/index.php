@@ -27,8 +27,8 @@ $this->section('contenido');
     <div class="col-6 col-md-2"><label for="estado" class="form-label small">Estado</label>
         <select id="estado" name="estado" class="form-select"><option value="">Todos</option><?php foreach (['Activa' => 'Activa', 'Finalizada' => 'Finalizada'] as $k => $t): ?><option value="<?= $k ?>"<?= $f['estado'] === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?></select></div>
     <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Activada desde</label><input type="date" id="desde" name="desde" class="form-control" value="<?= esc($f['desde'], 'attr') ?>"></div>
-    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">hasta</label><input type="date" id="hasta" name="hasta" class="form-control" value="<?= esc($f['hasta'], 'attr') ?>"></div>
-    <div class="col-6 col-md-1"><label for="canal" class="form-label small">Canal</label>
+    <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">Activada hasta</label><input type="date" id="hasta" name="hasta" class="form-control" value="<?= esc($f['hasta'], 'attr') ?>"></div>
+    <div class="col-6 col-md-3 col-xl-2"><label for="canal" class="form-label small">Canal</label>
         <select id="canal" name="canal" class="form-select"><option value="">Todos</option><?php foreach (C::CANALES as $k => $t): ?><option value="<?= $k ?>"<?= $f['canal'] === $k ? ' selected' : '' ?>><?= esc($t) ?></option><?php endforeach ?></select></div>
     <?= acciones_filtro(limpiar: url_to('campanas.consultar')) ?>
 </form>
