@@ -42,7 +42,7 @@ $this->section('contenido');
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table align-middle mb-0">
-                        <thead><tr><?php foreach ($columnas as $col): ?><th<?= in_array($col, $columnasImporte, true) ? ' class="importe"' : '' ?>><?= $col ?></th><?php endforeach ?></tr></thead>
+                        <thead><tr><?php foreach ($columnas as $col): ?><th scope="col"<?= in_array($col, $columnasImporte, true) ? ' class="importe"' : '' ?>><?= $col ?></th><?php endforeach ?></tr></thead>
                         <tbody><?php foreach ($h[$clave] as $r): ?><tr><?php foreach ($celdas($r) as $celda): ?><td><?= $celda ?></td><?php endforeach ?></tr><?php endforeach ?></tbody>
                     </table>
                 </div>
