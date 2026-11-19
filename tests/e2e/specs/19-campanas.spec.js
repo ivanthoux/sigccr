@@ -2,7 +2,7 @@
 // docs/pruebas/prueba_funcional_iteracion_4.md.
 const { test, expect } = require('../lib/fixtures');
 const { consulta, valor, spark, cerrarBase, ultimoCorreo } = require('../lib/sistema');
-const { fecha, ddmmaaaa, portal } = require('../lib/datos');
+const { fecha, portal } = require('../lib/datos');
 const { demo, comoCliente } = require('../lib/portal');
 
 const { joaquin } = demo;
@@ -74,7 +74,7 @@ test('I-47 Nueva versión de los parámetros', async ({ comoUsuario }) => {
   await page.locator('#caracter-Ingreso').check();
   await page.locator('#programado').setChecked(false);
   await page.locator('#importe').fill('40000000');
-  await page.locator('#fecha').fill(ddmmaaaa(fecha()));
+  await page.locator('#fecha').fill(fecha());
   await page.locator('#concepto').fill('Aporte para la campaña de la iteración 4');
   await page.getByRole('button', { name: 'Registrar movimiento' }).click();
   await expect(exito(page)).toContainText('Movimiento registrado.');

@@ -27,7 +27,7 @@ $this->section('contenido');
     <div class="row g-3">
         <div class="col-md-6">
             <label for="importe" class="form-label">Importe deseado <span class="text-body-secondary fw-normal">(opcional)</span></label>
-            <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" placeholder="500.000,00" value="<?= esc((string) old('importe'), 'attr') ?>">
+            <input type="text" class="form-control<?= campo_invalido('importe') ?>" id="importe" name="importe" inputmode="decimal" placeholder="Por ejemplo: 500.000,00" value="<?= esc((string) old('importe'), 'attr') ?>">
             <?= error_campo('importe') ?>
         </div>
         <div class="col-md-6">

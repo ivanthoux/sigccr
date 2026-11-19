@@ -46,10 +46,7 @@ $this->section('contenido');
                 <?php foreach ($categorias as $k => $t): ?><option value="<?= $k ?>"<?= $c('categoria') === $k ? ' selected' : '' ?>><?= esc($t) ?></option><?php endforeach ?>
             </select>
         </div>
-        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
-            <a href="<?= url_to('lineas.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Buscar</span></button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('lineas.localizar')) ?>
     </div>
 </form>
 

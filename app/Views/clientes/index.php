@@ -54,10 +54,7 @@ $this->section('contenido');
                 <option value="Desactivado"<?= $c('estado') === 'Desactivado' ? ' selected' : '' ?>>Desactivado</option>
             </select>
         </div>
-        <div class="col-md-6 col-lg-12 d-flex gap-2 justify-content-lg-end">
-            <a href="<?= url_to('clientes.localizar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('clientes.localizar')) ?>
     </div>
 </form>
 

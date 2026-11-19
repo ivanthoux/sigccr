@@ -92,7 +92,7 @@ $this->section('contenido');
             </div>
             <?= $campo('nro_documento', 'Número de documento', $texto('nro_documento', 15, $numerico), 'Sin puntos.', 'col-md-4') ?>
             <?= $campo('fecha_nacimiento', 'Fecha de nacimiento', '<input type="date" class="form-control' . campo_invalido('fecha_nacimiento') . '" id="fecha_nacimiento" name="fecha_nacimiento" value="' . esc($v('fecha_nacimiento'), 'attr') . '">', '', 'col-md-5') ?>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label for="estado_civil" class="form-label">Estado civil <span class="text-body-secondary fw-normal">(opcional)</span></label>
                 <select class="form-select<?= campo_invalido('estado_civil') ?>" id="estado_civil" name="estado_civil">
                     <option value="">Sin informar</option>
@@ -100,7 +100,7 @@ $this->section('contenido');
                 </select>
                 <?= error_campo('estado_civil') ?>
             </div>
-            <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-4') ?>
+            <?= $campo('nacionalidad', 'Nacionalidad', $texto('nacionalidad', 60, 'list="nacionalidades" autocomplete="off"'), 'Exigida por la Resolución UIF 200/2024 (RN-80).', 'col-md-6') ?>
             <datalist id="nacionalidades"><option value="Argentina"><option value="Boliviana"><option value="Brasileña"><option value="Chilena"><option value="Paraguaya"><option value="Peruana"><option value="Uruguaya"><option value="Venezolana"></datalist>
         </div>
         <div class="row g-3 mt-0" data-solo="PersonaJuridica">
@@ -222,7 +222,7 @@ $this->section('contenido');
         <?= error_campo('persona_expuesta') ?>
         <?php if ($alta && isset($tipoPep)): ?>
             <div class="mt-3 col-md-6" data-aplica="<?= esc($tipoPep['aplica_a'], 'attr') ?>">
-                <label for="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" class="form-label"><?= esc($tipoPep['nombre']) ?> <span class="text-body-secondary fw-normal">(opcional en el alta)</span></label>
+                <label for="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" class="form-label">Declaración jurada firmada <span class="text-body-secondary fw-normal">(opcional en el alta)</span></label>
                 <input type="file" class="form-control<?= campo_invalido('doc_' . $tipoPep['codigo'], 'ayuda-doc-pep') ?>" id="doc-<?= esc($tipoPep['codigo'], 'attr') ?>" name="documentos[<?= esc($tipoPep['codigo'], 'attr') ?>][]" accept=".pdf,.jpg,.jpeg,.png" multiple>
                 <div class="form-text" id="ayuda-doc-pep">Firmada por el cliente; PDF, JPG o PNG de hasta 5 MB. Puede adjuntarse ahora o más adelante: se exige para liquidar un crédito.</div>
                 <?= error_campo('doc_' . $tipoPep['codigo']) ?>

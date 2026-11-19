@@ -32,7 +32,7 @@ $this->section('contenido');
     <div class="row g-3 align-items-end">
         <div class="col-md-6">
             <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control<?= $abierto === 'nuevo' ? campo_invalido('nombre') : '' ?>" id="nombre" name="nombre" maxlength="120" placeholder="Certificado de servicios del empleador" value="<?= esc($abierto === 'nuevo' ? (string) old('nombre') : '', 'attr') ?>">
+            <input type="text" class="form-control<?= $abierto === 'nuevo' ? campo_invalido('nombre') : '' ?>" id="nombre" name="nombre" maxlength="120" placeholder="Por ejemplo: certificado de servicios del empleador" value="<?= esc($abierto === 'nuevo' ? (string) old('nombre') : '', 'attr') ?>">
             <?= $abierto === 'nuevo' ? error_campo('nombre') : '' ?>
         </div>
         <div class="col-md-3">

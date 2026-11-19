@@ -60,7 +60,7 @@ $this->section('contenido');
             <div class="row g-2">
                 <div class="col-sm-5">
                     <label for="fecha" class="form-label small">Fecha</label>
-                    <input type="text" class="form-control" id="fecha" name="fecha" placeholder="dd/mm/aaaa" value="<?= esc((string) old('fecha'), 'attr') ?>">
+                    <input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc(fecha_campo((string) old('fecha')), 'attr') ?>">
                 </div>
                 <div class="col-sm-7">
                     <label for="tipo" class="form-label small">Tipo</label>
@@ -70,11 +70,11 @@ $this->section('contenido');
                 </div>
                 <div class="col-12">
                     <label for="descripcion" class="form-label small">Descripción</label>
-                    <input type="text" class="form-control" id="descripcion" name="descripcion" maxlength="150" placeholder="Día de la Independencia" value="<?= esc((string) old('descripcion'), 'attr') ?>">
+                    <input type="text" class="form-control" id="descripcion" name="descripcion" maxlength="150" placeholder="Por ejemplo: Día de la Independencia" value="<?= esc((string) old('descripcion'), 'attr') ?>">
                 </div>
                 <div class="col-12">
                     <label for="carga" class="form-label small">Carga anual <span class="text-body-secondary">(opcional; una fecha por línea: dd/mm/aaaa; descripción; tipo)</span></label>
-                    <textarea class="form-control font-monospace small" id="carga" name="carga" rows="6" placeholder="01/01/2027; Año Nuevo&#10;24/03/2027; Día de la Memoria&#10;31/12/2027; Cierre de balance; CierreEntidad"><?= esc((string) old('carga')) ?></textarea>
+                    <textarea class="form-control font-monospace small" id="carga" name="carga" rows="6" placeholder="Por ejemplo:&#10;01/01/2027; Año Nuevo&#10;24/03/2027; Día de la Memoria&#10;31/12/2027; Cierre de balance; CierreEntidad"><?= esc((string) old('carga')) ?></textarea>
                     <div class="form-text">Si no indica el tipo, se usa el elegido arriba. Cada fecha se valida por separado y se informan las rechazadas.</div>
                 </div>
             </div>

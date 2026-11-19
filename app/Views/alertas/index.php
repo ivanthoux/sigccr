@@ -36,18 +36,15 @@ $this->section('contenido');
                 <?php foreach ($tipos as $k => $t): ?><option value="<?= $k ?>"<?= $f('tipo') === $k ? ' selected' : '' ?>><?= $t ?></option><?php endforeach ?>
             </select>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-md-3 col-xl-2">
             <label for="desde" class="form-label small">Desde</label>
             <input type="date" class="form-control" id="desde" name="desde" value="<?= esc($f('desde'), 'attr') ?>">
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-md-3 col-xl-2">
             <label for="hasta" class="form-label small">Hasta</label>
             <input type="date" class="form-control" id="hasta" name="hasta" value="<?= esc($f('hasta'), 'attr') ?>">
         </div>
-        <div class="col-md-3 d-flex gap-2 justify-content-md-end">
-            <a href="<?= url_to('alertas.consultar') ?>" class="btn btn-outline-secondary">Limpiar</a>
-            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar</button>
-        </div>
+        <?= acciones_filtro(limpiar: url_to('alertas.consultar')) ?>
     </div>
 </form>
 

@@ -80,7 +80,7 @@ $this->section('contenido');
         </div>
         <div class="col-md-3">
             <label for="fecha" class="form-label">Fecha</label>
-            <input type="text" class="form-control<?= campo_invalido('fecha') ?>" id="fecha" name="fecha" placeholder="dd/mm/aaaa" value="<?= esc((string) (old('fecha') ?? formato_fecha($hoy)), 'attr') ?>" required>
+            <input type="date" class="form-control<?= campo_invalido('fecha') ?>" id="fecha" name="fecha" value="<?= esc(fecha_campo((string) (old('fecha') ?? formato_fecha($hoy))), 'attr') ?>" required>
             <?= error_campo('fecha') ?>
         </div>
         <div class="col-md-5">

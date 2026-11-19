@@ -36,7 +36,7 @@ $this->section('contenido');
             <?php foreach ($estados as $k => $n): ?><option value="<?= $k ?>"<?= $filtros['estado'] === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
         </select>
     </div>
-    <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+    <?= acciones_filtro(limpiar: current_url()) ?>
 </form>
 <div class="hoja p-3">
     <?php if ($ordenes === []): ?>

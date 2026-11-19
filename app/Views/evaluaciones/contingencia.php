@@ -78,7 +78,7 @@ $this->section('contenido');
                         <td><input type="text" class="form-control form-control-sm<?= $err ? ' is-invalid' : '' ?>" name="deudas[<?= $i ?>][entidad]" maxlength="150" value="<?= esc((string) ($d['entidad'] ?? ''), 'attr') ?>" aria-label="Entidad, fila <?= $i + 1 ?>"></td>
                         <td><input type="text" class="form-control form-control-sm" name="deudas[<?= $i ?>][situacion]" inputmode="numeric" maxlength="1" value="<?= esc((string) ($d['situacion'] ?? ''), 'attr') ?>" aria-label="Situación, fila <?= $i + 1 ?>"></td>
                         <td><input type="text" class="form-control form-control-sm" name="deudas[<?= $i ?>][monto]" inputmode="decimal" value="<?= esc((string) ($d['monto'] ?? ''), 'attr') ?>" aria-label="Monto, fila <?= $i + 1 ?>"></td>
-                        <td><input type="text" class="form-control form-control-sm" name="deudas[<?= $i ?>][periodo]" placeholder="mm/aaaa" maxlength="7" value="<?= esc((string) ($d['periodo'] ?? ''), 'attr') ?>" aria-label="Período, fila <?= $i + 1 ?>"></td>
+                        <td><input type="month" class="form-control form-control-sm" name="deudas[<?= $i ?>][periodo]" value="<?= esc(periodo_campo((string) ($d['periodo'] ?? '')), 'attr') ?>" aria-label="Período, fila <?= $i + 1 ?>"></td>
                     </tr>
                     <?php if ($err): ?><tr><td colspan="4" class="border-0 pt-0"><div class="invalid-feedback d-block"><?= esc($err) ?></div></td></tr><?php endif ?>
                 <?php endforeach ?>

@@ -39,15 +39,15 @@ $this->section('contenido');
             <?php foreach (RefinanciacionService::ESTADOS as $k => $n): ?><option value="<?= $k ?>"<?= $filtros['estado'] === $k ? ' selected' : '' ?>><?= esc($n) ?></option><?php endforeach ?>
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-3 col-xl-2">
         <label for="desde" class="form-label small">Registrada desde</label>
         <input type="date" class="form-control<?= $invalido('desde') ?>" id="desde" name="desde" value="<?= esc($filtros['desde'], 'attr') ?>">
     </div>
-    <div class="col-md-2">
+    <div class="col-6 col-md-3 col-xl-2">
         <label for="hasta" class="form-label small">Hasta</label>
         <input type="date" class="form-control<?= $invalido('hasta') ?>" id="hasta" name="hasta" value="<?= esc($filtros['hasta'], 'attr') ?>">
     </div>
-    <div class="col-12 text-end"><button class="btn btn-outline-primary" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+    <?= acciones_filtro(limpiar: url_to('refinanciaciones.localizar')) ?>
     <?php if ($erroresFiltro !== []): ?><div class="col-12 text-danger small"><?= esc(implode(' ', $erroresFiltro)) ?></div><?php endif ?>
 </form>
 <div class="hoja p-3">

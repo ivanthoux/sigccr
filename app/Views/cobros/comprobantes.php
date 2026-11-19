@@ -21,8 +21,8 @@ $this->section('contenido');
     <div class="row g-2 align-items-end">
         <div class="col-md-3"><label for="numero" class="form-label small">N.º de comprobante o de cobro</label><input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" value="<?= esc((string) $f['numero'], 'attr') ?>"></div>
         <div class="col-md-4"><label for="texto" class="form-label small">Cliente o CUIT/CUIL</label><input type="search" class="form-control" id="texto" name="texto" value="<?= esc((string) $f['texto'], 'attr') ?>"></div>
-        <div class="col-md-3"><label for="fecha" class="form-label small">Fecha del cobro</label><input type="text" class="form-control" id="fecha" name="fecha" placeholder="dd/mm/aaaa" value="<?= esc((string) $f['fecha_texto'], 'attr') ?>"></div>
-        <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
+        <div class="col-md-3"><label for="fecha" class="form-label small">Fecha del cobro</label><input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc(fecha_campo((string) $f['fecha_texto']), 'attr') ?>"></div>
+        <?= acciones_filtro(limpiar: current_url()) ?>
     </div>
 </form>
 <?php if ($cobros !== null): ?>

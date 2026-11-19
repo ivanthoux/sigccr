@@ -131,16 +131,16 @@ test('R-044 Calendario operativo', async ({ comoUsuario }) => {
     await page.locator('#carga').fill(carga);
     await page.getByRole('button', { name: 'Registrar', exact: true }).click();
   };
-  await agregar(ddmmaaaa(feriado1), 'Feriado de prueba uno');
+  await agregar(feriado1, 'Feriado de prueba uno');
   await expect(exito(page)).toContainText('Se registraron 1 día(s) no hábil(es).');
-  await agregar(ddmmaaaa(feriado2), 'Feriado de prueba dos');
+  await agregar(feriado2, 'Feriado de prueba dos');
   await expect(exito(page)).toContainText('Se registraron 1');
-  await agregar(ddmmaaaa(cierre), 'Cierre anticipado de fin de año', 'CierreEntidad');
+  await agregar(cierre, 'Cierre anticipado de fin de año', 'CierreEntidad');
   await expect(exito(page)).toContainText('Se registraron 1');
 
-  await agregar(ddmmaaaa(feriado1), 'Feriado repetido');
+  await agregar(feriado1, 'Feriado repetido');
   await expect(page.locator('main')).toContainText('ya está registrada (A2)');
-  await agregar(ddmmaaaa(fecha(-9)), 'Fecha pasada');
+  await agregar(fecha(-9), 'Fecha pasada');
   await expect(page.locator('main')).toContainText('es una fecha pasada (A1)');
 
   const carga = [
@@ -169,7 +169,7 @@ test('R-045 Baja de un día no hábil y nueva carga', async ({ comoUsuario }) =>
   const fila = page.locator('main table tbody tr', { hasText: ddmmaaaa(feriado2) });
   await fila.getByRole('button').click();
   await expect(exito(page)).toContainText('Día no hábil dado de baja.');
-  await page.locator('#fecha').fill(ddmmaaaa(feriado2));
+  await page.locator('#fecha').fill(feriado2);
   await page.locator('#descripcion').fill('Feriado de prueba dos');
   await page.getByRole('button', { name: 'Registrar', exact: true }).click();
   await expect(exito(page)).toContainText('Se registraron 1');

@@ -79,10 +79,10 @@ $this->section('contenido');
     <?php if (in_array($clave, ['cartera', 'morosidad', 'cobranzas', 'solicitudes', 'refinanciaciones'], true)): ?>
         <?= $texto('cliente', 'Cliente', 'Nombre, CUIT/CUIL o documento') ?>
     <?php endif ?>
-    <div class="col-12 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+    <div class="col-12 col-md">
         <span class="small text-body-secondary"><?= $proyeccion ? 'Sin fechas, se proyecta desde hoy por el período configurado en los parámetros de campañas.' : 'Día, semana, mes o trimestre que contiene la fecha de referencia (hoy si se deja vacía); el rango personalizado usa las fechas «desde» y «hasta».' ?></span>
-        <span class="d-flex gap-2"><a href="<?= $ruta ?>" class="btn btn-sm btn-outline-secondary">Limpiar</a><button type="submit" class="btn btn-sm btn-primary">Generar reporte</button></span>
     </div>
+    <?= acciones_filtro(limpiar: $ruta, texto: 'Generar reporte', icono: 'bi-bar-chart') ?>
 </form>
 <?php if ($r !== null): ?>
     <?php $acciones = '<span class="d-flex gap-2 d-print-none"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir o PDF</button>'
