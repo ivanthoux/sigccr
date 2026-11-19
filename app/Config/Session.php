@@ -31,7 +31,7 @@ class Session extends BaseConfig
      *
      * The session cookie name, must contain only [0-9a-z_-] characters
      */
-    public string $cookieName = 'sigccr_sesion';
+    public string $cookieName = '__Host-sigccr_sesion'; // prefijo __Host-: solo HTTPS, sin dominio y con ruta / (ASVS V3.3.1)
 
     /**
      * --------------------------------------------------------------------------
