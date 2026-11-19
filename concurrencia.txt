@@ -1,0 +1,6 @@
+cliente=20014
+cobros_confirmados_del_cliente=1
+cobro=486
+estado_del_cobro=Anulado
+anulaciones_del_cobro=1
+saldos_a_favor_de_la_anulacion=1

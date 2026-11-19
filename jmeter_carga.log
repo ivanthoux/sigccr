@@ -1,0 +1,617 @@
+2026-11-19 19:23:44,606 INFO o.a.j.u.JMeterUtils: Setting Locale to en_EN
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Loading user properties from: /home/runner/work/sigccr/sigccr/jmeter/bin/user.properties
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Loading system properties from: /home/runner/work/sigccr/sigccr/jmeter/bin/system.properties
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Setting JMeter property: clave=Rend-dd37cdf34022b2d371f8a0ed-2026
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Setting JMeter property: datos=tests/rendimiento/resultados
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Setting JMeter property: duracion=600
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Setting JMeter property: host=localhost
+2026-11-19 19:23:44,617 INFO o.a.j.JMeter: Setting JMeter property: puerto=443
+2026-11-19 19:23:44,620 INFO o.a.j.JMeter: Copyright (c) 1998-2024 The Apache Software Foundation
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: Version 5.6.3
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: java.version=21.0.13
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: java.vm.name=OpenJDK 64-Bit Server VM
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: os.name=Linux
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: os.arch=amd64
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: os.version=7.0.0-1020-azure
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: file.encoding=UTF-8
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: java.awt.headless=true
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: Max memory     =1073741824
+2026-11-19 19:23:44,621 INFO o.a.j.JMeter: Available Processors =4
+2026-11-19 19:23:44,627 INFO o.a.j.JMeter: Default Locale=English (EN)
+2026-11-19 19:23:44,628 INFO o.a.j.JMeter: JMeter  Locale=English (EN)
+2026-11-19 19:23:44,628 INFO o.a.j.JMeter: JMeterHome=/home/runner/work/sigccr/sigccr/jmeter
+2026-11-19 19:23:44,628 INFO o.a.j.JMeter: user.dir  =/home/runner/work/sigccr/sigccr
+2026-11-19 19:23:44,628 INFO o.a.j.JMeter: PWD       =/home/runner/work/sigccr/sigccr
+2026-11-19 19:23:44,628 INFO o.a.j.JMeter: IP: 10.1.1.29 Name: runnervm0hi8g FullName: runnervm0hi8g.3yqozcg4kt4u1f4me5n0tbvtwg.gx.internal.cloudapp.net
+2026-11-19 19:23:44,635 INFO o.a.j.JMeter: Setting property 'jmeter.reportgenerator.outputdir' to:'/home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga'
+2026-11-19 19:23:44,637 INFO o.a.j.s.FileServer: Default base='/home/runner/work/sigccr/sigccr'
+2026-11-19 19:23:44,638 INFO o.a.j.s.FileServer: Set new base='/home/runner/work/sigccr/sigccr/tests/rendimiento'
+2026-11-19 19:23:44,969 INFO o.a.j.s.SaveService: Testplan (JMX) version: 2.2. Testlog (JTL) version: 2.2
+2026-11-19 19:23:44,992 INFO o.a.j.s.SaveService: Using SaveService properties version 5.0
+2026-11-19 19:23:44,994 INFO o.a.j.s.SaveService: Using SaveService properties file encoding UTF-8
+2026-11-19 19:23:44,996 INFO o.a.j.s.SaveService: Loading file: tests/rendimiento/carga.jmx
+2026-11-19 19:23:45,019 INFO o.a.j.p.h.c.CookieManager: Settings: Delete null: true Check: true Allow variable: true Save: false Prefix: COOKIE_
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/html is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xhtml+xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for application/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/xml is org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/vnd.wap.wml is org.apache.jmeter.protocol.http.parser.RegexpHTMLParser
+2026-11-19 19:23:45,028 INFO o.a.j.p.h.s.HTTPSamplerBase: Parser for text/css is org.apache.jmeter.protocol.http.parser.CssParser
+2026-11-19 19:23:45,145 INFO o.a.j.JMeter: Creating summariser <summary>
+2026-11-19 19:23:45,150 INFO o.a.j.r.d.ReportGenerator: ReportGenerator will use for Parsing the separator: ','
+2026-11-19 19:23:45,151 INFO o.a.j.r.d.ReportGenerator: Will generate report at end of test from  results file: tests/rendimiento/resultados/carga.jtl
+2026-11-19 19:23:45,151 INFO o.a.j.r.d.ReportGenerator: Reading report generator properties from: /home/runner/work/sigccr/sigccr/jmeter/bin/reportgenerator.properties
+2026-11-19 19:23:45,151 INFO o.a.j.r.d.ReportGenerator: Merging with JMeter properties
+2026-11-19 19:23:45,153 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.temp_dir' not found, using default value 'temp' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.apdex_per_transaction' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: apdex_per_transaction is empty, not APDEX per transaction customization
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.sample_filter' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.report_title' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.start_date' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.end_date' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.date_format' not found, using default value 'null' instead.
+2026-11-19 19:23:45,154 INFO o.a.j.r.c.ReportGeneratorConfiguration: Will use date range start date: null, end date: null
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.totalTPS.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.activeThreadsOverTime.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.timeVsThreads.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimeDistribution.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.transactionsPerSecond.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentiles.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimePercentilesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.responseTimesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.connectTimeOverTime.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,156 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.graph.latenciesOverTime.exclude_controllers' not found, using default value 'false' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.filters_only_sample_series' not found, using default value 'true' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.series_filter' not found, using default value '' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.json.show_controllers_only' not found, using default value 'false' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.filters_only_sample_series' not found, using default value 'true' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.series_filter' not found, using default value '' instead.
+2026-11-19 19:23:45,157 INFO o.a.j.r.c.ReportGeneratorConfiguration: Property 'jmeter.reportgenerator.exporter.html.show_controllers_only' not found, using default value 'false' instead.
+2026-11-19 19:23:45,176 INFO o.a.j.e.StandardJMeterEngine: Running the test!
+2026-11-19 19:23:45,176 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-11-19 19:23:45,176 INFO o.a.j.s.SampleEvent: List of sample_variables: []
+2026-11-19 19:23:45,190 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must contain the string: '.functions.'
+2026-11-19 19:23:45,190 INFO o.a.j.e.u.CompoundVariable: Note: Function class names must not contain the string: '.gui.'
+2026-11-19 19:23:45,253 INFO o.a.j.JMeter: Running test (1795116225252)
+2026-11-19 19:23:45,271 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 1 : Analistas de Crédito
+2026-11-19 19:23:45,271 INFO o.a.j.e.StandardJMeterEngine: Starting 3 threads for group Analistas de Crédito.
+2026-11-19 19:23:45,271 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-19 19:23:45,271 INFO o.a.j.t.ThreadGroup: Starting thread group... number=1 threads=3 ramp-up=30 delayedStart=false
+2026-11-19 19:23:45,276 INFO o.a.j.t.ThreadGroup: Started thread group number 1
+2026-11-19 19:23:45,276 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 2 : Cajeros
+2026-11-19 19:23:45,276 INFO o.a.j.e.StandardJMeterEngine: Starting 6 threads for group Cajeros.
+2026-11-19 19:23:45,276 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-19 19:23:45,276 INFO o.a.j.t.ThreadGroup: Starting thread group... number=2 threads=6 ramp-up=60 delayedStart=false
+2026-11-19 19:23:45,280 INFO o.a.j.t.ThreadGroup: Started thread group number 2
+2026-11-19 19:23:45,280 INFO o.a.j.e.StandardJMeterEngine: Starting ThreadGroup: 3 : Gerente
+2026-11-19 19:23:45,280 INFO o.a.j.e.StandardJMeterEngine: Starting 1 threads for group Gerente.
+2026-11-19 19:23:45,281 INFO o.a.j.e.StandardJMeterEngine: Thread will continue on error
+2026-11-19 19:23:45,281 INFO o.a.j.t.ThreadGroup: Starting thread group... number=3 threads=1 ramp-up=10 delayedStart=false
+2026-11-19 19:23:45,281 INFO o.a.j.t.ThreadGroup: Started thread group number 3
+2026-11-19 19:23:45,281 INFO o.a.j.e.StandardJMeterEngine: All thread groups have been started
+2026-11-19 19:23:45,281 INFO o.a.j.t.JMeterThread: Thread started: Gerente 3-1
+2026-11-19 19:23:45,308 INFO o.a.j.p.h.s.HTTPHCAbstractImpl: Local host = runnervm0hi8g
+2026-11-19 19:23:45,316 INFO o.a.j.p.h.s.HTTPHC4Impl: HTTP request retry count = 0
+2026-11-19 19:23:45,317 INFO o.a.j.s.SampleResult: Note: Sample TimeStamps are START times
+2026-11-19 19:23:45,317 INFO o.a.j.s.SampleResult: sampleresult.default.encoding is set to UTF-8
+2026-11-19 19:23:45,317 INFO o.a.j.s.SampleResult: sampleresult.useNanoTime=true
+2026-11-19 19:23:45,317 INFO o.a.j.s.SampleResult: sampleresult.nanoThreadSleep=5000
+2026-11-19 19:23:45,438 INFO o.a.j.p.h.s.h.LazyLayeredConnectionSocketFactory: Setting up HTTPS TrustAll Socket Factory
+2026-11-19 19:23:45,443 INFO o.a.j.u.JsseSSLManager: Using default SSL protocol: TLS
+2026-11-19 19:23:45,443 INFO o.a.j.u.JsseSSLManager: SSL session context: per-thread
+2026-11-19 19:23:45,517 INFO o.a.j.t.JMeterThread: Thread started: Analistas de Crédito 1-1
+2026-11-19 19:23:45,517 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-1
+2026-11-19 19:23:45,518 INFO o.a.j.s.FileServer: Stored: tests/rendimiento/resultados/clientes.csv
+2026-11-19 19:23:45,518 INFO o.a.j.s.FileServer: Stored: tests/rendimiento/resultados/cobros.csv
+2026-11-19 19:23:45,749 INFO o.a.j.u.SSLManager: JmeterKeyStore Location:  type JKS
+2026-11-19 19:23:45,768 INFO o.a.j.u.SSLManager: KeyStore created OK
+2026-11-19 19:23:45,768 WARN o.a.j.u.SSLManager: Keystore file not found, loading empty keystore
+2026-11-19 19:23:55,515 INFO o.a.j.t.JMeterThread: Thread started: Analistas de Crédito 1-2
+2026-11-19 19:23:55,517 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-2
+2026-11-19 19:24:00,486 INFO o.a.j.r.Summariser: summary +     32 in 00:00:15 =    2.1/s Avg:   246 Min:    13 Max:  1827 Err:     0 (0.00%) Active: 5 Started: 5 Finished: 0
+2026-11-19 19:24:05,516 INFO o.a.j.t.JMeterThread: Thread started: Analistas de Crédito 1-3
+2026-11-19 19:24:05,516 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-3
+2026-11-19 19:24:15,516 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-4
+2026-11-19 19:24:25,515 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-5
+2026-11-19 19:24:30,475 INFO o.a.j.r.Summariser: summary +    130 in 00:00:30 =    4.3/s Avg:   117 Min:    11 Max:  1741 Err:     0 (0.00%) Active: 9 Started: 9 Finished: 0
+2026-11-19 19:24:30,476 INFO o.a.j.r.Summariser: summary =    162 in 00:00:45 =    3.6/s Avg:   142 Min:    11 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:24:35,514 INFO o.a.j.t.JMeterThread: Thread started: Cajeros 2-6
+2026-11-19 19:25:00,054 INFO o.a.j.r.Summariser: summary +    169 in 00:00:30 =    5.7/s Avg:    74 Min:    10 Max:  1805 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:25:00,055 INFO o.a.j.r.Summariser: summary =    331 in 00:01:15 =    4.4/s Avg:   107 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:25:30,137 INFO o.a.j.r.Summariser: summary +    169 in 00:00:30 =    5.6/s Avg:    89 Min:    11 Max:  1657 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:25:30,137 INFO o.a.j.r.Summariser: summary =    500 in 00:01:45 =    4.8/s Avg:   101 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:26:00,198 INFO o.a.j.r.Summariser: summary +    173 in 00:00:30 =    5.8/s Avg:    87 Min:    11 Max:  1653 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:26:00,198 INFO o.a.j.r.Summariser: summary =    673 in 00:02:15 =    5.0/s Avg:    97 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:26:30,218 INFO o.a.j.r.Summariser: summary +    164 in 00:00:30 =    5.5/s Avg:    82 Min:    11 Max:  1640 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:26:30,219 INFO o.a.j.r.Summariser: summary =    837 in 00:02:45 =    5.1/s Avg:    94 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:27:00,785 INFO o.a.j.r.Summariser: summary +    179 in 00:00:31 =    5.9/s Avg:    88 Min:    11 Max:  1579 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:27:00,785 INFO o.a.j.r.Summariser: summary =   1016 in 00:03:16 =    5.2/s Avg:    93 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:27:30,493 INFO o.a.j.r.Summariser: summary +    178 in 00:00:30 =    6.0/s Avg:    87 Min:    10 Max:  1607 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:27:30,493 INFO o.a.j.r.Summariser: summary =   1194 in 00:03:45 =    5.3/s Avg:    92 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:28:00,009 INFO o.a.j.r.Summariser: summary +    181 in 00:00:30 =    6.1/s Avg:    87 Min:    11 Max:  1668 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:28:00,009 INFO o.a.j.r.Summariser: summary =   1375 in 00:04:15 =    5.4/s Avg:    92 Min:    10 Max:  1827 Err:     0 (0.00%)
+2026-11-19 19:28:30,241 INFO o.a.j.r.Summariser: summary +    163 in 00:00:30 =    5.4/s Avg:    97 Min:    11 Max:  1834 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:28:30,241 INFO o.a.j.r.Summariser: summary =   1538 in 00:04:45 =    5.4/s Avg:    92 Min:    10 Max:  1834 Err:     0 (0.00%)
+2026-11-19 19:28:49,508 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:28:53,221 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:28:56,494 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:28:58,493 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:28:59,115 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:28:59,727 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:00,097 INFO o.a.j.r.Summariser: summary +    182 in 00:00:30 =    6.1/s Avg:    92 Min:    11 Max:  1850 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:29:00,097 INFO o.a.j.r.Summariser: summary =   1720 in 00:05:15 =    5.5/s Avg:    92 Min:    10 Max:  1850 Err:     0 (0.00%)
+2026-11-19 19:29:01,545 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:02,840 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:05,262 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:05,262 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:09,877 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:09,940 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:10,069 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:10,784 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:12,203 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:12,680 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:14,129 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:15,637 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:16,489 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:16,777 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:16,971 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:19,374 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:20,604 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:21,253 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:21,387 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:21,927 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:21,959 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:22,879 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:23,859 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:26,787 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:27,076 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:27,133 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:27,958 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:28,090 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:28,211 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:29,006 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:30,519 INFO o.a.j.r.Summariser: summary +    172 in 00:00:30 =    5.7/s Avg:   101 Min:    11 Max:  1826 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:29:30,520 INFO o.a.j.r.Summariser: summary =   1892 in 00:05:45 =    5.5/s Avg:    93 Min:    10 Max:  1850 Err:     0 (0.00%)
+2026-11-19 19:29:30,599 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:31,020 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:32,136 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:33,166 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:33,447 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:34,277 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:34,506 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:34,520 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:35,701 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:37,871 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:38,521 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:38,571 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:38,761 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:39,179 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:39,398 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:41,588 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:42,424 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:43,244 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:43,571 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:44,169 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:44,211 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:45,725 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:46,273 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:46,450 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:46,792 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:47,775 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:48,418 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:50,056 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:50,099 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:50,132 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:50,484 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:51,774 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:54,408 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:55,092 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:55,166 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:55,337 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:55,775 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:56,573 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:58,830 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:58,918 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:29:59,258 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:00,160 INFO o.a.j.r.Summariser: summary +    165 in 00:00:30 =    5.6/s Avg:    94 Min:    11 Max:  1650 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:30:00,160 INFO o.a.j.r.Summariser: summary =   2057 in 00:06:15 =    5.5/s Avg:    93 Min:    10 Max:  1850 Err:     0 (0.00%)
+2026-11-19 19:30:00,197 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:00,593 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:01,118 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:01,226 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:01,304 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:02,429 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:03,140 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:04,109 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:05,661 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:06,571 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:07,180 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:08,341 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:08,848 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:09,108 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:09,572 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:09,981 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:10,142 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:12,004 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:12,151 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:12,734 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:13,454 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:14,584 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:14,953 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:15,292 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:17,410 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:18,029 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:18,328 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:18,653 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:19,661 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:19,689 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:19,700 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:20,286 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:21,421 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:22,473 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:23,056 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:24,491 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:25,286 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:25,500 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:26,777 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:26,810 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:26,994 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:28,180 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:29,398 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:30,029 INFO o.a.j.r.Summariser: summary +    173 in 00:00:30 =    5.8/s Avg:    82 Min:    12 Max:  1904 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:30:30,029 INFO o.a.j.r.Summariser: summary =   2230 in 00:06:45 =    5.5/s Avg:    92 Min:    10 Max:  1904 Err:     0 (0.00%)
+2026-11-19 19:30:30,062 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:30,578 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:30,624 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:31,000 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:32,944 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:33,470 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:33,591 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:34,297 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:34,309 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:34,971 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:35,503 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:36,103 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:36,141 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:38,312 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:38,667 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:38,836 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:39,657 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:40,254 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:40,645 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:41,516 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:41,835 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:43,543 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:44,683 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:44,773 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:44,869 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:44,956 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:46,214 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:46,522 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:46,692 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:49,107 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:49,467 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:49,901 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:50,378 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:51,038 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:51,125 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:52,084 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:52,181 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:54,233 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:54,360 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:54,517 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:55,481 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:55,510 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:55,725 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:56,907 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:57,928 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:30:58,452 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:00,754 INFO o.a.j.r.Summariser: summary +    179 in 00:00:31 =    5.8/s Avg:   101 Min:    13 Max:  1961 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:31:00,755 INFO o.a.j.r.Summariser: summary =   2409 in 00:07:16 =    5.5/s Avg:    93 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:31:00,768 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:00,788 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:00,914 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:02,410 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:02,667 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:02,890 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:02,937 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:03,752 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:04,007 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:04,535 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:05,839 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:05,853 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:06,582 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:07,130 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:07,483 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:09,128 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:10,788 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:11,301 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:11,716 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:13,346 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:13,447 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:14,095 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:14,266 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:14,852 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:15,277 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:15,951 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:16,099 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:16,817 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:19,160 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:19,324 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:20,319 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:20,350 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:20,358 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:21,357 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:21,511 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:22,696 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:23,403 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:24,499 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:24,977 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:25,742 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:26,401 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:26,413 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:27,813 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:29,126 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:29,872 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:30,080 INFO o.a.j.r.Summariser: summary +    176 in 00:00:29 =    6.0/s Avg:    96 Min:    12 Max:  1909 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:31:30,080 INFO o.a.j.r.Summariser: summary =   2585 in 00:07:45 =    5.6/s Avg:    93 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:31:30,110 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:30,183 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:31,514 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:32,103 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:32,691 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:33,158 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:35,382 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:35,460 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:35,799 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:36,073 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:37,025 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:37,081 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:37,164 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:37,531 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:38,747 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:40,195 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:41,030 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:41,165 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:42,283 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:43,440 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:43,636 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:43,738 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:44,639 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:44,716 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:45,477 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:45,786 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:46,921 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:47,564 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:48,200 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:48,784 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:50,850 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:50,996 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:51,298 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:52,524 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:52,793 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:52,860 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:53,946 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:54,077 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:57,011 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:57,027 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:57,139 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:57,573 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:59,060 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:59,275 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:31:59,713 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:00,232 INFO o.a.j.r.Summariser: summary +    177 in 00:00:30 =    5.9/s Avg:    88 Min:    11 Max:  1923 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:32:00,232 INFO o.a.j.r.Summariser: summary =   2762 in 00:08:15 =    5.6/s Avg:    93 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:32:00,321 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:00,417 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:02,652 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:02,823 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:03,414 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:04,472 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:06,355 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:06,448 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:06,505 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:06,855 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:07,437 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:08,501 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:08,511 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:08,640 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:09,106 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:11,581 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:11,716 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:12,849 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:13,079 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:13,387 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:14,364 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:14,741 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:14,829 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:16,204 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:16,382 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:17,883 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:17,930 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:19,484 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:19,546 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:19,602 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:20,233 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:22,166 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:23,212 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:23,528 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:23,596 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:23,600 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:24,889 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:25,623 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:26,091 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:28,090 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:28,395 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:29,428 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:29,661 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:29,795 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:30,130 INFO o.a.j.r.Summariser: summary +    171 in 00:00:30 =    5.7/s Avg:    71 Min:    11 Max:  1688 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:32:30,130 INFO o.a.j.r.Summariser: summary =   2933 in 00:08:45 =    5.6/s Avg:    91 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:32:30,632 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:31,250 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:32,710 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:32,771 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:32,977 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:35,818 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:35,990 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:36,206 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:36,301 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:37,050 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:39,086 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:39,461 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:39,562 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:40,774 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:41,176 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:41,555 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:42,188 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:43,041 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:44,391 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:45,864 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:45,969 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:46,966 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:47,271 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:47,519 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:47,741 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:49,497 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:51,149 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:51,764 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:52,065 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:52,367 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:54,219 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:54,324 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:54,845 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:54,909 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:55,049 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:58,223 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:58,425 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:58,610 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:58,775 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:32:58,950 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:00,189 INFO o.a.j.r.Summariser: summary +    155 in 00:00:30 =    5.2/s Avg:    91 Min:    11 Max:  1663 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:33:00,189 INFO o.a.j.r.Summariser: summary =   3088 in 00:09:15 =    5.6/s Avg:    91 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:33:01,723 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:02,150 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:03,224 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:03,502 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:03,960 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:04,295 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:04,525 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:04,636 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:05,173 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:06,633 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:07,083 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:08,420 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:09,445 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:09,520 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:09,960 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:10,270 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:11,048 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:11,816 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:12,367 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:12,506 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:15,225 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:15,291 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:15,326 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:15,627 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:15,704 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:16,089 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:17,445 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:18,810 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:19,450 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:20,320 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:20,625 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:21,482 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:22,086 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:22,404 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:23,568 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:23,624 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:24,202 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:24,622 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:24,924 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:25,414 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:27,625 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:27,927 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:28,595 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:29,013 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:29,528 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:29,930 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:30,105 INFO o.a.j.r.Summariser: summary +    181 in 00:00:30 =    6.1/s Avg:    82 Min:    11 Max:  1586 Err:     0 (0.00%) Active: 10 Started: 10 Finished: 0
+2026-11-19 19:33:30,105 INFO o.a.j.r.Summariser: summary =   3269 in 00:09:45 =    5.6/s Avg:    91 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:33:32,245 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:32,273 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:32,858 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:34,471 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:34,745 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:34,790 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:34,813 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:35,052 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:35,168 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:37,336 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:39,280 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:40,228 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:40,228 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-1
+2026-11-19 19:33:40,333 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:40,544 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:40,544 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-2
+2026-11-19 19:33:40,663 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:41,364 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:41,739 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:42,644 INFO o.a.j.t.JMeterThread: Thread finished: Analistas de Crédito 1-1
+2026-11-19 19:33:42,683 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:42,774 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-5
+2026-11-19 19:33:42,885 INFO o.a.j.t.JMeterThread: Thread finished: Gerente 3-1
+2026-11-19 19:33:42,903 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:43,667 WARN o.a.j.p.h.s.HTTPSamplerBase: Existing CookieManager Cookies de la sesión superseded by Cookies de la sesión
+2026-11-19 19:33:43,667 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-4
+2026-11-19 19:33:44,018 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-6
+2026-11-19 19:33:44,056 INFO o.a.j.t.JMeterThread: Thread finished: Cajeros 2-3
+2026-11-19 19:33:44,582 INFO o.a.j.t.JMeterThread: Thread finished: Analistas de Crédito 1-3
+2026-11-19 19:33:44,800 INFO o.a.j.t.JMeterThread: Thread finished: Analistas de Crédito 1-2
+2026-11-19 19:33:44,801 INFO o.a.j.e.StandardJMeterEngine: Notifying test listeners of end of test
+2026-11-19 19:33:44,801 INFO o.a.j.s.FileServer: Close: tests/rendimiento/resultados/cobros.csv
+2026-11-19 19:33:44,802 INFO o.a.j.s.FileServer: Close: tests/rendimiento/resultados/clientes.csv
+2026-11-19 19:33:44,802 INFO o.a.j.r.Summariser: summary +     83 in 00:00:15 =    5.6/s Avg:   111 Min:    11 Max:  1679 Err:     0 (0.00%) Active: 0 Started: 10 Finished: 10
+2026-11-19 19:33:44,802 INFO o.a.j.r.Summariser: summary =   3352 in 00:10:00 =    5.6/s Avg:    91 Min:    10 Max:  1961 Err:     0 (0.00%)
+2026-11-19 19:33:44,803 INFO o.a.j.JMeter: Generating Dashboard
+2026-11-19 19:33:44,803 INFO o.a.j.r.d.ReportGenerator: Flushing result collector before report Generation
+2026-11-19 19:33:44,809 INFO o.a.j.r.p.NormalizerSampleConsumer: Using format, 'ms', to parse timeStamp field
+2026-11-19 19:33:44,944 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): beginDate produced 0 samples
+2026-11-19 19:33:44,944 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.AggregateConsumer#stopProducing(): endDate produced 0 samples
+2026-11-19 19:33:44,945 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ApdexSummaryConsumer#stopProducing(): apdexSummary produced 0 samples
+2026-11-19 19:33:44,945 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.RequestsSummaryConsumer#stopProducing(): requestsSummary produced 0 samples
+2026-11-19 19:33:44,951 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.StatisticsSummaryConsumer#stopProducing(): statisticsSummary produced 0 samples
+2026-11-19 19:33:44,952 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.Top5ErrorsBySamplerConsumer#stopProducing(): top5ErrorsBySampler produced 0 samples
+2026-11-19 19:33:44,952 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.ErrorsSummaryConsumer#stopProducing(): errorsSummary produced 0 samples
+2026-11-19 19:33:44,952 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.HitsPerSecondGraphConsumer#stopProducing(): hitsPerSecond produced 0 samples
+2026-11-19 19:33:45,003 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyVSRequestGraphConsumer#stopProducing(): latencyVsRequest produced 0 samples
+2026-11-19 19:33:45,003 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.SyntheticResponseTimeDistributionGraphConsumer#stopProducing(): syntheticResponseTimeDistribution produced 0 samples
+2026-11-19 19:33:45,004 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.BytesThroughputGraphConsumer#stopProducing(): bytesThroughputOverTime produced 0 samples
+2026-11-19 19:33:45,004 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.CodesPerSecondGraphConsumer#stopProducing(): codesPerSecond produced 0 samples
+2026-11-19 19:33:45,031 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeVSRequestGraphConsumer#stopProducing(): responseTimeVsRequest produced 0 samples
+2026-11-19 19:33:45,031 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): startIntervalControlerFilter produced 30324 samples
+2026-11-19 19:33:45,031 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TotalTPSGraphConsumer#stopProducing(): totalTPS produced 0 samples
+2026-11-19 19:33:45,031 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ActiveThreadsGraphConsumer#stopProducing(): activeThreadsOverTime produced 0 samples
+2026-11-19 19:33:45,032 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TimeVSThreadGraphConsumer#stopProducing(): timeVsThreads produced 0 samples
+2026-11-19 19:33:45,032 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeDistributionGraphConsumer#stopProducing(): responseTimeDistribution produced 0 samples
+2026-11-19 19:33:45,032 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.TransactionsPerSecondGraphConsumer#stopProducing(): transactionsPerSecond produced 0 samples
+2026-11-19 19:33:45,032 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesGraphConsumer#stopProducing(): responseTimePercentiles produced 0 samples
+2026-11-19 19:33:45,036 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimePercentilesOverTimeGraphConsumer#stopProducing(): responseTimePercentilesOverTime produced 0 samples
+2026-11-19 19:33:45,037 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ResponseTimeOverTimeGraphConsumer#stopProducing(): responseTimesOverTime produced 0 samples
+2026-11-19 19:33:45,037 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.ConnectTimeOverTimeGraphConsumer#stopProducing(): connectTimeOverTime produced 0 samples
+2026-11-19 19:33:45,037 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.graph.impl.LatencyOverTimeGraphConsumer#stopProducing(): latenciesOverTime produced 0 samples
+2026-11-19 19:33:45,038 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): nameFilter produced 64980 samples
+2026-11-19 19:33:45,038 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.FilterConsumer#stopProducing(): dateRangeFilter produced 12996 samples
+2026-11-19 19:33:45,038 INFO o.a.j.r.p.AbstractSampleConsumer: class org.apache.jmeter.report.processor.NormalizerSampleConsumer#stopProducing(): normalizer produced 4332 samples
+2026-11-19 19:33:45,038 INFO o.a.j.r.p.CsvFileSampleSource: produce(): 4332 samples produced in 219ms on channel 0
+2026-11-19 19:33:45,038 INFO o.a.j.r.d.ReportGenerator: Exporting data using exporter:'json' of className:'org.apache.jmeter.report.dashboard.JsonExporter'
+2026-11-19 19:33:45,086 INFO o.a.j.r.d.JsonExporter: Found data for consumer statisticsSummary in context
+2026-11-19 19:33:45,093 INFO o.a.j.r.d.JsonExporter: Creating statistics for overall
+2026-11-19 19:33:45,093 INFO o.a.j.r.d.JsonExporter: Creating statistics for other transactions
+2026-11-19 19:33:45,094 INFO o.a.j.r.d.JsonExporter: Checking output folder
+2026-11-19 19:33:45,094 INFO o.a.j.r.d.JsonExporter: Writing statistics JSON to /home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga/statistics.json
+2026-11-19 19:33:45,116 INFO o.a.j.r.d.ReportGenerator: Exporting data using exporter:'html' of className:'org.apache.jmeter.report.dashboard.HtmlTemplateExporter'
+2026-11-19 19:33:45,117 INFO o.a.j.r.d.HtmlTemplateExporter: Will generate dashboard in folder: /home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga
+2026-11-19 19:33:45,214 INFO o.a.j.r.d.HtmlTemplateExporter: Report will be generated in: /home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga, creating folder structure
+2026-11-19 19:33:45,216 INFO o.a.j.r.d.TemplateVisitor: Copying folder from '/home/runner/work/sigccr/sigccr/jmeter/bin/report-template' to '/home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga', got message: /home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga, found non empty folder with following content [/home/runner/work/sigccr/sigccr/tests/rendimiento/resultados/informe-carga/statistics.json], will be ignored
+2026-11-19 19:33:45,316 INFO o.a.j.JMeter: Dashboard generated

@@ -1,0 +1,184 @@
+{
+  "cumple": true,
+  "carga": [
+    {
+      "operacion": "RP-01 Búsqueda de clientes por CUIL",
+      "requisito": "RNF-03",
+      "muestras": 315,
+      "por_minuto": 31.7,
+      "p50": 13,
+      "p90": 26,
+      "p95": 36,
+      "p99": 64,
+      "maximo": 80,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-01 Búsqueda de clientes por apellido",
+      "requisito": "RNF-03",
+      "muestras": 315,
+      "por_minuto": 31.7,
+      "p50": 39,
+      "p90": 59,
+      "p95": 81,
+      "p99": 127,
+      "maximo": 156,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-01 Búsqueda de clientes por documento",
+      "requisito": "RNF-03",
+      "muestras": 315,
+      "por_minuto": 31.7,
+      "p50": 14,
+      "p90": 26,
+      "p95": 39,
+      "p99": 79,
+      "maximo": 90,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-02 Búsqueda del cliente en el cobro",
+      "requisito": "RNF-03",
+      "muestras": 474,
+      "por_minuto": 47.7,
+      "p50": 38,
+      "p90": 59,
+      "p95": 74,
+      "p99": 128,
+      "maximo": 136,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-03 Deuda del cliente",
+      "requisito": "RNF-03",
+      "muestras": 474,
+      "por_minuto": 47.7,
+      "p50": 45,
+      "p90": 105,
+      "p95": 122,
+      "p99": 205,
+      "maximo": 558,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-03 Registro del cobro",
+      "requisito": "RNF-03",
+      "muestras": 474,
+      "por_minuto": 47.7,
+      "p50": 50,
+      "p90": 83,
+      "p95": 109,
+      "p99": 182,
+      "maximo": 257,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-05 Comprobantes del día",
+      "requisito": "RNF-07",
+      "muestras": 473,
+      "por_minuto": 47.6,
+      "p50": 17,
+      "p90": 27,
+      "p95": 38,
+      "p99": 71,
+      "maximo": 88,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-05 Listado de solicitudes",
+      "requisito": "RNF-07",
+      "muestras": 315,
+      "por_minuto": 31.7,
+      "p50": 35,
+      "p90": 59,
+      "p95": 80,
+      "p99": 116,
+      "maximo": 126,
+      "errores_pct": 0.0,
+      "cumple": true
+    },
+    {
+      "operacion": "RP-05 Reporte de cartera",
+      "requisito": "Informativo",
+      "muestras": 57,
+      "por_minuto": 5.7,
+      "p50": 1187,
+      "p90": 1292,
+      "p95": 1310,
+      "p99": 1397,
+      "maximo": 1397,
+      "errores_pct": 0.0,
+      "cumple": null
+    },
+    {
+      "operacion": "RP-05 Reporte de morosidad",
+      "requisito": "Informativo",
+      "muestras": 57,
+      "por_minuto": 5.7,
+      "p50": 258,
+      "p90": 308,
+      "p95": 364,
+      "p99": 387,
+      "maximo": 387,
+      "errores_pct": 0.0,
+      "cumple": null
+    },
+    {
+      "operacion": "RP-05 Tablero gerencial",
+      "requisito": "Informativo",
+      "muestras": 57,
+      "por_minuto": 5.7,
+      "p50": 1627,
+      "p90": 1850,
+      "p95": 1909,
+      "p99": 1961,
+      "maximo": 1961,
+      "errores_pct": 0.0,
+      "cumple": null
+    }
+  ],
+  "concurrencia": [
+    {
+      "caso": "RP-06a Dos cobros simultáneos de la misma cuota",
+      "esperado": "un solo cobro confirmado",
+      "obtenido": "1 cobro(s) confirmado(s)",
+      "cumple": true
+    },
+    {
+      "caso": "RP-06b Dos anulaciones simultáneas del mismo cobro",
+      "esperado": "una sola anulación y un solo saldo a favor",
+      "obtenido": "estado Anulado, 1 anulación(es), 1 saldo(s) a favor",
+      "cumple": true
+    }
+  ],
+  "procesos": [
+    {
+      "proceso": "cartera:punitorios",
+      "segundos": 72.2,
+      "codigo": 0
+    },
+    {
+      "proceso": "fondos:proyectar",
+      "segundos": 0.2,
+      "codigo": 0
+    },
+    {
+      "proceso": "vencimientos:controlar",
+      "segundos": 0.2,
+      "codigo": 0
+    },
+    {
+      "proceso": "evaluacion:ejecutar",
+      "segundos": 0.1,
+      "codigo": 0
+    }
+  ]
+}

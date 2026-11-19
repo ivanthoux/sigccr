@@ -1,0 +1,7 @@
+
+CodeIgniter v4.7.5 Command Line Tool - Server Time: 2026-11-19 19:23:27 UTC+00:00
+
+Volumen de rendimiento cargado en 15.9 s: 20000 clientes, 30000 créditos, 300000 cuotas (6642 vencidas).
+Seeded: App\Database\Seeds\RendimientoSeeder
+Carga del volumen: 17 s
+Totales de la base (clientes, créditos, cuotas): 20022,30015,300201

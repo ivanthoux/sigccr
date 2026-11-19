@@ -1,0 +1,5 @@
+cartera:punitorios,72.2,0
+fondos:proyectar,0.2,0
+vencimientos:controlar,0.2,0
+evaluacion:ejecutar,0.1,0
+Cuotas con punitorios después del cálculo: 5937
