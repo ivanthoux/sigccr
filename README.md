@@ -131,6 +131,10 @@ E2E_CONSERVAR=1 bash tests/e2e/ejecutar.sh # deja la pila levantada al terminar
 
 Levanta una pila aparte (proyecto `sigccr_e2e`, puertos 18080 y 18443) con SQL Server vacío, aplica las migraciones y las semillas, crea el Administrador `admin@prueba.local` y recorre con Playwright el circuito de la prueba funcional integral (`docs/pruebas/prueba_funcional_integral_1_a_3.md`). Cada prueba lleva el identificador de su caso (R-xxx). El informe con las capturas de cada paso queda en `tests/e2e/informe/index.html`. No toca los contenedores ni la base del entorno de desarrollo. La integración continua la ejecuta en cada *pull request* y publica el informe como artefacto.
 
+## Actualizar la versión de SQL Server (D-62)
+
+La imagen está fija en una actualización acumulativa (hoy `2022-CU28-ubuntu-22.04`) para que el entorno no cambie solo. Para actualizarla: elegir la etiqueta nueva en <https://mcr.microsoft.com/v2/mssql/server/tags/list>, cambiarla en `docker-compose.yml` y en `.github/workflows/ci.yml`, abrir el *pull request* y esperar que pasen la integración, la prueba de punta a punta y, antes de publicar, la de rendimiento. En el equipo de desarrollo: `docker compose pull db && docker compose up -d db`.
+
 ## Conexión cifrada con SQL Server
 
 El controlador ODBC 18 exige un certificado de confianza para cifrar la conexión. En desarrollo la conexión viaja por la red interna de Docker sin cifrar (`database.default.encrypt = false`). Para cifrarla: configurar un certificado TLS en SQL Server (`mssql-conf set network.tlscert/tlskey`), agregar su autoridad a la imagen `app` (`/usr/local/share/ca-certificates` + `update-ca-certificates`) y poner `encrypt = true`.
