@@ -6,6 +6,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 Auditoría de diseño y accesibilidad de la interfaz (D-47).
 
+### Agregado (pruebas de integración de D-55 a D-58)
+- IN-71: modelo de contrato por campo (forma, título y texto de una cláusula, fecha y motivo) y controles del modelo
+  completo; antes IN-55, que ya identifica el descarte del pre-registro.
+- IN-72: declaración jurada PEP en el alta (ARC-01 a ARC-06, opcional) y su incorporación al legajo.
+- IN-73: impresión formal; un título con datos del usuario no sale del estilo de impresión.
+
+### Corregido (H-32 y extensiones)
+- H-32: las cláusulas del modelo de contrato con las listas paralelas incompletas se rechazan; antes podían correrse.
+- H-16 en el título y el texto de las cláusulas; la forma admite espacios en los extremos; el texto reduce los
+  espacios repetidos; el motivo de la pantalla admite 500 caracteres, como el sistema.
+
 ### Agregado (observaciones de la cátedra del 18/11/2026)
 - D-55: declaración jurada de persona expuesta políticamente en el legajo: opcional en el alta, exigida para
   liquidar (migración 33).
