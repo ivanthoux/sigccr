@@ -28,7 +28,7 @@ $this->section('contenido');
     <div class="row g-2 align-items-end">
         <div class="col-md-6 col-lg-4">
             <label for="texto" class="form-label small">Nombre, apellido o razón social</label>
-            <input type="search" class="form-control" id="texto" name="texto" value="<?= esc($c('texto'), 'attr') ?>" autofocus>
+            <input type="search" class="form-control" id="texto" name="texto" value="<?= esc($c('texto'), 'attr') ?>">
         </div>
         <div class="col-md-3 col-lg-2">
             <label for="documento" class="form-label small">Documento</label>

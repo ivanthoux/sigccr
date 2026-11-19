@@ -21,7 +21,7 @@ $this->section('contenido');
         </div>
         <div class="col-7">
             <label for="numero" class="form-label">Número</label>
-            <input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" required maxlength="15" autofocus value="<?= esc((string) old('numero'), 'attr') ?>">
+            <input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" required maxlength="15" value="<?= esc((string) old('numero'), 'attr') ?>">
         </div>
     </div>
     <div class="mb-3">

@@ -37,7 +37,7 @@ $this->section('contenido');
     <div class="row g-2 align-items-end">
         <div class="col-md-8 col-lg-6">
             <label for="texto" class="form-label small">Cliente: nombre, apellido o razón social</label>
-            <input type="search" class="form-control" id="texto" name="texto" value="<?= esc($texto, 'attr') ?>" autofocus aria-describedby="ayuda-texto">
+            <input type="search" class="form-control" id="texto" name="texto" value="<?= esc($texto, 'attr') ?>" aria-describedby="ayuda-texto">
         </div>
         <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-search me-1" aria-hidden="true"></i>Buscar</button></div>
     </div>
