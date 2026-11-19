@@ -8,6 +8,7 @@ use App\Adapters\Fabrica;
 use App\Adapters\ServicioNoDisponibleException;
 use App\Controllers\BaseController;
 use App\Exceptions\ReglaNegocioException;
+use App\Libraries\Clientes\DatosPadron;
 use App\Libraries\Validacion\Campos;
 use App\Services\Clientes\ClienteService;
 use App\Services\Clientes\PreRegistroService;
@@ -64,29 +65,34 @@ class Clientes extends BaseController
     }
 
     /**
-     * CU-11 A9: datos del padrón de ARCA para el CUIL ingresado, que el Analista confirma o corrige. Si el servicio no
-     * responde, se informa y los datos se cargan a mano (ACT-10, RNF-08).
+     * CU-11 A9 (D-60): al ingresar el CUIT o CUIL, propone el nombre y el apellido o la razón social según la Central
+     * de Deudores del BCRA, y el DNI que contiene el CUIL. Si el servicio no encuentra a la persona o no responde, solo
+     * se informa que no es posible obtener sus datos: el DNI se propone igual y el resto lo completa el Analista.
      */
     public function padron(): ResponseInterface
     {
-        $cuil = str_replace(['-', ' ', '.'], '', $this->campoGet('cuil'));
-        $error = Campos::obligatorio($cuil, 'el CUIL') ?? Campos::cuit($cuil, 'PersonaHumana');
+        $cuit = str_replace(['-', ' ', '.'], '', $this->campoGet('cuil'));
+        $tipo = $this->campoGet('tipo') === 'PersonaJuridica' ? 'PersonaJuridica' : 'PersonaHumana';
+        $error = Campos::obligatorio($cuit, $tipo === 'PersonaJuridica' ? 'el CUIT' : 'el CUIL') ?? Campos::cuit($cuit, $tipo);
         if ($error !== null) {
             return $this->response->setStatusCode(422)->setJSON(['mensaje' => $error]);
         }
+        $auditoria = new AuditoriaService();
         try {
-            $datos = Fabrica::padron()->consultar($cuil);
-        } catch (ServicioNoDisponibleException) {
-            (new AuditoriaService())->registrar('clientes.consultar-padron', 'clientes', null, 'Fallido', 'El padrón de ARCA no respondió');
-
-            return $this->response->setStatusCode(503)->setJSON(['mensaje' => 'El padrón de ARCA no responde: complete los datos manualmente.']);
+            $denominacion = Fabrica::padron()->consultar($cuit);
+        } catch (ServicioNoDisponibleException $e) {
+            $auditoria->registrar('clientes.consultar-padron', 'clientes', null, 'Fallido', $e->getMessage(), ['cuit_cuil' => $cuit]);
+            $denominacion = false;
         }
-        (new AuditoriaService())->registrar('clientes.consultar-padron', 'clientes', null, $datos === null ? 'Sin datos' : 'Exitoso', null, ['cuil' => $cuil]);
-        if ($datos === null) {
-            return $this->response->setStatusCode(404)->setJSON(['mensaje' => 'El padrón no tiene datos para ese CUIL: complete los datos manualmente.']);
+        if ($denominacion !== false) {
+            $auditoria->registrar('clientes.consultar-padron', 'clientes', null, $denominacion === null ? 'Sin datos' : 'Exitoso', null, ['cuit_cuil' => $cuit]);
+        }
+        $datos = DatosPadron::desde($cuit, is_string($denominacion) ? $denominacion : null);
+        if (!is_string($denominacion)) {
+            return $this->response->setStatusCode(404)->setJSON(['datos' => $datos, 'mensaje' => 'No es posible obtener los datos de esta persona.']);
         }
 
-        return $this->response->setJSON(['datos' => $datos, 'mensaje' => 'Datos propuestos por el padrón de ARCA: confírmelos o corríjalos antes de registrar.']);
+        return $this->response->setJSON(['datos' => $datos]);
     }
 
     /** CU-11 pasos 3 a 9. */

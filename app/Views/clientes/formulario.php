@@ -73,10 +73,11 @@ $this->section('contenido');
             <?php // O-04 (D-52): obligatorio en el alta; un cliente anterior sin CUIL lo completa al modificar o al solicitar ?>
             <?= $campo('cuit_cuil', '<span data-solo="PersonaHumana">CUIT/CUIL</span><span data-solo="PersonaJuridica">CUIT</span>', $texto('cuit_cuil', 13, $numerico), '11 dígitos, con o sin guiones.' . ($alta ? '' : '<span data-solo="PersonaHumana"> Obligatorio para solicitar crédito.</span>'), 'col-md-6') ?>
             <?php if ($alta): ?>
-                <div class="col-md-6" data-solo="PersonaHumana">
+                <div class="col-md-6">
                     <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
-                    <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar el padrón de ARCA</button>
-                    <output class="form-text d-block" data-padron-resultado>Al ingresar un CUIL válido se completan el DNI, el nombre y el apellido con el padrón de ARCA, para que los confirme (A9).</output>
+                    <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar los datos del CUIT/CUIL</button>
+                    <?php // D-60: solo la denominación (Central de Deudores del BCRA) y el DNI del CUIL; el resto lo carga el Analista ?>
+                    <output class="form-text d-block" data-padron-resultado><span data-solo="PersonaHumana">Al ingresar un CUIL válido se completan el DNI, el nombre y el apellido, para que los confirme.</span><span data-solo="PersonaJuridica">Al ingresar un CUIT válido se completa la razón social, para que la confirme.</span> El domicilio y los demás datos se cargan a mano (A9).</output>
                 </div>
             <?php endif ?>
         </div>

@@ -7,45 +7,45 @@ namespace App\Adapters\Padron;
 use App\Adapters\ServicioNoDisponibleException;
 
 /**
- * Simulador del padrón de ARCA para desarrollo, pruebas y demostraciones (RNF-05). Responde según el CUIL:
- * - los CUIL de la tabla CONOCIDOS devuelven sus datos (clientes de los datos de prueba);
- * - un DNI que empieza con 99 simula el servicio sin respuesta;
- * - un DNI que empieza con 98 no tiene datos en el padrón;
- * - cualquier otro devuelve un nombre y un domicilio de ejemplo, siempre los mismos para el mismo CUIL.
- * El documento es siempre el DNI contenido en el CUIL.
+ * Simulador de la consulta por CUIT o CUIL para desarrollo, pruebas y demostraciones (RNF-05, D-60). Responde como la
+ * Central de Deudores del BCRA: solo la denominación, en mayúsculas, con el apellido primero. Según el CUIT o CUIL:
+ * - los de la tabla CONOCIDOS devuelven su denominación (clientes de los datos de prueba);
+ * - si los ocho dígitos centrales empiezan con 99, el servicio no responde;
+ * - si empiezan con 98, la persona no está en el servicio;
+ * - cualquier otro devuelve una denominación de ejemplo, siempre la misma para el mismo número.
  */
 final class SimuladorPadron implements PadronInterface
 {
-    /** @var array<string, array{0: string, 1: string, 2: string}> CUIL => nombre, apellido, domicilio fiscal */
+    /** @var array<string, string> CUIT o CUIL => denominación */
     public const CONOCIDOS = [
-        '27394445520' => ['Martina', 'Díaz', 'Av. San Martín 2020, Apóstoles, Misiones'],
-        '27394445660' => ['Martina', 'Díaz', 'Av. San Martín 2020, Apóstoles, Misiones'],
-        '27415551040' => ['Sofía', 'Benítez', 'Belgrano 845, Apóstoles, Misiones'],
-        '20402223090' => ['Mateo', 'Acosta', 'Sarmiento 312, Apóstoles, Misiones'],
+        '27394445520' => 'DÍAZ MARTINA',
+        '27394445660' => 'DÍAZ MARTINA',
+        '27415551040' => 'BENÍTEZ SOFÍA',
+        '20402223090' => 'ACOSTA MATEO',
     ];
 
-    private const NOMBRES = ['Sofía', 'Mateo', 'Valeria', 'Benjamín', 'Julieta', 'Santiago', 'Carolina', 'Facundo'];
-    private const APELLIDOS = ['González', 'Fernández', 'Rodríguez', 'Benítez', 'Acosta', 'Romero', 'Sosa', 'Ramírez'];
-    private const CALLES = ['Belgrano', 'Sarmiento', 'Rivadavia', 'Mitre', 'Colón', 'Alem'];
+    private const NOMBRES = ['SOFÍA', 'MATEO', 'VALERIA', 'BENJAMÍN', 'JULIETA', 'SANTIAGO', 'CAROLINA', 'FACUNDO'];
+    private const APELLIDOS = ['GONZÁLEZ', 'FERNÁNDEZ', 'RODRÍGUEZ', 'BENÍTEZ', 'ACOSTA', 'ROMERO', 'SOSA', 'RAMÍREZ'];
+    private const EMPRESAS = ['DISTRIBUIDORA DEL NORESTE', 'YERBATERA APÓSTOLES', 'TRANSPORTES MISIONES', 'AGROINSUMOS DEL SUR'];
+    private const FORMAS = ['S.A.', 'S.R.L.', 'S.A.S.'];
 
-    public function consultar(string $cuil): ?array
+    public function consultar(string $cuit): ?string
     {
-        $dni = ltrim(substr($cuil, 2, 8), '0');
-        if (str_starts_with(substr($cuil, 2, 8), '99')) {
-            throw new ServicioNoDisponibleException('El padrón de ARCA no respondió (simulado).');
+        $centro = substr($cuit, 2, 8);
+        if (str_starts_with($centro, '99')) {
+            throw new ServicioNoDisponibleException('La consulta por CUIT o CUIL no respondió (simulado).');
         }
-        if (str_starts_with(substr($cuil, 2, 8), '98')) {
+        if (str_starts_with($centro, '98')) {
             return null;
         }
-        if (isset(self::CONOCIDOS[$cuil])) {
-            [$nombre, $apellido, $domicilio] = self::CONOCIDOS[$cuil];
-        } else {
-            $h = crc32($cuil);
-            $nombre = self::NOMBRES[$h % count(self::NOMBRES)];
-            $apellido = self::APELLIDOS[intdiv($h, 8) % count(self::APELLIDOS)];
-            $domicilio = self::CALLES[intdiv($h, 64) % count(self::CALLES)] . ' ' . (100 + $h % 1900) . ', Apóstoles, Misiones';
+        if (isset(self::CONOCIDOS[$cuit])) {
+            return self::CONOCIDOS[$cuit];
+        }
+        $h = crc32($cuit);
+        if (in_array(substr($cuit, 0, 2), ['30', '33', '34'], true)) {
+            return self::EMPRESAS[$h % count(self::EMPRESAS)] . ' ' . self::FORMAS[intdiv($h, 8) % count(self::FORMAS)];
         }
 
-        return ['nombre' => $nombre, 'apellido' => $apellido, 'tipo_documento' => 'DNI', 'nro_documento' => $dni, 'domicilio_fiscal' => $domicilio];
+        return self::APELLIDOS[intdiv($h, 8) % count(self::APELLIDOS)] . ' ' . self::NOMBRES[$h % count(self::NOMBRES)];
     }
 }

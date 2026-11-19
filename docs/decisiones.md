@@ -62,7 +62,7 @@ Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica
 | D-56 | 18/11/2026 | Propuesta |
 | D-57 | 18/11/2026 | Propuesta |
 | D-58 | 18/11/2026 | Propuesta |
-| D-59 | 18/11/2026 | Propuesta |
+| D-60 | 18/11/2026 | Propuesta |
 
 ## D-01 · Capital máximo financiable con el IVA del interés (CU-87)
 
@@ -1004,7 +1004,7 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 
 **Consecuencias.** Cambian `clientes.js` y el texto de ayuda del alta. Sin cambios del servidor ni de esquema. Prueba E2E I-92.
 
-## D-59 · Interfaz homogénea: fechas, filtros y ejemplos (RNF-02, RNF-07)
+## D-60 · Interfaz homogénea: fechas, filtros y ejemplos (RNF-02, RNF-07)
 
 **Contexto.** El recorrido estético del 18/11/2026 (hallazgos H-39 a H-46) encontró la misma tarea resuelta de formas distintas en distintas pantallas:
 - **Fechas:** unas se ingresaban con el selector del navegador (fecha de nacimiento, vigencias, filtros de auditoría y campañas) y otras como texto «dd/mm/aaaa» (filtros de solicitudes, movimientos y comprobantes; calendario, fondos, conformidad del cliente, transferencia del desembolso, asignación de cajas).
