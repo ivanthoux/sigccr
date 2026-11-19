@@ -80,37 +80,35 @@
         }
     });
 
-    // CU-11 A9 (D-58): al cargar un CUIL válido de una persona humana, el padrón de ARCA completa el documento, el nombre
-    // y el apellido; el Analista los confirma o corrige. La consulta automática completa los campos vacíos o los que
-    // completó una consulta anterior, sin pisar lo que se escribió a mano; el botón vuelve a consultar y reemplaza todo.
+    // CU-11 A9 (D-58, D-60): al cargar un CUIT o CUIL válido, la Central de Deudores del BCRA propone el nombre y el
+    // apellido o la razón social, y el DNI sale del propio CUIL; el Analista los confirma o corrige. No se completa nada
+    // más: el domicilio y el empleo los carga el Analista. La consulta automática completa los campos vacíos o los que
+    // completó una consulta anterior, sin pisar lo que se escribió a mano; el botón vuelve a consultar y reemplaza.
     const form = document.querySelector('form.formulario-cliente');
     const padron = form?.querySelector('[data-padron]');
     const resultado = form?.querySelector('[data-padron-resultado]');
     const campoCuil = form?.querySelector('#cuit_cuil');
-    // Mismo control que el servidor (Campos::cuit): prefijo de persona humana y dígito verificador
-    const cuilValido = (c) => {
-        if (!/^(20|23|24|27)\d{9}$/.test(c)) return false;
+    const tipoCliente = () => form?.querySelector('input[name="tipo_cliente"]:checked')?.value || form?.querySelector('input[name="tipo_cliente"]')?.value || 'PersonaHumana';
+    // Mismo control que el servidor (Campos::cuit): prefijo del tipo de cliente y dígito verificador
+    const cuitValido = (c) => {
+        const prefijos = tipoCliente() === 'PersonaJuridica' ? /^(30|33|34)\d{9}$/ : /^(20|23|24|27)\d{9}$/;
+        if (!prefijos.test(c)) return false;
         const pesos = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
         const r = pesos.reduce((s, p, i) => s + p * Number(c[i]), 0) % 11;
         const dv = r === 0 ? 0 : 11 - r;
         return dv !== 10 && dv === Number(c[10]);
     };
-    const esPersonaHumana = () => (form?.querySelector('input[name="tipo_cliente"]:checked')?.value || form?.querySelector('input[name="tipo_cliente"]')?.value) === 'PersonaHumana';
+    const enLista = (l) => (l.length > 1 ? l.slice(0, -1).join(', ') + ' y ' + l.at(-1) : l[0]);
     let ultimoConsultado = '';
     const consultar = async (reemplazar) => {
-        const cuil = (campoCuil?.value || '').replace(/[-\s.]/g, '');
+        const cuit = (campoCuil?.value || '').replace(/[-\s.]/g, '');
         resultado.classList.remove('text-danger');
-        resultado.textContent = 'Consultando el padrón…';
+        resultado.textContent = 'Consultando los datos del CUIT/CUIL…';
         padron.disabled = true;
-        ultimoConsultado = cuil;
+        ultimoConsultado = cuit;
         try {
-            const r = await fetch(padron.dataset.padron + '?cuil=' + encodeURIComponent(cuil), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const r = await fetch(padron.dataset.padron + '?cuil=' + encodeURIComponent(cuit) + '&tipo=' + encodeURIComponent(tipoCliente()), { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const j = await r.json();
-            if (!r.ok) {
-                resultado.classList.add('text-danger');
-                resultado.textContent = j.mensaje;
-                return;
-            }
             const completados = [];
             const poner = (id, valor, etiqueta) => {
                 const el = form.querySelector('#' + id);
@@ -121,33 +119,39 @@
                 completados.push(etiqueta);
                 return true;
             };
-            // El tipo de documento acompaña al número: solo cambia si el padrón completó el número
-            if (poner('nro_documento', j.datos.nro_documento, 'el DNI')) {
+            const d = j.datos || {};
+            // El tipo de documento acompaña al número: solo cambia si se completó el número
+            if (poner('nro_documento', d.nro_documento, 'el DNI')) {
                 const tipo = form.querySelector('#tipo_documento');
-                if (tipo && j.datos.tipo_documento) { tipo.value = j.datos.tipo_documento; tipo.dispatchEvent(new Event('change')); }
+                if (tipo && d.tipo_documento) { tipo.value = d.tipo_documento; tipo.dispatchEvent(new Event('change')); }
             }
-            poner('nombre', j.datos.nombre, 'el nombre');
-            poner('apellido', j.datos.apellido, 'el apellido');
-            const domicilio = form.querySelector('#domicilio');
-            if (domicilio && domicilio.value.trim() === '') {
-                domicilio.value = j.datos.domicilio_fiscal.split(',')[0];
+            poner('nombre', d.nombre, 'el nombre');
+            poner('apellido', d.apellido, 'el apellido');
+            poner('razon_social', d.razon_social, 'la razón social');
+            if (!r.ok) {
+                // Sin la persona en el servicio, o sin respuesta: solo el aviso (el DNI del CUIL ya quedó propuesto)
+                resultado.classList.add('text-danger');
+                resultado.textContent = j.mensaje + (completados.length ? ' Se completó ' + enLista(completados) + ' a partir del CUIL.' : '');
+                return;
             }
-            const lista = completados.length > 1 ? completados.slice(0, -1).join(', ') + ' y ' + completados.at(-1) : completados[0];
-            resultado.textContent = (completados.length ? 'Se completaron ' + lista + ' con el padrón de ARCA: confírmelos o corríjalos antes de registrar.' : j.mensaje)
-                + ' Domicilio fiscal: ' + j.datos.domicilio_fiscal + '.';
+            resultado.textContent = completados.length
+                ? (completados.length > 1 ? 'Se completaron ' : 'Se completó ') + enLista(completados) + ': '
+                    + (completados.length > 1 ? 'confírmelos o corríjalos' : 'confírmelo o corríjalo') + ' antes de registrar.'
+                    + (d.apellido ? ' Revise dónde termina el apellido: el BCRA informa el nombre completo sin separarlo.' : '')
+                : 'Los datos del CUIT/CUIL coinciden con los cargados.';
         } catch (e) {
             resultado.classList.add('text-danger');
-            resultado.textContent = 'No se pudo consultar el padrón: complete los datos manualmente.';
+            resultado.textContent = 'No es posible obtener los datos de esta persona.';
         } finally {
             padron.disabled = false;
         }
     };
     if (padron && resultado) {
         padron.addEventListener('click', () => consultar(true));
-        // Consulta automática cuando el CUIL queda completo y es válido, una vez por CUIL
+        // Consulta automática cuando el CUIT o CUIL queda completo y es válido, una vez por número
         campoCuil?.addEventListener('input', () => {
-            const cuil = campoCuil.value.replace(/[-\s.]/g, '');
-            if (esPersonaHumana() && cuil !== ultimoConsultado && cuilValido(cuil)) consultar(false);
+            const cuit = campoCuil.value.replace(/[-\s.]/g, '');
+            if (cuit !== ultimoConsultado && cuitValido(cuit)) consultar(false);
         });
     }
 })();
