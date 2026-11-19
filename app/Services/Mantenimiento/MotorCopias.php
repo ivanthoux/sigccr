@@ -336,6 +336,9 @@ class MotorCopias
                 $db->table('copias_seguridad')->where('id', $c['id'])->update(['estado' => 'Depurada', 'detalle' => 'El archivo no está en el volumen de copias (catálogo rehecho tras una restauración).']);
             }
         }
+        // La copia automática se hace con su proceso (copias:generar) en curso: esa ejecución quedó «En curso» en la base
+        // restaurada, aunque ya terminó. Se cierra para que no bloquee otra restauración durante dos horas (CU-63, precondición).
+        $db->query("UPDATE dbo.ejecuciones_proceso SET estado = 'Fallida', fin = SYSDATETIMEOFFSET(), detalle = N'La ejecución estaba en curso al generar la copia restaurada; se cerró al restaurar.' WHERE estado = 'EnCurso'");
     }
 
     /**

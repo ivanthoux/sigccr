@@ -129,7 +129,7 @@ bash tests/e2e/ejecutar.sh --grep R-01     # solo los casos que coinciden
 E2E_CONSERVAR=1 bash tests/e2e/ejecutar.sh # deja la pila levantada al terminar
 ```
 
-Levanta una pila aparte (proyecto `sigccr_e2e`, puertos 18080 y 18443) con SQL Server vacío, aplica las migraciones y las semillas, crea el Administrador `admin@prueba.local` y recorre con Playwright el circuito de la prueba funcional integral (`docs/pruebas/prueba_funcional_integral_1_a_3.md`). Cada prueba lleva el identificador de su caso (R-xxx). El informe con las capturas de cada paso queda en `tests/e2e/informe/index.html`. No toca los contenedores ni la base del entorno de desarrollo. La integración continua la ejecuta en cada *pull request* y publica el informe como artefacto.
+Levanta una pila aparte (proyecto `sigccr_e2e`, puertos 18080 y 18443) con SQL Server vacío, aplica las migraciones y las semillas, crea el Administrador `admin@prueba.local` y recorre con Playwright el circuito de la prueba funcional integral (`docs/pruebas/prueba_funcional_integral_1_a_4.md`). Cada prueba lleva el identificador de su caso (R-xxx). El informe con las capturas de cada paso queda en `tests/e2e/informe/index.html`. No toca los contenedores ni la base del entorno de desarrollo. La integración continua la ejecuta en cada *pull request* y publica el informe como artefacto.
 
 ## Actualizar la versión de SQL Server (D-62)
 

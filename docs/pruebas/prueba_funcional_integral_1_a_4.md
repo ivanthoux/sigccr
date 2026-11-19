@@ -1,22 +1,23 @@
-# Prueba funcional integral: iteraciones 1 a 3
+# Prueba funcional integral: iteraciones 1 a 4
 
-Prueba de regresión antes de la iteración 4. Recorre en un solo circuito todo lo construido hasta la iteración 3:
+Prueba de aceptación del sistema completo. Recorre en un solo circuito todo lo construido, con los mismos clientes y créditos de principio a fin:
 
 - **Iteración 1:** acceso, usuarios, clientes, portal, líneas y comunicaciones.
 - **Iteración 2:** parámetros, calendario, fondos, cajas, simulación, solicitud, evaluación, alternativas, resolución, contrato y liquidación.
 - **Iteración 3:** cobranza, morosidad, pagos electrónicos, saldos a favor, refinanciación, revocación, cancelación anticipada y procesos automáticos.
+- **Iteración 4:** portal de autogestión, pre-registro y consulta al padrón, campañas crediticias, tablero, reportes y auditoría, y copias de seguridad con su restauración.
 
-Las pruebas por iteración (`prueba_funcional_iteracion_1.md` a `_3.md`) detallan más validaciones de cada pantalla. Esta prueba conserva las principales y agrega el circuito completo con datos nuevos. Cada dato que hay que cargar está en el **Anexo A**. Los archivos para adjuntar están en la carpeta **`Datos de prueba`** de la documentación (Anexo B).
+Las pruebas por iteración (`prueba_funcional_iteracion_1.md` a `_4.md`) detallan más validaciones de cada pantalla. Esta prueba conserva las principales y agrega el circuito completo con datos nuevos. Cada dato que hay que cargar está en el **Anexo A**. Los archivos para adjuntar están en la carpeta **`Datos de prueba`** de la documentación (Anexo B).
 
-Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* con la etiqueta `bug`, el identificador del caso y lo observado. La prueba se aprueba cuando todos los casos dan OK o sus fallas están corregidas; con eso se publica `v0.4.0` y empieza la iteración 4.
+Cada caso se marca con **OK** o **Falla**. Una falla se registra como *issue* con la etiqueta `bug`, el identificador del caso y lo observado. La prueba se aprueba cuando todos los casos dan OK o sus fallas están corregidas; con eso queda aceptado el recorrido completo del sistema para la Transición.
 
-Duración estimada: dos jornadas. Jornada 1: partes 0 a 2 (hasta la sección 14). Jornada 2: parte 3. El caso R-124 conviene hacerlo al día siguiente de R-123, para que el cálculo de punitorios corra de un día para el otro.
+Duración estimada: tres jornadas. Jornada 1: partes 0 a 2 (hasta la sección 14). Jornada 2: parte 3. Jornada 3: parte 4. El caso R-124 conviene hacerlo al día siguiente de R-123, para que el cálculo de punitorios corra de un día para el otro.
 
 ## Parte 0. Preparación
 
 ### 0.1 Instalación limpia (recomendada)
 
-Así también se prueban las 25 migraciones y las semillas desde cero. **Borra la base actual.**
+Así también se prueban todas las migraciones y las semillas desde cero. **Borra la base actual.**
 
 ```bash
 git checkout develop && git pull
@@ -344,6 +345,67 @@ Con el crédito E de Julián, sin modificar sus vencimientos.
 
 ---
 
+## Parte 4. Iteración 4
+
+Se hace con los datos en el estado en que quedaron las partes 1 a 3 (Ana con su crédito A, Bruno con el crédito refinanciado F, Carla con sus saldos, Julián con su crédito cancelado). Los casos se ejecutan en orden. Los datos nuevos están en el **Anexo A.19 y A.20**. Para ver los correos con su enlace: `docker compose exec app php spark sigccr:correos 5`. Los casos de esta parte están automatizados en `tests/e2e/specs/23-integral-iteracion-4.spec.js`; el detalle de cada pantalla está en `prueba_funcional_iteracion_4.md`.
+
+### 24. Portal de autogestión con los clientes de la prueba (CU-04, CU-45 a CU-49, CU-75, CU-98)
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| R-153 | Activar el portal de Carla y de Julián | En `/portal/activar`, con tipo DNI, el DNI y el correo de cada uno (C-03 y C-10); abrir el enlace de `sigccr:correos` y definir la contraseña de A.20. Ingresar como Carla. | «Su acceso al portal quedó activado.» para los dos; Carla ingresa al portal. | |
+| R-154 | Funciones y perfil de Ana | Ingresar como Ana (`ana.gomez2@prueba.local`, A.2). Abrir *Mi perfil*. | El inicio ofrece *Estado de cuenta*, *Pagar una cuota*, *Comprobantes*, *Mis solicitudes*, *Mi perfil* y *Refinanciaciones y ofertas*. El perfil muestra el CUIL 27-30111233-0 y el correo vigente. | |
+| R-155 | Consentimiento de comunicaciones | En *Modificar preferencias de comunicación*, cambiar el consentimiento (revocarlo si está otorgado, otorgarlo si está revocado) y volver al estado inicial. | «Consentimiento revocado…» y «Consentimiento otorgado…» (en el orden que corresponda); en el legajo de Ana hay dos consentimientos nuevos con medio Portal (RN-64). | |
+| R-156 | Cambio de correo de Carla | En *Mi perfil → Cambiar correo electrónico*, enviar vacío, su correo actual y el de Bruno; luego `carla.sosa2@prueba.local` (A.20). Confirmar el cambio desde el enlace del correo actual y verificar el correo nuevo. Probar el ingreso con el correo anterior y con el nuevo. | Los errores junto al campo («El nuevo correo es igual al actual.», «Ese correo ya está registrado para otro cliente…»); «Cambio confirmado…» y «Su correo quedó verificado»; el correo anterior ya no ingresa y el nuevo sí, con la misma contraseña (RN-58). | |
+| R-157 | Estado de cuenta de Ana | Como Ana, abrir *Estado de cuenta* y el crédito A. | El estado del crédito coincide con el del panel (al día o en mora). El saldo deudor total es al menos la suma de lo pendiente de sus cuotas (capital, interés, gastos e IVA) más los punitorios calculados hasta hoy (RN-57). | |
+| R-158 | Cuota vencida | Si el crédito de Ana tiene una cuota vencida (R-127), abrirla desde *Cuotas vencidas*. | «Vencida hace N día(s)» y, según el atraso, «superada la tolerancia…» con los punitorios o «dentro de la tolerancia…» sin punitorios. | |
+| R-159 | Saldo a favor de Carla | Como Carla (correo nuevo), abrir *Estado de cuenta*. | El saldo a favor disponible coincide con el que muestra el panel (aplicar saldo, sección 18); la consulta no aplica ni devuelve nada. Si no queda saldo: «No tiene saldo a favor.» | |
+| R-160 | Julián sin deuda | Como Julián, abrir *Estado de cuenta*. | «No tiene deuda pendiente.»; su crédito figura *Cancelado* (R-134). | |
+| R-161 | Créditos y comprobantes ajenos | Como Julián, abrir el crédito de Ana (`/portal/estado-cuenta/creditos/<id>`) y un comprobante de Ana (`/portal/comprobantes/<id del cobro>`). | Vuelve al listado con el mensaje genérico «No encontramos la información solicitada entre sus operaciones.», sin revelar si el dato existe; quedan dos registros `portal.acceso-denegado` (RN-45). | |
+| R-162 | Pago electrónico desde el portal | Como Ana, en *Pagar una cuota*, marcar la segunda cuota pendiente sin la primera y generar; luego marcar la primera y generar. Volver a *Pagar una cuota*. Abrir «Pagar en la pasarela», aprobar en el simulador y ejecutar `docker compose exec app php spark pagos:notificaciones`. | El primer intento se rechaza: la selección debe comenzar por la cuota más antigua (RN-29). El segundo: «Orden generada.»; la cuota queda deshabilitada en la orden vigente (A7). Tras el pago, la orden queda *Confirmada* y la cuota *Pagada*. | |
+| R-163 | Comprobante del pago | Como Ana, abrir *Comprobantes* y el del pago de R-162. En el panel, como Paula, abrir *Cobro en ventanilla*. | El comprobante muestra el importe, el medio electrónico y la cuota con sus conceptos; el cobro figura con canal electrónico y un solo comprobante (RN-31). | |
+| R-164 | Pantalla angosta del portal | Con 360 px de ancho, abrir el estado de cuenta, el crédito, *Pagar una cuota*, *Comprobantes*, *Mi perfil* y *Refinanciaciones y ofertas*. | Sin desplazamiento horizontal (RNF-03). | |
+
+### 25. Pre-registro y alta con consulta al padrón (CU-104, CU-11 A9, D-60)
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| R-165 | Pre-registro y verificación | Sin sesión, en `/portal/pre-registro`, pre-registrar a Ana con otro correo; luego a Martina Díaz (A.19). Abrir el enlace de `sigccr:correos` y verificar el correo. | Para Ana: «Usted ya es cliente de la entidad…», sin pre-registro. Para Martina: «Verifique su correo», y después «Su correo quedó verificado. Acérquese a la sucursal…»; el pre-registro pasa a *Pendiente de validación* (RN-03). | |
+| R-166 | Alta desde la bandeja | Como Martín, en *Crédito → Pre-registros del portal*, abrir el de Martina y «Completar el alta». Presionar «Consultar los datos del CUIT/CUIL». Completar los datos de A.19 y registrar. | Se completan el DNI 39444552, el nombre y el apellido; el domicilio, la ocupación y los demás datos quedan vacíos para el Analista (el sistema no los inventa). «Cliente registrado.»; el pre-registro queda *Completado*. | |
+| R-167 | Persona que no está en el servicio | En *Registrar cliente*, consultar `20-99000001-9` y `20-98000001-0`. | «No es posible obtener los datos de esta persona.» en los dos casos; el DNI sale del CUIL y el nombre queda vacío (D-60). | |
+
+### 26. Campañas crediticias (CU-50 a CU-52, CU-93, CU-94 y CU-43 A5)
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| R-168 | Parámetros y activación | Como Laura, en *Gestión → Parámetros de campañas*, registrar con capital máximo 0, factor 120 y sin categorías; como Martín, abrir la pantalla. Registrar un aporte de capital de $ 40.000.000 (A.20) y la versión válida de A.20; ejecutar `docker compose exec app php spark fondos:proyectar` dos veces. | Los errores junto a cada campo y nada registrado; Martín: 403. La primera ejecución informa «activada la campaña N.º … con … oferta(s)»; la segunda, «la campaña activa continúa» (RN-66). | |
+| R-169 | Quiénes reciben ofertas | Como Laura, abrir la campaña y revisar los clientes con oferta. | Solo personas humanas activas de las categorías elegidas y con atraso de hasta 30 días; ninguna persona jurídica. | |
+| R-170 | Consulta de campañas | Como Martín, abrir *Cartera → Campañas*, filtrar por *Activa* y abrir la campaña; como Paula, abrir `/admin/campanas`. | La campaña de la línea Personal con sus ofertas; Paula: 403. | |
+| R-171 | Aceptar una oferta | Ingresar al portal con un cliente que tenga oferta (Ana, Bruno, Carla o Julián), abrir *Refinanciaciones y ofertas* y la oferta, elegir una alternativa y aceptar. En el panel, abrir la solicitud. | «Aceptó la oferta: se generó la solicitud N.º …»; la solicitud tiene origen *Oferta* y sin Analista, y reserva el capital (compromiso en Fondos). Ya no se ofrece aceptar ni rechazar (RN-42). | |
+| R-172 | Rechazar y propuestas de refinanciación | Con otro cliente con oferta, rechazarla. Como Bruno, abrir *Refinanciaciones y ofertas* y su propuesta. | «Rechazó la oferta. No se generó ninguna solicitud.»; Bruno ve la propuesta que se aplicó en R-125 con su estado (CU-43 A5). | |
+| R-173 | Cierre por vigencia | Vencer la campaña con `UPDATE dbo.campanas SET vence = DATEADD(minute, -1, SYSDATETIMEOFFSET()) WHERE estado = 'Activa'` y ejecutar `docker compose exec app php spark campanas:cerrar`. | La campaña queda *Finalizada* por *Vigencia* y no queda ninguna oferta vigente (CU-94). | |
+
+### 27. Tablero, reportes y auditoría sobre los datos de la prueba (CU-55 a CU-57, CU-65 a CU-71)
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| R-174 | Tablero y siete reportes | Como Laura, abrir *Gestión → Tablero gerencial* y generar cada reporte de *Gestión → Reportes*; como Martín, abrir `/admin/reportes/cartera`. | Ocho grupos de indicadores y siete reportes sin errores, cada uno con «Exportar a Excel»; cada generación queda auditada; Martín: 403. | |
+| R-175 | Coherencia con los datos | Generar el reporte de cartera filtrado por la línea Motos y el de cobranzas del mes. | La cartera lista a Ana, Bruno y Carla. El total cobrado del mes coincide con la suma de los cobros confirmados de la prueba, incluido el pago del portal de R-162 (consulta C.7). | |
+| R-176 | Exportar a Excel | Exportar cada uno de los siete reportes. | Un archivo `.xlsx` por reporte, que abre en Excel. | |
+| R-177 | Caja diaria | Como Laura, abrir *Caja → Informe de caja diaria* y las jornadas de R-136 y R-137. Como Paula, intentar ver las de Tomás. | Las jornadas con sus diferencias y explicaciones. Paula: «Solo puede consultar sus propias jornadas.» (A2). | |
+| R-178 | Auditoría de las cuatro iteraciones | Como Iván, en *Administración → Auditoría*, revisar las operaciones de toda la prueba; como Paula, abrir `/admin/auditoria`. | Registros de cada circuito: usuarios, clientes, líneas, solicitudes, cobros, pagos, pre-registros, padrón, campañas, tablero y reportes. Sin contraseñas ni enlaces con códigos (RN-45). Paula: 403. | |
+
+### 28. Copia de seguridad y restauración del estado final (CU-61 a CU-63)
+
+| ID | Caso | Pasos | Resultado esperado | Resultado |
+|---|---|---|---|---|
+| R-179 | Generar la copia | Anotar con la consulta C.7 los totales actuales (clientes, créditos, cuotas pagadas, cobros e importe, saldos, propuestas, ofertas y movimientos de fondos). Como Iván, en *Copias de seguridad*, generar una copia con la descripción de A.21 y ejecutar `docker compose exec app php spark copias:procesar`. | «Copia solicitada…»; la copia queda *Verificada* con su huella SHA-256 (CU-61). | |
+| R-180 | Descargar y verificar | Descargar la copia. En la carpeta de descargas ejecutar `certutil -hashfile <archivo> SHA256`. | La huella coincide con la que muestra la pantalla (CU-62). | |
+| R-181 | Restaurar | Como Laura, registrar un aporte de capital de $ 1.000 (movimiento posterior a la copia). Como Iván, abrir «Restaurar esta copia»; escribir «si» y después RESTAURAR. Esperar con la página abierta y ejecutar `copias:procesar`. | «Para confirmar, escriba RESTAURAR…» con «si». Con RESTAURAR: *Sistema en mantenimiento* (503 en el panel y el portal) y después *Restauración finalizada*. Las sesiones se cierran. Los totales vuelven a ser los anotados en R-179 y el aporte posterior ya no está (CU-63). | |
+| R-182 | El sistema sigue operando | Ingresar al portal como Ana y abrir su estado de cuenta; como Iván, abrir *Copias de seguridad*. | Ana ingresa con su contraseña y ve su estado de cuenta. El Administrador ve la última restauración y la copia *Previa a una restauración*, verificada; la restauración figura en la auditoría. | |
+
+---
+
 ## Anexo A. Datos de prueba
 
 Todos los CUIL, CUIT y CBU tienen dígitos verificadores válidos; se comprobaron con las validaciones del sistema. Los correos usan el dominio ficticio `prueba.local`.
@@ -539,6 +601,24 @@ Explicación de la diferencia: «Comisión bancaria descontada de una transferen
 | `/admin/devoluciones` | 403 | 403 | permitido |
 | `/admin/creditos/cancelacion-anticipada` | 403 | 403 | permitido |
 
+### A.19 Persona para el pre-registro
+
+| Nombre | Apellido | DNI | CUIL | Correo | Teléfono | Nacimiento | Estado civil | Ocupación | Empleador | Categoría | Ingresos ($) | Domicilio |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Martina | Díaz | 39444552 | 27-39444552-0 | `martina.diaz@prueba.local` | 3758 43-2001 | 21/08/1994 | Soltera | Recepcionista | Clínica Apóstoles | Relación de dependencia | 1.300.000 | Misiones, Apóstoles, 3350, «Av. San Martín 1515» |
+
+El simulador del padrón (D-60) conoce su denominación («DÍAZ MARTINA»). Adjuntar `DNI_Diaz.pdf` y `recibo_sueldo_Diaz.pdf` (cualquier PDF de prueba). Aceptar la política de datos y las comunicaciones comerciales; declaración PEP: no.
+
+### A.20 Portal y campañas
+
+- Contraseñas del portal: Carla `Portal-Carla-2026-OK`; Julián `Portal-Julian-2026-OK`. Correo nuevo de Carla (R-156): `carla.sosa2@prueba.local`.
+- Aporte de capital de R-168: $ 40.000.000, fecha de hoy, concepto «Aporte para la campaña de la prueba integral».
+- Parámetros de campañas de R-168: umbral de disponibilidad 0; período de proyección 30 días; factor de cobrabilidad 90 %; reserva mínima 0; línea **Personal**; capital máximo $ 3.000.000; máximo de 200 ofertas; categorías *Relación de dependencia* y *Jubilado/pensionado*; antigüedad mínima 0 meses; morosidad máxima 30 días; admite obligaciones vigentes; canal Correo; duración 15 días; cierre por disponibilidad; mensaje «Oferta especial de préstamos personales»; vigencia desde hoy; motivo «Campaña de la prueba integral».
+
+### A.21 Copia de seguridad
+
+Descripción de R-179: «Estado final de la prueba integral». Aporte de R-181: $ 1.000, concepto «Movimiento posterior a la copia».
+
 ## Anexo B. Archivos para adjuntar
 
 Carpeta `Datos de prueba` de la documentación. Son documentos ficticios, marcados «DOCUMENTO DE PRUEBA – SIN VALIDEZ».
@@ -566,9 +646,10 @@ En `consultas_de_apoyo.sql`, reemplazar los números marcados con `…`.
 - **C.4 Sacar un crédito del plazo de revocación.**
 - **C.5 Vencer una simulación, una alternativa, una aprobación y una autorización de devolución.**
 - **C.6 Ver los créditos, cuotas y saldos de un cliente**, para anotar los números de la prueba.
+- **C.7 Totales para la copia y los reportes.** Cuenta clientes, créditos, cuotas pagadas, cobros, importe cobrado, saldos a favor, propuestas, ofertas y movimientos de fondos; suma los cobros confirmados del mes.
 
 ## Registro
 
 | Fecha | Responsable | Casos OK | Fallas (issues) | Observaciones |
 |---|---|---|---|---|
-| | Iván Ezequiel Thoux | de 147 | | |
+| | Iván Ezequiel Thoux | de 179 | | |

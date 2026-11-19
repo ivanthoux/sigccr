@@ -4,6 +4,7 @@ const { test, expect } = require('../lib/fixtures');
 const { consulta, valor, spark, cerrarBase, ultimoCorreo } = require('../lib/sistema');
 const { fecha, portal } = require('../lib/datos');
 const { demo, comoCliente } = require('../lib/portal');
+const { registrarParametrosCampanas } = require('../lib/campanas');
 
 const { joaquin } = demo;
 const exito = (page) => page.locator('.alert-success[role="status"]');
@@ -14,31 +15,13 @@ const ofertaDe = (cuil) => consulta(
   { c: cuil },
 ).then((f) => f[0]);
 
-/** CU-51: completa el formulario de parámetros de campañas y registra la versión. */
-async function registrarParametros(page, cambios = {}) {
-  const p = {
-    umbral_disponibilidad: '0', periodo_proyeccion_dias: '30', factor_cobrabilidad: '90', reserva_minima: '0', linea: 'Electrodomésticos (ELECTRO)',
-    capital_maximo: '3000000', cantidad_maxima_ofertas: '200', categorias: ['RelacionDependencia'], antiguedad_minima_meses: '0', morosidad_maxima_dias: '30',
-    admite_obligaciones_vigentes: true, mensaje: 'Oferta especial de electrodomésticos', duracion_dias: '15', cierre_por_disponibilidad: true,
-    fecha_vigencia: fecha(), motivo: 'Campaña de prueba de la iteración 4', ...cambios,
-  };
-  await page.goto('/admin/parametros/campanas');
-  for (const k of ['umbral_disponibilidad', 'periodo_proyeccion_dias', 'factor_cobrabilidad', 'reserva_minima', 'capital_maximo', 'cantidad_maxima_ofertas', 'antiguedad_minima_meses', 'morosidad_maxima_dias', 'duracion_dias']) {
-    await page.locator(`#${k}`).fill(p[k]);
-  }
-  if (p.linea === '') await page.locator('#linea_id').selectOption('');
-  else await page.locator('#linea_id').selectOption({ label: p.linea });
-  for (const caja of await page.locator('input[name="categorias_admitidas[]"]').all()) {
-    await caja.setChecked(p.categorias.includes(await caja.getAttribute('value')));
-  }
-  await page.locator('#canal-Correo').check();
-  await page.locator('#admite_obligaciones_vigentes').setChecked(p.admite_obligaciones_vigentes);
-  await page.locator('#cierre_por_disponibilidad').setChecked(p.cierre_por_disponibilidad);
-  await page.locator('#mensaje').fill(p.mensaje);
-  await page.locator('#fecha_vigencia').fill(p.fecha_vigencia);
-  await page.locator('#motivo').fill(p.motivo);
-  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
-}
+/** CU-51: registra una versión de los parámetros sobre Electrodomésticos. */
+const registrarParametros = (page, cambios = {}) => registrarParametrosCampanas(page, {
+  umbral_disponibilidad: '0', periodo_proyeccion_dias: '30', factor_cobrabilidad: '90', reserva_minima: '0', linea: 'Electrodomésticos (ELECTRO)',
+  capital_maximo: '3000000', cantidad_maxima_ofertas: '200', categorias: ['RelacionDependencia'], antiguedad_minima_meses: '0', morosidad_maxima_dias: '30',
+  admite_obligaciones_vigentes: true, mensaje: 'Oferta especial de electrodomésticos', duracion_dias: '15', cierre_por_disponibilidad: true,
+  motivo: 'Campaña de prueba de la iteración 4',
+}, cambios);
 
 test.describe.configure({ mode: 'serial' });
 test.afterAll(cerrarBase);
