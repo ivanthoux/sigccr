@@ -50,7 +50,7 @@ $this->section('contenido');
                 </tr>
             <?php endforeach ?>
             </tbody>
-            <tfoot><tr><th colspan="6">Total a pagar</th><th class="importe"><?= esc(formato_importe($total, false)) ?></th></tr></tfoot>
+            <tfoot><tr><th scope="row" colspan="6">Total a pagar</th><td class="importe fw-semibold"><?= esc(formato_importe($total, false)) ?></td></tr></tfoot>
         </table>
     </div>
 </section>

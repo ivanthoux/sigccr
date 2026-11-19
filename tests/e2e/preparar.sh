@@ -43,5 +43,5 @@ spark SIGCCR_DB_GRUPO=migraciones SIGCCR_ADMIN_CORREO=admin@prueba.local SIGCCR_
     php spark db:seed AdministradorInicialSeeder
 mkdir -p writable/correos writable/copias && chown -R www-data:www-data writable
 # Volumen de copias (D-45): en la pila de pruebas no hay scheduler y copias:procesar corre en app
-mkdir -p /var/opt/sigccr/backups && chown 10001:www-data /var/opt/sigccr/backups && chmod 2770 /var/opt/sigccr/backups
+mkdir -p /var/opt/sigccr/backups && chown 10001:www-data /var/opt/sigccr/backups && chmod u=rwx,g=rwxs,o= /var/opt/sigccr/backups
 echo "Base de pruebas lista."

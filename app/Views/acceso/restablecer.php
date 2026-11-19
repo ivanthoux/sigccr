@@ -21,7 +21,7 @@ $this->section('contenido');
         <label for="contrasena" class="form-label">Nueva contraseña</label>
         <div class="input-group">
             <input type="password" class="form-control" id="contrasena" name="contrasena" autocomplete="new-password" required
-                   minlength="<?= PoliticaContrasena::MINIMO ?>" maxlength="<?= PoliticaContrasena::MAXIMO ?>" autofocus>
+                   minlength="<?= PoliticaContrasena::MINIMO ?>" maxlength="<?= PoliticaContrasena::MAXIMO ?>">
             <button class="btn btn-outline-secondary" type="button" data-mostrar="contrasena" aria-label="Mostrar la contraseña"><i class="bi bi-eye"></i></button>
         </div>
         <div class="form-text" data-contador="contrasena"></div>

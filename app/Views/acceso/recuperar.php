@@ -15,7 +15,7 @@ $this->section('contenido');
     <?= csrf_field() ?>
     <div class="mb-3">
         <label for="correo" class="form-label">Correo electrónico</label>
-        <input type="email" class="form-control" id="correo" name="correo" autocomplete="username" required autofocus maxlength="254" value="<?= esc(old('correo'), 'attr') ?>">
+        <input type="email" class="form-control" id="correo" name="correo" autocomplete="username" required maxlength="254" value="<?= esc(old('correo'), 'attr') ?>">
     </div>
     <button type="submit" class="btn btn-primary w-100">Enviar instrucciones</button>
 </form>

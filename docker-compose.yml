@@ -84,6 +84,9 @@ services:
     volumes:
       - sqldata:/var/opt/mssql
       - backups:/var/opt/sigccr/backups
+    # Grupo www-data (gid 33 de la imagen de PHP): SQL Server lee las copias que deja PHP sin dar permisos a otros
+    # usuarios (archivos 0640, carpeta 2770; D-45)
+    group_add: ["33"]
     # El puerto 1433 no se publica en producción. Para usar SSMS o Azure Data Studio en desarrollo,
     # agregar en un docker-compose.override.yml:  ports: ["1433:1433"]
     healthcheck:

@@ -102,14 +102,14 @@ class MotorCopias
             $destino = $this->dir . '/' . $c['archivo'];
             CifradoCopia::cifrar("{$temporal}.zip", $destino, $this->clave());
             $hash = (string) hash_file('sha256', $destino);
-            @chmod($destino, 0644);
+            @chmod($destino, 0640);
             $fila = [
                 'estado' => 'Verificada', 'hash_verificacion' => $hash, 'tamano_bytes' => (int) filesize($destino), 'fecha_fin' => $this->ahora(),
                 'incluye_adjuntos' => $adjuntos !== null ? 1 : 0, 'detalle' => $adjuntos !== null ? "Incluye {$cantidad} archivo(s) del legajo." : null,
             ];
             $this->app()->table('copias_seguridad')->where('id', $id)->update($fila);
             file_put_contents($destino . '.json', PoliticaCopias::manifiesto($fila + $c));
-            @chmod($destino . '.json', 0644);
+            @chmod($destino . '.json', 0640);
             (new AuditoriaService($this->app()))->registrar('copias.generar', 'copias_seguridad', $id, 'Exitoso', null, ['archivo' => $c['archivo'], 'tamano' => $fila['tamano_bytes'], 'hash' => $hash, 'origen' => $c['origen']], $c['usuario_id'] === null ? self::PROCESO_AUTOMATICA : null, $c['usuario_id'] === null ? null : (int) $c['usuario_id'], (string) $c['responsable']);
 
             return ['id' => $id, 'estado' => 'Verificada', 'detalle' => null];
@@ -262,11 +262,12 @@ class MotorCopias
      */
     private function restaurarArchivo(string $ruta, bool $conAdjuntos = true): int
     {
+        umask(0007); // el .bak descifrado no queda al alcance de otros usuarios (ver prepararDirectorio)
         $temporal = $this->dir . '/restauracion_' . bin2hex(random_bytes(4));
         try {
             CifradoCopia::descifrar($ruta, "{$temporal}.zip", $this->clave());
             PaqueteCopia::extraerBase("{$temporal}.zip", "{$temporal}.bak");
-            @chmod("{$temporal}.bak", 0644);
+            @chmod("{$temporal}.bak", 0640);
             $m = $this->mantenimiento();
             $this->ejecutar($m, "RESTORE VERIFYONLY FROM DISK = N'{$temporal}.bak' WITH CHECKSUM");
             $this->ejecutar($m, "ALTER DATABASE [{$this->base}] SET OFFLINE WITH ROLLBACK IMMEDIATE");
@@ -441,14 +442,19 @@ class MotorCopias
 
     private function prepararDirectorio(): void
     {
-        if (!is_dir($this->dir) && !@mkdir($this->dir, 0775, true)) {
+        // Los temporales (.bak y .zip sin cifrar) se crean sin permisos para otros usuarios. El proceso es de consola
+        // (copias:generar, copias:procesar), así que la máscara no alcanza a las peticiones web
+        umask(0007);
+        if (!is_dir($this->dir) && !@mkdir($this->dir, 02770, true)) {
             throw new ReglaNegocioException("El destino de las copias ({$this->dir}) no está disponible (A2).");
         }
-        // SQL Server escribe con su propio usuario (mssql, uid 10001); PHP-FPM lee con www-data para la descarga
+        // SQL Server escribe con su propio usuario (mssql, uid 10001) y pertenece al grupo www-data (group_add del servicio
+        // db); PHP-FPM lee con www-data para la descarga. Sin permisos para otros usuarios: el .bak de una restauración
+        // está sin cifrar mientras dura
         if (function_exists('posix_geteuid') && posix_geteuid() === 0) {
             @chown($this->dir, 10001);
             @chgrp($this->dir, 'www-data');
-            @chmod($this->dir, 02775);
+            @chmod($this->dir, 02770);
         }
         if (!is_writable($this->dir)) {
             throw new ReglaNegocioException("El destino de las copias ({$this->dir}) no admite escritura (A2).");
