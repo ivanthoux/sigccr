@@ -2,7 +2,7 @@
 
 Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su justificación, con los criterios de la sección siguiente que la sostienen. Toda la construcción se apoyó en ellas.
 
-**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-61), después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
+**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-62), después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
 
 El contenido de cada decisión está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
@@ -69,6 +69,7 @@ El contenido de cada decisión está incorporado en las secciones correspondient
 | D-59 | 18/11/2026 | Validada (19/11/2026) |
 | D-60 | 19/11/2026 | Validada (19/11/2026) |
 | D-61 | 19/11/2026 | Validada (19/11/2026) |
+| D-62 | 19/11/2026 | Validada (19/11/2026) |
 
 ## Criterios de decisión
 
@@ -1205,3 +1206,16 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 **Consecuencias.** Sin cambios en el sistema. Cambia la sección de alcance del documento del Trabajo Final, con la exclusión, y se quita del programa la tarea del perfil de riesgo.
 
 **Justificación** (C7, C1). Un monitoreo útil requiere definir la matriz de riesgo de la entidad, los umbrales de cada regla y el circuito de análisis y reporte con su oficial de cumplimiento, que dependen de la política de cada entidad y exceden el alcance y el plazo de un trabajo final. Construir reglas genéricas daría una falsa apariencia de cumplimiento. Dejarlo explícitamente fuera del alcance, con la información que el sistema sí conserva, es la forma honesta de tratar la obligación.
+
+## D-62 · Versiones fijas de las imágenes y reintentos de descarga en la integración continua (4.4.5; RNF-04)
+
+**Contexto.** El entorno usaba la etiqueta móvil `mssql/server:2022-latest`: cuando Microsoft publica una actualización acumulativa, la base cambia sin que el proyecto haya tocado nada y una prueba que pasaba puede fallar sin explicación. Además, la integración continua descarga paquetes de servidores externos; el 19/11/2026 un error 503 del espejo de Ubuntu hizo fallar la prueba de integración sin que hubiera un defecto en el código.
+
+**Decisión.**
+1. **SQL Server con versión acumulativa fija:** `2022-CU28-ubuntu-22.04` en `docker-compose.yml` (que usan el entorno de desarrollo, la batería de punta a punta y las pruebas de rendimiento) y en `ci.yml`. El resto de las imágenes ya tenían versión (Nginx 1.27, Mailpit 1.27.10, Playwright 1.49.1).
+2. **La actualización es una decisión deliberada:** se cambia el valor en los dos archivos, se ejecuta la integración continua completa (integración, punta a punta y rendimiento) y recién entonces se incorpora. El procedimiento está en el README.
+3. **Reintentos de descarga:** `apt-get` con `Acquire::Retries=5`, `curl` con `--retry 5 --retry-all-errors` y la descarga de la imagen de SQL Server con hasta cinco intentos de espera creciente, en el CI y en el Dockerfile de PHP.
+
+**Consecuencias.** Las ejecuciones son reproducibles en el tiempo. Hay que actualizar la versión a mano cada tanto para recibir las correcciones de seguridad de Microsoft; el README lo indica.
+
+**Justificación** (C3, C5). Una prueba que falla por algo ajeno al código resta confianza a todas las demás; fijar las versiones y absorber las fallas transitorias de red hace que un fallo signifique un defecto real. El costo (actualizar a mano) es menor que el de investigar fallas intermitentes.
