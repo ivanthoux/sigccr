@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Libraries\Clientes;
 
 /**
- * Datos que el alta del cliente propone a partir del CUIT o CUIL (CU-11 A9, D-59).
+ * Datos que el alta del cliente propone a partir del CUIT o CUIL (CU-11 A9, D-60).
  *
  * - Persona humana (prefijos 20, 23, 24 y 27): el DNI son los ocho dígitos centrales del CUIL, sin los ceros de la
  *   izquierda, y se completa aunque el servicio no encuentre a la persona. De la denominación («PEREZ GOMEZ ANA

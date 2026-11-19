@@ -59,7 +59,7 @@ final class Fabrica
     {
         $c = config('Sigccr');
 
-        // D-59: el servicio real es la Central de Deudores del BCRA, el mismo de la evaluación crediticia
+        // D-60: el servicio real es la Central de Deudores del BCRA, el mismo de la evaluación crediticia
         return match ($c->adaptadorPadron) {
             'simulador' => new SimuladorPadron(),
             'real', 'bcra' => new BcraPadron(

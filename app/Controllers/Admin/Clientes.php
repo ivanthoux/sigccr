@@ -65,7 +65,7 @@ class Clientes extends BaseController
     }
 
     /**
-     * CU-11 A9 (D-59): al ingresar el CUIT o CUIL, propone el nombre y el apellido o la razón social según la Central
+     * CU-11 A9 (D-60): al ingresar el CUIT o CUIL, propone el nombre y el apellido o la razón social según la Central
      * de Deudores del BCRA, y el DNI que contiene el CUIL. Si el servicio no encuentra a la persona o no responde, solo
      * se informa que no es posible obtener sus datos: el DNI se propone igual y el resto lo completa el Analista.
      */

@@ -6,7 +6,7 @@ namespace App\Adapters\Padron;
 
 /**
  * Consulta de la denominación asociada a un CUIT o CUIL, para proponer el nombre y el apellido o la razón social en el
- * alta del cliente (CU-11 A9, D-59). Solo se obtiene la denominación: el domicilio, el empleo y los demás datos los
+ * alta del cliente (CU-11 A9, D-60). Solo se obtiene la denominación: el domicilio, el empleo y los demás datos los
  * completa el Analista. El número de documento no se consulta: sale del propio CUIL (DatosPadron).
  *
  * Implementaciones: la Central de Deudores del BCRA (API pública) y un simulador para desarrollo y pruebas (RNF-05).

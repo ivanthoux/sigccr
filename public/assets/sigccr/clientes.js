@@ -80,7 +80,7 @@
         }
     });
 
-    // CU-11 A9 (D-58, D-59): al cargar un CUIT o CUIL válido, la Central de Deudores del BCRA propone el nombre y el
+    // CU-11 A9 (D-58, D-60): al cargar un CUIT o CUIL válido, la Central de Deudores del BCRA propone el nombre y el
     // apellido o la razón social, y el DNI sale del propio CUIL; el Analista los confirma o corrige. No se completa nada
     // más: el domicilio y el empleo los carga el Analista. La consulta automática completa los campos vacíos o los que
     // completó una consulta anterior, sin pisar lo que se escribió a mano; el botón vuelve a consultar y reemplaza.

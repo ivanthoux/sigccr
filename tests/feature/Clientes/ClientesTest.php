@@ -498,7 +498,7 @@ final class ClientesTest extends IntegracionTestCase
     }
 
     /**
-     * IN-14 · CU-11 A9 (D-59): el CUIT o CUIL propone el nombre y el apellido o la razón social y el DNI; sin la persona
+     * IN-14 · CU-11 A9 (D-60): el CUIT o CUIL propone el nombre y el apellido o la razón social y el DNI; sin la persona
      * en el servicio, o sin respuesta, solo el aviso y el DNI. Ningún otro dato.
      */
     public function testConsultaPorCuitPropone(): void

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Portal de autogestión (SS-07, D-42): reglas de presentación de CU-46 y CU-47, validaciones de CU-75, CU-98 y
- * CU-104. El simulador de la consulta por CUIT o CUIL se prueba en Tests\Unit\Clientes\PadronTest (D-59).
+ * CU-104. El simulador de la consulta por CUIT o CUIL se prueba en Tests\Unit\Clientes\PadronTest (D-60).
  */
 final class PortalTest extends TestCase
 {

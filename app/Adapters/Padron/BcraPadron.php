@@ -9,7 +9,7 @@ use App\Adapters\ServicioNoDisponibleException;
 use Throwable;
 
 /**
- * Denominación de una persona según la Central de Deudores del BCRA (API pública, sin credenciales; D-59).
+ * Denominación de una persona según la Central de Deudores del BCRA (API pública, sin credenciales; D-60).
  *
  *   GET {url}/Deudas/{cuit} → 200 {"status":200,"results":{"identificacion":…,"denominacion":"PEREZ ANA",…}}
  *                           → 404 si el BCRA no tiene deudas informadas para esa identificación

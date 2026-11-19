@@ -123,7 +123,7 @@ test('I-09 Completar el alta desde el pre-registro', async ({ comoUsuario }) => 
   await expect(page).toHaveURL(new RegExp(`/admin/clientes/nuevo\\?pre=${pre.id}`));
   await expect(page.locator('#nombre')).toHaveValue(sofia.nombre);
   await expect(page.locator('#cuit_cuil')).toHaveValue(/27-?41555104-?0/);
-  // A9: el botón vuelve a consultar y reemplaza los datos (D-58, D-59)
+  // A9: el botón vuelve a consultar y reemplaza los datos (D-58, D-60)
   await page.getByRole('button', { name: 'Consultar los datos del CUIT/CUIL' }).click();
   await expect(page.locator('[data-padron-resultado]')).toContainText('Se completaron el DNI, el nombre y el apellido');
   await expect(page.locator('#nro_documento')).toHaveValue('41555104');
@@ -152,7 +152,7 @@ test('I-10 Persona que no está en el servicio, servicio sin respuesta o CUIL in
   await page.goto('/admin/clientes/nuevo');
   await page.locator('label[for="tipo-PersonaHumana"]').click();
   const resultado = page.locator('[data-padron-resultado]');
-  // D-59: en los dos casos, solo el aviso; el DNI sale del CUIL y el nombre queda para el Analista
+  // D-60: en los dos casos, solo el aviso; el DNI sale del CUIL y el nombre queda para el Analista
   for (const [cuil, dni] of [['20990000019', '99000001'], ['20980000010', '98000001']]) {
     await page.locator('#cuit_cuil').fill(cuil);
     await page.getByRole('button', { name: 'Consultar los datos del CUIT/CUIL' }).click();
@@ -166,7 +166,7 @@ test('I-10 Persona que no está en el servicio, servicio sin respuesta o CUIL in
   await expect(page.locator('#nombre')).toHaveValue('');
 });
 
-test('I-92 El CUIT o CUIL completa el DNI y el nombre o la razón social (A9, D-58, D-59)', async ({ comoUsuario }) => {
+test('I-92 El CUIT o CUIL completa el DNI y el nombre o la razón social (A9, D-58, D-60)', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   await page.goto('/admin/clientes/nuevo');
   await page.locator('label[for="tipo-PersonaHumana"]').click();

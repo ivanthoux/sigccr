@@ -76,7 +76,7 @@ $this->section('contenido');
                 <div class="col-md-6">
                     <span class="form-label d-none d-md-block" aria-hidden="true">&nbsp;</span>
                     <button type="button" class="btn btn-outline-secondary" data-padron="<?= site_url('admin/clientes/padron') ?>"><i class="bi bi-search me-1" aria-hidden="true"></i>Consultar los datos del CUIT/CUIL</button>
-                    <?php // D-59: solo la denominación (Central de Deudores del BCRA) y el DNI del CUIL; el resto lo carga el Analista ?>
+                    <?php // D-60: solo la denominación (Central de Deudores del BCRA) y el DNI del CUIL; el resto lo carga el Analista ?>
                     <output class="form-text d-block" data-padron-resultado><span data-solo="PersonaHumana">Al ingresar un CUIL válido se completan el DNI, el nombre y el apellido, para que los confirme.</span><span data-solo="PersonaJuridica">Al ingresar un CUIT válido se completa la razón social, para que la confirme.</span> El domicilio y los demás datos se cargan a mano (A9).</output>
                 </div>
             <?php endif ?>

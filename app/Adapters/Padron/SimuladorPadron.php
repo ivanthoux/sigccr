@@ -7,7 +7,7 @@ namespace App\Adapters\Padron;
 use App\Adapters\ServicioNoDisponibleException;
 
 /**
- * Simulador de la consulta por CUIT o CUIL para desarrollo, pruebas y demostraciones (RNF-05, D-59). Responde como la
+ * Simulador de la consulta por CUIT o CUIL para desarrollo, pruebas y demostraciones (RNF-05, D-60). Responde como la
  * Central de Deudores del BCRA: solo la denominación, en mayúsculas, con el apellido primero. Según el CUIT o CUIL:
  * - los de la tabla CONOCIDOS devuelven su denominación (clientes de los datos de prueba);
  * - si los ocho dígitos centrales empiezan con 99, el servicio no responde;

@@ -27,7 +27,7 @@ Auditoría de diseño y accesibilidad de la interfaz (D-47).
 - D-58: el alta consulta el padrón al ingresar un CUIL válido y completa el DNI, el nombre y el apellido.
 
 ### Cambiado
-- D-59: la consulta por CUIT o CUIL usa la Central de Deudores del BCRA (`sigccr.adaptadorPadron = real`; el
+- D-60: la consulta por CUIT o CUIL usa la Central de Deudores del BCRA (`sigccr.adaptadorPadron = real`; el
   simulador sigue en desarrollo y pruebas). Propone solo el nombre y el apellido o la razón social, y el DNI sale del
   CUIL; ya no completa el domicilio. Si la persona no está en el servicio, o el servicio no responde, solo informa
   «No es posible obtener los datos de esta persona.». Funciona también para el CUIT de una persona jurídica.

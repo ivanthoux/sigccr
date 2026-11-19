@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * D-59: al ingresar el CUIT o CUIL se propone solo el nombre y el apellido o la razón social, según la Central de
+ * D-60: al ingresar el CUIT o CUIL se propone solo el nombre y el apellido o la razón social, según la Central de
  * Deudores del BCRA, y el DNI que contiene el CUIL (CU-11 A9).
  */
 final class PadronTest extends TestCase
