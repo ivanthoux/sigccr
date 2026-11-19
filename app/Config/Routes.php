@@ -68,7 +68,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
             // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
             $routes->get('localidades/(:num)', 'Admin\Clientes::localidades/$1', ['filter' => 'permiso:clientes.registrar']);
-            // CU-11 A9: consulta del padrón de ARCA por CUIL
+            // CU-11 A9: nombre o razón social por CUIT/CUIL (Central de Deudores del BCRA, D-59)
             $routes->get('padron', 'Admin\Clientes::padron', ['filter' => 'permiso:clientes.registrar']);
             $routes->get('(:num)', 'Admin\Clientes::ver/$1', ['filter' => 'permiso:clientes.consultar-perfil']);
             $routes->get('(:num)/historial', 'Admin\Clientes::historial/$1', ['filter' => 'permiso:clientes.consultar-perfil']);

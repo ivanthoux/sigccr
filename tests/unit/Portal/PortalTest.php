@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Portal;
 
-use App\Adapters\Padron\SimuladorPadron;
-use App\Adapters\ServicioNoDisponibleException;
 use App\Exceptions\ReglaNegocioException;
 use App\Libraries\Clientes\ValidadorPreRegistro;
 use App\Libraries\Finanzas\Decimal;
@@ -14,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Portal de autogestión (SS-07, D-42): reglas de presentación de CU-46 y CU-47, validaciones de CU-75, CU-98 y
- * CU-104, y el simulador del padrón de ARCA (CU-11 A9).
+ * CU-104. El simulador de la consulta por CUIT o CUIL se prueba en Tests\Unit\Clientes\PadronTest (D-59).
  */
 final class PortalTest extends TestCase
 {
@@ -143,18 +141,5 @@ final class PortalTest extends TestCase
         $this->assertNotNull(ReglasPortal::validarCorreoNuevo('martina@', 'martina@prueba.local'));
         $this->assertSame('El nuevo correo es igual al actual.', ReglasPortal::validarCorreoNuevo('martina@prueba.local', 'Martina@Prueba.local'));
         $this->assertNull(ReglasPortal::validarCorreoNuevo('martina.diaz@nuevo.local', 'martina@prueba.local'));
-    }
-
-    public function testSimuladorDelPadron(): void
-    {
-        $p = new SimuladorPadron();
-        $martina = $p->consultar('27394445520');
-        $this->assertSame(['nombre' => 'Martina', 'apellido' => 'Díaz', 'tipo_documento' => 'DNI', 'nro_documento' => '39444552', 'domicilio_fiscal' => 'Av. San Martín 2020, Apóstoles, Misiones'], $martina);
-        $otro = $p->consultar('20301112225');
-        $this->assertSame($otro, $p->consultar('20301112225'));
-        $this->assertSame('30111222', $otro['nro_documento']);
-        $this->assertNull($p->consultar('20981112223'));
-        $this->expectException(ServicioNoDisponibleException::class);
-        $p->consultar('20991112227');
     }
 }

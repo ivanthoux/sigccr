@@ -10,6 +10,7 @@ use App\Adapters\Comunicaciones\SmtpComunicaciones;
 use App\Adapters\InformacionCrediticia\BcraInformacionCrediticia;
 use App\Adapters\InformacionCrediticia\InformacionCrediticiaInterface;
 use App\Adapters\InformacionCrediticia\SimuladorInformacionCrediticia;
+use App\Adapters\Padron\BcraPadron;
 use App\Adapters\Padron\PadronInterface;
 use App\Adapters\Padron\SimuladorPadron;
 use App\Adapters\Pasarela\PasarelaInterface;
@@ -56,9 +57,16 @@ final class Fabrica
 
     public static function padron(): PadronInterface
     {
-        return match (config('Sigccr')->adaptadorPadron) {
+        $c = config('Sigccr');
+
+        // D-59: el servicio real es la Central de Deudores del BCRA, el mismo de la evaluación crediticia
+        return match ($c->adaptadorPadron) {
             'simulador' => new SimuladorPadron(),
-            default => throw new RuntimeException('Adaptador del padrón desconocido: use simulador (el servicio real requiere el convenio con ARCA).'),
+            'real', 'bcra' => new BcraPadron(
+                $c->informacionCrediticiaUrl !== '' ? $c->informacionCrediticiaUrl : BcraInformacionCrediticia::URL,
+                $c->tiempoEsperaExterno,
+            ),
+            default => throw new RuntimeException('Adaptador de la consulta por CUIT o CUIL desconocido: use simulador o real.'),
         };
     }
 }

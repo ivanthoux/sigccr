@@ -497,6 +497,34 @@ final class ClientesTest extends IntegracionTestCase
         $this->assertSame(1, $this->contar('registros_auditoria', ['accion' => 'clientes.descargar_documento', 'objeto_id' => (string) $docB]));
     }
 
+    /**
+     * IN-14 · CU-11 A9 (D-59): el CUIT o CUIL propone el nombre y el apellido o la razón social y el DNI; sin la persona
+     * en el servicio, o sin respuesta, solo el aviso y el DNI. Ningún otro dato.
+     */
+    public function testConsultaPorCuitPropone(): void
+    {
+        $this->comoRol('AnalistaCredito');
+        $r = $this->pedir('admin/clientes/padron', ['cuil' => '20-40222309-0', 'tipo' => 'PersonaHumana'], true);
+        $r->assertOK();
+        $this->assertSame(['tipo_cliente' => 'PersonaHumana', 'tipo_documento' => 'DNI', 'nro_documento' => '40222309', 'apellido' => 'Acosta', 'nombre' => 'Mateo'], json_decode($r->getJSON(), true)['datos']);
+
+        $j = json_decode($this->pedir('admin/clientes/padron', ['cuil' => '30712345671', 'tipo' => 'PersonaJuridica'], true)->getJSON(), true);
+        $this->assertSame(['tipo_cliente', 'razon_social'], array_keys($j['datos']));
+
+        foreach (['20980000010', '20990000019'] as $cuil) {
+            $r = $this->pedir('admin/clientes/padron', ['cuil' => $cuil, 'tipo' => 'PersonaHumana'], true);
+            $r->assertStatus(404);
+            $j = json_decode($r->getJSON(), true);
+            $this->assertSame('No es posible obtener los datos de esta persona.', $j['mensaje'], $cuil);
+            $this->assertSame(['tipo_cliente', 'tipo_documento', 'nro_documento'], array_keys($j['datos']), $cuil);
+        }
+        $this->assertGreaterThanOrEqual(1, $this->contar('registros_auditoria', ['accion' => 'clientes.consultar-padron', 'resultado' => 'Fallido']));
+
+        // Un CUIL de persona humana como CUIT de persona jurídica, o con el verificador mal, no se consulta
+        $this->pedir('admin/clientes/padron', ['cuil' => '20402223090', 'tipo' => 'PersonaJuridica'], true)->assertStatus(422);
+        $this->pedir('admin/clientes/padron', ['cuil' => '20402223091', 'tipo' => 'PersonaHumana'], true)->assertStatus(422);
+    }
+
     public function testAgregarDocumentosSinArchivos(): void
     {
         $this->comoRol('AnalistaCredito');

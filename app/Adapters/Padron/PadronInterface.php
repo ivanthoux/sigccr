@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace App\Adapters\Padron;
 
 /**
- * Servicio de padrón de ARCA (ACT-10): datos de identificación asociados a un CUIL, para proponerlos en el alta del
- * cliente (CU-11 A9) y al completar un pre-registro (CU-104). El Analista los confirma o corrige; si el servicio no
- * responde, los datos se ingresan manualmente (RNF-05, RNF-08).
+ * Consulta de la denominación asociada a un CUIT o CUIL, para proponer el nombre y el apellido o la razón social en el
+ * alta del cliente (CU-11 A9, D-59). Solo se obtiene la denominación: el domicilio, el empleo y los demás datos los
+ * completa el Analista. El número de documento no se consulta: sale del propio CUIL (DatosPadron).
+ *
+ * Implementaciones: la Central de Deudores del BCRA (API pública) y un simulador para desarrollo y pruebas (RNF-05).
  */
 interface PadronInterface
 {
     /**
-     * @return array{nombre: string, apellido: string, tipo_documento: string, nro_documento: string, domicilio_fiscal: string}|null
-     *         null si el padrón no tiene datos para ese CUIL
-     * @throws \App\Adapters\ServicioNoDisponibleException
+     * @param string $cuit 11 dígitos, sin guiones
+     * @return string|null la denominación tal como la informa el servicio («PEREZ GOMEZ ANA MARIA»), o null si el
+     *                     servicio no tiene a esa persona
+     * @throws \App\Adapters\ServicioNoDisponibleException si el servicio no responde o la respuesta no es válida
      */
-    public function consultar(string $cuil): ?array;
+    public function consultar(string $cuit): ?string;
 }
