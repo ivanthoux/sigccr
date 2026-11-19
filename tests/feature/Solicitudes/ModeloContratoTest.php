@@ -10,7 +10,7 @@ use CodeIgniter\I18n\Time;
 use Tests\Support\Feature\IntegracionTestCase;
 
 /**
- * IN-55 · Modelo de contrato configurable (CU-106, D-56; RN-15, RN-78). El Gerente registra una versión de las
+ * IN-71 · Modelo de contrato configurable (CU-106, D-56; RN-15, RN-78). El Gerente registra una versión de las
  * cláusulas; los contratos que se generan desde entonces la usan y los anteriores conservan la suya.
  *
  * @internal
