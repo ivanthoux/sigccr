@@ -9,6 +9,7 @@ const { documento } = require('../lib/archivos');
 const { elegirDomicilio } = require('../lib/clientes');
 const { clientes, portal, fecha, usuarios } = require('../lib/datos');
 const { activarPortal, entrarPortal, comoCliente, anchoDocumento } = require('../lib/portal');
+const { registrarParametrosCampanas } = require('../lib/campanas');
 
 const { C01: ana, C02: bruno, C03: carla, C10: julian } = clientes;
 const CORREO_ANA = 'ana.gomez2@prueba.local'; // R-024
@@ -45,29 +46,12 @@ async function pagarEnPasarela(page, ordenId) {
 }
 
 /** CU-51: registra una versión de los parámetros de campañas sobre la línea Personal (A.4). */
-async function registrarParametros(page, cambios = {}) {
-  const p = {
-    umbral_disponibilidad: '0', periodo_proyeccion_dias: '30', factor_cobrabilidad: '90', reserva_minima: '0', linea: 'Personal (PERSONAL)',
-    capital_maximo: '3000000', cantidad_maxima_ofertas: '200', categorias: ['RelacionDependencia', 'JubiladoPensionado'], antiguedad_minima_meses: '0',
-    morosidad_maxima_dias: '30', admite_obligaciones_vigentes: true, mensaje: 'Oferta especial de préstamos personales', duracion_dias: '15',
-    cierre_por_disponibilidad: true, fecha_vigencia: fecha(), motivo: 'Campaña de la prueba integral', ...cambios,
-  };
-  await page.goto('/admin/parametros/campanas');
-  for (const k of ['umbral_disponibilidad', 'periodo_proyeccion_dias', 'factor_cobrabilidad', 'reserva_minima', 'capital_maximo', 'cantidad_maxima_ofertas', 'antiguedad_minima_meses', 'morosidad_maxima_dias', 'duracion_dias']) {
-    await page.locator(`#${k}`).fill(p[k]);
-  }
-  await page.locator('#linea_id').selectOption({ label: p.linea });
-  for (const caja of await page.locator('input[name="categorias_admitidas[]"]').all()) {
-    await caja.setChecked(p.categorias.includes(await caja.getAttribute('value')));
-  }
-  await page.locator('#canal-Correo').check();
-  await page.locator('#admite_obligaciones_vigentes').setChecked(p.admite_obligaciones_vigentes);
-  await page.locator('#cierre_por_disponibilidad').setChecked(p.cierre_por_disponibilidad);
-  await page.locator('#mensaje').fill(p.mensaje);
-  await page.locator('#fecha_vigencia').fill(p.fecha_vigencia);
-  await page.locator('#motivo').fill(p.motivo);
-  await page.getByRole('button', { name: 'Registrar nueva versión' }).click();
-}
+const registrarParametros = (page, cambios = {}) => registrarParametrosCampanas(page, {
+  umbral_disponibilidad: '0', periodo_proyeccion_dias: '30', factor_cobrabilidad: '90', reserva_minima: '0', linea: 'Personal (PERSONAL)',
+  capital_maximo: '3000000', cantidad_maxima_ofertas: '200', categorias: ['RelacionDependencia', 'JubiladoPensionado'], antiguedad_minima_meses: '0',
+  morosidad_maxima_dias: '30', admite_obligaciones_vigentes: true, mensaje: 'Oferta especial de préstamos personales', duracion_dias: '15',
+  cierre_por_disponibilidad: true, motivo: 'Campaña de la prueba integral',
+}, cambios);
 
 /** Movimiento de fondos (CU-85) del Gerente. */
 async function registrarAporte(page, importe, concepto) {
