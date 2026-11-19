@@ -4,7 +4,30 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
-Auditoría de diseño y accesibilidad de la interfaz (D-47).
+## [0.6.0] - 2026-11-19
+
+Transición: la versión incorpora los cambios posteriores al fin de Construcción. Auditoría de diseño y accesibilidad
+de la interfaz (D-47) e interfaz homogénea (D-59); auditoría de cada modificación campo a campo (D-48); correo de
+desarrollo con Mailpit (D-49); tema oscuro (D-50); pruebas de rendimiento (D-46) y pruebas de integración por campo y
+clase de dato de las cuatro iteraciones contra SQL Server (D-51), con los defectos y las observaciones que
+encontraron (D-52 a D-54); observaciones de la cátedra del 18/11/2026 (D-55 a D-58); consulta por CUIT o CUIL con la
+Central de Deudores del BCRA (D-60); registro de decisiones con criterios y justificación, y todas las decisiones
+validadas; y las correcciones del análisis de SonarQube Cloud. Pruebas automáticas, de integración y de punta a punta
+aprobadas sobre SQL Server.
+
+### Corregido (análisis de SonarQube Cloud)
+- La clave del límite de intentos usa SHA-256 en lugar de MD5.
+- Copias de seguridad sin permisos para otros usuarios: SQL Server pertenece al grupo `www-data`, los archivos quedan
+  en 0640, la carpeta en 2770 y los procesos de copia usan `umask(0007)`, porque los temporales están sin cifrar.
+- Acciones de GitHub fijadas por SHA; `curl` solo por HTTPS en el Dockerfile.
+- Encabezados de fila con `scope` en los totales del plan y de la constancia; `lang` en la página de error; sin
+  `autofocus` en siete formularios; `[[ ]]` en los scripts de shell.
+- Se excluyen del análisis los archivos de CodeIgniter sin cambios y `tests/_local`.
+
+### Documentación
+- Registro de decisiones: criterios de decisión C1 a C9 y la justificación de cada decisión. D-01 a D-14 validadas
+  por el director; D-15 a D-61 validadas el 19/11/2026. D-61: el monitoreo de operaciones inusuales de la UIF queda
+  fuera del alcance.
 
 ### Agregado (pruebas de integración de D-55 a D-58)
 - IN-71: modelo de contrato por campo (forma, título y texto de una cláusula, fecha y motivo) y controles del modelo
@@ -414,7 +437,8 @@ Hito Fin de Elaboración: arquitectura ejecutable verificada (2.2.2 del document
 - La cobertura de RNF-15 se mide sobre el motor financiero; los servicios se miden con las pruebas de integración.
 - `inicializar.sh` detecta las excepciones de spark aunque termine con código 0 y mide la cobertura.
 
-[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.5.0...develop
+[Sin publicar]: https://github.com/ivanthoux/sigccr/compare/v0.6.0...develop
+[0.6.0]: https://github.com/ivanthoux/sigccr/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/ivanthoux/sigccr/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ivanthoux/sigccr/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ivanthoux/sigccr/compare/v0.2.0...v0.3.0
