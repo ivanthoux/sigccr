@@ -236,7 +236,7 @@ async function cambiarContrasena(page, actual, nueva, confirmacion = nueva) {
   await page.locator('#actual').fill(actual);
   await page.locator('#contrasena').fill(nueva);
   await page.locator('#confirmacion').fill(confirmacion);
-  await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+  await page.getByRole('button', { name: 'Cambiar la contraseña' }).click();
 }
 
 test('I-45 Cambiar la contraseña en el portal (CU-107)', async ({ browser }) => {
