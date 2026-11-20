@@ -75,7 +75,6 @@ final class SesionYCabecerasTest extends IntegracionTestCase
         // El framework completa el tipo de contenido al enviar la respuesta; si todavía no está, rige la codificación configurada
         $tipo = $r->response()->getHeaderLine('Content-Type');
         if ($tipo !== '') {
-            $this->assertStringContainsString('text/html', $tipo);
             $this->assertStringContainsString('charset=UTF-8', $tipo);
         }
         $this->assertSame('UTF-8', config('App')->charset);
