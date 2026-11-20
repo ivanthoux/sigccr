@@ -1,0 +1,168 @@
+name: Medición de cobertura global (temporal)
+
+# Rama temporal, no se integra (G14). Mide la cobertura de líneas de app/ con todos los niveles automáticos:
+# Finanzas, Unitarias y Rutas; Integración contra SQL Server; y la batería de punta a punta con pcov en el contenedor.
+on:
+  push:
+    branches: ['medicion/cobertura-*']
+
+jobs:
+  unitarias:
+    name: Finanzas, Unitarias y Rutas
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: PHP 8.3 con pcov
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring
+          coverage: pcov
+          tools: composer:v2
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
+      - name: Configuración de cobertura sobre app/ (mismo alcance que la medición del 18/11)
+        run: |
+          python3 - <<'P'
+          s = open('phpunit.xml.dist').read()
+          dirs = ['Libraries', 'Services', 'Controllers', 'Filters', 'Adapters', 'Commands', 'Helpers', 'Database/SQLSRV']
+          inc = ''.join(f'<directory suffix=".php">./app/{d}</directory>' for d in dirs)
+          s = s.replace('<directory suffix=".php">./app/Libraries/Finanzas</directory>', inc)
+          open('phpunit.cobertura.xml', 'w').write(s)
+          P
+          grep -c 'directory suffix' phpunit.cobertura.xml
+          mkdir -p build
+      - name: Suites con cobertura
+        timeout-minutes: 20
+        run: php -d memory_limit=2G vendor/bin/phpunit -c phpunit.cobertura.xml --testsuite Finanzas,Unitarias,Rutas --coverage-php build/a.cov --no-progress
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with: { name: cov-unitarias, path: build/a.cov, retention-days: 7 }
+
+  integracion:
+    name: Integración contra SQL Server
+    runs-on: ubuntu-24.04
+    env:
+      SIGCCR_DB_HOST: localhost
+      SIGCCR_CREAR_INICIOS: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+
+      - name: Contraseñas de esta ejecución (aleatorias, no se guardan en el repositorio)
+        run: |
+          for v in MSSQL_SA_PASSWORD OWNER_PASSWORD APP_PASSWORD; do
+            clave="Ci$(openssl rand -hex 12)!9"
+            echo "::add-mask::${clave}"
+            echo "${v}=${clave}" >> "$GITHUB_ENV"
+          done
+
+      - name: SQL Server 2022
+        run: |
+          for i in 1 2 3 4 5; do docker pull mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04 && break; echo "Descarga fallida ($i/5)"; sleep $((i * 10)); done
+          docker run -d --name mssql -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
+            -e MSSQL_SA_PASSWORD -e MSSQL_COLLATION=Modern_Spanish_CI_AI mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
+          for i in $(seq 1 60); do
+            docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q 'SELECT 1' -b -o /dev/null && exit 0
+            sleep 2
+          done
+          docker logs mssql | tail -20
+          exit 1
+
+      - name: Controlador ODBC 18 de Microsoft (lo requiere la extensión sqlsrv)
+        run: |
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+          sudo apt-get -o Acquire::Retries=5 update -q
+          sudo ACCEPT_EULA=Y apt-get -o Acquire::Retries=5 install -y -q msodbcsql18 unixodbc-dev
+
+      - name: PHP 8.3 con sqlsrv
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring, sqlsrv
+          coverage: pcov
+          tools: composer:v2
+
+      - name: sqlcmd
+        run: |
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
+          sqlcmd --version
+
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress
+
+      - name: Configuración (.env de ejemplo con la base en localhost y las contraseñas de esta ejecución)
+        run: |
+          cp env.sigccr.example .env
+          sed -i -E 's/^(database\.[a-z]+\.hostname) = db$/\1 = localhost/; s/^app\.forceGlobalSecureRequests = true/app.forceGlobalSecureRequests = false/' .env
+          sed -i -E "s/^database\.default\.password = .*/database.default.password = ${APP_PASSWORD}/; s/^database\.migraciones\.password = .*/database.migraciones.password = ${OWNER_PASSWORD}/" .env
+          php spark key:generate --force
+
+      - name: Configuración de cobertura sobre app/ (mismo alcance que la medición del 18/11)
+        run: |
+          python3 - <<'P'
+          s = open('phpunit.xml.dist').read()
+          dirs = ['Libraries', 'Services', 'Controllers', 'Filters', 'Adapters', 'Commands', 'Helpers', 'Database/SQLSRV']
+          inc = ''.join(f'<directory suffix=".php">./app/{d}</directory>' for d in dirs)
+          s = s.replace('<directory suffix=".php">./app/Libraries/Finanzas</directory>', inc)
+          open('phpunit.cobertura.xml', 'w').write(s)
+          P
+          grep -c 'directory suffix' phpunit.cobertura.xml
+          mkdir -p build
+      - name: Integración con cobertura
+        timeout-minutes: 50
+        run: |
+          composer dump-autoload --quiet
+          bash tests/feature/preparar_base.sh
+          php -d memory_limit=3G vendor/bin/phpunit -c phpunit.cobertura.xml --testsuite Integracion --coverage-php build/b.cov --no-progress
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with: { name: cov-integracion, path: build/b.cov, retention-days: 7 }
+
+  e2e:
+    name: Punta a punta con pcov
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CI: "1"
+      E2E_COMPOSE_EXTRA: tests/e2e/docker-compose.cobertura.yml
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: Carpeta de las líneas ejecutadas (la escribe www-data dentro del contenedor)
+        run: mkdir -p build/cobertura-e2e && chmod 0777 build build/cobertura-e2e
+      - name: Batería completa
+        run: bash tests/e2e/ejecutar.sh || echo "::warning::La batería terminó con fallas"
+      - name: Empaquetar
+        if: always()
+        run: |
+          ls build/cobertura-e2e | wc -l
+          tar -czf build/e2e.tgz -C build cobertura-e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with: { name: cov-e2e, path: build/e2e.tgz, retention-days: 7 }
+
+  unir:
+    name: Resumen de la cobertura global
+    needs: [unitarias, integracion, e2e]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - name: PHP 8.3 con pcov
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
+        with:
+          php-version: "8.3"
+          extensions: bcmath, intl, mbstring
+          coverage: pcov
+          tools: composer:v2
+      - name: Dependencias
+        run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
+      - uses: actions/download-artifact@v4  # rama temporal
+        with: { path: build, merge-multiple: true }
+      - name: Unir
+        run: |
+          ls -la build
+          [ -f build/e2e.tgz ] && tar -xzf build/e2e.tgz -C build
+          php -d memory_limit=4G tests/cobertura/unir.php | head -14
+          python3 tests/cobertura/resumen.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with: { name: cobertura-global, path: "build/clover-*.xml\nbuild/html", retention-days: 14 }

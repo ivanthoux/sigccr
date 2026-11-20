@@ -1,0 +1,5 @@
+# Medición de cobertura (rama temporal): pcov activo y el registro de líneas ejecutadas en el contenedor app
+services:
+  app:
+    volumes:
+      - ./tests/cobertura/zzz-cobertura.ini:/usr/local/etc/php/conf.d/zzz-cobertura.ini:ro

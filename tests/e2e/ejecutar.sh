@@ -8,7 +8,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 export COMPOSE_PROJECT_NAME=sigccr_e2e HTTP_PORT="${E2E_HTTP_PORT:-18080}" HTTPS_PORT="${E2E_HTTPS_PORT:-18443}"
-dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml "$@"; }
+dc() { docker compose -f docker-compose.yml -f tests/e2e/docker-compose.e2e.yml ${E2E_COMPOSE_EXTRA:+-f "$E2E_COMPOSE_EXTRA"} "$@"; }
 
 [[ -f .env ]] || cp env.sigccr.example .env
 # La batería verifica los correos con el simulador (writable/correos y sus direcciones de falla). Si el entorno de
