@@ -2,7 +2,7 @@
 
 Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su justificación, con los criterios de la sección siguiente que la sostienen. Toda la construcción se apoyó en ellas.
 
-**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-62), después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
+**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-62), y D-63 al aprobar el plan de la lista de comprobación de seguridad, después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
 
 El contenido de cada decisión está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
@@ -70,6 +70,7 @@ El contenido de cada decisión está incorporado en las secciones correspondient
 | D-60 | 19/11/2026 | Validada (19/11/2026) |
 | D-61 | 19/11/2026 | Validada (19/11/2026) |
 | D-62 | 19/11/2026 | Validada (19/11/2026) |
+| D-63 | 19/11/2026 | Validada (19/11/2026) |
 
 ## Criterios de decisión
 
@@ -1219,3 +1220,21 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 **Consecuencias.** Las ejecuciones son reproducibles en el tiempo. Hay que actualizar la versión a mano cada tanto para recibir las correcciones de seguridad de Microsoft; el README lo indica.
 
 **Justificación** (C3, C5). Una prueba que falla por algo ajeno al código resta confianza a todas las demás; fijar las versiones y absorber las fallas transitorias de red hace que un fallo signifique un defecto real. El costo (actualizar a mano) es menor que el de investigar fallas intermitentes.
+
+## D-63 · Lista de comprobación OWASP ASVS 5.0 nivel 1 y cambio de contraseña (CU-107; RNF-12, RN-62; plan de pruebas)
+
+**Contexto.** RNF-12 pide cumplir el nivel 1 de OWASP ASVS, pero el proyecto no tenía la lista de comprobación que lo demostrara. La versión vigente del estándar es la 5.0.0, que reúne 70 requisitos en el nivel 1. Al revisarlos uno por uno, 14 no aplican al sistema, 46 ya se cumplían, 9 se corrigieron con cambios chicos y 1 queda como desvío. El más importante de los faltantes era que ningún usuario podía cambiar su contraseña (V6.2.2 y V6.2.3), porque el análisis solo preveía restablecerla por olvido o por indicación del Administrador.
+
+**Decisión.**
+1. **Versión de referencia.** Se usa ASVS 5.0.0 (nivel 1, 70 requisitos). La matriz con el estado de cada uno, la evidencia y la prueba que lo sostiene está en `docs/seguridad/asvs_nivel1.md`.
+2. **No aplica, con motivo.** Tokens autocontenidos (V9, 4 requisitos) y OAuth/OIDC (V10, 5): el sistema usa sesiones por referencia en el servidor y no es servidor de autorización. WebSockets (V4.4.1), editores HTML (V1.3.1), XML (V1.5.1) y CORS (V3.4.2, V3.5.2): no se usan.
+3. **Nuevo CU-107 «Cambiar contraseña»** para cualquier usuario con sesión, del panel o del portal: pide la contraseña actual y la nueva con su confirmación, aplica la política de RN-62, exige que la nueva sea distinta, cierra las demás sesiones abiertas de la cuenta y queda auditado. Los intentos con contraseña actual incorrecta cuentan para el bloqueo temporal de RN-62.
+4. **Lista de contraseñas comprometidas (V6.2.4).** Se incorporan las 3.000 contraseñas más frecuentes de 15 a 128 caracteres del archivo `xato-net-10-million-passwords-1000000.txt` de SecLists (licencia MIT, con la atribución en el encabezado de la lista), más unas pocas propias del proyecto. Se filtran por el largo porque la política ya exige 15 caracteres como mínimo: las más frecuentes, que son más cortas, no se pueden elegir de todos modos. La lista queda dentro del repositorio (`app/Libraries/Seguridad/contrasenas_comprometidas.txt`), sin términos ofensivos, y se aplica al alta, la activación, la recuperación y el cambio.
+5. **Desvío (V14.2.1).** Las búsquedas de clientes y solicitudes usan `GET` con el DNI o el CUIL en la dirección, de modo que el dato queda en los registros de acceso y en el historial del navegador. Se acepta en esta entrega: el documento es un dato de identificación que el operador ya ve en pantalla, ninguna credencial viaja en la dirección y los registros de acceso están dentro de la red de la entidad. Queda registrado como mejora futura pasar esas búsquedas a `POST`.
+6. **Cambios técnicos.** Cookie de sesión `__Host-sigccr_sesion`; `Cache-Control: no-store` en las páginas autenticadas y `Clear-Site-Data: "cache"` al cerrar sesión (V14.3.1); descargas de imágenes del legajo con `Content-Security-Policy: sandbox` (V3.2.1); cifrado de los cuerpos de las comunicaciones con AES-256-GCM, que reemplaza a AES-CTR no aprobado por el estándar (V11.3.2), con lectura de lo ya guardado.
+7. **Política de dependencias (V15.1.1, V15.2.1).** `docs/seguridad/politica_dependencias.md` fija los plazos de corrección según la gravedad del aviso; Dependabot propone las actualizaciones y el CI ejecuta `composer audit` y falla si hay un aviso conocido.
+8. **Pruebas.** Nuevo nivel de prueba «Seguridad» (S-01 a S-12) en el Plan de pruebas v1.5, pruebas de integración del cambio de contraseña (IN-76) y la prueba de punta a punta I-94.
+
+**Consecuencias.** Cambian el caso de uso CU-107 y la matriz de participación por actor (3.6.2: lo usan todos los roles y el cliente), RN-62 (se agrega el cambio de contraseña y la lista de comprometidas), el Plan de pruebas (v1.5) y la prueba funcional de la iteración 4 (I-94). Se agregan el filtro de cabeceras, el servicio de cambio de contraseña y las rutas `cuenta/contrasena` y `perfil/contrasena`. Las sesiones existentes se cierran una vez al cambiar el nombre de la cookie.
+
+**Justificación** (C4, C8, C1, C9, C7). Un estándar solo respalda al sistema si cada requisito tiene su evidencia: la matriz la da y las pruebas la mantienen vigente. Se agregó el cambio de contraseña porque es una función básica de cualquier sistema de autenticación y su ausencia obligaba a pedirle al Administrador un restablecimiento. Se aceptó un desvío y no se lo ocultó, porque pasar las búsquedas a `POST` toca muchas pantallas y pruebas, y el riesgo es bajo en el contexto de la entidad.

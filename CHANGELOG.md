@@ -4,7 +4,15 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado
+- Lista de comprobación OWASP ASVS 5.0 nivel 1 (`docs/seguridad/asvs_nivel1.md`): 70 requisitos, con su estado, evidencia y prueba (RNF-12, D-63).
+- CU-107 Cambiar contraseña, en el panel y en el portal: pide la actual, aplica la política, cierra las demás sesiones y queda auditado (V6.2.2, V6.2.3).
+- Lista de contraseñas comprometidas de más de 3.000 entradas, con SecLists (licencia MIT) (V6.2.4).
+- Auditoría de dependencias en el CI (`composer audit`), Dependabot y política de plazos de corrección (V15.1.1, V15.2.1).
+- Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-94.
+
 ### Cambiado
+- Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.
 - SQL Server con versión acumulativa fija (`2022-CU28-ubuntu-22.04`) y reintentos de descarga en la integración continua y en el Dockerfile (D-62).
 - La prueba funcional integral pasa a cubrir las iteraciones 1 a 4 (`prueba_funcional_integral_1_a_4.md`, casos R-153 a R-182), con su automatización en la batería de punta a punta.
 
