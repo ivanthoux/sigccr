@@ -129,6 +129,17 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
       - name: Carpeta de las líneas ejecutadas (la escribe www-data dentro del contenedor)
         run: mkdir -p build/cobertura-e2e && chmod 0777 build build/cobertura-e2e
+      - name: Verificación previa de pcov en la consola (si falla, solo se miden las peticiones web)
+        run: |
+          docker compose -f docker-compose.yml build app
+          cp env.sigccr.example .env
+          docker run --rm -v "$PWD:/var/www/html" -w /var/www/html -e COMPOSER_ALLOW_SUPERUSER=1 \
+            -v "$PWD/tests/cobertura/zzz-cobertura.ini:/usr/local/etc/php/conf.d/zzz-cobertura.ini:ro" \
+            --entrypoint bash sigccr/php:8.3 -c 'composer install -q --no-interaction && php spark list > /dev/null && php spark key:generate --force' \
+            && echo "Consola con pcov: correcta" \
+            || { echo "::warning::pcov falla en la consola: los comandos de spark no se miden"; touch build/cobertura-e2e/.sin-cli; }
+          rm -f build/cobertura-e2e/*.gz
+          ls -la build/cobertura-e2e
       - name: Batería completa
         run: bash tests/e2e/ejecutar.sh || echo "::warning::La batería terminó con fallas"
       - name: Empaquetar
