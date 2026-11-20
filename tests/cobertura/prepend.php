@@ -27,7 +27,9 @@ if (function_exists('pcov\start') && is_dir($sigccrDirCobertura) && !(PHP_SAPI =
                 }
             }
             if ($salida !== '') {
-                file_put_contents($sigccrDirCobertura . '/' . getmypid() . '-' . hrtime(true) . '.gz', gzencode($salida, 1));
+                $destino = $sigccrDirCobertura . '/' . getmypid() . '-' . hrtime(true) . '.gz';
+                file_put_contents($destino, gzencode($salida, 1));
+                chmod($destino, 0644); // los procesos de copias usan umask(0007)
             }
         } catch (\Throwable) {
             // la medición nunca debe alterar la respuesta

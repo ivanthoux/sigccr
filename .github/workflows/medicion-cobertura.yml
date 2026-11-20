@@ -7,7 +7,20 @@ on:
     branches: ['medicion/cobertura-*']
 
 jobs:
+  config:
+    # Si tests/cobertura/reutilizar tiene el número de una corrida, solo se rehace la unión con sus artefactos
+    name: Configuración
+    runs-on: ubuntu-24.04
+    outputs:
+      corrida: ${{ steps.c.outputs.corrida }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - id: c
+        run: echo "corrida=$(cat tests/cobertura/reutilizar 2>/dev/null | tr -dc 0-9)" >> "$GITHUB_OUTPUT"
+
   unitarias:
+    needs: config
+    if: needs.config.outputs.corrida == ''
     name: Finanzas, Unitarias y Rutas
     runs-on: ubuntu-24.04
     steps:
@@ -39,6 +52,8 @@ jobs:
         with: { name: cov-unitarias, path: build/a.cov, retention-days: 7 }
 
   integracion:
+    needs: config
+    if: needs.config.outputs.corrida == ''
     name: Integración contra SQL Server
     runs-on: ubuntu-24.04
     env:
@@ -119,6 +134,8 @@ jobs:
         with: { name: cov-integracion, path: build/b.cov, retention-days: 7 }
 
   e2e:
+    needs: config
+    if: needs.config.outputs.corrida == ''
     name: Punta a punta con pcov
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -146,15 +163,18 @@ jobs:
         if: always()
         run: |
           ls build/cobertura-e2e | wc -l
-          tar -czf build/e2e.tgz -C build cobertura-e2e
+          sudo tar -czf build/e2e.tgz -C build cobertura-e2e && sudo chown "$(id -u)" build/e2e.tgz
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         if: always()
         with: { name: cov-e2e, path: build/e2e.tgz, retention-days: 7 }
 
   unir:
     name: Resumen de la cobertura global
-    needs: [unitarias, integracion, e2e]
+    needs: [config, unitarias, integracion, e2e]
     if: always()
+    permissions:
+      actions: read
+      contents: read
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
@@ -168,7 +188,12 @@ jobs:
       - name: Dependencias
         run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
       - uses: actions/download-artifact@v4  # rama temporal
-        with: { path: build, merge-multiple: true }
+        with:
+          path: build
+          merge-multiple: true
+          pattern: cov-*
+          run-id: ${{ needs.config.outputs.corrida || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Unir
         run: |
           ls -la build

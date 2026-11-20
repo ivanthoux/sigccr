@@ -39,6 +39,11 @@ foreach ($archivos as $f) {
 }
 echo 'Archivos de punta a punta: ' . count($archivos) . ', archivos de app/ ejecutados: ' . count($e2e) . PHP_EOL;
 
+// El informe de $a quedó en caché al escribir los Clover anteriores: se arma un objeto nuevo con los mismos datos
+$a = include 'build/a.cov';
+if (is_file('build/b.cov')) {
+    $a->merge(include 'build/b.cov');
+}
 $datos = $a->getData();
 $lineas = $datos->lineCoverage();
 $soloE2e = [];
@@ -53,6 +58,9 @@ foreach ($lineas as $archivo => $porLinea) {
 $datos->setLineCoverage($lineas);
 $a->setData($datos);
 $a->setTests($a->getTests() + ['e2e' => ['size' => 'large', 'status' => 'success']]);
+if (method_exists($a, 'clearCache')) {
+    $a->clearCache();
+}
 (new Clover())->process($a, 'build/clover-total.xml');
 file_put_contents('build/e2e-lineas.json', json_encode(array_map('array_keys', $soloE2e)));
 echo (new Text(Thresholds::default(), false, true))->process($a, false);
