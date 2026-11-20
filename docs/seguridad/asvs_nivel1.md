@@ -78,7 +78,7 @@ El desvío documentado es V14.2.1 (ver su fila).
 |---|---|---|---|
 | V6.1.1 | Cumple | Documentado en RN-62 y en D-63: 5 intentos fallidos por cuenta en 15 minutos bloquean 15 minutos; 100 intentos por dirección de origen cada 15 minutos (`LimiteIntentosFilter`, también en recuperación, activación y preinscripción). | IN de acceso, S-09 |
 | V6.2.1 | Cumple | Mínimo 15 caracteres (`PoliticaContrasena::MINIMO`), máximo 128. | unit de política |
-| V6.2.2 | Cumple (corregido) | Nuevo CU-107 «Cambiar contraseña», en el panel (`cuenta/contrasena`) y en el portal (`perfil/contrasena`) (PR #203). | IN-76, I-45 |
+| V6.2.2 | Cumple (corregido) | Nuevo CU-107 «Cambiar contraseña», en el panel (`cuenta/contrasena`) y en el portal (`perfil/contrasena`) (PR #203). | IN-76, I-94 |
 | V6.2.3 | Cumple (corregido) | El cambio exige la contraseña actual y la nueva; la nueva debe diferir de la actual y se cierran las demás sesiones (PR #203). | IN-76 |
 | V6.2.4 | Cumple (corregido) | La política rechaza las contraseñas de una lista de 3.062 entradas: las 3.000 más frecuentes de 15 o más caracteres de SecLists (licencia MIT) y algunas propias, en el alta, la activación, la recuperación y el cambio (PR #202). | S-07 |
 | V6.2.5 | Cumple | Sin reglas de composición (mayúsculas, números, símbolos); solo largo y lista de comprometidas. | unit de política |

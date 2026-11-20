@@ -9,7 +9,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - CU-107 Cambiar contraseña, en el panel y en el portal: pide la actual, aplica la política, cierra las demás sesiones y queda auditado (V6.2.2, V6.2.3).
 - Lista de contraseñas comprometidas de más de 3.000 entradas, con SecLists (licencia MIT) (V6.2.4).
 - Auditoría de dependencias en el CI (`composer audit`), Dependabot y política de plazos de corrección (V15.1.1, V15.2.1).
-- Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-45.
+- Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-94.
 
 ### Cambiado
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.

@@ -239,7 +239,7 @@ async function cambiarContrasena(page, actual, nueva, confirmacion = nueva) {
   await page.getByRole('button', { name: 'Cambiar la contraseña' }).click();
 }
 
-test('I-45 Cambiar la contraseña en el portal (CU-107)', async ({ browser }) => {
+test('I-94 Cambiar la contraseña en el portal (CU-107)', async ({ browser }) => {
   const NUEVA = 'Portal-Cambio-2026-OK';
   const page = await comoCliente(browser, franco.correoNuevo);
   const otra = await comoCliente(browser, franco.correoNuevo); // segunda sesión abierta: debe cerrarse (A2)
