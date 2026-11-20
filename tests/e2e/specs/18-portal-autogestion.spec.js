@@ -3,6 +3,7 @@
 const { test, expect } = require('../lib/fixtures');
 const { ultimoCorreo, consulta, valor, spark, cerrarBase } = require('../lib/sistema');
 const { demo, activarPortal, entrarPortal, comoCliente, anchoDocumento, CLAVE_DEMO } = require('../lib/portal');
+const { contrasenasInvalidas } = require('../lib/datos');
 
 const { franco, joaquin } = demo;
 const exito = (page) => page.locator('.alert-success[role="status"]');
@@ -228,4 +229,49 @@ test('I-44 Auditoría del bloque A', async () => {
   for (const a of ['pre-registros.registrar', 'pre-registros.verificar', 'pre-registros.descartar', 'clientes.consultar-padron', 'portal.acceso-denegado']) {
     expect(acciones, a).toContain(a);
   }
+});
+
+/** CU-107: completa el formulario de cambio de contraseña (el mismo en el panel y en el portal). */
+async function cambiarContrasena(page, actual, nueva, confirmacion = nueva) {
+  await page.locator('#actual').fill(actual);
+  await page.locator('#contrasena').fill(nueva);
+  await page.locator('#confirmacion').fill(confirmacion);
+  await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
+}
+
+test('I-45 Cambiar la contraseña en el portal (CU-107)', async ({ browser }) => {
+  const NUEVA = 'Portal-Cambio-2026-OK';
+  const page = await comoCliente(browser, franco.correoNuevo);
+  const otra = await comoCliente(browser, franco.correoNuevo); // segunda sesión abierta: debe cerrarse (A2)
+  await page.goto('/portal/perfil');
+  await page.getByRole('link', { name: 'Cambiar contraseña' }).click();
+  await expect(page).toHaveURL(/\/portal\/perfil\/contrasena$/);
+  await cambiarContrasena(page, 'Clave-Incorrecta-2026', NUEVA);
+  await expect(alerta(page)).toContainText('La contraseña actual no es correcta.');
+  await cambiarContrasena(page, CLAVE_DEMO, CLAVE_DEMO);
+  await expect(alerta(page)).toContainText('La contraseña nueva debe ser distinta de la actual.');
+  await cambiarContrasena(page, CLAVE_DEMO, contrasenasInvalidas.comprometida);
+  await expect(alerta(page)).toContainText('lista de contraseñas comprometidas');
+  await cambiarContrasena(page, CLAVE_DEMO, NUEVA, 'Otra-Confirmacion-2026');
+  await expect(alerta(page)).toContainText('La confirmación no coincide');
+  await cambiarContrasena(page, CLAVE_DEMO, NUEVA);
+  await expect(exito(page)).toContainText('La contraseña se cambió.');
+  await otra.goto('/portal/estado-cuenta');
+  await expect(otra).toHaveURL(/\/portal\/login/);
+  // La anterior ya no sirve y la nueva sí; después se restablece la de la batería
+  const nuevo = await browser.newContext();
+  const p2 = await nuevo.newPage();
+  await p2.goto('/portal/login');
+  await p2.locator('#correo').fill(franco.correoNuevo);
+  await p2.locator('#contrasena').fill(CLAVE_DEMO);
+  await p2.getByRole('button', { name: 'Iniciar sesión' }).click();
+  await expect(alerta(p2)).toBeVisible();
+  await entrarPortal(p2, franco.correoNuevo, NUEVA);
+  await p2.goto('/portal/perfil/contrasena');
+  await cambiarContrasena(p2, NUEVA, CLAVE_DEMO);
+  await expect(exito(p2)).toContainText('La contraseña se cambió.');
+  expect(await valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion = 'acceso.cambio-contrasena'")).toBeGreaterThanOrEqual(2);
+  await p2.context().close();
+  await page.context().close();
+  await otra.context().close();
 });

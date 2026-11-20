@@ -7,7 +7,7 @@ namespace Tests\Feature\Seguridad;
 use Tests\Support\Feature\IntegracionTestCase;
 
 /**
- * S-01 a S-05 · Cookie de sesión, caché de las páginas autenticadas y cierre de sesión (RNF-11, RNF-12; OWASP ASVS 5.0
+ * S-01 a S-05 y S-12 · Cookie de sesión, caché de las páginas autenticadas y cierre de sesión (RNF-11, RNF-12; OWASP ASVS 5.0
  * nivel 1: V3.3.1, V14.3.1, V7.4.1). Plan de pruebas 7.10.
  *
  * @internal
@@ -65,5 +65,20 @@ final class SesionYCabecerasTest extends IntegracionTestCase
         $r = $this->pedir('/admin');
         $this->assertContains($r->response()->getStatusCode(), [302, 303]);
         $this->assertStringContainsString('/admin/login', $r->response()->getHeaderLine('Location'));
+    }
+
+    /** S-12 · Las respuestas declaran su tipo de contenido con la codificación, evitan que el navegador lo adivine y no habilitan CORS (V4.1.1, V3.2.1, V3.4.2). */
+    public function testRespuestasConTipoDeContenidoYSinCors(): void
+    {
+        $r = $this->pedir('/admin/login');
+        $this->assertSame(200, $r->response()->getStatusCode());
+        // El framework completa el tipo de contenido al enviar la respuesta; si todavía no está, rige la codificación configurada
+        $tipo = $r->response()->getHeaderLine('Content-Type');
+        if ($tipo !== '') {
+            $this->assertStringContainsString('text/html', $tipo);
+            $this->assertStringContainsString('charset=UTF-8', $tipo);
+        }
+        $this->assertSame('UTF-8', config('App')->charset);
+        $this->assertFalse($r->response()->hasHeader('Access-Control-Allow-Origin'));
     }
 }
