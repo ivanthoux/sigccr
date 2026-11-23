@@ -19,6 +19,8 @@ class Sigccr extends BaseConfig
     public string $entidadRazonSocial = 'Entidad de crédito (configurar sigccr.entidadRazonSocial)';
     public string $entidadCuit = '';
     public string $entidadDomicilio = '';
+    /** Correo donde los titulares ejercen sus derechos sobre los datos personales (Ley 25.326; política de datos). */
+    public string $entidadCorreoDatos = '';
 
     /** Modo de mantenimiento del portal de clientes (RNF-13, plan correctivo de R7). */
     public bool $portalEnMantenimiento = false;

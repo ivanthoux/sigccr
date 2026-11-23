@@ -237,7 +237,7 @@ $this->section('contenido');
         <?php if ($alta): ?>
             <div class="form-check mb-2">
                 <input class="form-check-input<?= campo_invalido('acepta_politica') ?>" type="checkbox" id="acepta_politica" name="acepta_politica" value="1"<?= old('acepta_politica') !== null ? ' checked' : '' ?>>
-                <label class="form-check-label" for="acepta_politica">El cliente aceptó la política de tratamiento de datos personales (obligatorio)</label>
+                <label class="form-check-label" for="acepta_politica">El cliente aceptó la <a href="<?= url_to('politica-datos') ?>" target="_blank" rel="noopener">política de tratamiento de datos personales</a> (obligatorio)</label>
                 <?= error_campo('acepta_politica') ?>
             </div>
         <?php endif ?>
@@ -245,7 +245,8 @@ $this->section('contenido');
             <input class="form-check-input" type="checkbox" id="acepta_comunicaciones" name="acepta_comunicaciones" value="1"<?= $comunicaciones ? ' checked' : '' ?>>
             <label class="form-check-label" for="acepta_comunicaciones">El cliente acepta recibir comunicaciones comerciales (opcional, puede revocarlo en cualquier momento)</label>
         </div>
-        <p class="small text-body-secondary mt-2 mb-0">Se registra con la fecha de hoy y el medio "Sucursal" (RN-64).</p>
+        <p class="small text-body-secondary mt-2 mb-2">Se registra con la fecha de hoy y el medio "Sucursal" (RN-64).</p>
+        <?= view('partials/leyenda_aaip') ?>
     </fieldset>
 
     <div class="d-flex gap-2 justify-content-end">

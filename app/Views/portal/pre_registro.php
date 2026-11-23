@@ -54,9 +54,10 @@ $this->section('contenido');
     </div>
     <div class="form-check mb-3">
         <input class="form-check-input<?= campo_invalido('acepta_politica') ?>" type="checkbox" id="acepta_politica" name="acepta_politica" value="1"<?= old('acepta_politica') !== null ? ' checked' : '' ?>>
-        <label class="form-check-label small" for="acepta_politica">Acepto la política de tratamiento de datos personales: la entidad usa estos datos solo para registrarme como cliente y puedo pedir su acceso, rectificación o supresión (Ley 25.326).</label>
+        <label class="form-check-label small" for="acepta_politica">Acepto la <a href="<?= url_to('politica-datos') ?>" target="_blank" rel="noopener">política de tratamiento de datos personales</a> (se abre en otra pestaña): la entidad usa estos datos solo para registrarme como cliente y puedo pedir su acceso, rectificación o supresión (Ley 25.326).</label>
         <?= error_campo('acepta_politica') ?>
     </div>
+    <?= view('partials/leyenda_aaip') ?>
     <button type="submit" class="btn btn-primary w-100">Pre-registrarme</button>
 </form>
 <div class="text-center mt-3"><a href="<?= url_to('portal.login') ?>" class="small">Ya soy cliente: iniciar sesión</a></div>
