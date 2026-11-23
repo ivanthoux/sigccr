@@ -228,3 +228,23 @@ test('I-95 Política de datos personales y leyenda de la AAIP (Ley 25.326)', asy
   await expect(politica.locator('main, .acceso-formulario')).toContainText('se eliminan a los 90 días');
   await politica.close();
 });
+
+test('I-97 Depuración de los pre-registros sin completar (Ley 25.326, art. 4)', async () => {
+  const insertar = (cuil, estado, dias) => consulta(
+    "INSERT INTO dbo.pre_registros (tipo_documento, nro_documento, cuit_cuil, nombre, apellido, correo, vence, fecha_politica, estado, creado_en, actualizado_en, motivo_descarte) "
+    + "VALUES ('DNI', @dni, @cuil, N'Depuración', N'Prueba', @correo, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET(), @estado, DATEADD(day, -@dias, SYSDATETIMEOFFSET()), NULL, @motivo)",
+    { dni: cuil.slice(2, 10), cuil, correo: `depuracion.${cuil}@prueba.local`, estado, dias, motivo: estado === 'Descartado' ? 'No se presentó a verificar su identidad.' : null },
+  );
+  const viejoSinVerificar = '20400000019';
+  const viejoDescartado = '20400000027';
+  const reciente = '20400000035';
+  await insertar(viejoSinVerificar, 'PendienteVerificacion', 95);
+  await insertar(viejoDescartado, 'Descartado', 120);
+  await insertar(reciente, 'PendienteVerificacion', 30);
+  spark('vencimientos:controlar');
+  expect(await preRegistros(viejoSinVerificar)).toHaveLength(0);
+  expect(await preRegistros(viejoDescartado)).toHaveLength(0);
+  expect(await preRegistros(reciente)).toHaveLength(1);
+  expect(await valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion = 'pre-registros.depurar'")).toBeGreaterThanOrEqual(1);
+  await consulta('DELETE FROM dbo.pre_registros WHERE cuit_cuil = @c', { c: reciente });
+});
