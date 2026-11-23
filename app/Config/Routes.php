@@ -14,6 +14,9 @@ $routes->addPlaceholder('num', '[0-9]{1,9}');
 // Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
 $routes->get('/', 'Portada::index', ['as' => 'portada']);
 
+// Política de tratamiento de datos personales: pública, para leerla antes de aceptarla (Ley 25.326, arts. 5 y 6; D-64)
+$routes->get('politica-de-datos', 'Portada::politicaDatos', ['as' => 'politica-datos']);
+
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');
 
@@ -58,6 +61,13 @@ $routes->group('admin', static function (RouteCollection $routes): void {
             $routes->get('(:num)/rol', 'Admin\Usuarios::confirmar/$1/rol', ['filter' => 'permiso:usuarios.asignar-rol']);
             $routes->post('(:num)/rol', 'Admin\Usuarios::asignarRol/$1', ['filter' => 'permiso:usuarios.asignar-rol']);
         });
+
+        // CU-108 (D-64): solicitudes de derechos del titular de los datos (Ley 25.326), que se responden en plazo
+        $routes->get('derechos', 'Admin\Derechos::index', ['as' => 'derechos.atender', 'filter' => 'permiso:derechos.atender']);
+        $routes->get('derechos/nueva', 'Admin\Derechos::nueva', ['filter' => 'permiso:derechos.atender']);
+        $routes->post('derechos', 'Admin\Derechos::registrar', ['filter' => 'permiso:derechos.atender']);
+        $routes->get('derechos/(:num)', 'Admin\Derechos::ver/$1', ['filter' => 'permiso:derechos.atender']);
+        $routes->post('derechos/(:num)/resolver', 'Admin\Derechos::resolver/$1', ['filter' => 'permiso:derechos.atender']);
 
         // CU-104 paso 7: pre-registros del portal, que el Analista completa con CU-11 o descarta
         $routes->get('pre-registros', 'Admin\PreRegistros::index', ['as' => 'pre-registros.consultar', 'filter' => 'permiso:clientes.registrar']);
@@ -307,6 +317,9 @@ $routes->group('portal', static function (RouteCollection $routes): void {
         $routes->post('salir', 'Portal\Acceso::cerrar');
         // CU-45, CU-98 y CU-75 (pasos 1 a 5)
         $routes->get('perfil', 'Portal\Perfil::index', ['as' => 'portal.perfil']);
+        // CU-108 (D-64): derechos del titular de los datos personales
+        $routes->get('derechos', 'Portal\Derechos::index', ['as' => 'portal.derechos']);
+        $routes->post('derechos', 'Portal\Derechos::registrar');
         $routes->get('perfil/preferencias', 'Portal\Perfil::preferencias', ['as' => 'portal.preferencias']);
         $routes->post('perfil/preferencias', 'Portal\Perfil::guardarPreferencias');
         $routes->get('perfil/correo', 'Portal\Perfil::correo', ['as' => 'portal.cambiar-correo']);

@@ -43,6 +43,7 @@ $cuenta = session('cuenta') ?? [];
     <?= cabecera_impresion($titulo ?? 'SIG-CCR') ?>
     <?= $this->renderSection('contenido') ?>
 </main>
+<footer class="portal-ancho small text-body-secondary py-3"><a href="<?= url_to('politica-datos') ?>">Política de datos personales</a></footer>
 <script src="<?= base_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
 <script src="<?= recurso('assets/sigccr/sigccr.js') ?>"></script>
 </body>

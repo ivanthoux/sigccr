@@ -223,3 +223,15 @@
         });
     });
 })();
+
+/* CU-108 (D-64): el pedido de revisión de una decisión automatizada pide además la solicitud de crédito. */
+(() => {
+    const tipo = document.querySelector('[data-derechos-tipo]');
+    const solicitud = document.querySelector('[data-derechos-solicitud]');
+    if (tipo === null || solicitud === null) {
+        return;
+    }
+    tipo.addEventListener('change', () => {
+        solicitud.hidden = tipo.value !== 'RevisionAutomatizada';
+    });
+})();
