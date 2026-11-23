@@ -35,6 +35,7 @@ $this->section('contenido');
     </div>
     <div class="d-flex flex-wrap gap-2">
         <a href="<?= site_url("admin/clientes/{$id}/historial") ?>" class="btn btn-primary"><i class="bi bi-clock-history me-1" aria-hidden="true"></i>Ver historial crediticio</a>
+        <?php if (tiene_permiso('derechos.atender')): ?><a href="<?= site_url("admin/derechos/nueva?cliente={$id}") ?>" class="btn btn-outline-secondary"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>Registrar solicitud de derechos</a><?php endif ?>
         <?php if ($activo && tiene_permiso('clientes.modificar')): ?><a href="<?= site_url("admin/clientes/{$id}/editar") ?>" class="btn btn-outline-secondary"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Modificar datos</a><?php endif ?>
         <?php if ($activo && tiene_permiso('clientes.desactivar')): ?><a href="<?= site_url("admin/clientes/{$id}/desactivar") ?>" class="btn btn-outline-danger"><i class="bi bi-person-x me-1" aria-hidden="true"></i>Desactivar</a><?php endif ?>
         <?php if (!$activo && tiene_permiso('clientes.reactivar')): ?><a href="<?= site_url("admin/clientes/{$id}/reactivar") ?>" class="btn btn-outline-secondary"><i class="bi bi-person-check me-1" aria-hidden="true"></i>Reactivar</a><?php endif ?>
