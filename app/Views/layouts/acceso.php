@@ -32,6 +32,7 @@
     <div>
         <?= $this->include('partials/mensajes') ?>
         <?= $this->renderSection('contenido') ?>
+        <?php if (!isset($sinPieDatos)): ?><p class="small mt-4 mb-0"><a href="<?= url_to('politica-datos') ?>">Política de datos personales</a></p><?php endif ?>
     </div>
 </main>
 </div>

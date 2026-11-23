@@ -14,6 +14,9 @@ $routes->addPlaceholder('num', '[0-9]{1,9}');
 // Portada pública: orienta a los clientes al portal y ofrece el acceso del personal al panel
 $routes->get('/', 'Portada::index', ['as' => 'portada']);
 
+// Política de tratamiento de datos personales: pública, para leerla antes de aceptarla (Ley 25.326, arts. 5 y 6; D-64)
+$routes->get('politica-de-datos', 'Portada::politicaDatos', ['as' => 'politica-datos']);
+
 // Estado de la arquitectura ejecutable (sin datos sensibles): versión, base de datos y hora del servidor
 $routes->get('estado', 'Estado::index');
 

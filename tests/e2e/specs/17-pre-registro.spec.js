@@ -211,3 +211,20 @@ test('I-11 Descartar un pre-registro', async ({ comoUsuario }) => {
   await expect(page.locator('.alert-success[role="status"]')).toContainText('Pre-registro descartado.');
   expect((await preRegistros(mateo.cuil))[0].estado).toBe('Descartado');
 });
+
+test('I-95 Política de datos personales y leyenda de la AAIP (Ley 25.326)', async ({ page }) => {
+  await page.goto('/portal/pre-registro');
+  // El formulario lleva la leyenda de la Res. AAIP 14/2018 y la casilla enlaza la política, que se lee sin iniciar sesión
+  await expect(page.locator('[data-leyenda-aaip]')).toContainText('Agencia de Acceso a la Información Pública');
+  const [politica] = await Promise.all([
+    page.context().waitForEvent('page'),
+    page.getByRole('link', { name: 'política de tratamiento de datos personales' }).click(),
+  ]);
+  await expect(politica).toHaveURL(/\/politica-de-datos$/);
+  await expect(politica.getByRole('heading', { level: 1, name: 'Política de datos personales' })).toBeVisible();
+  for (const titulo of ['Responsable del tratamiento', 'Sus derechos', 'Decisiones automatizadas', 'Reclamos']) {
+    await expect(politica.getByRole('heading', { name: titulo }), titulo).toBeVisible();
+  }
+  await expect(politica.locator('main, .acceso-formulario')).toContainText('se eliminan a los 90 días');
+  await politica.close();
+});
