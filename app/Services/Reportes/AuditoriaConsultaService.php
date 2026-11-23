@@ -18,7 +18,9 @@ use CodeIgniter\I18n\Time;
  */
 class AuditoriaConsultaService extends BaseService
 {
-    public const POR_PAGINA = 50;
+    /** Cantidades de registros por página que se pueden elegir; POR_PAGINA es la que se usa si no se elige otra. */
+    public const OPCIONES_POR_PAGINA = [10, 25, 50, 100];
+    public const POR_PAGINA = 25;
 
     /** Tipos de operación del paso 2 y los prefijos de acción que comprende cada uno. */
     public const CATEGORIAS = [
@@ -51,8 +53,8 @@ class AuditoriaConsultaService extends BaseService
     /**
      * Pasos 3 y 4 (A1, A2).
      *
-     * @param array<string, mixed> $f desde, hasta, responsable, categoria, objeto, resultado, pagina
-     * @return array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int, periodo: array<string, mixed>}
+     * @param array<string, mixed> $f desde, hasta, responsable, categoria, objeto, resultado, pagina, por_pagina
+     * @return array{filas: list<array<string, mixed>>, total: int, pagina: int, paginas: int, por_pagina: int, periodo: array<string, mixed>}
      */
     public function buscar(array $f): array
     {
@@ -89,15 +91,16 @@ class AuditoriaConsultaService extends BaseService
             $b[] = $f['resultado'];
         }
         $total = (int) $this->db->query('SELECT COUNT(*) AS t FROM dbo.registros_auditoria a' . $w, $b)->getRow()->t;
-        $paginas = max(1, (int) ceil($total / self::POR_PAGINA));
+        $porPagina = in_array((int) ($f['por_pagina'] ?? 0), self::OPCIONES_POR_PAGINA, true) ? (int) $f['por_pagina'] : self::POR_PAGINA;
+        $paginas = max(1, (int) ceil($total / $porPagina));
         $pagina = min($paginas, max(1, (int) ($f['pagina'] ?? 1)));
         $filas = $this->db->query(
             'SELECT a.id, a.fecha_hora, a.responsable, a.proceso, a.accion, a.objeto_tipo, a.objeto_id, a.resultado, a.motivo FROM dbo.registros_auditoria a' . $w
-            . ' ORDER BY a.fecha_hora DESC, a.id DESC OFFSET ' . (($pagina - 1) * self::POR_PAGINA) . ' ROWS FETCH NEXT ' . self::POR_PAGINA . ' ROWS ONLY',
+            . ' ORDER BY a.fecha_hora DESC, a.id DESC OFFSET ' . (($pagina - 1) * $porPagina) . ' ROWS FETCH NEXT ' . $porPagina . ' ROWS ONLY',
             $b,
         )->getResultArray();
 
-        return ['filas' => $filas, 'total' => $total, 'pagina' => $pagina, 'paginas' => $paginas, 'periodo' => $p];
+        return ['filas' => $filas, 'total' => $total, 'pagina' => $pagina, 'paginas' => $paginas, 'por_pagina' => $porPagina, 'periodo' => $p];
     }
 
     /**

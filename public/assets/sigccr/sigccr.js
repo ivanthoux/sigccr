@@ -235,3 +235,8 @@
         solicitud.hidden = tipo.value !== 'RevisionAutomatizada';
     });
 })();
+
+/* Los selectores marcados con data-autoenviar envían su formulario al cambiar (por ejemplo, registros por página). */
+document.querySelectorAll('select[data-autoenviar]').forEach((campo) => {
+    campo.addEventListener('change', () => campo.form?.requestSubmit());
+});

@@ -19,6 +19,11 @@ $sel = static function (string $k, string $etiqueta, array $opc, string $todos) 
 };
 $consulta = array_filter($f, static fn ($x) => $x !== '');
 $pagina = static fn (int $n): string => url_to('auditoria.consultar') . '?' . http_build_query(['pagina' => $n] + $consulta);
+$paginacion = [
+    'actual' => $b['pagina'], 'paginas' => $b['paginas'], 'total' => $b['total'], 'porPagina' => $b['por_pagina'],
+    'opciones' => A::OPCIONES_POR_PAGINA, 'enlace' => $pagina, 'accion' => url_to('auditoria.consultar'),
+    'criterios' => array_diff_key($consulta, ['pagina' => 1, 'por_pagina' => 1]),
+];
 $this->extend('layouts/panel');
 $this->section('contenido');
 ?>
@@ -35,11 +40,13 @@ $this->section('contenido');
     <?= $sel('categoria', 'Tipo de operación', A::CATEGORIAS, 'Todos') ?>
     <?= $sel('objeto', 'Objeto afectado', A::OBJETOS, 'Todos') ?>
     <?= $sel('resultado', 'Resultado', A::RESULTADOS, 'Todos') ?>
+    <?php if ($f['por_pagina'] !== ''): ?><input type="hidden" name="por_pagina" value="<?= esc($f['por_pagina'], 'attr') ?>"><?php endif ?>
     <?= acciones_filtro(limpiar: url_to('auditoria.consultar')) ?>
 </form>
 <?php if ($b['filas'] === []): ?>
     <div class="hoja p-4"><p class="mb-0">No hay registros que coincidan con los criterios: modifíquelos y vuelva a buscar (A1).</p></div>
 <?php else: ?>
+    <?= view('partials/paginacion', $paginacion) ?>
     <div class="hoja p-0">
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
@@ -60,12 +67,6 @@ $this->section('contenido');
             </table>
         </div>
     </div>
-    <div class="d-flex justify-content-between align-items-center mt-2 small">
-        <span class="text-body-secondary"><?= number_format($b['total'], 0, ',', '.') ?> registros · página <?= $b['pagina'] ?> de <?= $b['paginas'] ?></span>
-        <span class="d-flex gap-2">
-            <?php if ($b['pagina'] > 1): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] - 1)) ?>">Anterior</a><?php endif ?>
-            <?php if ($b['pagina'] < $b['paginas']): ?><a class="btn btn-sm btn-outline-secondary" href="<?= esc($pagina($b['pagina'] + 1)) ?>">Siguiente</a><?php endif ?>
-        </span>
-    </div>
+    <?= view('partials/paginacion', $paginacion + ['pie' => true]) ?>
 <?php endif ?>
 <?php $this->endSection() ?>

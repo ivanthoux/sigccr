@@ -17,7 +17,7 @@ class Auditoria extends BaseController
     public function index(): string|RedirectResponse
     {
         $f = [];
-        foreach (['desde', 'hasta', 'responsable', 'categoria', 'objeto', 'resultado', 'pagina'] as $k) {
+        foreach (['desde', 'hasta', 'responsable', 'categoria', 'objeto', 'resultado', 'pagina', 'por_pagina'] as $k) {
             $f[$k] = trim($this->campoGet($k));
         }
         try {

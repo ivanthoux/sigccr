@@ -14,6 +14,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - CU-108 Atender solicitud de derechos del titular: el cliente pide en el portal, o el Analista registra en la sucursal, el acceso, la rectificación, la actualización, la supresión o la revisión de una decisión automatizada; plazos de 10 días corridos o 5 hábiles, alerta, respuesta obligatoria y auditoría (Ley 25.326, arts. 14, 16 y 20; migración 36; IN-77, I-96).
 
 ### Cambiado
+- Registro de auditoría (CU-57): barra de páginas arriba y abajo de la tabla (primera, anterior, páginas vecinas, siguiente, última) y selector de registros por página (10, 25, 50 o 100; 25 por defecto, antes 50).
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.
 - SQL Server con versión acumulativa fija (`2022-CU28-ubuntu-22.04`) y reintentos de descarga en la integración continua y en el Dockerfile (D-62).
 - La prueba funcional integral pasa a cubrir las iteraciones 1 a 4 (`prueba_funcional_integral_1_a_4.md`, casos R-153 a R-182), con su automatización en la batería de punta a punta.
