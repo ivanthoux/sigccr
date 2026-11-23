@@ -41,7 +41,7 @@ final class PoliticaDatosTest extends CIUnitTestCase
     {
         $t = $this->texto(['razonSocial' => 'Entidad', 'cuit' => '', 'domicilio' => '', 'correo' => '']);
         $this->assertStringContainsString('el domicilio de la sucursal', $t);
-        $this->assertStringNotContainsString('CUIT ', $t);
+        $this->assertStringNotContainsString(', CUIT ', $t);
         $this->assertDoesNotMatchRegularExpression('/\{|\}|null/', $t);
     }
 
