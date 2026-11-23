@@ -12,14 +12,14 @@ final class CatalogoPermisosTest extends TestCase
 {
     /**
      * Texto de la matriz 3.6.2 tal como figura en el documento (v9: CU-99 para el Analista, D-10; CU-100 y CU-101 del
-     * Gerente, D-25 y D-26; v12: CU-102 del Cajero y CU-103 del Analista, D-31; iteración 4: CU-105 del Gerente, D-44; CU-106 del Gerente, D-56). CU-104 es del portal y no requiere permiso interno.
+     * Gerente, D-25 y D-26; v12: CU-102 del Cajero y CU-103 del Analista, D-31; iteración 4: CU-105 del Gerente, D-44; CU-106 del Gerente, D-56; CU-108 del Gerente y del Analista, D-64). CU-104 es del portal y no requiere permiso interno.
      */
     private const MATRIZ_DOCUMENTO = [
         'Administrador' => 'CU-01 a CU-03; CU-05 a CU-10; CU-53; CU-54; CU-57; CU-61 a CU-63; CU-83',
         'Gerente' => 'CU-01 a CU-03; CU-13 a CU-20; CU-24; CU-26; CU-28 a CU-30; CU-32; CU-37; CU-41 a CU-44; CU-50; CU-51; '
-            . 'CU-54 a CU-60; CU-65 a CU-73; CU-77; CU-80 a CU-83; CU-85; CU-96; CU-100; CU-101; CU-105; CU-106',
+            . 'CU-54 a CU-60; CU-65 a CU-73; CU-77; CU-80 a CU-83; CU-85; CU-96; CU-100; CU-101; CU-105; CU-106; CU-108',
         'AnalistaCredito' => 'CU-01 a CU-03; CU-11 a CU-15; CU-20 a CU-25; CU-28 a CU-30; CU-39; CU-40; CU-42; CU-43; CU-50; '
-            . 'CU-54; CU-64; CU-73; CU-74; CU-79; CU-83; CU-84; CU-96; CU-99; CU-103',
+            . 'CU-54; CU-64; CU-73; CU-74; CU-79; CU-83; CU-84; CU-96; CU-99; CU-103; CU-108',
         'Cajero' => 'CU-01 a CU-03; CU-27; CU-29; CU-31 a CU-36; CU-38; CU-42; CU-43; CU-54; CU-56; CU-74; CU-76; CU-78; '
             . 'CU-83; CU-97; CU-102',
     ];

@@ -10,6 +10,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Lista de contraseñas comprometidas de más de 3.000 entradas, con SecLists (licencia MIT) (V6.2.4).
 - Auditoría de dependencias en el CI (`composer audit`), Dependabot y política de plazos de corrección (V15.1.1, V15.2.1).
 - Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-94.
+- Política de tratamiento de datos personales pública (`/politica-de-datos`) y leyenda de la AAIP en el alta de clientes y en el pre-registro (Ley 25.326, arts. 5 y 6; Res. AAIP 14/2018; S-13, S-14, I-95).
+- CU-108 Atender solicitud de derechos del titular: el cliente pide en el portal, o el Analista registra en la sucursal, el acceso, la rectificación, la actualización, la supresión o la revisión de una decisión automatizada; plazos de 10 días corridos o 5 hábiles, alerta, respuesta obligatoria y auditoría (Ley 25.326, arts. 14, 16 y 20; migración 36; IN-77, I-96).
 
 ### Cambiado
 - Las búsquedas con DNI, CUIT o CUIL se envían por `POST` (filtro `busquedapost`) y el filtro «Cliente» de los reportes busca solo por nombre: el identificador ya no queda en la URL. Cierra el desvío V14.2.1 (Ley 25.326 art. 4). Pruebas S-15, S-16 e IN-79.
