@@ -24,7 +24,8 @@ $this->section('contenido');
 </div>
 
 <?= view('partials/boton_filtros', ['id' => 'filtros-clientes', 'que' => 'clientes', 'abierto' => $hayCriterios]) ?>
-<form method="get" action="<?= url_to('clientes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-clientes" role="search" aria-label="Buscar clientes">
+<form method="post" action="<?= site_url('admin/clientes/buscar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-clientes" role="search" aria-label="Buscar clientes">
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
         <div class="col-md-6 col-lg-4">
             <label for="texto" class="form-label small">Nombre, apellido o razón social</label>

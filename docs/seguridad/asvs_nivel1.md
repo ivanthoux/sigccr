@@ -13,13 +13,13 @@ Estados: **Cumple** · **Cumple (corregido)** = se resolvió con esta lista de c
 | Estado | Requisitos |
 |---|---|
 | Cumple | 46 |
-| Cumple (corregido en esta revisión) | 9 |
+| Cumple (corregido en esta revisión) | 10 |
 | No aplica | 14 |
-| Desvío documentado | 1 |
+| Desvío documentado | 0 |
 | **Total** | **70** |
 
-Los nueve requisitos corregidos son V3.2.1, V3.3.1, V6.2.2, V6.2.3, V6.2.4, V11.3.2, V14.3.1, V15.1.1 y V15.2.1.
-El desvío documentado es V14.2.1 (ver su fila).
+Los diez requisitos corregidos son V3.2.1, V3.3.1, V6.2.2, V6.2.3, V6.2.4, V11.3.2, V14.2.1, V14.3.1, V15.1.1 y V15.2.1.
+No quedan desvíos documentados: V14.2.1 se corrigió al pasar las búsquedas con DNI o CUIL a `POST` (D-64).
 
 ## V1 · Codificación y saneamiento
 
@@ -143,7 +143,7 @@ El desvío documentado es V14.2.1 (ver su fila).
 
 | Req. | Estado | Evidencia | Prueba |
 |---|---|---|---|
-| V14.2.1 | **Desvío documentado** | Las búsquedas de clientes y solicitudes usan `GET` con el DNI o CUIL como parámetro de la URL, por lo que el dato queda en los registros de acceso y en el historial del navegador. Las contraseñas, códigos y tokens nunca viajan en la URL. Ver D-63 (punto 5): se acepta el riesgo en este nivel porque el DNI es un dato de identificación que el operador ya ve en pantalla, y se propone pasar la búsqueda a `POST` en una iteración posterior. | — |
+| V14.2.1 | Cumple (corregido) | Las búsquedas de clientes, solicitudes, usuarios, pre-registros, refinanciaciones, comprobantes, anulaciones, devoluciones, pagos electrónicos, contratos y liquidaciones se envían por `POST` (con token CSRF) a una ruta `…/buscar` o equivalente. El filtro `busquedapost` copia el cuerpo a los criterios de la consulta, sin tocar los controladores. El filtro «Cliente» de los reportes busca solo por nombre o razón social. Ningún formulario `GET` pide DNI, CUIT ni CUIL. Corrige el desvío de D-63 (punto 5) por la Ley 25.326 art. 4 (RNF-14). | S-15, S-16, IN-79 |
 | V14.3.1 | Cumple (corregido) | Las páginas autenticadas llevan `Cache-Control: no-store` y el cierre de sesión envía `Clear-Site-Data: "cache"` (PR #200). | S-02 a S-04 |
 
 ## V15 · Componentes y diseño seguro

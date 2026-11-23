@@ -6,6 +6,7 @@ namespace App\Services\Clientes;
 
 use App\Exceptions\ReglaNegocioException;
 use App\Exceptions\ValidacionException;
+use App\Libraries\Clientes\PoliticaDatos;
 use App\Libraries\Clientes\ValidadorPreRegistro;
 use App\Libraries\Validacion\Campos;
 use App\Services\BaseService;
@@ -221,6 +222,48 @@ class PreRegistroService extends BaseService
             ]);
             (new AlertaService($this->db))->resolver('pre_registros', $id, (string) (session('cuenta')['nombre'] ?? 'Analista de Crédito'));
             (new AuditoriaService($this->db))->registrar('pre-registros.descartar', 'pre_registros', $id, 'Exitoso', $motivo);
+        });
+    }
+
+    /**
+     * Elimina los pre-registros que no se completaron en {@see PoliticaDatos::DIAS_CONSERVACION_PRE_REGISTRO} días
+     * (sin verificar, verificados sin alta o descartados): los datos dejan de ser necesarios para su finalidad
+     * (Ley 25.326, art. 4, inc. 7; D-64). Los completados se conservan: son los datos del cliente. Lo ejecuta el control
+     * de vencimientos (CU-89) y deja constancia en la auditoría solo cuando elimina algo.
+     *
+     * @return int cantidad de pre-registros eliminados
+     */
+    public function depurar(string $proceso): int
+    {
+        return $this->transaccion(function () use ($proceso): int {
+            $limite = Time::now('UTC')->subDays(PoliticaDatos::DIAS_CONSERVACION_PRE_REGISTRO)->format('Y-m-d H:i:s.vP');
+            $filas = $this->db->query(
+                "SELECT id, estado FROM dbo.pre_registros WITH (UPDLOCK, ROWLOCK) WHERE estado <> 'Completado' AND ISNULL(actualizado_en, creado_en) <= ?",
+                [$limite],
+            )->getResultArray();
+            if ($filas === []) {
+                return 0;
+            }
+            $alertas = new AlertaService($this->db);
+            $porEstado = [];
+            foreach ($filas as $f) {
+                $alertas->resolver('pre_registros', (int) $f['id'], "Proceso {$proceso}");
+                $porEstado[$f['estado']] = ($porEstado[$f['estado']] ?? 0) + 1;
+            }
+            foreach (array_chunk(array_map(static fn (array $f): int => (int) $f['id'], $filas), 500) as $lote) {
+                $this->db->table('pre_registros')->whereIn('id', $lote)->delete();
+            }
+            (new AuditoriaService($this->db))->registrar(
+                'pre-registros.depurar',
+                'pre_registros',
+                null,
+                'Exitoso',
+                null,
+                ['cantidad' => count($filas), 'dias' => PoliticaDatos::DIAS_CONSERVACION_PRE_REGISTRO, 'por_estado' => $porEstado],
+                $proceso,
+            );
+
+            return count($filas);
         });
     }
 }

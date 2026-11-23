@@ -122,9 +122,16 @@ test('R-023 Localizar clientes', async ({ comoUsuario }) => {
   await page.goto('/admin/clientes?texto=Góm');
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText('Gómez');
-  await page.goto(`/admin/clientes?documento=${bruno.dni}`);
+  // D-64 (ASVS V14.2.1): el documento y el CUIT se buscan por POST y no quedan en la dirección
+  await page.goto('/admin/clientes');
+  await page.locator('#documento').fill(bruno.dni);
+  await page.getByRole('button', { name: 'Buscar' }).click();
   await expect(filas).toHaveCount(1);
-  await page.goto(`/admin/clientes?cuit=${pyme.cuit}`);
+  expect(page.url()).not.toContain(bruno.dni);
+  await page.goto('/admin/clientes');
+  await page.locator('#cuit').fill(pyme.cuit);
+  await page.getByRole('button', { name: 'Buscar' }).click();
+  expect(page.url()).not.toContain(pyme.cuit);
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText(pyme.razonSocial);
   await page.goto('/admin/clientes?tipo=PersonaJuridica');
