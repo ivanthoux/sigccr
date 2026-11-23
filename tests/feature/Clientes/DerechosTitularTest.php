@@ -60,7 +60,9 @@ final class DerechosTitularTest extends IntegracionTestCase
         $this->assertSame(Time::now(config('Sigccr')->zonaNegocio)->addDays(10)->format('Y-m-d'), substr((string) $f['vence'], 0, 10));
         $this->assertSame(1, $this->contar('registros_auditoria', ['accion' => 'derechos.registrar', 'objeto_id' => (string) $f['id']]));
         $this->assertSame(1, $this->contar('alertas', ['objeto_tipo' => 'solicitudes_derechos', 'objeto_id' => (string) $f['id'], 'rol_destino' => 'AnalistaCredito', 'estado' => 'Pendiente']));
-        $this->pedir('/portal/derechos')->assertSee('Quiero una copia de mis datos.');
+        $lista = $this->pedir('/portal/derechos');
+        $lista->assertSee(DerechosTitular::TIPOS['Acceso']);
+        $lista->assertSee(DerechosTitular::ESTADOS['Pendiente']);
     }
 
     /** @dataProvider tiposEnDiasHabiles */
