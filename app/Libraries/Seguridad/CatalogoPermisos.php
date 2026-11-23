@@ -102,6 +102,8 @@ final class CatalogoPermisos
         // Iteración 4 (D-44)
         105 => ['regimen.consultar', 'Generar Régimen Informativo de Deudores'],
         106 => ['parametros.contrato', 'Configurar Modelo de Contrato'],
+        // D-64 (Ley 25.326): CU-107 (cambiar contraseña, D-63) no requiere permiso
+        108 => ['derechos.atender', 'Atender Solicitud de Derechos del Titular'],
     ];
 
     /**
@@ -111,8 +113,8 @@ final class CatalogoPermisos
      */
     public const MATRIZ = [
         'Administrador' => [[5, 10], 53, 54, 57, [61, 63], 83],
-        'Gerente' => [[13, 20], 24, 26, [28, 30], 32, 37, [41, 44], 50, 51, [54, 60], [65, 73], 77, [80, 83], 85, 96, 100, 101, 105, 106],
-        'AnalistaCredito' => [[11, 15], [20, 25], [28, 30], 39, 40, 42, 43, 50, 54, 64, 73, 74, 79, 83, 84, 96, 99, 103],
+        'Gerente' => [[13, 20], 24, 26, [28, 30], 32, 37, [41, 44], 50, 51, [54, 60], [65, 73], 77, [80, 83], 85, 96, 100, 101, 105, 106, 108],
+        'AnalistaCredito' => [[11, 15], [20, 25], [28, 30], 39, 40, 42, 43, 50, 54, 64, 73, 74, 79, 83, 84, 96, 99, 103, 108],
         'Cajero' => [27, 29, [31, 36], 38, 42, 43, 54, 56, 74, 76, 78, 83, 97, 102],
     ];
 

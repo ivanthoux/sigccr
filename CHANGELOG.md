@@ -10,6 +10,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Lista de contraseñas comprometidas de más de 3.000 entradas, con SecLists (licencia MIT) (V6.2.4).
 - Auditoría de dependencias en el CI (`composer audit`), Dependabot y política de plazos de corrección (V15.1.1, V15.2.1).
 - Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-94.
+- Política de tratamiento de datos personales pública (`/politica-de-datos`) y leyenda de la AAIP en el alta de clientes y en el pre-registro (Ley 25.326, arts. 5 y 6; Res. AAIP 14/2018; S-13, S-14, I-95).
+- CU-108 Atender solicitud de derechos del titular: el cliente pide en el portal, o el Analista registra en la sucursal, el acceso, la rectificación, la actualización, la supresión o la revisión de una decisión automatizada; plazos de 10 días corridos o 5 hábiles, alerta, respuesta obligatoria y auditoría (Ley 25.326, arts. 14, 16 y 20; migración 36; IN-77, I-96).
 
 ### Cambiado
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.

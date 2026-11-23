@@ -23,6 +23,7 @@ class Menu extends BaseConfig
             ['texto' => 'Clientes', 'icono' => 'bi-people', 'ruta' => 'clientes.localizar', 'permiso' => 'clientes.localizar'],
             ['texto' => 'Pre-registros del portal', 'icono' => 'bi-person-plus', 'ruta' => 'pre-registros.consultar', 'permiso' => 'clientes.registrar'],
             ['texto' => 'Solicitudes', 'icono' => 'bi-file-earmark-text', 'ruta' => 'solicitudes.localizar', 'permiso' => 'solicitudes.localizar'],
+            ['texto' => 'Derechos del titular', 'icono' => 'bi-shield-check', 'ruta' => 'derechos.atender', 'permiso' => 'derechos.atender'],
             ['texto' => 'Contingencias', 'icono' => 'bi-exclamation-diamond', 'ruta' => 'evaluaciones.contingencia', 'permiso' => 'evaluaciones.registrar-contingencia'],
             ['texto' => 'Resolver solicitudes', 'icono' => 'bi-check2-square', 'ruta' => 'solicitudes.resolver', 'permiso' => 'solicitudes.resolver'],
             ['texto' => 'Contratos', 'icono' => 'bi-file-earmark-check', 'ruta' => 'contratos.registrar-firmado', 'permiso' => 'contratos.registrar-firmado'],
@@ -86,5 +87,6 @@ class Menu extends BaseConfig
         ['icono' => 'bi-file-earmark-text', 'titulo' => 'Mis solicitudes', 'texto' => 'Estado de sus solicitudes de crédito.', 'ruta' => 'portal.solicitudes'],
         ['icono' => 'bi-arrow-repeat', 'titulo' => 'Refinanciaciones y ofertas', 'texto' => 'Propuestas de refinanciación y ofertas recibidas.', 'ruta' => 'portal.propuestas'],
         ['icono' => 'bi-person-vcard', 'titulo' => 'Mi perfil', 'texto' => 'Sus datos registrados en la entidad.', 'ruta' => 'portal.perfil'],
+        ['icono' => 'bi-shield-check', 'titulo' => 'Mis derechos sobre mis datos', 'texto' => 'Pida ver, corregir o suprimir sus datos personales.', 'ruta' => 'portal.derechos'],
     ];
 }

@@ -40,7 +40,7 @@ test('Preparación: activar el portal de Franco Molina y Joaquín Medina (CU-04)
 
 test('I-12 Funciones del portal', async ({ browser }) => {
   const page = await comoCliente(browser, franco.correo);
-  for (const nombre of ['Estado de cuenta', 'Pagar una cuota', 'Comprobantes', 'Mis solicitudes', 'Mi perfil', 'Refinanciaciones y ofertas']) {
+  for (const nombre of ['Estado de cuenta', 'Pagar una cuota', 'Comprobantes', 'Mis solicitudes', 'Mi perfil', 'Mis derechos sobre mis datos', 'Refinanciaciones y ofertas']) {
     await expect(page.getByRole('link', { name: nombre }).first(), nombre).toBeVisible();
   }
   await page.context().close();
@@ -274,4 +274,66 @@ test('I-94 Cambiar la contraseña en el portal (CU-107)', async ({ browser }) =>
   await p2.context().close();
   await page.context().close();
   await otra.context().close();
+});
+
+test('I-96 Ejercer los derechos sobre los datos personales (CU-108, Ley 25.326)', async ({ browser, comoUsuario }) => {
+  const page = await comoCliente(browser, franco.correoNuevo);
+  await page.goto('/portal/perfil');
+  await page.getByRole('link', { name: 'Ejercer mis derechos sobre mis datos' }).click();
+  await expect(page).toHaveURL(/\/portal\/derechos$/);
+  await expect(page.locator('[data-leyenda-aaip]')).toBeVisible();
+  // Validaciones y revisión de una decisión automatizada: la solicitud de crédito aparece solo con ese tipo
+  await page.getByRole('button', { name: 'Enviar solicitud' }).click();
+  await expect(alerta(page)).toContainText('Revise los datos marcados.');
+  await expect(error(page, 'tipo')).toBeVisible();
+  await expect(error(page, 'detalle')).toBeVisible();
+  await expect(page.locator('#solicitud_id')).toBeHidden();
+  await page.locator('#tipo').selectOption('RevisionAutomatizada');
+  await expect(page.locator('#solicitud_id')).toBeVisible();
+  // Rectificación válida y sin repetición
+  await page.locator('#tipo').selectOption('Rectificacion');
+  await page.locator('#detalle').fill('Mi domicilio cambió: necesito que lo actualicen en mi ficha.');
+  await page.getByRole('button', { name: 'Enviar solicitud' }).click();
+  await expect(exito(page)).toContainText('Recibimos su solicitud');
+  await expect(page.getByRole('cell', { name: 'Rectificación de datos inexactos' })).toBeVisible();
+  await page.locator('#tipo').selectOption('Rectificacion');
+  await page.locator('#detalle').fill('Segundo intento del mismo pedido pendiente.');
+  await page.getByRole('button', { name: 'Enviar solicitud' }).click();
+  await expect(alerta(page)).toContainText('Ya hay un pedido pendiente');
+  const id = await valor("SELECT MAX(id) FROM dbo.solicitudes_derechos WHERE tipo = 'Rectificacion' AND canal = 'Portal'");
+  expect(await valor("SELECT COUNT(*) FROM dbo.solicitudes_derechos WHERE cliente_id = @c AND tipo = 'Rectificacion'", { c: await idCliente(franco.cuil) })).toBe(1);
+  expect(await valor("SELECT COUNT(*) FROM dbo.alertas WHERE objeto_tipo = 'solicitudes_derechos' AND objeto_id = @i AND estado = 'Pendiente'", { i: String(id) })).toBe(1);
+
+  // El Analista la ve, la valida y responde
+  const panel = await comoUsuario('analista');
+  await panel.goto('/admin/derechos');
+  await expect(panel.getByRole('heading', { name: 'Derechos del titular de los datos' })).toBeVisible();
+  await panel.getByRole('link', { name: String(id), exact: true }).click();
+  await expect(panel.getByRole('heading', { name: 'Rectificación de datos inexactos' })).toBeVisible();
+  await panel.locator('#estado').selectOption('Atendida');
+  await panel.locator('#respuesta').fill('ok');
+  await panel.getByRole('button', { name: 'Registrar respuesta' }).click();
+  await expect(error(panel, 'respuesta')).toBeVisible();
+  await panel.locator('#estado').selectOption('Atendida');
+  await panel.locator('#respuesta').fill('Actualizamos su domicilio en la ficha del cliente.');
+  await panel.getByRole('button', { name: 'Registrar respuesta' }).click();
+  await expect(exito(panel)).toContainText('Respuesta registrada.');
+  expect(await valor('SELECT estado FROM dbo.solicitudes_derechos WHERE id = @i', { i: id })).toBe('Atendida');
+  expect(await valor("SELECT COUNT(*) FROM dbo.alertas WHERE objeto_tipo = 'solicitudes_derechos' AND objeto_id = @i AND estado = 'Pendiente'", { i: String(id) })).toBe(0);
+  expect(await valor("SELECT COUNT(*) FROM dbo.registros_auditoria WHERE accion IN ('derechos.registrar', 'derechos.resolver') AND objeto_id = @i", { i: String(id) })).toBe(2);
+
+  // El cliente ve la respuesta
+  await page.goto('/portal/derechos');
+  await expect(page.getByText('Actualizamos su domicilio en la ficha del cliente.')).toBeVisible();
+
+  // A1: una persona que se presenta en la sucursal; la registra el Analista desde la ficha del cliente
+  await panel.goto(`/admin/clientes/${await idCliente(joaquin.cuil)}`);
+  await panel.getByRole('link', { name: 'Registrar solicitud de derechos' }).click();
+  await panel.locator('#tipo').selectOption('Acceso');
+  await panel.locator('#detalle').fill('Se presentó en la sucursal y pidió una copia de sus datos.');
+  await panel.getByRole('button', { name: 'Registrar solicitud' }).click();
+  await expect(exito(panel)).toContainText('Solicitud registrada.');
+  await expect(panel.locator('main')).toContainText('Sucursal');
+  expect(await valor("SELECT COUNT(*) FROM dbo.solicitudes_derechos WHERE canal = 'Sucursal' AND tipo = 'Acceso' AND estado = 'Pendiente'")).toBeGreaterThanOrEqual(1);
+  await page.context().close();
 });
