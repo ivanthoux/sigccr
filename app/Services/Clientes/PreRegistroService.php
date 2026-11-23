@@ -254,8 +254,13 @@ class PreRegistroService extends BaseService
                 $this->db->table('pre_registros')->whereIn('id', $lote)->delete();
             }
             (new AuditoriaService($this->db))->registrar(
-                'pre-registros.depurar', 'pre_registros', null, 'Exitoso', null,
-                ['cantidad' => count($filas), 'dias' => PoliticaDatos::DIAS_CONSERVACION_PRE_REGISTRO, 'por_estado' => $porEstado], $proceso,
+                'pre-registros.depurar',
+                'pre_registros',
+                null,
+                'Exitoso',
+                null,
+                ['cantidad' => count($filas), 'dias' => PoliticaDatos::DIAS_CONSERVACION_PRE_REGISTRO, 'por_estado' => $porEstado],
+                $proceso,
             );
 
             return count($filas);
