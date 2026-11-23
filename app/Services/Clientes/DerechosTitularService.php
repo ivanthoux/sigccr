@@ -77,7 +77,11 @@ class DerechosTitularService extends BaseService
                 $id,
             );
             (new AuditoriaService($this->db))->registrar(
-                'derechos.registrar', 'solicitudes_derechos', $id, 'Exitoso', null,
+                'derechos.registrar',
+                'solicitudes_derechos',
+                $id,
+                'Exitoso',
+                null,
                 ['cliente_id' => $clienteId, 'tipo' => $d['tipo'], 'canal' => $canal, 'vence' => $vence->format('Y-m-d')],
             );
 
@@ -178,7 +182,11 @@ class DerechosTitularService extends BaseService
             ]);
             (new AlertaService($this->db))->resolver('solicitudes_derechos', $id, (string) (session('cuenta')['nombre'] ?? 'Usuario'));
             (new AuditoriaService($this->db))->registrar(
-                'derechos.resolver', 'solicitudes_derechos', $id, 'Exitoso', $respuesta,
+                'derechos.resolver',
+                'solicitudes_derechos',
+                $id,
+                'Exitoso',
+                $respuesta,
                 ['tipo' => $s['tipo'], 'resultado' => $estado, 'vencia' => substr((string) $s['vence'], 0, 10), 'en_plazo' => $this->hoyNegocio() <= substr((string) $s['vence'], 0, 10)],
             );
         });
