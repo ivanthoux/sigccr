@@ -25,7 +25,7 @@ final class BusquedasPorPostTest extends IntegracionTestCase
         $porDni->assertOK();
         $this->assertStringContainsString($enlace, (string) $porDni->response()->getBody());
 
-        $porCuil = $this->enviar('admin/clientes/buscar', ['documento' => (string) $c['datos']['cuit_cuil']]);
+        $porCuil = $this->enviar('admin/clientes/buscar', ['cuit' => (string) $c['datos']['cuit_cuil']]);
         $porCuil->assertOK();
         $this->assertStringContainsString($enlace, (string) $porCuil->response()->getBody());
     }
@@ -44,19 +44,21 @@ final class BusquedasPorPostTest extends IntegracionTestCase
     public function testBusquedaPorPostRequierePermiso(): void
     {
         $this->comoRol('Cajero');
-        $this->enviar('admin/clientes/buscar', ['documento' => '20123456'])->assertStatus(403);
+        $r = $this->enviar('admin/usuarios/buscar', ['texto' => 'prueba']);
+        $r->assertStatus(403);
+        $this->assertStringContainsString('Acceso no autorizado', (string) $r->response()->getBody());
     }
 
     /** Las pantallas de listado envían su formulario por POST a la ruta de búsqueda. */
     public function testListadosEnvianElFormularioPorPost(): void
     {
-        $this->comoRol('Gerente');
         $esperadas = [
-            'admin/clientes' => 'admin/clientes/buscar',
-            'admin/solicitudes' => 'admin/solicitudes/buscar',
-            'admin/usuarios' => 'admin/usuarios/buscar',
+            ['AnalistaCredito', 'admin/clientes', 'admin/clientes/buscar'],
+            ['AnalistaCredito', 'admin/solicitudes', 'admin/solicitudes/buscar'],
+            ['Administrador', 'admin/usuarios', 'admin/usuarios/buscar'],
         ];
-        foreach ($esperadas as $pagina => $destino) {
+        foreach ($esperadas as [$rol, $pagina, $destino]) {
+            $this->comoRol($rol);
             $html = (string) $this->pedir($pagina)->response()->getBody();
             $this->assertMatchesRegularExpression('#<form method="post" action="[^"]*' . preg_quote($destino, '#') . '"#', $html, $pagina);
             $this->assertStringContainsString('name="csrf_sigccr"', $html, $pagina);
