@@ -17,7 +17,8 @@ $this->section('contenido');
         <p>Autorizadas por el Gerente; se ejecutan por el medio de pago original o por transferencia (RN-73).</p>
     </div>
 </div>
-<form method="get" class="hoja p-3 mb-3 row g-2 align-items-end" role="search" aria-label="Buscar devoluciones">
+<form method="post" class="hoja p-3 mb-3 row g-2 align-items-end" role="search" aria-label="Buscar devoluciones">
+    <?= csrf_field() ?>
     <div class="col-md-2"><label for="numero" class="form-label small">N.º</label><input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" value="<?= esc($filtros['numero'], 'attr') ?>"></div>
     <div class="col-md-4"><label for="texto" class="form-label small">Cliente o CUIT/CUIL</label><input type="text" class="form-control" id="texto" name="texto" value="<?= esc($filtros['texto'], 'attr') ?>"></div>
     <div class="col-6 col-md-3 col-xl-2"><label for="fecha" class="form-label small">Autorizada el</label><input type="date" class="form-control" id="fecha" name="fecha" value="<?= esc($filtros['fecha'], 'attr') ?>"></div>

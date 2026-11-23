@@ -25,7 +25,8 @@ $this->section('contenido');
     <?php endif ?>
 </div>
 <?= view('partials/boton_filtros', ['id' => 'filtros-solicitudes', 'que' => 'solicitudes', 'abierto' => $buscado]) ?>
-<form method="get" action="<?= url_to('solicitudes.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $buscado ? ' show' : '' ?>" id="filtros-solicitudes" role="search" aria-label="Buscar solicitudes" novalidate>
+<form method="post" action="<?= site_url('admin/solicitudes/buscar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $buscado ? ' show' : '' ?>" id="filtros-solicitudes" role="search" aria-label="Buscar solicitudes" novalidate>
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
         <div class="col-sm-4 col-lg-2">
             <label for="numero" class="form-label small">Número</label>

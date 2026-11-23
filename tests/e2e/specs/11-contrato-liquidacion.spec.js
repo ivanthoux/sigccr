@@ -135,7 +135,11 @@ test('R-087 Cancelar una solicitud aprobada (CU-28)', async ({ comoUsuario }) =>
 test('R-088 Buscar solicitudes', async ({ comoUsuario }) => {
   const page = await comoUsuario('analista');
   const filas = page.locator('main table tbody tr');
-  await page.goto(`/admin/solicitudes?documento=${ana.dni}`);
+  // D-64 (ASVS V14.2.1): el documento se busca por POST y no queda en la dirección
+  await page.goto('/admin/solicitudes');
+  await page.locator('#documento').fill(ana.dni);
+  await page.getByRole('button', { name: 'Buscar' }).click();
+  expect(page.url()).not.toContain(ana.dni);
   await expect(filas.first()).toContainText('Gómez');
   await page.goto('/admin/solicitudes?estado=Liquidada');
   await expect(filas).toHaveCount(6);
