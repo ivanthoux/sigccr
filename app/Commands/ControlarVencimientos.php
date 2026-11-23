@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Commands;
 
 use App\Services\Caja\DevolucionService;
+use App\Services\Clientes\PreRegistroService;
 use App\Services\Caja\PagoElectronicoService;
 use App\Services\Cartera\RefinanciacionService;
 use App\Services\Solicitudes\VencimientoService;
@@ -12,7 +13,7 @@ use App\Services\Solicitudes\VencimientoService;
 /**
  * CU-89 Controlar Vencimientos. El Temporizador lo ejecuta cada 15 minutos (docker/scheduler/crontab). En la
  * iteración 2 vence simulaciones, alternativas, aprobaciones, evaluaciones, solicitudes inactivas y autorizaciones de
- * acceso. En la iteración 3 se agregan las propuestas de refinanciación (RN-36), las órdenes de pago electrónico sin
+ * acceso. En D-64 se agrega la depuración de los pre-registros sin completar. En la iteración 3 se agregan las propuestas de refinanciación (RN-36), las órdenes de pago electrónico sin
  * confirmación (RN-54) y las autorizaciones de devolución sin ejecución iniciada (RN-73): el proceso queda completo.
  *
  *   php spark vencimientos:controlar
@@ -61,6 +62,10 @@ class ControlarVencimientos extends BaseProcesoCommand
                 $devoluciones->vencerAutorizacion($id);
             });
         }
+        // D-64 (Ley 25.326, art. 4, inc. 7): los pre-registros sin completar se eliminan a los 90 días
+        $this->procesarElemento('pre-registros sin completar', static function (): void {
+            (new PreRegistroService())->depurar(VencimientoService::PROCESO);
+        });
         foreach ($s->solicitudesInactivas() as $id) {
             $this->procesarElemento("solicitud inactiva {$id}", static function () use ($s, $id): void {
                 $s->vencerPorInactividad($id);
