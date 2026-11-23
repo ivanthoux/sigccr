@@ -77,7 +77,7 @@ $this->section('contenido');
         <?= $select('categoria', 'Categoría de ingresos', C::categorias(), 'Todas') ?>
     <?php endif ?>
     <?php if (in_array($clave, ['cartera', 'morosidad', 'cobranzas', 'solicitudes', 'refinanciaciones'], true)): ?>
-        <?= $texto('cliente', 'Cliente', 'Nombre, CUIT/CUIL o documento') ?>
+        <?= $texto('cliente', 'Cliente', 'Nombre o razón social') ?>
     <?php endif ?>
     <div class="col-12 col-md">
         <span class="small text-body-secondary"><?= $proyeccion ? 'Sin fechas, se proyecta desde hoy por el período configurado en los parámetros de campañas.' : 'Día, semana, mes o trimestre que contiene la fecha de referencia (hoy si se deja vacía); el rango personalizado usa las fechas «desde» y «hasta».' ?></span>

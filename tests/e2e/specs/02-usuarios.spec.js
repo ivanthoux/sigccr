@@ -97,7 +97,11 @@ test('R-011 Localizar y edición simultánea', async ({ comoUsuario }) => {
   await page.goto('/admin/usuarios?texto=Silva');
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText(cajero2.correo);
-  await page.goto(`/admin/usuarios?documento=${gerente.dni}`);
+  // D-64 (ASVS V14.2.1): el documento se busca por POST y no queda en la dirección
+  await page.goto('/admin/usuarios');
+  await page.locator('#documento').fill(gerente.dni);
+  await page.getByRole('button', { name: 'Buscar' }).click();
+  expect(page.url()).not.toContain(gerente.dni);
   await expect(filas).toHaveCount(1);
   await expect(filas.first()).toContainText('Pérez');
   await page.goto('/admin/usuarios?rol=Cajero');

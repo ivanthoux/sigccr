@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\AuthFilter;
+use App\Filters\BusquedaPostFilter;
 use App\Filters\LimiteIntentosFilter;
 use App\Filters\MantenimientoPortalFilter;
 use App\Filters\RestauracionFilter;
@@ -43,6 +44,7 @@ class Filters extends BaseFilters
         'mantenimiento' => MantenimientoPortalFilter::class,
         'restauracion'  => RestauracionFilter::class,
         'limiteintentos' => LimiteIntentosFilter::class,
+        'busquedapost'  => BusquedaPostFilter::class,
     ];
 
     /**

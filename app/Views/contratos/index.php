@@ -15,7 +15,8 @@ $this->section('contenido');
         <p>Contrato de cada solicitud aprobada para imprimir y firmar, y constancia firmada para el legajo. Sin ella no se liquida (RN-25, RN-78).</p>
     </div>
 </div>
-<form method="get" action="<?= url_to('contratos.registrar-firmado') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar solicitudes aprobadas">
+<form method="post" action="<?= url_to('contratos.registrar-firmado') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar solicitudes aprobadas">
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
         <div class="col-md-8 col-lg-6">
             <label for="texto" class="form-label small">Número de solicitud, cliente o CUIT/CUIL</label>

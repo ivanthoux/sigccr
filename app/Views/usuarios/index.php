@@ -25,7 +25,8 @@ $hayCriterios = hay_criterios($criterios);
 </div>
 
 <?= view('partials/boton_filtros', ['id' => 'filtros-usuarios', 'que' => 'usuarios', 'abierto' => $hayCriterios]) ?>
-<form method="get" action="<?= url_to('usuarios.localizar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-usuarios" role="search" aria-label="Buscar usuarios">
+<form method="post" action="<?= site_url('admin/usuarios/buscar') ?>" class="hoja p-3 mb-3 collapse d-md-block<?= $hayCriterios ? ' show' : '' ?>" id="filtros-usuarios" role="search" aria-label="Buscar usuarios">
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
         <div class="col-md-4 col-lg-3">
             <label for="texto" class="form-label small">Nombre o apellido</label>

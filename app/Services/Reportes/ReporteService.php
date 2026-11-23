@@ -774,7 +774,8 @@ class ReporteService extends BaseService
     }
 
     /**
-     * Clientes que coinciden con el texto (nombre, CUIT/CUIL o documento), o null sin filtro.
+     * Clientes cuya denominación coincide con el texto, o null sin filtro. No busca por CUIT/CUIL ni documento:
+     * los criterios viajan en la URL (GET) y Ley 25.326 art. 4 / ASVS V14.2.1 piden no exponer identificadores ahí.
      *
      * @return list<int>|null
      */
@@ -784,13 +785,9 @@ class ReporteService extends BaseService
         if ($t === '') {
             return null;
         }
-        $digitos = preg_replace('/\D/', '', $t) ?? '';
-        $b = $this->db->table('clientes c')->select('c.id')->join('personas_humanas ph', 'ph.cliente_id = c.id', 'left')->groupStart()->like('c.denominacion', Campos::literalLike((string) $t));
-        if ($digitos !== '') {
-            $b->orWhere('c.cuit_cuil', $digitos)->orWhere('ph.nro_documento', $digitos);
-        }
+        $b = $this->db->table('clientes c')->select('c.id')->like('c.denominacion', Campos::literalLike((string) $t));
 
-        return array_map('intval', array_column($b->groupEnd()->limit(500)->get()->getResultArray(), 'id'));
+        return array_map('intval', array_column($b->limit(500)->get()->getResultArray(), 'id'));
     }
 
     /** @return list<string> */

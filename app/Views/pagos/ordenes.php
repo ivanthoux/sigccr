@@ -20,7 +20,8 @@ $this->section('contenido');
         <a class="btn btn-primary" href="<?= url_to('pagos-electronicos.generar-orden') ?>"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nueva orden</a>
     <?php endif ?>
 </div>
-<form method="get" class="hoja p-3 mb-3 row g-2 align-items-end" role="search" aria-label="Buscar órdenes">
+<form method="post" class="hoja p-3 mb-3 row g-2 align-items-end" role="search" aria-label="Buscar órdenes">
+    <?= csrf_field() ?>
     <div class="col-md-2">
         <label for="numero" class="form-label small">N.º de orden</label>
         <input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" value="<?= esc($filtros['numero'], 'attr') ?>">

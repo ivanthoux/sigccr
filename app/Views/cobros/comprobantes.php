@@ -17,7 +17,8 @@ $this->section('contenido');
         <p><?= $anular ? 'El cobro anulado se conserva como antecedente y su importe queda como saldo a favor del cliente (RN-33, RN-57).' : 'Consulta, impresión y reemisión de comprobantes. La reemisión no genera un nuevo cobro (RN-31).' ?></p>
     </div>
 </div>
-<form method="get" action="<?= url_to($anular ? 'cobros.anular' : 'cobros.emitir-comprobante') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar cobros">
+<form method="post" action="<?= url_to($anular ? 'cobros.anular' : 'cobros.emitir-comprobante') ?>" class="hoja p-3 mb-3" role="search" aria-label="Buscar cobros">
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
         <div class="col-md-3"><label for="numero" class="form-label small">N.º de comprobante o de cobro</label><input type="text" class="form-control" id="numero" name="numero" inputmode="numeric" value="<?= esc((string) $f['numero'], 'attr') ?>"></div>
         <div class="col-md-4"><label for="texto" class="form-label small">Cliente o CUIT/CUIL</label><input type="search" class="form-control" id="texto" name="texto" value="<?= esc((string) $f['texto'], 'attr') ?>"></div>

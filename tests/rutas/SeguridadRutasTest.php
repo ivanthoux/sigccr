@@ -54,4 +54,47 @@ final class SeguridadRutasTest extends CIUnitTestCase
         $this->assertSame([], config('Cors')->default['allowedOrigins']);
         $this->assertSame([], config('Cors')->default['allowedOriginsPatterns']);
     }
+
+    /**
+     * S-15 · Ningún formulario que se envía por GET pide un documento, un CUIT o un CUIL: el dato quedaría en la dirección,
+     * en el historial del navegador y en los registros del servidor (V14.2.1; Ley 25.326, art. 9; D-64).
+     */
+    public function testLosFormulariosPorGetNoPidenDocumentos(): void
+    {
+        $mal = [];
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(APPPATH . 'Views', \FilesystemIterator::SKIP_DOTS)) as $archivo) {
+            if ($archivo->getExtension() !== 'php') {
+                continue;
+            }
+            $codigo = (string) file_get_contents($archivo->getPathname());
+            preg_match_all('/<form\b[^\n]*?method="get"[^\n]*?>.*?<\/form>/is', $codigo, $formularios);
+            foreach ($formularios[0] as $formulario) {
+                if (preg_match('/name="(documento|nro_documento|cuit|cuil|cuit_cuil|dni)"|\b(DNI|CUIT|CUIL|documento)\b/i', $formulario) === 1) {
+                    $mal[] = str_replace(APPPATH, 'app/', $archivo->getPathname());
+                }
+            }
+        }
+        $this->assertSame([], $mal, "Formularios GET que piden un documento o un CUIT/CUIL:\n" . implode("\n", $mal));
+    }
+
+    /** S-16 · Cada búsqueda por POST tiene su listado por GET con la misma acción, el mismo permiso y el filtro de copia de criterios. */
+    public function testLasBusquedasPorPostCorrespondenAUnListado(): void
+    {
+        /** @var RouteCollection $rutas */
+        $rutas = service('routes')->loadRoutes();
+        $get   = $rutas->getRoutes('GET', false);
+        $busquedas = 0;
+        foreach ($rutas->getRoutes('POST', false) as $ruta => $manejador) {
+            $filtros = $rutas->getFiltersForRoute($ruta, 'POST');
+            if (!in_array('busquedapost', $filtros, true)) {
+                continue;
+            }
+            $busquedas++;
+            $this->assertStringContainsString('::index', $manejador . '::index', "POST {$ruta}");
+            $this->assertContains($manejador, $get, "POST {$ruta} → {$manejador} no tiene un listado por GET con la misma acción.");
+            $permisos = array_values(array_filter($filtros, static fn (string $f): bool => str_starts_with($f, 'permiso:')));
+            $this->assertCount(1, $permisos, "POST {$ruta}");
+        }
+        $this->assertGreaterThanOrEqual(10, $busquedas, 'Clientes, solicitudes, usuarios, pre-registros, refinanciaciones, cobros (2), devoluciones, pagos, contratos y liquidaciones.');
+    }
 }

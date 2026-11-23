@@ -12,6 +12,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - Nivel de prueba «Seguridad» (S-01 a S-12), pruebas de integración IN-76 y prueba de punta a punta I-94.
 
 ### Cambiado
+- Las búsquedas con DNI, CUIT o CUIL se envían por `POST` (filtro `busquedapost`) y el filtro «Cliente» de los reportes busca solo por nombre: el identificador ya no queda en la URL. Cierra el desvío V14.2.1 (Ley 25.326 art. 4). Pruebas S-15, S-16 e IN-79.
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.
 - SQL Server con versión acumulativa fija (`2022-CU28-ubuntu-22.04`) y reintentos de descarga en la integración continua y en el Dockerfile (D-62).
 - La prueba funcional integral pasa a cubrir las iteraciones 1 a 4 (`prueba_funcional_integral_1_a_4.md`, casos R-153 a R-182), con su automatización en la batería de punta a punta.

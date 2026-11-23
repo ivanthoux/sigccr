@@ -44,6 +44,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         // SS-01 Usuarios internos (CU-05 a CU-10, CU-53)
         $routes->group('usuarios', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Usuarios::index', ['as' => 'usuarios.localizar', 'filter' => 'permiso:usuarios.localizar']);
+            $routes->post('buscar', 'Admin\Usuarios::index', ['filter' => ['permiso:usuarios.localizar', 'busquedapost']]);
             $routes->get('nuevo', 'Admin\Usuarios::nuevo', ['as' => 'usuarios.registrar', 'filter' => 'permiso:usuarios.registrar']);
             $routes->post('', 'Admin\Usuarios::registrar', ['filter' => 'permiso:usuarios.registrar']);
             $routes->get('(:num)', 'Admin\Usuarios::ver/$1', ['filter' => 'permiso:usuarios.localizar']);
@@ -61,12 +62,14 @@ $routes->group('admin', static function (RouteCollection $routes): void {
 
         // CU-104 paso 7: pre-registros del portal, que el Analista completa con CU-11 o descarta
         $routes->get('pre-registros', 'Admin\PreRegistros::index', ['as' => 'pre-registros.consultar', 'filter' => 'permiso:clientes.registrar']);
+        $routes->post('pre-registros', 'Admin\PreRegistros::index', ['filter' => ['permiso:clientes.registrar', 'busquedapost']]);
         $routes->get('pre-registros/(:num)', 'Admin\PreRegistros::ver/$1', ['filter' => 'permiso:clientes.registrar']);
         $routes->post('pre-registros/(:num)/descartar', 'Admin\PreRegistros::descartar/$1', ['filter' => 'permiso:clientes.registrar']);
 
         // SS-02 Clientes (CU-11 a CU-15, CU-54)
         $routes->group('clientes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Clientes::index', ['as' => 'clientes.localizar', 'filter' => 'permiso:clientes.localizar']);
+            $routes->post('buscar', 'Admin\Clientes::index', ['filter' => ['permiso:clientes.localizar', 'busquedapost']]);
             $routes->get('nuevo', 'Admin\Clientes::nuevo', ['as' => 'clientes.registrar', 'filter' => 'permiso:clientes.registrar']);
             $routes->post('', 'Admin\Clientes::registrar', ['filter' => 'permiso:clientes.registrar']);
             // D-18: localidades de una provincia para el formulario del cliente (alta y modificación)
@@ -102,6 +105,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('cobros', 'Admin\Cobros::index', ['as' => 'cobros.registrar', 'filter' => 'permiso:cobros.registrar']);
         $routes->post('cobros', 'Admin\Cobros::registrar', ['filter' => 'permiso:cobros.registrar']);
         $routes->get('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['as' => 'cobros.emitir-comprobante', 'filter' => 'permiso:cobros.emitir-comprobante']);
+        $routes->post('cobros/comprobantes', 'Admin\Cobros::comprobantes', ['filter' => ['permiso:cobros.emitir-comprobante', 'busquedapost']]);
         $routes->get('cobros/(:num)/comprobante', 'Admin\Cobros::comprobante/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         $routes->post('cobros/(:num)/reemitir', 'Admin\Cobros::reemitir/$1', ['filter' => 'permiso:cobros.emitir-comprobante']);
         // SS-08 Campañas crediticias (CU-50); los parámetros (CU-51) están en el grupo parametros
@@ -110,6 +114,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('campanas/ofertas/(:num)', 'Admin\Campanas::oferta/$1', ['filter' => 'permiso:campanas.consultar']);
         // SS-06 Refinanciaciones (CU-39 a CU-43, CU-74, CU-96) y condonación de punitorios (CU-44)
         $routes->get('refinanciaciones', 'Admin\Refinanciaciones::index', ['as' => 'refinanciaciones.localizar', 'filter' => 'permiso:refinanciaciones.localizar']);
+        $routes->post('refinanciaciones', 'Admin\Refinanciaciones::index', ['filter' => ['permiso:refinanciaciones.localizar', 'busquedapost']]);
         $routes->get('refinanciaciones/simular', 'Admin\Refinanciaciones::simular', ['as' => 'refinanciaciones.simular', 'filter' => 'permiso:refinanciaciones.simular']);
         $routes->post('refinanciaciones/simular', 'Admin\Refinanciaciones::crearSimulacion', ['filter' => 'permiso:refinanciaciones.simular']);
         $routes->get('refinanciaciones/simulaciones/(:num)', 'Admin\Refinanciaciones::simulacion/$1', ['filter' => 'permiso:refinanciaciones.simular']);
@@ -138,6 +143,7 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('saldos-favor/autorizaciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
         $routes->post('saldos-favor/autorizaciones/(:num)/anular', 'Admin\SaldosFavor::anular/$1', ['filter' => 'permiso:saldos-favor.autorizar-devolucion']);
         $routes->get('devoluciones', 'Admin\SaldosFavor::devoluciones', ['as' => 'saldos-favor.ejecutar-devolucion', 'filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
+        $routes->post('devoluciones', 'Admin\SaldosFavor::devoluciones', ['filter' => ['permiso:saldos-favor.ejecutar-devolucion', 'busquedapost']]);
         $routes->get('devoluciones/(:num)', 'Admin\SaldosFavor::ver/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
         $routes->post('devoluciones/(:num)/ejecutar', 'Admin\SaldosFavor::ejecutar/$1', ['filter' => 'permiso:saldos-favor.ejecutar-devolucion']);
 
@@ -145,9 +151,11 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         $routes->get('pagos-electronicos/nueva', 'Admin\PagosElectronicos::nueva', ['as' => 'pagos-electronicos.generar-orden', 'filter' => 'permiso:pagos-electronicos.generar-orden']);
         $routes->post('pagos-electronicos/nueva', 'Admin\PagosElectronicos::generar', ['filter' => 'permiso:pagos-electronicos.generar-orden']);
         $routes->get('pagos-electronicos', 'Admin\PagosElectronicos::index', ['as' => 'pagos-electronicos.consultar-estado', 'filter' => 'permiso:pagos-electronicos.consultar-estado']);
+        $routes->post('pagos-electronicos', 'Admin\PagosElectronicos::index', ['filter' => ['permiso:pagos-electronicos.consultar-estado', 'busquedapost']]);
         $routes->get('pagos-electronicos/(:num)', 'Admin\PagosElectronicos::ver/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
         $routes->post('pagos-electronicos/(:num)/consultar', 'Admin\PagosElectronicos::consultar/$1', ['filter' => 'permiso:pagos-electronicos.consultar-estado']);
         $routes->get('cobros/anulaciones', 'Admin\Cobros::comprobantes', ['as' => 'cobros.anular', 'filter' => 'permiso:cobros.anular']);
+        $routes->post('cobros/anulaciones', 'Admin\Cobros::comprobantes', ['filter' => ['permiso:cobros.anular', 'busquedapost']]);
         $routes->get('cobros/(:num)/anular', 'Admin\Cobros::anulacion/$1', ['filter' => 'permiso:cobros.anular']);
         $routes->post('cobros/(:num)/anular', 'Admin\Cobros::anular/$1', ['filter' => 'permiso:cobros.anular']);
         $routes->get('revocaciones', 'Admin\Revocaciones::index', ['as' => 'creditos.revocar', 'filter' => 'permiso:creditos.revocar']);
@@ -180,14 +188,17 @@ $routes->group('admin', static function (RouteCollection $routes): void {
         // CU-26 y CU-27: bandejas del Gerente y del Cajero
         $routes->get('resoluciones', 'Admin\Resoluciones::index', ['as' => 'solicitudes.resolver', 'filter' => 'permiso:solicitudes.resolver']);
         $routes->get('contratos', 'Admin\Contratos::index', ['as' => 'contratos.registrar-firmado', 'filter' => 'permiso:contratos.registrar-firmado']);
+        $routes->post('contratos', 'Admin\Contratos::index', ['filter' => ['permiso:contratos.registrar-firmado', 'busquedapost']]);
         $routes->get('contratos/(:num)', 'Admin\Contratos::ver/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
         $routes->post('contratos/(:num)', 'Admin\Contratos::registrar/$1', ['filter' => 'permiso:contratos.registrar-firmado']);
         $routes->get('liquidaciones', 'Admin\Liquidaciones::index', ['as' => 'creditos.liquidar', 'filter' => 'permiso:creditos.liquidar']);
+        $routes->post('liquidaciones', 'Admin\Liquidaciones::index', ['filter' => ['permiso:creditos.liquidar', 'busquedapost']]);
         $routes->get('liquidaciones/(:num)', 'Admin\Liquidaciones::ver/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->post('liquidaciones/(:num)', 'Admin\Liquidaciones::liquidar/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->get('liquidaciones/(:num)/constancia', 'Admin\Liquidaciones::constancia/$1', ['filter' => 'permiso:creditos.liquidar']);
         $routes->group('solicitudes', static function (RouteCollection $routes): void {
             $routes->get('', 'Admin\Solicitudes::index', ['as' => 'solicitudes.localizar', 'filter' => 'permiso:solicitudes.localizar']);
+            $routes->post('buscar', 'Admin\Solicitudes::index', ['filter' => ['permiso:solicitudes.localizar', 'busquedapost']]);
             $routes->get('nueva', 'Admin\Solicitudes::nueva', ['as' => 'solicitudes.registrar', 'filter' => 'permiso:solicitudes.registrar']);
             $routes->get('nueva/(:num)', 'Admin\Solicitudes::confirmar/$1', ['filter' => 'permiso:solicitudes.registrar']);
             $routes->post('', 'Admin\Solicitudes::registrar', ['filter' => 'permiso:solicitudes.registrar']);
