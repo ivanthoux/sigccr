@@ -36,7 +36,7 @@ $this->section('contenido');
 <form method="get" class="hoja p-3 mb-3 row g-2 align-items-end" novalidate>
     <div class="col-6 col-md-3 col-xl-2"><label for="desde" class="form-label small">Desde</label><input type="date" id="desde" name="desde" class="form-control<?= campo_invalido('desde') ?>" value="<?= esc($f['desde'] !== '' ? $f['desde'] : $b['periodo']['desde'], 'attr') ?>"><?= error_campo('desde') ?></div>
     <div class="col-6 col-md-3 col-xl-2"><label for="hasta" class="form-label small">Hasta</label><input type="date" id="hasta" name="hasta" class="form-control<?= campo_invalido('hasta') ?>" value="<?= esc($f['hasta'] !== '' ? $f['hasta'] : $b['periodo']['hasta'], 'attr') ?>"><?= error_campo('hasta') ?></div>
-    <div class="col-6 col-md-2"><label for="responsable" class="form-label small">Responsable</label><input type="text" id="responsable" name="responsable" class="form-control" value="<?= esc($f['responsable'], 'attr') ?>" placeholder="Usuario o proceso"></div>
+    <div class="col-6 col-md-2"><label for="responsable" class="form-label small">Responsable</label><input type="text" id="responsable" name="responsable" class="form-control" value="<?= esc($f['responsable'], 'attr') ?>" title="Usuario o proceso"></div>
     <?= $sel('categoria', 'Tipo de operación', A::CATEGORIAS, 'Todos') ?>
     <?= $sel('objeto', 'Objeto afectado', A::OBJETOS, 'Todos') ?>
     <?= $sel('resultado', 'Resultado', A::RESULTADOS, 'Todos') ?>
@@ -46,10 +46,11 @@ $this->section('contenido');
 <?php if ($b['filas'] === []): ?>
     <div class="hoja p-4"><p class="mb-0">No hay registros que coincidan con los criterios: modifíquelos y vuelva a buscar (A1).</p></div>
 <?php else: ?>
-    <?= view('partials/paginacion', $paginacion) ?>
-    <div class="hoja p-0">
+    <div class="hoja p-3">
+        <p class="small text-body-secondary mb-2">Operaciones más recientes primero.</p>
+        <?= view('partials/paginacion', $paginacion + ['parte' => 'cabecera']) ?>
         <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
+            <table class="table table-hover align-middle mb-0">
                 <thead><tr><th>Fecha y hora</th><th>Responsable</th><th>Tipo de operación</th><th>Acción</th><th>Objeto</th><th>Resultado</th><th>Motivo</th></tr></thead>
                 <tbody>
                 <?php foreach ($b['filas'] as $a): ?>
@@ -59,14 +60,14 @@ $this->section('contenido');
                         <td class="small"><?= esc(A::categoria((string) $a['accion'], $a['proceso'])) ?></td>
                         <td class="small"><code><?= esc((string) $a['accion']) ?></code></td>
                         <td class="small"><?= esc(OperacionAlerta::OBJETOS[$a['objeto_tipo']] ?? (string) $a['objeto_tipo']) ?><?= $a['objeto_id'] !== null ? ' ' . esc((string) $a['objeto_id']) : '' ?></td>
-                        <td><?= $a['resultado'] === 'Exitoso' ? 'Exitoso' : '<span class="text-danger">' . esc((string) $a['resultado']) . '</span>' ?></td>
+                        <td><span class="badge rounded-pill <?= $a['resultado'] === 'Exitoso' ? 'text-bg-success' : 'text-bg-danger' ?>"><?= esc((string) $a['resultado']) ?></span></td>
                         <td class="small"><?= esc((string) ($a['motivo'] ?? '')) ?></td>
                     </tr>
                 <?php endforeach ?>
                 </tbody>
             </table>
         </div>
+        <?= view('partials/paginacion', $paginacion + ['parte' => 'pie']) ?>
     </div>
-    <?= view('partials/paginacion', $paginacion + ['pie' => true]) ?>
 <?php endif ?>
 <?php $this->endSection() ?>

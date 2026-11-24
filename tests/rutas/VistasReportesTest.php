@@ -159,10 +159,12 @@ final class VistasReportesTest extends CIUnitTestCase
         $this->assertStringContainsString('Campaña crediticia 2', $html);
         $this->assertStringContainsString('Siguiente', $html);
         $this->assertStringContainsString(site_url('admin/auditoria/90'), $html);
-        // La barra de páginas está arriba y abajo de la tabla, con el selector de registros por página
-        $this->assertSame(2, substr_count($html, 'aria-label="Paginación"'));
-        $this->assertSame(2, substr_count($html, 'data-autoenviar'));
-        $this->assertStringContainsString('1–25 de 120 registros', $html);
+        // Como los listados con DataTables: «Mostrar [n] registros» arriba, «Mostrando X a Y de Z registros» abajo y las
+        // páginas arriba y abajo de la tabla
+        $this->assertSame(2, substr_count($html, '<ul class="pagination flex-wrap justify-content-center mb-0">'));
+        $this->assertSame(1, substr_count($html, 'data-autoenviar'));
+        $this->assertStringContainsString('Mostrando 1 a 25 de 120 registros', $html);
+        $this->assertStringContainsString('badge rounded-pill text-bg-success">Exitoso', $html);
         foreach ([10, 25, 50, 100] as $n) {
             $this->assertStringContainsString("<option value=\"{$n}\"", $html);
         }

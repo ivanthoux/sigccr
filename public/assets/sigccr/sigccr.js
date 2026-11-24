@@ -114,6 +114,14 @@
     const iniciarTablas = () => {
         Object.assign(window.DataTable.defaults, {
             pageLength: 25,
+            // Las páginas arriba y abajo de la tabla, en todos los listados (como el registro de auditoría, que pagina en
+            // el servidor): no hace falta bajar hasta el final para cambiar de página
+            layout: {
+                topStart: 'pageLength',
+                topEnd: ['search', 'paging'],
+                bottomStart: 'info',
+                bottomEnd: 'paging',
+            },
             language: {
                 decimal: ',',
                 thousands: '.',

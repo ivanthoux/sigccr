@@ -15,6 +15,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 - CU-108 Atender solicitud de derechos del titular: el cliente pide en el portal, o el Analista registra en la sucursal, el acceso, la rectificación, la actualización, la supresión o la revisión de una decisión automatizada; plazos de 10 días corridos o 5 hábiles, alerta, respuesta obligatoria y auditoría (Ley 25.326, arts. 14, 16 y 20; migración 36; IN-77, I-96).
 
 ### Cambiado
+- Registro de auditoría: paginación con la misma forma que los demás listados («Mostrar [n] registros», «Mostrando X a Y de Z registros», Primera/Anterior/Siguiente/Última dentro del recuadro de la tabla) y resultado como etiqueta de estado.
 - Registro de auditoría (CU-57): barra de páginas arriba y abajo de la tabla (primera, anterior, páginas vecinas, siguiente, última) y selector de registros por página (10, 25, 50 o 100; 25 por defecto, antes 50).
 - Las búsquedas con DNI, CUIT o CUIL se envían por `POST` (filtro `busquedapost`) y el filtro «Cliente» de los reportes busca solo por nombre: el identificador ya no queda en la URL. Cierra el desvío V14.2.1 (Ley 25.326 art. 4). Pruebas S-15, S-16 e IN-79.
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.
