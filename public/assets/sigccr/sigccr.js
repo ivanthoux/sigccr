@@ -114,6 +114,14 @@
     const iniciarTablas = () => {
         Object.assign(window.DataTable.defaults, {
             pageLength: 25,
+            // Las páginas arriba y abajo de la tabla, en todos los listados (como el registro de auditoría, que pagina en
+            // el servidor): no hace falta bajar hasta el final para cambiar de página
+            layout: {
+                topStart: 'pageLength',
+                topEnd: ['search', 'paging'],
+                bottomStart: 'info',
+                bottomEnd: 'paging',
+            },
             language: {
                 decimal: ',',
                 thousands: '.',
@@ -223,3 +231,20 @@
         });
     });
 })();
+
+/* CU-108 (D-64): el pedido de revisión de una decisión automatizada pide además la solicitud de crédito. */
+(() => {
+    const tipo = document.querySelector('[data-derechos-tipo]');
+    const solicitud = document.querySelector('[data-derechos-solicitud]');
+    if (tipo === null || solicitud === null) {
+        return;
+    }
+    tipo.addEventListener('change', () => {
+        solicitud.hidden = tipo.value !== 'RevisionAutomatizada';
+    });
+})();
+
+/* Los selectores marcados con data-autoenviar envían su formulario al cambiar (por ejemplo, registros por página). */
+document.querySelectorAll('select[data-autoenviar]').forEach((campo) => {
+    campo.addEventListener('change', () => campo.form?.requestSubmit());
+});

@@ -30,6 +30,9 @@ jobs:
       - name: Dependencias
         run: composer install --no-interaction --no-progress --ignore-platform-req=ext-sqlsrv
 
+      - name: Auditoría de dependencias (avisos de seguridad conocidos, ASVS V15.2.1)
+        run: composer audit --locked --no-interaction
+
       - name: Sintaxis de PHP en todo el código
         run: find app tests -name '*.php' -not -path 'tests/_local/*' -print0 | xargs -0 -n1 -P4 php -l > /dev/null
 
@@ -82,8 +85,9 @@ jobs:
 
       - name: SQL Server 2022
         run: |
+          for i in 1 2 3 4 5; do docker pull mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04 && break; echo "Descarga fallida ($i/5)"; sleep $((i * 10)); done
           docker run -d --name mssql -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_PID=Developer \
-            -e MSSQL_SA_PASSWORD -e MSSQL_COLLATION=Modern_Spanish_CI_AI mcr.microsoft.com/mssql/server:2022-latest
+            -e MSSQL_SA_PASSWORD -e MSSQL_COLLATION=Modern_Spanish_CI_AI mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
           for i in $(seq 1 60); do
             docker exec mssql /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -Q 'SELECT 1' -b -o /dev/null && exit 0
             sleep 2
@@ -93,10 +97,10 @@ jobs:
 
       - name: Controlador ODBC 18 de Microsoft (lo requiere la extensión sqlsrv)
         run: |
-          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-          curl --proto =https --tlsv1.2 -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
-          sudo apt-get update -q
-          sudo ACCEPT_EULA=Y apt-get install -y -q msodbcsql18 unixodbc-dev
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list > /dev/null
+          sudo apt-get -o Acquire::Retries=5 update -q
+          sudo ACCEPT_EULA=Y apt-get -o Acquire::Retries=5 install -y -q msodbcsql18 unixodbc-dev
 
       - name: PHP 8.3 con sqlsrv
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # 2.40.0
@@ -108,7 +112,7 @@ jobs:
 
       - name: sqlcmd
         run: |
-          curl --proto =https --tlsv1.2 -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
+          curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -sSL https://github.com/microsoft/go-sqlcmd/releases/download/v1.8.0/sqlcmd-linux-amd64.tar.bz2 | sudo tar -xj -C /usr/local/bin sqlcmd
           sqlcmd --version
 
       - name: Dependencias

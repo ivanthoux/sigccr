@@ -62,6 +62,9 @@ ENUMS = {
     'MedioConsentimiento': ['Portal', 'Sucursal'],
     'EstadoRegimen': ['Vigente', 'Rectificado'],
     'EstadoPreRegistro': ['PendienteVerificacion', 'PendienteValidacion', 'Completado', 'Descartado'],
+    'TipoDerecho': ['Acceso', 'Rectificacion', 'Actualizacion', 'Supresion', 'RevisionAutomatizada'],
+    'CanalDerecho': ['Portal', 'Sucursal'],
+    'EstadoDerecho': ['Pendiente', 'Atendida', 'Denegada'],
     'OrigenSolicitud': ['Independiente', 'Oferta'],
     'ResultadoVerificacion': ['Conforme', 'Observado', 'Rechazado'],
     'MotivoObservacion': ['Faltante', 'Ilegible', 'Vencido', 'Inconsistente', 'NoCorresponde'],
@@ -485,6 +488,27 @@ add('pre_registros', 'SS-02', 'PreRegistro', 'Datos que una persona que todavía
        ('CK_pre_registros_descarte', "estado <> 'Descartado' OR motivo_descarte IS NOT NULL")],
    idx=[('IX_pre_registros_documento', ['tipo_documento', 'nro_documento'], ['estado'], None),
         ('IX_pre_registros_estado', ['estado', 'creado_en'], None, None)])
+
+add('solicitudes_derechos', 'SS-02', 'SolicitudDerechos', 'Pedido de un cliente para ejercer un derecho sobre sus datos personales, recibido por el portal o en la sucursal, con su plazo legal y su respuesta (CU-108, D-64).', [
+    ID(),
+    FK('cliente_id', 'clientes'),
+    EN('tipo', 'TipoDerecho'),
+    C('detalle', 'NVARCHAR(1000)', d='Qué pide la persona: los datos que quiere ver, corregir o suprimir, o por qué pide la revisión.'),
+    C('solicitud_id', 'INT', null=True, d='Solicitud de crédito cuya valoración automatizada se pide revisar (art. 20); obligatoria en ese tipo. Sin clave foránea: SS-04 ya depende de SS-02 y la referencia se valida en el servicio.'),
+    EN('canal', 'CanalDerecho'),
+    EN('estado', 'EstadoDerecho', default="'Pendiente'"),
+    C('vence', D, d='Fecha límite de respuesta: 10 días corridos (acceso y revisión) o 5 días hábiles (rectificación, actualización y supresión) desde la recepción (RN-85).'),
+    C('fecha_resolucion', TS, null=True),
+    C('respuesta', 'NVARCHAR(1000)', null=True, d='Respuesta a la persona; obligatoria al atender o denegar (RN-86).'),
+    FK('usuario_id', 'usuarios_internos', null=True, d='Usuario que atendió o denegó la solicitud.'),
+    CREADO(),
+    ACT(),
+    VF(),
+], ck=[('CK_solicitudes_derechos_revision', "tipo <> 'RevisionAutomatizada' OR solicitud_id IS NOT NULL"),
+       ('CK_solicitudes_derechos_respuesta', "estado = 'Pendiente' OR (respuesta IS NOT NULL AND fecha_resolucion IS NOT NULL AND usuario_id IS NOT NULL)")],
+   idx=[('IX_solicitudes_derechos_cliente', ['cliente_id', 'estado'], None, None),
+        ('IX_solicitudes_derechos_estado', ['estado', 'vence'], None, None),
+        ('IX_solicitudes_derechos_solicitud_id', ['solicitud_id'], None, None)])
 
 # ============================================================== SS-03
 add('lineas_credito', 'SS-03', 'LineaCredito', 'Productos crediticios ofrecidos por la entidad.', [

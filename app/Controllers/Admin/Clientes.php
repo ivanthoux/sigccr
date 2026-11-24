@@ -186,6 +186,13 @@ class Clientes extends BaseController
 
         $r = $this->response->download($d['ruta'], null)->setFileName($d['nombre'])->setContentType($d['mime']);
 
+        // El tipo es el real, comprobado con el contenido al subirlo (LegajoService), y nunca HTML (ASVS V3.2.1, V5.2.2)
+        $r->setHeader('X-Content-Type-Options', 'nosniff');
+        if (str_starts_with($d['mime'], 'image/')) {
+            // Una imagen que se abre directamente no puede ejecutar nada en el origen del sistema
+            $r->setHeader('Content-Security-Policy', "sandbox; default-src 'none'; style-src 'unsafe-inline'");
+        }
+
         // ?ver=1 abre el PDF o la imagen en el navegador, por ejemplo desde la resolución gerencial (D-23)
         return $this->request->getGet('ver') === '1' ? $r->inline() : $r;
     }

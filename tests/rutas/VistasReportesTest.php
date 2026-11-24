@@ -147,8 +147,8 @@ final class VistasReportesTest extends CIUnitTestCase
 
     public function testRegistroDeAuditoria(): void
     {
-        $f = ['desde' => '', 'hasta' => '', 'responsable' => '', 'categoria' => '', 'objeto' => '', 'resultado' => '', 'pagina' => ''];
-        $b = ['filas' => [], 'total' => 0, 'pagina' => 1, 'paginas' => 1, 'periodo' => Periodo::desde(['tipo' => 'rango'], '2026-11-12')];
+        $f = ['desde' => '', 'hasta' => '', 'responsable' => '', 'categoria' => '', 'objeto' => '', 'resultado' => '', 'pagina' => '', 'por_pagina' => ''];
+        $b = ['filas' => [], 'total' => 0, 'pagina' => 1, 'paginas' => 1, 'por_pagina' => 25, 'periodo' => Periodo::desde(['tipo' => 'rango'], '2026-11-12')];
         $html = view('auditoria/index', ['titulo' => 'Auditoría', 'f' => $f, 'b' => $b]);
         $this->assertStringContainsString('(A1)', $html);
         $this->assertStringContainsString('Decisiones automáticas', $html);
@@ -159,6 +159,16 @@ final class VistasReportesTest extends CIUnitTestCase
         $this->assertStringContainsString('Campaña crediticia 2', $html);
         $this->assertStringContainsString('Siguiente', $html);
         $this->assertStringContainsString(site_url('admin/auditoria/90'), $html);
+        // Como los listados con DataTables: «Mostrar [n] registros» arriba, «Mostrando X a Y de Z registros» abajo y las
+        // páginas arriba y abajo de la tabla
+        $this->assertSame(2, substr_count($html, '<ul class="pagination flex-wrap justify-content-center mb-0">'));
+        $this->assertSame(1, substr_count($html, 'data-autoenviar'));
+        $this->assertStringContainsString('Mostrando 1 a 25 de 120 registros', $html);
+        $this->assertStringContainsString('badge rounded-pill text-bg-success">Exitoso', $html);
+        foreach ([10, 25, 50, 100] as $n) {
+            $this->assertStringContainsString("<option value=\"{$n}\"", $html);
+        }
+        $this->assertStringContainsString('pagina=3', $html, 'Enlace a la última página');
 
         $a = $fila + ['rol' => null, 'detalle_datos' => ['causa' => 'Cupo', 'aceptadas' => 1], 'ip_origen' => null];
         $ver = view('auditoria/ver', ['titulo' => 'Registro', 'a' => $a, 'volver' => 'pagina=2']);

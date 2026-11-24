@@ -159,7 +159,7 @@ class DocumentacionService extends BaseService
         $nombre = Campos::texto($d['nombre'] ?? '');
         $aplica = (string) ($d['aplica_a'] ?? '');
         $e = [];
-        if (mb_strlen($nombre) < 5 || mb_strlen($nombre) > 120) {
+        if (Campos::largo($nombre) < 5 || Campos::largo($nombre) > 120) {
             $e['nombre'] = 'Ingrese el nombre del documento (de 5 a 120 caracteres).';
         }
         if (!isset(self::APLICA_A[$aplica])) {

@@ -73,8 +73,9 @@ services:
     restart: unless-stopped
 
   db:
-    # Fijar una versión acumulativa concreta (por ejemplo 2022-CU16-ubuntu-22.04) antes de producción.
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Versión acumulativa fija (D-62): el entorno no cambia solo cuando Microsoft publica una actualización.
+    # Para actualizarla, ver «Actualizar la versión de SQL Server» en el README (el mismo valor va en ci.yml).
+    image: mcr.microsoft.com/mssql/server:2022-CU28-ubuntu-22.04
     # .env.docker (fuera del repositorio) define MSSQL_SA_PASSWORD y MSSQL_PID:
     # Developer en desarrollo, Express en producción (RNF-06).
     env_file: .env.docker

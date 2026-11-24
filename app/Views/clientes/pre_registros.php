@@ -18,7 +18,8 @@ $this->section('contenido');
         <p>Personas que dejaron sus datos en el portal. Verifique su identidad en la sucursal y complete el alta.</p>
     </div>
 </div>
-<form method="get" class="hoja p-3 mb-3" role="search" aria-label="Buscar pre-registros">
+<form method="post" class="hoja p-3 mb-3" role="search" aria-label="Buscar pre-registros">
+    <?= csrf_field() ?>
     <div class="row g-2 align-items-end">
     <div class="col-md-3">
         <label for="estado" class="form-label small">Estado</label>

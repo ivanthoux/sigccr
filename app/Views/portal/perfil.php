@@ -52,6 +52,7 @@ $this->section('contenido');
                 <dt class="col-5">Domicilio</dt><dd class="col-7"><?= esc($c['domicilio'] . ', ' . $c['localidad'] . ', ' . $c['provincia'] . ' (' . $c['codigo_postal'] . ')') ?></dd>
             </dl>
             <a href="<?= url_to('portal.cambiar-correo') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-envelope me-1" aria-hidden="true"></i>Cambiar correo electrónico</a>
+            <a href="<?= url_to('portal.cambiar-contrasena') ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-key me-1" aria-hidden="true"></i>Cambiar contraseña</a>
         </div>
     </section>
     <section class="col-lg-6" aria-labelledby="t-laboral">
@@ -82,6 +83,8 @@ $this->section('contenido');
     <summary class="fw-medium">Solicitar corrección de datos</summary>
     <p class="small mt-2 mb-1">Para corregir sus datos personales, laborales o económicos, acérquese a la sucursal con su documento de identidad: un analista de crédito los actualizará y dejará constancia del cambio.</p>
     <p class="small mb-1">Si solo quiere cambiar su correo electrónico, puede hacerlo desde «Cambiar correo electrónico» confirmando desde el correo actual y el nuevo.</p>
-    <p class="small mb-0">Si perdió el acceso a su correo actual, el cambio también se hace en la sucursal, presentando su documento.</p>
+    <p class="small mb-1">Si perdió el acceso a su correo actual, el cambio también se hace en la sucursal, presentando su documento.</p>
+    <p class="small mb-0">También puede pedir la corrección, el acceso o la supresión de sus datos desde <a href="<?= url_to('portal.derechos') ?>">Mis derechos sobre mis datos</a>.</p>
 </details>
+<p class="small mt-3 mb-0"><a href="<?= url_to('portal.derechos') ?>"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>Ejercer mis derechos sobre mis datos</a></p>
 <?php $this->endSection() ?>

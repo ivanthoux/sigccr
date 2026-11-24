@@ -2,7 +2,7 @@
 
 Decisiones de análisis y diseño adoptadas durante el proyecto. Cada una indica su contexto, la decisión, sus consecuencias y su justificación, con los criterios de la sección siguiente que la sostienen. Toda la construcción se apoyó en ellas.
 
-**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-61), después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
+**Validación.** D-01 a D-08 fueron validadas por el director el 24/10/2026 y D-09 a D-14 el 29/10/2026. D-15 a D-29 fueron aceptadas el 06/11/2026 por uno de los profesores. El 19/11/2026 el alumno, como responsable del proyecto, dio por validadas todas las decisiones (D-01 a D-62), y D-63 al aprobar el plan de la lista de comprobación de seguridad, después de revisar cada una con los criterios de decisión y con la evidencia de las pruebas: la prueba funcional de cada iteración, la prueba integral, las pruebas de integración contra SQL Server, la batería de punta a punta y las pruebas de rendimiento y de usabilidad. Las decisiones se presentan al director con la entrega final.
 
 El contenido de cada decisión está incorporado en las secciones correspondientes del documento del proyecto, y este archivo es el registro oficial de las decisiones (desde la v9 el documento no lo reproduce). Si una decisión validada requiere un cambio, se registra como una decisión nueva que reemplaza a la anterior, con los motivos del cambio.
 
@@ -69,6 +69,8 @@ El contenido de cada decisión está incorporado en las secciones correspondient
 | D-59 | 18/11/2026 | Validada (19/11/2026) |
 | D-60 | 19/11/2026 | Validada (19/11/2026) |
 | D-61 | 19/11/2026 | Validada (19/11/2026) |
+| D-62 | 19/11/2026 | Validada (19/11/2026) |
+| D-63 | 19/11/2026 | Validada (19/11/2026) |
 
 ## Criterios de decisión
 
@@ -1205,3 +1207,54 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 **Consecuencias.** Sin cambios en el sistema. Cambia la sección de alcance del documento del Trabajo Final, con la exclusión, y se quita del programa la tarea del perfil de riesgo.
 
 **Justificación** (C7, C1). Un monitoreo útil requiere definir la matriz de riesgo de la entidad, los umbrales de cada regla y el circuito de análisis y reporte con su oficial de cumplimiento, que dependen de la política de cada entidad y exceden el alcance y el plazo de un trabajo final. Construir reglas genéricas daría una falsa apariencia de cumplimiento. Dejarlo explícitamente fuera del alcance, con la información que el sistema sí conserva, es la forma honesta de tratar la obligación.
+
+## D-62 · Versiones fijas de las imágenes y reintentos de descarga en la integración continua (4.4.5; RNF-04)
+
+**Contexto.** El entorno usaba la etiqueta móvil `mssql/server:2022-latest`: cuando Microsoft publica una actualización acumulativa, la base cambia sin que el proyecto haya tocado nada y una prueba que pasaba puede fallar sin explicación. Además, la integración continua descarga paquetes de servidores externos; el 19/11/2026 un error 503 del espejo de Ubuntu hizo fallar la prueba de integración sin que hubiera un defecto en el código.
+
+**Decisión.**
+1. **SQL Server con versión acumulativa fija:** `2022-CU28-ubuntu-22.04` en `docker-compose.yml` (que usan el entorno de desarrollo, la batería de punta a punta y las pruebas de rendimiento) y en `ci.yml`. El resto de las imágenes ya tenían versión (Nginx 1.27, Mailpit 1.27.10, Playwright 1.49.1).
+2. **La actualización es una decisión deliberada:** se cambia el valor en los dos archivos, se ejecuta la integración continua completa (integración, punta a punta y rendimiento) y recién entonces se incorpora. El procedimiento está en el README.
+3. **Reintentos de descarga:** `apt-get` con `Acquire::Retries=5`, `curl` con `--retry 5 --retry-all-errors` y la descarga de la imagen de SQL Server con hasta cinco intentos de espera creciente, en el CI y en el Dockerfile de PHP.
+
+**Consecuencias.** Las ejecuciones son reproducibles en el tiempo. Hay que actualizar la versión a mano cada tanto para recibir las correcciones de seguridad de Microsoft; el README lo indica.
+
+**Justificación** (C3, C5). Una prueba que falla por algo ajeno al código resta confianza a todas las demás; fijar las versiones y absorber las fallas transitorias de red hace que un fallo signifique un defecto real. El costo (actualizar a mano) es menor que el de investigar fallas intermitentes.
+
+## D-63 · Lista de comprobación OWASP ASVS 5.0 nivel 1 y cambio de contraseña (CU-107; RNF-12, RN-62; plan de pruebas)
+
+**Contexto.** RNF-12 pide cumplir el nivel 1 de OWASP ASVS, pero el proyecto no tenía la lista de comprobación que lo demostrara. La versión vigente del estándar es la 5.0.0, que reúne 70 requisitos en el nivel 1. Al revisarlos uno por uno, 14 no aplican al sistema, 46 ya se cumplían, 9 se corrigieron con cambios chicos y 1 queda como desvío. El más importante de los faltantes era que ningún usuario podía cambiar su contraseña (V6.2.2 y V6.2.3), porque el análisis solo preveía restablecerla por olvido o por indicación del Administrador.
+
+**Decisión.**
+1. **Versión de referencia.** Se usa ASVS 5.0.0 (nivel 1, 70 requisitos). La matriz con el estado de cada uno, la evidencia y la prueba que lo sostiene está en `docs/seguridad/asvs_nivel1.md`.
+2. **No aplica, con motivo.** Tokens autocontenidos (V9, 4 requisitos) y OAuth/OIDC (V10, 5): el sistema usa sesiones por referencia en el servidor y no es servidor de autorización. WebSockets (V4.4.1), editores HTML (V1.3.1), XML (V1.5.1) y CORS (V3.4.2, V3.5.2): no se usan.
+3. **Nuevo CU-107 «Cambiar contraseña»** para cualquier usuario con sesión, del panel o del portal: pide la contraseña actual y la nueva con su confirmación, aplica la política de RN-62, exige que la nueva sea distinta, cierra las demás sesiones abiertas de la cuenta y queda auditado. Los intentos con contraseña actual incorrecta cuentan para el bloqueo temporal de RN-62.
+4. **Lista de contraseñas comprometidas (V6.2.4).** Se incorporan las 3.000 contraseñas más frecuentes de 15 a 128 caracteres del archivo `xato-net-10-million-passwords-1000000.txt` de SecLists (licencia MIT, con la atribución en el encabezado de la lista), más unas pocas propias del proyecto. Se filtran por el largo porque la política ya exige 15 caracteres como mínimo: las más frecuentes, que son más cortas, no se pueden elegir de todos modos. La lista queda dentro del repositorio (`app/Libraries/Seguridad/contrasenas_comprometidas.txt`), sin términos ofensivos, y se aplica al alta, la activación, la recuperación y el cambio.
+5. **Desvío (V14.2.1).** Las búsquedas de clientes y solicitudes usan `GET` con el DNI o el CUIL en la dirección, de modo que el dato queda en los registros de acceso y en el historial del navegador. Se acepta en esta entrega: el documento es un dato de identificación que el operador ya ve en pantalla, ninguna credencial viaja en la dirección y los registros de acceso están dentro de la red de la entidad. Queda registrado como mejora futura pasar esas búsquedas a `POST`.
+6. **Cambios técnicos.** Cookie de sesión `__Host-sigccr_sesion`; `Cache-Control: no-store` en las páginas autenticadas y `Clear-Site-Data: "cache"` al cerrar sesión (V14.3.1); descargas de imágenes del legajo con `Content-Security-Policy: sandbox` (V3.2.1); cifrado de los cuerpos de las comunicaciones con AES-256-GCM, que reemplaza a AES-CTR no aprobado por el estándar (V11.3.2), con lectura de lo ya guardado.
+7. **Política de dependencias (V15.1.1, V15.2.1).** `docs/seguridad/politica_dependencias.md` fija los plazos de corrección según la gravedad del aviso; Dependabot propone las actualizaciones y el CI ejecuta `composer audit` y falla si hay un aviso conocido.
+8. **Pruebas.** Nuevo nivel de prueba «Seguridad» (S-01 a S-12) en el Plan de pruebas v1.5, pruebas de integración del cambio de contraseña (IN-76) y la prueba de punta a punta I-94.
+
+**Consecuencias.** Cambian el caso de uso CU-107 y la matriz de participación por actor (3.6.2: lo usan todos los roles y el cliente), RN-62 (se agrega el cambio de contraseña y la lista de comprometidas), el Plan de pruebas (v1.5) y la prueba funcional de la iteración 4 (I-94). Se agregan el filtro de cabeceras, el servicio de cambio de contraseña y las rutas `cuenta/contrasena` y `perfil/contrasena`. Las sesiones existentes se cierran una vez al cambiar el nombre de la cookie.
+
+**Justificación** (C4, C8, C1, C9, C7). Un estándar solo respalda al sistema si cada requisito tiene su evidencia: la matriz la da y las pruebas la mantienen vigente. Se agregó el cambio de contraseña porque es una función básica de cualquier sistema de autenticación y su ausencia obligaba a pedirle al Administrador un restablecimiento. Se aceptó un desvío y no se lo ocultó, porque pasar las búsquedas a `POST` toca muchas pantallas y pruebas, y el riesgo es bajo en el contexto de la entidad.
+
+
+## D-64 · Lista de comprobación Ley 25.326, derechos del titular y depuración de pre-registros (CU-108; RNF-14, RN-85, RN-86)
+
+**Contexto.** RNF-14 pide cumplir la Ley 25.326 de Protección de los Datos Personales, pero el proyecto no tenía la lista de comprobación que lo demostrara. Al revisar los artículos aplicables (4 a 7, 9 a 12, 14 a 16, 20, 21, 25 a 27 y las resoluciones AAIP 14/2018 y 47/2018) se encontraron cuatro faltantes de software: no había política de datos ni leyenda de la AAIP en los formularios, el titular no tenía un cauce para ejercer sus derechos con plazo, los pre-registros sin completar se conservaban para siempre y las búsquedas ponían el DNI o el CUIL en la dirección. El resto se cumplía o es organizativo.
+
+**Decisión.**
+1. **Matriz.** `docs/seguridad/ley_25326.md`: 28 filas (13 Cumple, 9 Cumple (corregido), 5 Organizativo, 1 No aplica). No es un dictamen legal: el asesor legal de la entidad debe validar el texto de la política y las condiciones organizativas (inscripción en el RNBD, contratos con la pasarela, el correo y el alojamiento, transferencia internacional, plazos de conservación, compromiso de confidencialidad del personal).
+2. **Política de datos.** Página pública `politica-de-datos` con 10 secciones, armada con los datos de la entidad de la configuración (`Config\Sigccr`), más la leyenda de la AAIP y enlaces desde los formularios y los pies de página. Constantes en `PoliticaDatos`: acceso 10 días corridos, rectificación 5 días hábiles, conservación de pre-registros 90 días.
+3. **Nuevo CU-108 «Atender derechos del titular».** Tabla `solicitudes_derechos` (migración 36). El cliente la inicia desde «Mi perfil» y el operador la registra por sucursal. Tipos: Acceso, Rectificación, Actualización, Supresión y Revisión de decisión automatizada. Las atienden el Gerente y el Analista de crédito; el plazo se calcula con el calendario de feriados y se muestra con semáforo, y hay una alerta al vencer.
+4. **RN-85 (plazos).** La fecha límite de respuesta es de 10 días corridos para el acceso y la revisión de una decisión automatizada (art. 14) y de 5 días hábiles, con el calendario de días no hábiles, para la rectificación, la actualización y la supresión (art. 16). Se muestra con su situación (en plazo, por vencer o vencida) y la solicitud genera una alerta hasta que se resuelve.
+5. **RN-86 (pedido y respuesta; art. 20).** El pedido lleva el derecho y un detalle de 10 a 1000 caracteres, no se repite un pedido pendiente del mismo tipo (ni dos revisiones de la misma solicitud) y atender o denegar exige una respuesta de 10 a 1000 caracteres. La evaluación crediticia desfavorable rechaza la solicitud en forma automática y no tenía un cauce de revisión humana: la revisión se pide sobre una solicitud propia rechazada por motivo crediticio y la resuelve solo quien tiene el permiso `solicitudes.resolver` (el Gerente).
+6. **`solicitud_id` sin clave foránea.** La tabla pertenece al subsistema de clientes (SS-02) y una clave foránea hacia las solicitudes (SS-04) crearía una dependencia circular entre subsistemas. Se guarda el identificador con un índice y se valida en el servicio.
+7. **Depuración.** El proceso diario `ControlarVencimientos` elimina los pre-registros no completados con más de 90 días de inactividad, en lotes de 500, resuelve sus alertas y deja una auditoría si borró algo. La migración 37 agrega `DELETE` sobre `pre_registros` al rol de la aplicación.
+8. **Búsquedas por `POST` (cierra el desvío de D-63, punto 5).** Filtro `busquedapost`: copia el cuerpo a los criterios de la consulta, de modo que los controladores no cambian. Se convierten 11 listados con token CSRF y el filtro «Cliente» de los reportes busca solo por nombre o razón social. Una consulta `GET` con `?documento=` sigue funcionando en el servidor, pero ya ningún formulario la genera (S-15). ASVS V14.2.1 pasa a «Cumple (corregido)»: 56 de 70 requisitos cumplen o se corrigieron y no quedan desvíos.
+9. **Pruebas.** S-13 a S-16, IN-77 a IN-79 e I-95 a I-97.
+
+**Consecuencias.** Cambian el caso de uso CU-108 (nuevo) y la matriz de participación (3.6.2), las reglas de negocio RN-85 y RN-86, el modelo de datos (86 tablas), la tabla de subsistemas (SS-02), el Plan de pruebas y las pruebas funcionales de la iteración 4.
+
+**Justificación** (C4, C8, C1, C9). Una ley solo respalda al sistema si cada artículo tiene su evidencia. Se cerró el desvío de las búsquedas, que D-63 había dejado pendiente, porque la ley pide no exponer datos personales más de lo necesario y el costo se redujo con el filtro genérico. Lo que no depende del software se documenta como condición de puesta en marcha en vez de darlo por resuelto.

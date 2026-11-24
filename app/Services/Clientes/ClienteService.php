@@ -248,7 +248,7 @@ class ClienteService extends BaseService
         $this->validarLocalidad($d, $actual['localidad_id'] === null ? null : (int) $actual['localidad_id'], $errores);
         $correoNuevo = $d['correo'] !== $actual['correo'] ? $d['correo'] : null;
         $evidencia = Campos::texto($evidenciaIdentidad);
-        if ($correoNuevo !== null && mb_strlen($evidencia) < 10) {
+        if ($correoNuevo !== null && Campos::largo($evidencia) < 10) {
             // A3 / RN-58: el cambio de correo en sucursal exige comprobar presencialmente documento e identidad
             $errores['evidencia_identidad'] = 'Para cambiar el correo, describa cómo comprobó presencialmente el documento y la identidad del cliente.';
         }

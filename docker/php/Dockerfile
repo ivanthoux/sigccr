@@ -4,10 +4,12 @@ FROM php:8.3-fpm-bookworm
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Dependencias del sistema, cron y repositorio de Microsoft para ODBC Driver 18 y sqlcmd
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Acquire::Retries y --retry: un servidor de paquetes que responde 503 un momento no debe romper la construcción (D-62)
+RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-reintentos \
+    && apt-get update && apt-get install -y --no-install-recommends \
         gnupg2 curl ca-certificates apt-transport-https unzip git cron \
         libicu-dev libzip-dev unixodbc-dev \
-    && curl --proto =https --tlsv1.2 -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl --proto =https --tlsv1.2 --retry 5 --retry-all-errors --retry-delay 5 -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && echo "deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" \
         > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update \

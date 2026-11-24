@@ -3,7 +3,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 /**
  * Pruebas de punta a punta del SIG-CCR. Recorren en orden el circuito de la prueba funcional integral
- * (docs/pruebas/prueba_funcional_integral_1_a_3.md): cada archivo continúa con los datos del anterior, por eso se
+ * (docs/pruebas/prueba_funcional_integral_1_a_4.md): cada archivo continúa con los datos del anterior, por eso se
  * ejecutan en serie con un solo proceso. Cada prueba lleva en el título el identificador del caso (R-xxx).
  */
 module.exports = defineConfig({
