@@ -1,0 +1,33 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1795534780924,302,00 Inicio de sesión (formulario),200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,3581,123,2,2,https://localhost/admin/login,298,0,274
+1795534780924,302,00 Inicio de sesión (formulario),200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,3581,123,2,2,https://localhost/admin/login,298,0,274
+1795534781235,342,00 Inicio de sesión,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,13734,582,2,2,https://localhost/admin,314,0,0
+1795534781235,314,00 Inicio de sesión-0,303,See Other,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,806,402,2,2,https://localhost/admin/login,314,0,0
+1795534781551,26,00 Inicio de sesión-1,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,12928,180,2,2,https://localhost/admin,26,0,0
+1795534781235,357,00 Inicio de sesión,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,13734,582,2,2,https://localhost/admin,329,0,0
+1795534781235,329,00 Inicio de sesión-0,303,See Other,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,806,402,2,2,https://localhost/admin/login,329,0,0
+1795534781565,27,00 Inicio de sesión-1,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,12928,180,2,2,https://localhost/admin,27,0,0
+1795534781580,159,06 Deuda del cliente,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,23868,201,2,2,https://localhost/admin/cobros?cliente=20014,158,0,0
+1795534781594,150,06 Deuda del cliente,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,23867,201,2,2,https://localhost/admin/cobros?cliente=20014,150,0,0
+1795534781784,83,RP-06a Cobro simultáneo,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,13293,698,2,2,https://localhost/admin/cobros/480/comprobante,46,0,0
+1795534781784,46,RP-06a Cobro simultáneo-0,303,See Other,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,668,495,2,2,https://localhost/admin/cobros,46,0,0
+1795534781830,37,RP-06a Cobro simultáneo-1,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-1,text,true,,12625,203,2,2,https://localhost/admin/cobros/480/comprobante,37,0,0
+1795534781784,97,RP-06a Cobro simultáneo,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,24275,696,1,1,https://localhost/admin/cobros?cliente=20014,54,0,0
+1795534781784,54,RP-06a Cobro simultáneo-0,303,See Other,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,666,495,1,1,https://localhost/admin/cobros,54,0,0
+1795534781838,43,RP-06a Cobro simultáneo-1,200,OK,RP-06a Cobro simultáneo de la misma cuota 1-2,text,true,,23609,201,1,1,https://localhost/admin/cobros?cliente=20014,42,0,0
+1795534781889,26,00 Inicio de sesión (formulario),200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,3581,123,2,2,https://localhost/admin/login,26,0,17
+1795534781889,28,00 Inicio de sesión (formulario),200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,3581,123,2,2,https://localhost/admin/login,28,0,18
+1795534781920,315,00 Inicio de sesión,200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,19195,583,2,2,https://localhost/admin,290,0,0
+1795534781920,290,00 Inicio de sesión-0,303,See Other,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,806,403,2,2,https://localhost/admin/login,290,0,0
+1795534782211,24,00 Inicio de sesión-1,200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,18389,180,2,2,https://localhost/admin,24,0,0
+1795534781918,320,00 Inicio de sesión,200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,19180,583,2,2,https://localhost/admin,298,0,0
+1795534781918,298,00 Inicio de sesión-0,303,See Other,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,806,403,2,2,https://localhost/admin/login,298,0,0
+1795534782216,22,00 Inicio de sesión-1,200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,18374,180,2,2,https://localhost/admin,22,0,0
+1795534782237,61,06 Anulación (formulario),200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,15155,198,2,2,https://localhost/admin/cobros/479/anular,61,0,0
+1795534782239,61,06 Anulación (formulario),200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,15149,198,2,2,https://localhost/admin/cobros/479/anular,61,0,0
+1795534782301,59,RP-06b Anulación simultánea,200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,15232,565,2,2,https://localhost/admin/cobros/479/anular,37,0,0
+1795534782301,59,RP-06b Anulación simultánea,200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,15285,565,2,2,https://localhost/admin/cobros/479/anular,36,0,0
+1795534782301,37,RP-06b Anulación simultánea-0,303,See Other,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,663,367,2,2,https://localhost/admin/cobros/479/anular,37,0,0
+1795534782301,36,RP-06b Anulación simultánea-0,303,See Other,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,663,367,2,2,https://localhost/admin/cobros/479/anular,36,0,0
+1795534782338,22,RP-06b Anulación simultánea-1,200,OK,RP-06b Anulación simultánea del mismo cobro 2-1,text,true,,14569,198,2,2,https://localhost/admin/cobros/479/anular,22,0,0
+1795534782337,23,RP-06b Anulación simultánea-1,200,OK,RP-06b Anulación simultánea del mismo cobro 2-2,text,true,,14622,198,2,2,https://localhost/admin/cobros/479/anular,23,0,0

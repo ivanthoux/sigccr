@@ -1,0 +1,5 @@
+/sigccr_e2e-app-1: 1500000000 nanoCPU, 3221225472 bytes
+/sigccr_e2e-db-1: 2000000000 nanoCPU, 4294967296 bytes
+/sigccr_e2e-web-1: 500000000 nanoCPU, 1073741824 bytes
+CPU del equipo de prueba: 4
+CI_ENVIRONMENT = production
