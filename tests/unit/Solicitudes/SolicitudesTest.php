@@ -104,6 +104,29 @@ final class SolicitudesTest extends TestCase
         $this->assertSame(1, $r['cftea']->compare($r['tea']));
     }
 
+    /** D-65: la cuota que supera la capacidad informa el importe máximo para esas cuotas, limitado por la línea y el tope. */
+    public function testExcesoDeCapacidad(): void
+    {
+        $d = static fn (string $v) => \App\Libraries\Finanzas\Decimal::of($v);
+        $v = $this->version();
+        $paso = $d('1000');
+        $this->assertNull(Simulador::excesoCapacidad($v, 12, $d('50000.00'), $d('50000.00'), '0.21', $paso));
+
+        $e = Simulador::excesoCapacidad($v, 12, $d('60000.00'), $d('30000.00'), '0.21', $paso);
+        $this->assertNotNull($e);
+        $maximo = $e['importe_maximo'];
+        $this->assertTrue($maximo->isPositive());
+        $this->assertSame(0, $maximo->compare($maximo->floorToMultiple($paso)), 'múltiplo del paso');
+        $cuota = Simulador::calcular($v, $maximo->toFixed(2), 12, '0.21', new DateTimeImmutable('2026-11-24'))['primera_cuota'];
+        $this->assertLessThanOrEqual(0, $cuota->compare($d('30000.00')), 'el máximo entra en la capacidad');
+        $this->assertStringContainsString('supera la capacidad de pago del cliente ($ 30.000,00)', $e['mensaje']);
+        $this->assertStringContainsString('puede financiar hasta $ ' . Simulador::monto($maximo), $e['mensaje']);
+
+        $this->assertSame('80000.00', Simulador::excesoCapacidad($v, 12, $d('999999.00'), $d('900000.00'), '0.21', $paso, $d('80000.00'))['importe_maximo']->toFixed(2), 'tope global');
+        $this->assertTrue(Simulador::excesoCapacidad($v, 3, $d('60000.00'), $d('5000.00'), '0.21', $paso)['importe_maximo']->isZero(), 'no alcanza el mínimo');
+        $this->assertStringContainsString('no tiene capacidad de pago disponible', Simulador::excesoCapacidad($v, 12, $d('1000.00'), $d('-200.00'), '0.21', $paso)['mensaje']);
+    }
+
     public function testFormatoDeImporteSinFloat(): void
     {
         $this->assertSame('1.234.567,89', Simulador::monto(\App\Libraries\Finanzas\Decimal::of('1234567.89')));

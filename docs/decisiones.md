@@ -71,6 +71,8 @@ El contenido de cada decisión está incorporado en las secciones correspondient
 | D-61 | 19/11/2026 | Validada (19/11/2026) |
 | D-62 | 19/11/2026 | Validada (19/11/2026) |
 | D-63 | 19/11/2026 | Validada (19/11/2026) |
+| D-64 | 23/11/2026 | Validada (23/11/2026) |
+| D-65 | 24/11/2026 | Validada (24/11/2026) |
 
 ## Criterios de decisión
 
@@ -1258,3 +1260,16 @@ No encontró rutas del panel sin sesión o sin permiso, accesos a datos de otro 
 **Consecuencias.** Cambian el caso de uso CU-108 (nuevo) y la matriz de participación (3.6.2), las reglas de negocio RN-85 y RN-86, el modelo de datos (86 tablas), la tabla de subsistemas (SS-02), el Plan de pruebas y las pruebas funcionales de la iteración 4.
 
 **Justificación** (C4, C8, C1, C9). Una ley solo respalda al sistema si cada artículo tiene su evidencia. Se cerró el desvío de las búsquedas, que D-63 había dejado pendiente, porque la ley pide no exponer datos personales más de lo necesario y el costo se redujo con el filtro genérico. Lo que no depende del software se documenta como condición de puesta en marcha en vez de darlo por resuelto.
+
+## D-65 · La simulación que supera la capacidad de pago no se formaliza como solicitud (CU-21, CU-22; RN-18, RN-23)
+
+**Contexto.** En la prueba integral (G01) se observó que el Analista podía simular y registrar una solicitud cuya cuota superaba la capacidad de pago del cliente. El análisis controla la capacidad recién en las alternativas de financiación (CU-87), después de verificar el legajo y de consultar la Central de Deudores: la combinación pedida se descarta y se ofrecen importes menores. Hasta ese momento la solicitud ocupa el trámite de la línea (RN-18), genera una consulta externa y hace trabajar al Analista sobre un pedido que de entrada no entra en los ingresos declarados.
+
+**Decisión.**
+1. **Simulación (CU-21).** Se calcula y se registra igual, porque es una referencia para el cliente (RN-17), pero si la cuota total más alta con IVA supera la capacidad de pago, la pantalla lo informa con la capacidad, la cuota y el importe máximo que puede financiar en esa cantidad de cuotas, limitado por la línea y por el tope global por cliente (RN-76, RN-83). No ofrece «Registrar solicitud».
+2. **Registro (CU-22).** No se registra una solicitud con una simulación cuya cuota supera la capacidad de pago de ese momento: se revalida al abrir el formulario y al registrar, con los ingresos y las obligaciones vigentes y comprometidas (RN-18), porque pueden haber cambiado desde la simulación. En el listado de simulaciones vigentes, las que exceden figuran como «Excede la capacidad de pago», sin «Formalizar».
+3. **Mismo cálculo que las alternativas.** La capacidad es la de CU-87 (ingresos × porcentaje de afectación − obligaciones) y el importe máximo, el de D-01 y D-28. La revisión en CU-87 y en la aprobación (RN-23) se mantiene, porque la capacidad puede cambiar antes de aprobar.
+
+**Consecuencias.** `Simulador::excesoCapacidad()`, `SimulacionService::excesoCapacidad()`, `SolicitudService::registrar()`, el controlador de solicitudes y las vistas de la simulación y del registro. Sin cambios de esquema. Pruebas: unitaria `testExcesoDeCapacidad` e integración `testNoSeRegistraLaSimulacionQueExcedeLaCapacidad` (IN-36). Cambian CU-21 (paso 8 y una alternativa nueva) y CU-22 (precondición y una alternativa nueva) en el documento del Trabajo Final.
+
+**Justificación** (C1, C6, C9). Registrar un pedido que no entra en la capacidad de pago contradice el crédito responsable que exigen las normas de protección del usuario de servicios financieros, y hace perder tiempo al Analista y al cliente. La simulación se conserva como referencia y orienta al importe que sí puede financiarse, y la capacidad se sigue revalidando en las alternativas y en la aprobación.

@@ -4,6 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Corregido
+- La simulación cuya cuota supera la capacidad de pago del cliente se muestra como referencia, con el importe máximo que puede financiar, pero ya no se puede formalizar como solicitud (CU-21, CU-22, D-65).
+
 ## [0.7.0] - 2026-11-24
 
 Cierre de la iteración de seguridad y protección de datos: lista de comprobación OWASP ASVS 5.0 nivel 1 (D-63) y de la Ley 25.326 (D-64), con sus correcciones y pruebas. Cobertura global de las pruebas automáticas: 89,1 %.

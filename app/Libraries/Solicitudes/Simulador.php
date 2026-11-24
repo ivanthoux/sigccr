@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Libraries\Solicitudes;
 
 use App\Libraries\Finanzas\AmortizacionFrancesa;
+use App\Libraries\Finanzas\CapacidadPago;
 use App\Libraries\Finanzas\Decimal;
 use App\Libraries\Finanzas\GastoAdministrativo;
 use App\Libraries\Finanzas\Plan;
@@ -85,6 +86,48 @@ final class Simulador
             'total_intereses' => $plan->totalIntereses(),
             'total_a_pagar' => $plan->totalAPagar(),
         ];
+    }
+
+    /**
+     * Control de la capacidad de pago de la simulación (D-65): la cuota total más alta, con IVA, no puede superar la
+     * capacidad de pago del cliente. Si la supera, la simulación se presenta igual, como referencia, pero no puede
+     * formalizarse como solicitud (CU-22). Devuelve null si entra en la capacidad; si no, la capacidad, la cuota y el
+     * importe máximo que se puede financiar en esa cantidad de cuotas, limitado por la línea y por el tope global por
+     * cliente (cero si no alcanza el importe mínimo de la línea), con el mensaje para el Analista.
+     *
+     * @param array{tna: string, monto_minimo: string, monto_maximo: string, gasto_administrativo_cuota?: string, tipo_gasto_administrativo?: string, gasto_administrativo_pct?: ?string} $version
+     * @return array{capacidad: Decimal, primera_cuota: Decimal, importe_maximo: Decimal, mensaje: string}|null
+     */
+    public static function excesoCapacidad(
+        array $version,
+        int $cuotas,
+        Decimal $primeraCuota,
+        Decimal $capacidad,
+        string $alicuotaIva,
+        Decimal $paso,
+        ?Decimal $tope = null,
+    ): ?array {
+        if ($primeraCuota->compare($capacidad) <= 0) {
+            return null;
+        }
+        $maximo = Decimal::of($version['monto_maximo']);
+        if ($tope !== null) {
+            $maximo = Decimal::min($maximo, $tope);
+        }
+        $importe = $capacidad->isPositive()
+            ? Decimal::min(CapacidadPago::capitalMaximo($capacidad, Decimal::of($version['tna']), $cuotas, GastoAdministrativo::deVersion($version), Decimal::of($alicuotaIva), $paso), $maximo)
+            : Decimal::zero();
+        if ($importe->compare(Decimal::of($version['monto_minimo'])) < 0) {
+            $importe = Decimal::zero();
+        }
+        $base = 'La cuota de $ ' . self::monto($primeraCuota) . ' supera la capacidad de pago del cliente ($ ' . self::monto($capacidad) . ')';
+        $mensaje = !$capacidad->isPositive()
+            ? $base . ': el cliente no tiene capacidad de pago disponible, por lo que no puede registrarse una solicitud.'
+            : ($importe->isZero()
+                ? $base . ": en {$cuotas} cuotas su capacidad no alcanza el importe mínimo de la línea. Simule con más cuotas o con otra línea."
+                : $base . ": en {$cuotas} cuotas puede financiar hasta $ " . self::monto($importe) . '. Simule con un importe menor o con más cuotas.');
+
+        return ['capacidad' => $capacidad, 'primera_cuota' => $primeraCuota, 'importe_maximo' => $importe, 'mensaje' => $mensaje];
     }
 
     /** Importe con separador de miles y coma decimal, sin pasar por float (RN-50). */

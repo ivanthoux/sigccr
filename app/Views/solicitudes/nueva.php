@@ -38,7 +38,7 @@ $this->section('contenido');
                     <td><?= esc(formato_porcentaje($s['cftea'])) ?></td>
                     <td><?= esc(formato_fecha_hora($s['fecha_generacion'])) ?></td>
                     <td><?= esc(formato_fecha_hora($s['vence'])) ?></td>
-                    <td class="text-end"><a class="btn btn-sm btn-primary" href="<?= site_url('admin/solicitudes/nueva/' . (int) $s['id']) ?>">Formalizar</a></td>
+                    <td class="text-end"><?php if (($s['exceso'] ?? null) === null): ?><a class="btn btn-sm btn-primary" href="<?= site_url('admin/solicitudes/nueva/' . (int) $s['id']) ?>">Formalizar</a><?php else: ?><span class="badge text-bg-warning" title="<?= esc($s['exceso']['mensaje']) ?>">Excede la capacidad de pago</span><?php endif ?></td>
                 </tr>
             <?php endforeach ?>
             </tbody>

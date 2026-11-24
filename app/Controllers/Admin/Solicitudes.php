@@ -84,6 +84,9 @@ class Solicitudes extends BaseController
         if ((int) $s['vigente'] !== 1) {
             return redirect()->to(site_url('admin/solicitudes/nueva?cliente=' . $s['cliente_id']))->with('error', 'La simulación superó su vigencia de 7 días corridos: genere una nueva (RN-48).');
         }
+        if ($s['exceso'] !== null) {
+            return redirect()->to(site_url('admin/simulaciones/' . $simulacionId))->with('error', $s['exceso']['mensaje'] . ' No puede registrarse la solicitud con esta simulación.');
+        }
         $cliente = $sim->cliente((int) $s['cliente_id']);
         $legajo = new LegajoService();
 
