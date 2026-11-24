@@ -122,6 +122,34 @@ final class SolicitudesTest extends IntegracionTestCase
         $this->assertSame($antes, $this->ultimoId('solicitudes_credito'), 'la misma simulación no genera otra solicitud');
     }
 
+    /**
+     * IN-36 y D-65: una simulación cuya cuota supera la capacidad de pago se muestra como referencia, pero no se puede
+     * formalizar: la pantalla no ofrece registrarla, el formulario redirige y el servicio la rechaza.
+     */
+    public function testNoSeRegistraLaSimulacionQueExcedeLaCapacidad(): void
+    {
+        $this->comoRol('AnalistaCredito');
+        $this->fabrica->fondos();
+        $cliente = $this->fabrica->clienteParaCredito(0, ['ingresos_declarados' => '100.000,00']);
+        $linea = $this->fabrica->linea()['id'];
+        $simulacion = $this->fabrica->simulacion($cliente['id'], $linea, '500.000,00', '12');
+
+        $ver = $this->pedir("admin/simulaciones/{$simulacion}");
+        $ver->assertSee('supera la capacidad de pago del cliente');
+        $ver->assertDontSee("admin/solicitudes/nueva/{$simulacion}");
+        $this->pedir('admin/solicitudes/nueva', ['cliente' => (string) $cliente['id']])->assertSee('Excede la capacidad de pago');
+        $this->pedir("admin/solicitudes/nueva/{$simulacion}")->assertRedirect();
+
+        $antes = $this->ultimoId('solicitudes_credito');
+        $this->enviar('admin/solicitudes', ['simulacion_id' => (string) $simulacion]);
+        $this->assertStringContainsString('supera la capacidad de pago', (string) ($_SESSION['error'] ?? ''));
+        $this->assertSame($antes, $this->ultimoId('solicitudes_credito'), 'no debe registrarse');
+
+        // Con una cuota que entra en la capacidad, se registra
+        $chica = $this->fabrica->simulacion($cliente['id'], $linea, '100.000,00', '12');
+        $this->assertAceptado($this->enviar('admin/solicitudes', ['simulacion_id' => (string) $chica]));
+    }
+
     // ── IN-37 Verificar legajo (CU-23) ───────────────────────────────────────────────────────────────────────────
 
     /** @return array{id: int, docs: list<int>, base: array<string, mixed>} */

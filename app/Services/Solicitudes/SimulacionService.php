@@ -72,6 +72,29 @@ class SimulacionService extends BaseService
     }
 
     /**
+     * Control de la capacidad de pago de una simulación (D-65), con los ingresos, las obligaciones y los parámetros de
+     * estructuración de hoy: null si la cuota entra en la capacidad; si no, el detalle de Simulador::excesoCapacidad().
+     *
+     * @param array<string, mixed> $c       fila de cliente()
+     * @param array<string, mixed> $version condiciones de la versión (tna, gastos y límites)
+     * @return array{capacidad: Decimal, primera_cuota: Decimal, importe_maximo: Decimal, mensaje: string}|null
+     */
+    public function excesoCapacidad(array $c, array $version, int $cuotas, string $primeraCuota): ?array
+    {
+        $p = (new ParametroService($this->db))->vigente('Estructuracion')['valores'];
+
+        return Simulador::excesoCapacidad(
+            $version,
+            $cuotas,
+            Decimal::of($primeraCuota),
+            Decimal::of($this->perfil($c)['capacidad']),
+            (string) $p['alicuota_iva'],
+            Decimal::of((string) ($p['paso_redondeo'] ?? '1000')),
+            ($p['tope_global_cliente'] ?? null) === null ? null : Decimal::of((string) $p['tope_global_cliente']),
+        );
+    }
+
+    /**
      * Paso 3: líneas con su versión vigente y el motivo por el que no admiten al cliente (null si lo admiten).
      *
      * @return list<array<string, mixed>>
@@ -166,6 +189,7 @@ class SimulacionService extends BaseService
             throw new ReglaNegocioException('La simulación no existe.');
         }
         $s['calculo'] = $this->calculo($s, (string) $s['fecha_generacion']);
+        $s['exceso'] = $this->excesoCapacidad($this->cliente((int) $s['cliente_id']), $s, (int) $s['cantidad_cuotas'], (string) $s['valor_cuota']);
 
         return $s;
     }
@@ -191,13 +215,25 @@ class SimulacionService extends BaseService
      */
     public function vigentesDelCliente(int $clienteId): array
     {
-        return $this->db->query(
+        $filas = $this->db->query(
             'SELECT s.id, s.fecha_generacion, s.importe, s.cantidad_cuotas, s.valor_cuota, s.cftea, s.vence, s.simulacion_comparativa_id, '
-            . 'l.id AS linea_id, l.nombre AS linea, v.numero AS version '
+            . 'l.id AS linea_id, l.nombre AS linea, v.numero AS version, v.tna, v.monto_minimo, v.monto_maximo, '
+            . 'v.tipo_gasto_administrativo, v.gasto_administrativo_cuota, v.gasto_administrativo_pct '
             . 'FROM dbo.simulaciones s JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id '
             . "WHERE s.cliente_id = ? AND s.estado = 'Vigente' AND s.vence > SYSDATETIMEOFFSET() ORDER BY s.fecha_generacion DESC",
             [$clienteId],
         )->getResultArray();
+        if ($filas === []) {
+            return [];
+        }
+        // D-65: las que superan la capacidad de pago de hoy se muestran, pero no se pueden formalizar
+        $cliente = $this->cliente($clienteId);
+        foreach ($filas as &$f) {
+            $f['exceso'] = $this->excesoCapacidad($cliente, $f, (int) $f['cantidad_cuotas'], (string) $f['valor_cuota']);
+        }
+        unset($f);
+
+        return $filas;
     }
 
     /**

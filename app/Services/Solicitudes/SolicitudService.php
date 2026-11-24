@@ -205,7 +205,7 @@ class SolicitudService extends BaseService
         try {
             return $this->transaccion(function () use ($simulacionId, $documentos, $usuarioId, $origen, $legajo, &$movidos): array {
                 $sim = $this->db->query(
-                    'SELECT s.id, s.cliente_id, s.version_condiciones_id, s.importe, s.cantidad_cuotas, v.linea_credito_id, '
+                    'SELECT s.id, s.cliente_id, s.version_condiciones_id, s.importe, s.cantidad_cuotas, s.valor_cuota, v.linea_credito_id, '
                     . "CASE WHEN s.estado = 'Vigente' AND s.vence > SYSDATETIMEOFFSET() THEN 1 ELSE 0 END AS vigente "
                     . 'FROM dbo.simulaciones s WITH (UPDLOCK, ROWLOCK) JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id WHERE s.id = ?',
                     [$simulacionId],
@@ -238,6 +238,11 @@ class SolicitudService extends BaseService
                 $limites = Simulador::validar($version, (string) $sim['importe'], (string) $sim['cantidad_cuotas']);
                 if ($limites['errores'] !== []) {
                     throw new ReglaNegocioException(implode(' ', $limites['errores']), 'RN-76');
+                }
+                // D-65: la cuota debe entrar en la capacidad de pago de hoy (ingresos y obligaciones vigentes, RN-18)
+                $exceso = (new SimulacionService($this->db))->excesoCapacidad($datos, $version, (int) $sim['cantidad_cuotas'], (string) $sim['valor_cuota']);
+                if ($exceso !== null) {
+                    throw new ReglaNegocioException($exceso['mensaje'] . ' No puede registrarse la solicitud con esta simulación.', 'RN-18');
                 }
                 $existente = $this->db->query(
                     'SELECT TOP (1) s.numero, s.estado FROM dbo.solicitudes_credito s JOIN dbo.versiones_condiciones v ON v.id = s.version_condiciones_id '
@@ -581,7 +586,8 @@ class SolicitudService extends BaseService
     {
         $v = $this->db->query(
             'SELECT l.estado, v.vigencia_inicio, v.vigencia_fin, v.admite_persona_humana, v.admite_persona_juridica, v.edad_minima, v.edad_maxima, '
-            . 'v.antiguedad_minima_meses, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas '
+            . 'v.antiguedad_minima_meses, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, '
+            . 'v.tna, v.tipo_gasto_administrativo, v.gasto_administrativo_cuota, v.gasto_administrativo_pct '
             . 'FROM dbo.versiones_condiciones v JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id WHERE v.id = ?',
             [$versionId],
         )->getRowArray();
