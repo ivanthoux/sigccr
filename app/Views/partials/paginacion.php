@@ -46,8 +46,7 @@ $boton = static function (string $texto, int $destino, bool $inactivo) use ($enl
     <?php else: ?>
         <div role="status">Mostrando <?= number_format($desde, 0, ',', '.') ?> a <?= number_format($hasta, 0, ',', '.') ?> de <?= number_format($total, 0, ',', '.') ?> registros</div>
     <?php endif ?>
-    <?php if ($paginas > 1): ?>
-        <nav aria-label="<?= $cabecera ? 'Páginas (arriba)' : 'Páginas' ?>">
+    <nav aria-label="<?= $cabecera ? 'Páginas (arriba)' : 'Páginas' ?>">
             <ul class="pagination flex-wrap justify-content-center mb-0">
                 <?= $boton('Primera', 1, $actual <= 1) ?>
                 <?= $boton('Anterior', max(1, $actual - 1), $actual <= 1) ?>
@@ -64,5 +63,4 @@ $boton = static function (string $texto, int $destino, bool $inactivo) use ($enl
                 <?= $boton('Última', $paginas, $actual >= $paginas) ?>
             </ul>
         </nav>
-    <?php endif ?>
 </div>
