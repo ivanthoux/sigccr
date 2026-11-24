@@ -161,7 +161,7 @@ final class VistasReportesTest extends CIUnitTestCase
         $this->assertStringContainsString(site_url('admin/auditoria/90'), $html);
         // Como los listados con DataTables: «Mostrar [n] registros» arriba, «Mostrando X a Y de Z registros» abajo y las
         // páginas arriba y abajo de la tabla
-        $this->assertSame(2, substr_count($html, '<ul class="pagination mb-0">'));
+        $this->assertSame(2, substr_count($html, '<ul class="pagination flex-wrap justify-content-center mb-0">'));
         $this->assertSame(1, substr_count($html, 'data-autoenviar'));
         $this->assertStringContainsString('Mostrando 1 a 25 de 120 registros', $html);
         $this->assertStringContainsString('badge rounded-pill text-bg-success">Exitoso', $html);
