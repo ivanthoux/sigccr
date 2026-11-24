@@ -586,7 +586,8 @@ class SolicitudService extends BaseService
     {
         $v = $this->db->query(
             'SELECT l.estado, v.vigencia_inicio, v.vigencia_fin, v.admite_persona_humana, v.admite_persona_juridica, v.edad_minima, v.edad_maxima, '
-            . 'v.antiguedad_minima_meses, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas '
+            . 'v.antiguedad_minima_meses, v.monto_minimo, v.monto_maximo, v.cuotas_minimas, v.cuotas_maximas, '
+            . 'v.tna, v.tipo_gasto_administrativo, v.gasto_administrativo_cuota, v.gasto_administrativo_pct '
             . 'FROM dbo.versiones_condiciones v JOIN dbo.lineas_credito l ON l.id = v.linea_credito_id WHERE v.id = ?',
             [$versionId],
         )->getRowArray();
