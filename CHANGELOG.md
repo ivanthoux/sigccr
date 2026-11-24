@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+## [0.7.0] - 2026-11-24
+
+Cierre de la iteración de seguridad y protección de datos: lista de comprobación OWASP ASVS 5.0 nivel 1 (D-63) y de la Ley 25.326 (D-64), con sus correcciones y pruebas. Cobertura global de las pruebas automáticas: 89,1 %.
+
 ### Agregado
 - Lista de comprobación Ley 25.326 (`docs/seguridad/ley_25326.md`, D-64, RNF-14): 28 filas con su evidencia y prueba.
 - Lista de comprobación OWASP ASVS 5.0 nivel 1 (`docs/seguridad/asvs_nivel1.md`): 70 requisitos, con su estado, evidencia y prueba (RNF-12, D-63).
@@ -16,6 +20,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ### Cambiado
 - Registro de auditoría: paginación con la misma forma que los demás listados («Mostrar [n] registros», «Mostrando X a Y de Z registros», Primera/Anterior/Siguiente/Última dentro del recuadro de la tabla) y resultado como etiqueta de estado.
+- Todos los listados paginados con DataTables muestran la barra de páginas arriba y abajo de la tabla; en el celular solo se muestra la página actual entre «Primera/Anterior» y «Siguiente/Última».
 - Registro de auditoría (CU-57): barra de páginas arriba y abajo de la tabla (primera, anterior, páginas vecinas, siguiente, última) y selector de registros por página (10, 25, 50 o 100; 25 por defecto, antes 50).
 - Las búsquedas con DNI, CUIT o CUIL se envían por `POST` (filtro `busquedapost`) y el filtro «Cliente» de los reportes busca solo por nombre: el identificador ya no queda en la URL. Cierra el desvío V14.2.1 (Ley 25.326 art. 4). Pruebas S-15, S-16 e IN-79.
 - Cookie de sesión `__Host-sigccr_sesion`, `no-store` en las páginas autenticadas, `Clear-Site-Data` al cerrar sesión, `sandbox` en las imágenes del legajo y cifrado AES-256-GCM de las comunicaciones (V3.3.1, V14.3.1, V3.2.1, V11.3.2). Las sesiones abiertas se cierran una vez.
