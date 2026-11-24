@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * Paginación en el servidor con la misma forma que los listados con DataTables (D-59): arriba «Mostrar [n] registros» a la
  * izquierda; abajo «Mostrando X a Y de Z registros» a la izquierda; las páginas (Primera, Anterior, vecinas, Siguiente,
- * Última) a la derecha, arriba y abajo, para no tener que bajar hasta el final para cambiar de página.
+ * Última) a la derecha, arriba y abajo, para no tener que bajar hasta el final para cambiar de página. En el celular
+ * solo se ven Primera, Anterior, la página actual, Siguiente y Última, para que la barra entre en el ancho.
  *
  * @var string                    $parte      'cabecera' (antes de la tabla) o 'pie' (después)
  * @var int                       $actual     página actual (desde 1)
@@ -51,11 +52,11 @@ $boton = static function (string $texto, int $destino, bool $inactivo) use ($enl
                 <?= $boton('Primera', 1, $actual <= 1) ?>
                 <?= $boton('Anterior', max(1, $actual - 1), $actual <= 1) ?>
                 <?php $previa = 0; foreach ($ventana as $n): ?>
-                    <?php if ($previa !== 0 && $n - $previa > 1): ?><li class="page-item disabled"><span class="page-link">…</span></li><?php endif ?>
+                    <?php if ($previa !== 0 && $n - $previa > 1): ?><li class="page-item disabled d-none d-sm-block"><span class="page-link">…</span></li><?php endif ?>
                     <?php if ($n === $actual): ?>
                         <li class="page-item active"><span class="page-link" aria-current="page"><?= $n ?></span></li>
                     <?php else: ?>
-                        <li class="page-item"><a class="page-link" href="<?= esc($enlace($n)) ?>" aria-label="Página <?= $n ?>"><?= $n ?></a></li>
+                        <li class="page-item d-none d-sm-block"><a class="page-link" href="<?= esc($enlace($n)) ?>" aria-label="Página <?= $n ?>"><?= $n ?></a></li>
                     <?php endif ?>
                     <?php $previa = $n; ?>
                 <?php endforeach ?>
