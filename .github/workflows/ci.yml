@@ -125,10 +125,10 @@ jobs:
           sed -i -E "s/^database\.default\.password = .*/database.default.password = ${APP_PASSWORD}/; s/^database\.migraciones\.password = .*/database.migraciones.password = ${OWNER_PASSWORD}/" .env
           php spark key:generate --force
 
-      - name: Pruebas de integración (base sigccr_pruebas desde cero)
-        run: composer test:integracion
-
       - name: Datos de la presentación (PresentacionSeeder sobre una base nueva)
         run: |
-          SIGCCR_CREAR_INICIOS=0 bash tests/feature/preparar_base.sh
+          bash tests/feature/preparar_base.sh
           vendor/bin/phpunit -c phpunit.xml.dist --testsuite Demostracion --no-coverage
+
+      - name: Pruebas de integración (base sigccr_pruebas desde cero)
+        run: SIGCCR_CREAR_INICIOS=0 composer test:integracion
