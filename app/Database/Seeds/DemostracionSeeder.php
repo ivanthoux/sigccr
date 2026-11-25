@@ -38,7 +38,7 @@ class DemostracionSeeder extends Seeder
     private const INGRESOS = '2000000';
 
     /** Clientes: nombre, apellido, DNI, nacimiento, ocupación, empleador; línea, importe, cuotas y atraso de la cuota 1. */
-    private const CREDITOS = [
+    protected const CREDITOS = [
         ['Valentina', 'Ruiz', '41222305', '1998-04-12', 'Diseñadora gráfica', 'Imprenta del Centro', 'ELECTRO', '300000', 6, -20],
         ['Joaquín', 'Medina', '38111404', '1994-09-03', 'Mecánico', 'Taller Medina Hnos.', 'MOTOS', '600000', 12, 2],
         ['Camila', 'Herrera', '39555103', '1996-01-25', 'Docente', 'Escuela Provincial N.º 412', 'PERSONAL', '400000', 12, 4],
