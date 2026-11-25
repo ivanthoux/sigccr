@@ -48,7 +48,7 @@ class PresentacionSeeder extends DemostracionSeeder
     /**
      * Clientes de la presentación: nombre, apellido, DNI, prefijo del CUIL, nacimiento, ocupación, empleador, categoría,
      * ingresos, línea, importe y cuotas. El último dígito del CUIL decide la respuesta del simulador de la Central de
-     * Deudores: 0 sin deudas, 3 situación 3, 5 situación 5 y 9 sin respuesta.
+     * Deudores: 0 sin deudas, 2 situación 2 (análisis gerencial), 5 situación 5 (rechazo) y 9 sin respuesta.
      */
     private const CLIENTES = [
         'verificacion' => ['Lucía', 'Fernández', '42111008', '27', '1999-06-14', 'Vendedora', 'Comercial Del Sol', 'RelacionDependencia', '1500000', 'ELECTRO', '200000', 6],
@@ -57,7 +57,7 @@ class PresentacionSeeder extends DemostracionSeeder
         'seleccion' => ['Ramón', 'Acuña', '33222011', '20', '1959-08-21', 'Jubilado docente', 'ANSES', 'JubiladoPensionado', '1200000', 'PERSONAL', '400000', 12],
         'aprobada' => ['Paula', 'Ríos', '42111025', '27', '1992-12-05', 'Contadora', 'Estudio Ríos & Asoc.', 'RelacionDependencia', '2500000', 'HOGAR', '800000', 18],
         'rechazo_crediticio' => ['Diego', 'Sosa', '37333009', '20', '1993-03-17', 'Albañil', 'Constructora Misiones', 'RelacionDependencia', '1300000', 'ELECTRO', '150000', 6],
-        'resolucion' => ['Carla', 'Ojeda', '38666001', '27', '1995-07-29', 'Peluquera', 'Salón Carla', 'RelacionDependencia', '1600000', 'MOTOS', '400000', 12],
+        'resolucion' => ['Carla', 'Ojeda', '38666007', '27', '1995-07-29', 'Peluquera', 'Salón Carla', 'RelacionDependencia', '1600000', 'MOTOS', '400000', 12],
         'contingencia' => ['Hernán', 'Godoy', '36777005', '20', '1991-11-11', 'Técnico en refrigeración', 'Frío Sur', 'RelacionDependencia', '1700000', 'PERSONAL', '250000', 6],
         'cartera_1' => ['Gabriela', 'Paz', '42111039', '27', '1988-04-03', 'Farmacéutica', 'Farmacia Central', 'RelacionDependencia', '3000000', 'PERSONAL', '1000000', 24],
         'cartera_2' => ['Sergio', 'Luna', '33222025', '20', '1984-09-26', 'Supervisor de planta', 'Yerbatera del Sur S.A.', 'RelacionDependencia', '3200000', 'HOGAR', '1500000', 36],
@@ -219,7 +219,8 @@ class PresentacionSeeder extends DemostracionSeeder
             if ($importe === '') {
                 // Total actualizado de la cuota 1, con los punitorios hasta hoy
                 $o = $cobros->obligaciones($demo[$apellido]['cliente']);
-                $cuota = $o['creditos'][$demo[$apellido]['credito']]['cuotas'][0] ?? null;
+                $credito = array_values(array_filter($o['creditos'], static fn ($c) => (int) $c['id'] === $demo[$apellido]['credito']))[0] ?? null;
+                $cuota = $credito['cuotas'][0] ?? null;
                 if ($cuota === null) {
                     throw new RuntimeException("{$apellido} no tiene cuotas pendientes.");
                 }
