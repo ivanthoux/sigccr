@@ -38,7 +38,7 @@ class DemostracionSeeder extends Seeder
     private const INGRESOS = '2000000';
 
     /** Clientes: nombre, apellido, DNI, nacimiento, ocupación, empleador; línea, importe, cuotas y atraso de la cuota 1. */
-    private const CREDITOS = [
+    protected const CREDITOS = [
         ['Valentina', 'Ruiz', '41222305', '1998-04-12', 'Diseñadora gráfica', 'Imprenta del Centro', 'ELECTRO', '300000', 6, -20],
         ['Joaquín', 'Medina', '38111404', '1994-09-03', 'Mecánico', 'Taller Medina Hnos.', 'MOTOS', '600000', 12, 2],
         ['Camila', 'Herrera', '39555103', '1996-01-25', 'Docente', 'Escuela Provincial N.º 412', 'PERSONAL', '400000', 12, 4],
@@ -57,8 +57,8 @@ class DemostracionSeeder extends Seeder
         'PERSONAL' => ['Personal', 'Préstamo personal de libre destino', '100000', '2000000', 3, 36, '70', '2', 'Porcentual', '0,5', 21, 70],
     ];
 
-    private int $analista;
-    private int $cajero;
+    protected int $analista;
+    protected int $cajero;
 
     public function run(): void
     {
@@ -107,7 +107,7 @@ class DemostracionSeeder extends Seeder
     }
 
     /** Cuenta habilitada de un rol; si no hay, la del Administrador (los servicios no controlan el rol). */
-    private function cuentaDeRol(string $rol): int
+    protected function cuentaDeRol(string $rol): int
     {
         $fila = $this->db->query(
             "SELECT TOP 1 ca.id FROM dbo.cuentas_acceso ca JOIN dbo.usuarios_internos u ON u.id = ca.id JOIN dbo.roles r ON r.id = u.rol_id "
@@ -126,7 +126,7 @@ class DemostracionSeeder extends Seeder
      *
      * @return array<string, int>
      */
-    private function lineas(): array
+    protected function lineas(): array
     {
         $ids = [];
         $servicio = new LineaService($this->db);
@@ -167,7 +167,14 @@ class DemostracionSeeder extends Seeder
         CLI::write('Aporte de capital registrado para los desembolsos de la demostración.');
     }
 
-    private function cliente(string $nombre, string $apellido, string $dni, string $cuil, string $nacimiento, string $ocupacion, string $empleador, int $n): int
+    /**
+     * Alta del cliente con su legajo (CU-11). $extra reemplaza datos del alta (por ejemplo, la categoría de ingresos) y
+     * $documentos, los códigos de la documentación de ingresos que se adjuntan además del DNI y la declaración PEP.
+     *
+     * @param array<string, string> $extra
+     * @param list<string>          $documentos
+     */
+    protected function cliente(string $nombre, string $apellido, string $dni, string $cuil, string $nacimiento, string $ocupacion, string $empleador, int $n, array $extra = [], array $documentos = ['RECIBO_SUELDO']): int
     {
         $localidad = $this->db->query(
             "SELECT TOP 1 l.id, l.provincia_id FROM dbo.localidades l JOIN dbo.provincias p ON p.id = l.provincia_id WHERE l.nombre = N'Apóstoles' AND p.nombre = N'Misiones'",
@@ -178,41 +185,73 @@ class DemostracionSeeder extends Seeder
         $correo = mb_strtolower(self::sinAcentos($nombre . '.' . $apellido)) . '@demo.local';
         $archivos = [
             ['codigo' => 'DOC_IDENTIDAD', 'nombre' => "DNI_{$apellido}.pdf"] + self::pdf("DNI de {$nombre} {$apellido}"),
-            ['codigo' => 'RECIBO_SUELDO', 'nombre' => "recibos_sueldo_{$apellido}.pdf"] + self::pdf("Recibos de sueldo de {$nombre} {$apellido}"),
             // D-55: la declaración PEP firmada, exigida para liquidar (RN-80)
             ['codigo' => 'DDJJ_PEP', 'nombre' => "ddjj_pep_{$apellido}.pdf"] + self::pdf("Declaración jurada PEP de {$nombre} {$apellido}"),
         ];
+        foreach ($documentos as $codigo) {
+            $archivos[] = ['codigo' => $codigo, 'nombre' => mb_strtolower($codigo) . "_{$apellido}.pdf"] + self::pdf("{$codigo} de {$nombre} {$apellido}");
+        }
 
-        return (int) $this->intentar(fn () => (new ClienteService($this->db))->registrar([
+        return (int) $this->intentar(fn () => (new ClienteService($this->db))->registrar(array_merge([
             'tipo_cliente' => 'PersonaHumana', 'nombre' => $nombre, 'apellido' => $apellido, 'tipo_documento' => 'DNI', 'nro_documento' => $dni,
             'fecha_nacimiento' => $nacimiento, 'estado_civil' => $n % 3 === 0 ? 'Casado' : 'Soltero', 'nacionalidad' => 'Argentina',
             'ocupacion' => $ocupacion, 'empleador' => $empleador, 'categoria_ingresos' => 'RelacionDependencia', 'ingresos_declarados' => self::INGRESOS,
             'cuit_cuil' => $cuil, 'correo' => $correo, 'telefono' => '3758 43-' . (3000 + $n * 11), 'provincia_id' => (string) $localidad['provincia_id'],
             'localidad_id' => (string) $localidad['id'], 'codigo_postal' => '3350', 'domicilio' => 'Calle Demostración ' . (100 + $n * 25),
             'persona_expuesta' => 'No', 'acepta_politica' => '1', 'acepta_comunicaciones' => '1',
-        ], $archivos, $this->analista), "cliente {$apellido}");
+        ], $extra), $archivos, $this->analista), "cliente {$apellido}");
     }
 
     /** Circuito completo de CU-21 a CU-27 con los servicios del sistema; devuelve el id del crédito. */
-    private function credito(int $clienteId, int $lineaId, string $importe, int $cuotas, string $dni, string $cuil, int $n): int
+    protected function credito(int $clienteId, int $lineaId, string $importe, int $cuotas, string $dni, string $cuil, int $n): int
     {
-        $hoy = Time::now(config('Sigccr')->zonaNegocio);
-        $simulacion = $this->intentar(fn () => (new SimulacionService($this->db))->simular($clienteId, $lineaId, $importe, (string) $cuotas, $this->analista), 'simulación');
-        $solicitudes = new SolicitudService($this->db);
-        $id = (int) $this->intentar(fn () => $solicitudes->registrar((int) $simulacion, [], $this->analista), 'solicitud')['id'];
-
-        $s = $solicitudes->obtener($id);
-        $verificaciones = [];
-        foreach ($s['documentos'] as $d) {
-            $verificaciones[(int) $d['id']] = ['resultado' => 'Conforme', 'motivo' => '', 'observacion' => ''];
-        }
-        $this->intentar(fn () => $solicitudes->verificar($id, (int) $s['version_fila'], 'Verificada', $verificaciones, '', '', $this->analista), 'verificación');
-        (new EvaluacionService($this->db))->evaluar($id);
-        $estado = $solicitudes->estado($id);
+        $id = $this->solicitud($clienteId, $lineaId, $importe, $cuotas);
+        $estado = $this->verificarYEvaluar($id);
         if ($estado !== 'PendienteSeleccionPlan') {
             throw new RuntimeException("La solicitud {$id} quedó en {$estado} después de la evaluación: revise los parámetros de evaluación.");
         }
+        $this->confirmarPedida($id);
+        $this->constancia($id);
 
+        return $this->liquidar($id, $dni, $cuil, $n);
+    }
+
+    /** CU-21 y CU-22: simulación y solicitud; devuelve el id de la solicitud. */
+    protected function solicitud(int $clienteId, int $lineaId, string $importe, int $cuotas): int
+    {
+        $simulacion = $this->intentar(fn () => (new SimulacionService($this->db))->simular($clienteId, $lineaId, $importe, (string) $cuotas, $this->analista), 'simulación');
+
+        return (int) $this->intentar(fn () => (new SolicitudService($this->db))->registrar((int) $simulacion, [], $this->analista), 'solicitud')['id'];
+    }
+
+    /**
+     * CU-23: revisión del legajo. Sin $observados, todo conforme y verificado, y después la evaluación automática
+     * (CU-86); con documentos observados o rechazados (código => [resultado, motivo]), el resultado indicado. Devuelve el
+     * estado de la solicitud.
+     *
+     * @param array<string, array{0: string, 1: string}> $observados
+     */
+    protected function verificarYEvaluar(int $id, array $observados = [], string $resultado = 'Verificada', string $observaciones = '', string $motivoRechazo = ''): string
+    {
+        $solicitudes = new SolicitudService($this->db);
+        $s = $solicitudes->obtener($id);
+        $verificaciones = [];
+        foreach ($s['documentos'] as $d) {
+            [$res, $motivo] = $observados[(string) ($d['codigo'] ?? '')] ?? ['Conforme', ''];
+            $verificaciones[(int) $d['id']] = ['resultado' => $res, 'motivo' => $motivo, 'observacion' => $res === 'Conforme' ? '' : 'Revisión de demostración: ' . mb_strtolower($motivo)];
+        }
+        $this->intentar(fn () => $solicitudes->verificar($id, (int) $s['version_fila'], $resultado, $verificaciones, $observaciones, $motivoRechazo, $this->analista), 'verificación');
+        if ($resultado === 'Verificada') {
+            (new EvaluacionService($this->db))->evaluar($id);
+        }
+
+        return $solicitudes->estado($id);
+    }
+
+    /** CU-79: confirmación de la alternativa pedida (o la primera vigente) con la conformidad del cliente. */
+    protected function confirmarPedida(int $id): void
+    {
+        $solicitudes = new SolicitudService($this->db);
         $alternativa = $this->db->query(
             "SELECT TOP 1 a.id FROM dbo.alternativas_financiacion a JOIN dbo.estructuraciones e ON e.id = a.estructuracion_id JOIN dbo.solicitudes_credito s ON s.id = e.solicitud_id "
             . "WHERE s.id = ? AND a.estado = 'Vigente' ORDER BY CASE WHEN a.importe = s.importe AND a.cantidad_cuotas = s.cantidad_cuotas THEN 0 ELSE 1 END, a.id",
@@ -223,16 +262,25 @@ class DemostracionSeeder extends Seeder
         }
         $version = (int) $solicitudes->obtener($id)['version_fila'];
         $this->intentar(fn () => (new EstructuracionService($this->db))->confirmar($id, (int) $alternativa['id'], $version, [
-            'fecha_conformidad' => $hoy->format('d/m/Y'), 'medio_conformidad' => 'PresencialFirma', 'observaciones' => 'Datos de demostración',
+            'fecha_conformidad' => Time::now(config('Sigccr')->zonaNegocio)->format('d/m/Y'), 'medio_conformidad' => 'PresencialFirma', 'observaciones' => 'Datos de demostración',
         ], $this->analista), 'confirmación de la alternativa');
+    }
 
+    /** CU-103: constancia firmada del contrato, que habilita la liquidación (RN-25). */
+    protected function constancia(int $id): void
+    {
         $this->intentar(fn () => (new ContratoService($this->db))->registrarConstancia(
             $id,
             ['nombre' => 'contrato_firmado.pdf'] + self::pdf("Contrato firmado de la solicitud {$id}"),
-            $hoy->format('Y-m-d'),
+            Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d'),
             $this->analista,
         ), 'constancia del contrato');
+    }
 
+    /** CU-27: liquidación por transferencia; devuelve el id del crédito. */
+    protected function liquidar(int $id, string $dni, string $cuil, int $n): int
+    {
+        $hoy = Time::now(config('Sigccr')->zonaNegocio);
         $liquidacion = new LiquidacionService($this->db);
         $datos = $liquidacion->datos($id);
         $r = $this->intentar(fn () => $liquidacion->liquidar($id, (int) $datos['version_fila'], [
@@ -248,7 +296,7 @@ class DemostracionSeeder extends Seeder
      * Simula el paso del tiempo (consulta C.1): corre la liquidación, el contrato y los vencimientos para que la cuota 1
      * tenga el atraso indicado hoy (negativo: faltan esos días para su vencimiento).
      */
-    private function atrasar(int $creditoId, int $atraso): void
+    protected function atrasar(int $creditoId, int $atraso): void
     {
         $hoy = Time::now(config('Sigccr')->zonaNegocio)->format('Y-m-d');
         $vencimiento = (string) $this->db->query('SELECT vencimiento FROM dbo.cuotas WHERE credito_id = ? AND numero = 1', [$creditoId])->getRow()->vencimiento;
@@ -270,7 +318,7 @@ class DemostracionSeeder extends Seeder
      * Cálculo de punitorios sobre los días simulados: la configuración inicial de morosidad e IVA rige desde un año
      * antes y se vuelve a procesar el día de ayer (el proceso calcula cada día una sola vez, RN-53).
      */
-    private function calcularPunitorios(): void
+    protected function calcularPunitorios(): void
     {
         $this->db->query(
             "UPDATE dbo.versiones_parametros SET vigente_desde = DATEADD(year, -1, vigente_desde) "
@@ -282,7 +330,7 @@ class DemostracionSeeder extends Seeder
     }
 
     /** Ejecuta una operación del circuito y, si una regla la rechaza, informa cuál y en qué paso. */
-    private function intentar(callable $operacion, string $paso): mixed
+    protected function intentar(callable $operacion, string $paso): mixed
     {
         try {
             return $operacion();
@@ -298,7 +346,7 @@ class DemostracionSeeder extends Seeder
      *
      * @return array{temporal: string, tamano: int}
      */
-    private static function pdf(string $texto): array
+    protected static function pdf(string $texto): array
     {
         $contenido = "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
             . "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 100]>>endobj\n% DOCUMENTO DE DEMOSTRACION - SIN VALIDEZ: {$texto}\n"
@@ -323,7 +371,7 @@ class DemostracionSeeder extends Seeder
     }
 
     /** CBU válido de un banco de prueba (072, sucursal 0045), distinto por cliente. */
-    private static function cbu(int $n): string
+    protected static function cbu(int $n): string
     {
         $bloque = '0720045';
         $cuenta = str_pad((string) (90000001 + $n * 137), 13, '0', STR_PAD_LEFT);
@@ -342,7 +390,7 @@ class DemostracionSeeder extends Seeder
         return (string) ((10 - $suma % 10) % 10);
     }
 
-    private static function sinAcentos(string $texto): string
+    protected static function sinAcentos(string $texto): string
     {
         return strtr($texto, ['á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U', 'ñ' => 'n']);
     }

@@ -4,6 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); v
 
 ## [Sin publicar]
 
+### Agregado
+- `PresentacionSeeder`: datos para presentar el sistema completo sobre la demostración de la morosidad (solicitudes en cada estado, jornada de caja con cobros, anulación y cancelación anticipada, refinanciaciones, condonación, campaña con ofertas, régimen informativo, pre-registros y derechos del titular). La integración continua la carga sobre una base nueva.
+
 ### Corregido
 - La simulación cuya cuota supera la capacidad de pago del cliente se muestra como referencia, con el importe máximo que puede financiar, pero ya no se puede formalizar como solicitud (CU-21, CU-22, D-65).
 
