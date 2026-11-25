@@ -24,11 +24,16 @@
         <testsuite name="Integracion">
             <directory>./tests/feature</directory>
         </testsuite>
+        <!-- Carga de los datos de la presentación (PresentacionSeeder) sobre una base recién preparada -->
+        <testsuite name="Demostracion">
+            <directory>./tests/demostracion</directory>
+        </testsuite>
         <!-- Todo lo que no necesita la base de datos -->
         <testsuite name="App">
             <directory>./tests</directory>
             <exclude>./tests/_local</exclude>
             <exclude>./tests/feature</exclude>
+            <exclude>./tests/demostracion</exclude>
         </testsuite>
     </testsuites>
     <!-- El mínimo de 90 % de RNF-15 rige para el motor financiero. Los servicios (app/Services) necesitan la base de

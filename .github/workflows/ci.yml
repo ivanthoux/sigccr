@@ -127,3 +127,8 @@ jobs:
 
       - name: Pruebas de integración (base sigccr_pruebas desde cero)
         run: composer test:integracion
+
+      - name: Datos de la presentación (PresentacionSeeder sobre una base nueva)
+        run: |
+          SIGCCR_CREAR_INICIOS=0 bash tests/feature/preparar_base.sh
+          vendor/bin/phpunit -c phpunit.xml.dist --testsuite Demostracion --no-coverage
