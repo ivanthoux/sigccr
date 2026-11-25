@@ -246,10 +246,11 @@ class PresentacionSeeder extends DemostracionSeeder
 
         $s = $cajas->situacion($this->cajero);
         $registrado = [];
-        foreach ($this->db->query(
+        $totales = $this->db->query(
             "SELECT medio, SUM(importe) AS total FROM dbo.movimientos_caja WHERE jornada_caja_id = ? AND tipo = 'Cobro' GROUP BY medio",
             [(int) $s['jornada']['id']],
-        )->getResultArray() as $f) {
+        )->getResultArray();
+        foreach ($totales as $f) {
             $registrado[(string) $f['medio']] = str_replace('.', ',', number_format((float) $f['total'], 2, '.', ''));
         }
         $this->intentar(fn () => $cajas->cerrar($this->cajero, (int) $s['jornada']['version_fila'], $registrado, []), 'cierre de la caja');
