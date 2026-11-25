@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Demostracion;
 
-use App\Database\Seeds\PresentacionSeeder;
 use Tests\Support\Feature\IntegracionTestCase;
 
 /**
@@ -19,17 +18,15 @@ final class PresentacionSeederTest extends IntegracionTestCase
         foreach (['AnalistaCredito', 'Cajero', 'Gerente'] as $rol) {
             $this->fabrica->usuario($rol);
         }
-        putenv('SIGCCR_DB_GRUPO=migraciones');
-        try {
-            $seeder = new PresentacionSeeder(config('Database'));
-            $seeder->run();
-        } finally {
-            putenv('SIGCCR_DB_GRUPO');
-        }
+        // Como se ejecuta en una instalación: spark con el propietario del esquema (los usuarios de cada rol ya existen)
+        exec('env SIGCCR_BASE_PRUEBAS=1 SIGCCR_DB_GRUPO=migraciones php spark db:seed PresentacionSeeder 2>&1', $salida, $codigo);
+        $texto = implode("\n", $salida);
+        fwrite(STDERR, $texto . "\n");
 
-        $omitidos = array_filter($seeder->resultados(), static fn ($r) => !str_starts_with($r[1], 'OK'));
-        $this->assertCount(8, $seeder->resultados());
-        $this->assertSame([], array_values($omitidos), implode("\n", array_map(static fn ($r) => "{$r[0]}: {$r[1]}", $omitidos)));
+        $this->assertSame(0, $codigo, $texto);
+        $this->assertStringContainsString('Datos de la presentación cargados.', $texto);
+        $this->assertStringNotContainsString('✗', $texto, 'Hay escenarios omitidos');
+        $this->assertDoesNotMatchRegularExpression('/^\[[A-Za-z\\\\]*Exception\]/m', $texto);
         $this->seeInDatabase('creditos', ['estado' => 'Refinanciado']);
         $this->seeInDatabase('campanas', ['estado' => 'Activa']);
         $this->seeInDatabase('pre_registros', ['estado' => 'PendienteValidacion']);
