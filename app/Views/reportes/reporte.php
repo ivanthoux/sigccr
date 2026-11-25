@@ -51,7 +51,7 @@ $this->section('contenido');
         <?= $fecha('fecha', 'Fecha de referencia') ?>
     <?php endif ?>
     <?= $fecha('desde', $proyeccion ? 'Desde' : 'Rango: desde') ?>
-    <?= $fecha('hasta', $proyeccion ? 'Hasta' : 'hasta') ?>
+    <?= $fecha('hasta', $proyeccion ? 'Hasta' : 'Rango: hasta') ?>
     <?= $select('linea', 'Línea de crédito', $lista($opciones['lineas']), 'Todas') ?>
     <?php if ($clave === 'cartera'): ?>
         <?= $select('estado', 'Estado del crédito', ['Activo' => 'Activo', 'EnMora' => 'En mora', 'Cancelado' => 'Cancelado', 'Refinanciado' => 'Refinanciado', 'Revocado' => 'Revocado']) ?>
@@ -79,13 +79,11 @@ $this->section('contenido');
     <?php if (in_array($clave, ['cartera', 'morosidad', 'cobranzas', 'solicitudes', 'refinanciaciones'], true)): ?>
         <?= $texto('cliente', 'Cliente', 'Nombre o razón social') ?>
     <?php endif ?>
-    <div class="col-12 col-md">
-        <span class="small text-body-secondary"><?= $proyeccion ? 'Sin fechas, se proyecta desde hoy por el período configurado en los parámetros de campañas.' : 'Día, semana, mes o trimestre que contiene la fecha de referencia (hoy si se deja vacía); el rango personalizado usa las fechas «desde» y «hasta».' ?></span>
-    </div>
+    <p class="col-12 order-last form-text mt-1 mb-0"><?= $proyeccion ? 'Sin fechas, se proyecta desde hoy por el período configurado en los parámetros de campañas.' : 'Día, semana, mes o trimestre que contiene la fecha de referencia (hoy si se deja vacía); el rango personalizado usa las fechas «desde» y «hasta».' ?></p>
     <?= acciones_filtro(limpiar: $ruta, texto: 'Generar reporte', icono: 'bi-bar-chart') ?>
 </form>
 <?php if ($r !== null): ?>
-    <?php $acciones = '<span class="d-flex gap-2 d-print-none"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir o PDF</button>'
+    <?php $acciones = '<span class="d-flex align-items-start align-self-start gap-2 d-print-none"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir o PDF</button>'
         . '<a class="btn btn-sm btn-outline-success" href="' . $ruta . '?' . esc(http_build_query(array_filter($f, static fn ($x) => $x !== '') + ['generar' => 1, 'formato' => 'xlsx'])) . '"><i class="bi bi-file-earmark-excel me-1" aria-hidden="true"></i>Exportar a Excel</a></span>'; ?>
     <?= view('reportes/_resultado', ['r' => $r, 'acciones' => $acciones]) ?>
 <?php endif ?>
