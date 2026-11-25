@@ -324,7 +324,7 @@ test('I-96 Ejercer los derechos sobre los datos personales (CU-108, Ley 25.326)'
 
   // El cliente ve la respuesta
   await page.goto('/portal/derechos');
-  await expect(page.getByText('Actualizamos su domicilio en la ficha del cliente.')).toBeVisible();
+  await expect(page.getByText('Actualizamos su domicilio en la ficha del cliente.').first()).toBeVisible();
 
   // A1: una persona que se presenta en la sucursal; la registra el Analista desde la ficha del cliente
   await panel.goto(`/admin/clientes/${await idCliente(joaquin.cuil)}`);
