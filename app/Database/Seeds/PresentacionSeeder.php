@@ -228,7 +228,8 @@ class PresentacionSeeder extends DemostracionSeeder
             }
 
             return $this->intentar(fn () => $cobros->registrar($this->cajero, $demo[$apellido]['cliente'], [$demo[$apellido]['credito'] => [1]], $importe, [
-                ['medio' => $medio, 'importe' => $importe, 'numero_operacion' => sprintf('DEMO-%04d', $operacion)],
+                // El importe de cada medio es un decimal con punto; el importe a cobrar, como lo escribe el Cajero
+                ['medio' => $medio, 'importe' => str_replace(',', '.', $importe), 'numero_operacion' => sprintf('DEMO-%04d', $operacion)],
             ]), "cobro de {$apellido}");
         };
         foreach ([['Medina', '', 'Transferencia'], ['Vega', '', 'TarjetaDebito'], ['Torres', '15000', 'Transferencia']] as [$apellido, $importe, $medio]) {
