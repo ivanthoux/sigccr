@@ -1,0 +1,54 @@
+@startuml
+!include estilo.iuml
+title CU-23 Verificar Legajo de Solicitud
+actor Analista as AN
+participant ":Solicitudes" as C <<control>>
+participant ":SolicitudService" as S <<service>>
+participant ":LegajoService" as L <<service>>
+participant "RevisionLegajo" as RL <<utility>>
+participant ":EvaluacionService" as E <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+AN -> C ++ : 1: verificar(id, versionFila, resultado, verificaciones, observaciones, motivo)
+C -> S ++ : 1.1: estado = verificar(id, versionFila, resultado, verificaciones, observaciones, motivo, usuarioId)
+group critical [transacción]
+  S -> S : 1.1.1: s = bloquear("solicitudes_credito", [id])
+  alt Si (s.estado ≠ "PendienteVerificacion")
+    S --> C : 1.1.2: ReglaNegocioException("ya no está pendiente de verificación", "RN-24")
+  end
+  S -> S : 1.1.3: exigidos = exigidos(versionId, categoriaIngresos)
+  S -> L ++ : 1.1.4: presentados = vigentesPorTipo(clienteId)
+  deactivate L
+  S -> RL ++ : 1.1.5: r = validar(exigidos, presentados, verificaciones, resultado, observaciones, motivo) (RN-19)
+  deactivate RL
+  alt Si (r.errores no está vacío)
+    S --> C : 1.1.6: ValidacionException(r.errores, "RN-19")
+  end
+  S -> S : 1.1.7: revision = revisionPendiente(id, versionId)
+  loop Mientras (haya documentos verificados)
+    S -> DB ++ : 1.1.8: insert("verificaciones_documento", resultado del documento)
+    deactivate DB
+  end
+  S -> DB ++ : 1.1.9: update(revisión Verificada, Observada o Rechazada)
+  deactivate DB
+  S -> RL ++ : 1.1.10: destino = estadoSolicitud(resultado)
+  deactivate RL
+  S -> S : 1.1.11: cambiarEstado(s, destino, usuarioId, motivo, versionFila): PendienteEvaluacion, PendienteDocumentacion o Rechazada
+  S -> AU ++ : 1.1.12: registrar("solicitudes.verificar_legajo", "solicitudes_credito", id)
+  deactivate AU
+end
+S --> C -- : 1.1.13: destino
+opt Si (destino = "PendienteEvaluacion")
+  C -> E ++ : 1.2: resultado = iniciarInmediata(id)
+  E -> DB ++ : 1.2.1: r = query(sp_getapplock sin espera)
+  deactivate DB
+  alt Si (r < 0: el proceso programado está en curso)
+    E --> C : 1.2.2: null: la evalúa la próxima ejecución (D-17)
+  else
+    E -> E : 1.2.3: evaluar(id), ver CU-86
+    E --> C -- : 1.2.4: resultado
+  end
+end
+C --> AN -- : 1.3: resultado de la verificación y de la evaluación, si terminó
+@enduml

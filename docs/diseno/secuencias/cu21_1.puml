@@ -1,0 +1,52 @@
+@startuml
+!include estilo.iuml
+title CU-21 Simular Crédito: elegir la línea y simular (diagrama 1 de 2)
+actor Analista as AN
+participant ":Simulaciones" as C <<control>>
+participant ":SimulacionService" as S <<service>>
+participant "Elegibilidad" as EL <<utility>>
+participant "Simulador" as SI <<utility>>
+participant ":ParametroService" as PS <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+AN -> C ++ : 1: index(clienteId)
+C -> S ++ : 1.1: cliente = cliente(clienteId) y perfil(cliente)
+deactivate S
+C -> S ++ : 1.2: lineas = lineasParaCliente(clienteId)
+loop Mientras (haya versiones vigentes de líneas activas)
+  S -> EL ++ : 1.2.1: v.motivoNoAdmitida = motivoNoAdmitida(v, cliente, hoy) (RN-75)
+  deactivate EL
+end
+S --> C -- : 1.2.2: lineas
+C --> AN -- : 1.3: perfil del cliente y líneas admitidas con sus condiciones
+AN -> C ++ : 2: simular(clienteId, lineaId, importe, cuotas)
+C -> S ++ : 2.1: id = simular(clienteId, lineaId, importe, cuotas, usuarioId)
+group critical [transacción]
+  S -> S : 2.1.1: bloquear("lineas_credito", [lineaId]) (A3, RN-16)
+  S -> S : 2.1.2: version = versionesVigentes(lineaId)[0]
+  S -> EL ++ : 2.1.3: motivo = motivoNoAdmitida(version, cliente(clienteId), hoy)
+  deactivate EL
+  S -> SI ++ : 2.1.4: v = validar(version, importe, cuotas): límites de la línea (RN-14, RN-76)
+  deactivate SI
+  alt Si (version = null o motivo ≠ null)
+    S --> C : 2.1.5: ReglaNegocioException(mensaje, "RN-13")
+  else Si (v.errores no está vacío)
+    S --> C : 2.1.6: ValidacionException(v.errores, "RN-76")
+    C --> AN : 2.2: importe y cuotas admitidos (A2)
+  end
+  S -> PS ++ : 2.1.7: iva = vigente("Estructuracion").alicuotaIva
+  deactivate PS
+  S -> SI ++ : 2.1.8: r = calcular(version, importe, cuotas, iva, hoy): plan francés, gastos, TEA y CFTEA (RN-50 a RN-52, RN-63, RN-68)
+  deactivate SI
+  alt Si (r.cftea supera el tope de registro)
+    S --> C : 2.1.9: ReglaNegocioException(MENSAJE_FUERA_DE_LIMITE, "RN-14")
+  end
+  S -> DB ++ : 2.1.10: id = insert("simulaciones", Vigente, vence a los 7 días) (RN-48)
+  deactivate DB
+  S -> AU ++ : 2.1.11: registrar("solicitudes.simular", "simulaciones", id)
+  deactivate AU
+end
+S --> C -- : 2.1.12: id
+C --> AN -- : 2.3: redirección a la simulación (diagrama 2 de 2)
+@enduml
