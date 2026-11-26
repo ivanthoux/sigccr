@@ -1,0 +1,27 @@
+@startuml
+!include estilo.iuml
+title sd Aplicar los cambios (CU-12, diagrama 2 de 2)
+participant ":ClienteService" as S <<service>>
+participant "ReglasClientes" as RC <<utility>>
+participant ":AutorizacionService" as AZ <<service>>
+participant "db : BaseConnection" as DB
+[-> S ++ : id, d, cambios, correoNuevo
+opt Si (cambia a persona expuesta políticamente)
+  S -> S : 1.1.10.1: fechaDeclaracionPep = ahora y alertarPersonaExpuesta(id, denominacion)
+end
+S -> DB ++ : 1.1.10.2: update("personas_humanas" o "personas_juridicas", datos de la subclase)
+deactivate DB
+opt Si (cambia el consentimiento comercial)
+  S -> S : 1.1.10.3: registrarConsentimiento(id, "ComunicacionesComerciales", otorgado) y, si se revoca, cancelarComunicacionesComerciales(id) (RN-64)
+end
+opt Si (correoNuevo ≠ null)
+  S -> AZ ++ : 1.1.10.4: sustituirVigentes(cuentaId) y comunicacionId = emitir(cuentaId, "VerificacionCorreo", correoNuevo, …)
+  deactivate AZ
+end
+S -> RC ++ : 1.1.10.5: relevantes = cambiosRelevantes(actual, nuevos)
+deactivate RC
+opt Si (relevantes ≠ ∅)
+  S -> S : 1.1.10.6: afectadas = tratarSolicitudesAfectadas(id, denominacion, relevantes): invalida evaluaciones y alerta (RN-12)
+end
+[<-- S -- : afectadas, comunicacionId
+@enduml

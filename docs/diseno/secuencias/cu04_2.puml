@@ -1,0 +1,38 @@
+@startuml
+!include estilo.iuml
+title CU-04 Activar o Rehabilitar Acceso del Cliente: definir la contraseña (diagrama 2 de 2)
+actor Cliente as CL
+participant ":Activacion" as C <<control>>
+participant ":ActivacionService" as S <<service>>
+participant "PoliticaContrasena" as PC <<utility>>
+participant ":AutorizacionService" as AZ <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate CL
+CL -> C ++ : 2: definirContrasena(codigo, contrasena, confirmacion)
+C -> S ++ : 2.1: correo = definirContrasena(codigo, contrasena, confirmacion)
+S -> PC ++ : 2.1.1: motivos = validar(contrasena, confirmacion)
+deactivate PC
+alt Si (motivos no está vacío)
+  S --> C : 2.1.2: ReglaNegocioException(motivos, "RN-62")
+end
+group critical [transacción]
+  S -> AZ ++ : 2.1.3: a = buscarVigente(codigo, ["Activacion", "Rehabilitacion"], true)
+  deactivate AZ
+  S -> DB ++ : 2.1.4: cliente = query(cliente de la cuenta, con bloqueo UPDLOCK)
+  deactivate DB
+  alt Si (a = null o cliente.estado ≠ "Activo")
+    S --> C : 2.1.5: ReglaNegocioException("enlace inválido", "RN-03, RN-10")
+  end
+  S -> DB ++ : 2.1.6: update(cuenta Habilitada: hash Argon2id, correo verificado, versionSeguridad + 1)
+  deactivate DB
+  S -> DB ++ : 2.1.7: update(cuentas_cliente: fechaActivacion)
+  deactivate DB
+  S -> AZ ++ : 2.1.8: marcarUtilizada(a.id)
+  deactivate AZ
+  S -> AU ++ : 2.1.9: registrar("acceso.activacion", "cuenta_acceso", cuentaId)
+  deactivate AU
+end
+S --> C -- : 2.1.10: correo
+C --> CL -- : 2.2: inicio de sesión del portal con el correo cargado
+@enduml

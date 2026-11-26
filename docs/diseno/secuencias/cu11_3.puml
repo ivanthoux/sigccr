@@ -1,0 +1,38 @@
+@startuml
+!include estilo.iuml
+title sd Registrar el cliente y su cuenta (CU-11, diagrama 3 de 3)
+participant ":ClienteService" as S <<service>>
+participant ":LegajoService" as L <<service>>
+participant ":AutorizacionService" as AZ <<service>>
+participant ":PreRegistroService" as PR <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> S ++ : d, documentos
+S -> S : 1.1.3.1: verificarUnicidad(d, null, null): documento, CUIT/CUIL y correo (RN-07, RN-08)
+S -> DB ++ : 1.1.3.2: id = insert("clientes", datos comunes)
+deactivate DB
+S -> DB ++ : 1.1.3.3: insert("personas_humanas" o "personas_juridicas", datos de la subclase)
+deactivate DB
+S -> DB ++ : 1.1.3.4: cuentaId = insert("cuentas_acceso", PendienteActivacion) y insert("cuentas_cliente")
+deactivate DB
+S -> S : 1.1.3.5: registrarConsentimiento(id, "PoliticaDatos", true) (RN-64)
+opt Si (d.aceptaComunicaciones)
+  S -> S : 1.1.3.6: registrarConsentimiento(id, "ComunicacionesComerciales", true)
+end
+loop Mientras (haya documentos por guardar)
+  S -> L ++ : 1.1.3.7: guardar(id, unDocumento, usuarioId): nombre aleatorio y hash SHA-256
+  deactivate L
+end
+S -> AZ ++ : 1.1.3.8: comunicacionId = emitir(cuentaId, "VerificacionCorreo", correo, nombre, "portal/verificar-correo")
+deactivate AZ
+opt Si (d.personaExpuesta)
+  S -> S : 1.1.3.9: alertarPersonaExpuesta(id, denominacion): alerta al Gerente
+end
+opt Si (preRegistroId ≠ null)
+  S -> PR ++ : 1.1.3.10: completar(preRegistroId, id, usuarioId) (CU-104)
+  deactivate PR
+end
+S -> AU ++ : 1.1.3.11: registrar("clientes.registrar", "clientes", id)
+deactivate AU
+[<-- S -- : id, comunicacionId
+@enduml

@@ -2,10 +2,11 @@
 !include estilo.iuml
 title CU-22 Registrar Solicitud de Crédito (diagrama 1 de 2)
 actor Analista as AN
-participant ":Solicitudes" as C
-participant ":SolicitudService" as S
-participant ":LegajoService" as L
-participant ":AuditoriaService" as AU
+participant ":Solicitudes" as C <<control>>
+participant ":SolicitudService" as S <<service>>
+participant ":LegajoService" as L <<service>>
+participant "RequisitosDocumentales" as RD <<utility>>
+participant ":AuditoriaService" as AU <<service>>
 participant "db : BaseConnection" as DB
 activate AN
 AN -> C ++ : 1: registrar(simulacionId, archivos)
@@ -13,25 +14,34 @@ C -> S ++ : 1.1: registrar(simulacionId, archivos, usuarioId)
 S -> L ++ : 1.1.1: documentos = validarArchivos(archivos, errores)
 deactivate L
 alt Si (errores no está vacío)
-  S --> C : 1.1.2: ValidacionException(errores)
+  S --> C : 1.1.2: ValidacionException(errores, "RNF-12")
   C --> AN : 1.2: formulario con cada error junto a su campo
 end
 group critical [transacción]
-  ref over S, DB : 1.1.3: Validar la simulación, el cliente y la documentación\n(CU-22, diagrama 2 de 2)
+  ref over S, DB : 1.1.3: datos = Validar la simulación y el cliente\n(diagrama 2 de 2)
+  S -> S : 1.1.4: exigidos = exigidos(versionId, datos.categoriaIngresos)
+  S -> L ++ : 1.1.5: vigentes = vigentesPorTipo(clienteId)
+  deactivate L
+  S -> RD ++ : 1.1.6: faltantes = faltantes(exigidos, vigentes + documentos)
+  deactivate RD
+  alt Si (faltantes no está vacío y origen ≠ "Oferta")
+    S --> C : 1.1.7: ValidacionException(faltantes, "RN-11")
+    C --> AN : 1.3: formulario con los documentos que faltan
+  end
   loop Mientras (haya documentos por guardar)
-    S -> L ++ : 1.1.4: guardar(clienteId, unDocumento, usuarioId)
+    S -> L ++ : 1.1.8: guardar(clienteId, unDocumento, usuarioId)
     deactivate L
   end
-  S -> DB ++ : 1.1.5: id = insert("solicitudes_credito", PendienteVerificacion)
+  S -> DB ++ : 1.1.9: id = insert("solicitudes_credito", fila PendienteVerificacion)
   deactivate DB
-  S -> S : 1.1.6: registrarTransicion(id, null, "PendienteVerificacion")
-  S -> S : 1.1.7: nuevaRevision(id, versionId)
-  S -> AU ++ : 1.1.8: registrar("solicitudes.registrar", id)
+  S -> S : 1.1.10: registrarTransicion(id, null, "PendienteVerificacion", usuarioId)
+  S -> S : 1.1.11: nuevaRevision(id, versionId)
+  S -> AU ++ : 1.1.12: registrar("solicitudes.registrar", "solicitudes_credito", id)
   deactivate AU
 end
 opt Si (falla después de guardar documentos)
-  S -> L : 1.1.9: descartar(movidos)
+  S -> L : 1.1.13: descartar(movidos)
 end
-S --> C -- : 1.1.10: [id, numero]
-C --> AN -- : 1.3: solicitud N.º numero registrada, pendiente de verificación
+S --> C -- : 1.1.14: [id, numero]
+C --> AN -- : 1.4: solicitud N.º numero registrada, pendiente de verificación
 @enduml

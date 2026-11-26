@@ -1,0 +1,37 @@
+@startuml
+!include estilo.iuml
+title CU-02 Recuperar Acceso: solicitar el enlace (diagrama 1 de 2)
+actor "Usuario interno\no Cliente" as U
+participant ":Acceso" as C <<control>>
+participant ":RecuperacionService" as S <<service>>
+participant ":AutorizacionService" as AZ <<service>>
+participant ":ComunicacionService" as CO <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate U
+U -> C ++ : 1: solicitarRecuperacion(correo)
+C -> S ++ : 1.1: solicitar(tipoCuenta, correo, rutaEnlace)
+group critical [transacción]
+  S -> DB ++ : 1.1.1: cuenta = query(cuenta del correo, con bloqueo UPDLOCK)
+  deactivate DB
+  alt Si (cuenta = null o cuenta.estado ≠ "Habilitada" o cliente desactivado)
+    S -> AU ++ : 1.1.2: registrar("acceso.recuperacion.solicitud", "cuenta_acceso", cuentaId, "Rechazado") (RN-10)
+    deactivate AU
+  else
+    S -> AZ ++ : 1.1.3: comunicacionId = emitir(cuentaId, "Recuperacion", correo, nombre, rutaEnlace)
+    AZ -> AZ : 1.1.3.1: crear(): sustituye la vigente y guarda el hash SHA-256 del código, vence en 15 min (RN-03)
+    AZ -> CO ++ : 1.1.3.2: encolar("Autorizacion", correo, plantilla, datos cifrados)
+    deactivate CO
+    deactivate AZ
+    S -> AU ++ : 1.1.4: registrar("acceso.recuperacion.solicitud", "cuenta_acceso", cuentaId, "Exitoso")
+    deactivate AU
+  end
+end
+opt Si (comunicacionId ≠ null)
+  S -> CO ++ : 1.1.5: enviar(comunicacionId), fuera de la transacción
+  deactivate CO
+end
+S --> C -- : 1.1.6:
+C --> U -- : 1.2: el mismo mensaje en todos los casos (A1, A5)
+
+@enduml

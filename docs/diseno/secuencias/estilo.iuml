@@ -1,7 +1,6 @@
 skinparam defaultFontName Arial
 skinparam defaultFontSize 15
 skinparam shadowing false
-skinparam dpi 200
 skinparam maxMessageSize 220
 skinparam ParticipantPadding 4
 skinparam BoxPadding 4
@@ -28,6 +27,9 @@ skinparam note {
   BorderColor #D6B656
 }
 hide footbox
+skinparam stereotypeCBackgroundColor #FFFFFF
+skinparam ParticipantStereotypeFontSize 12
+skinparam ParticipantStereotypeFontStyle italic
 <style>
 sequenceDiagram {
   lifeLine {

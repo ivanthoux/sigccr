@@ -1,0 +1,39 @@
+@startuml
+!include estilo.iuml
+title CU-83 Consultar Alertas
+actor "Usuario interno" as U
+participant "sigccr_helper" as H <<utility>>
+participant ":Alertas" as C <<control>>
+participant ":AlertaService" as S <<service>>
+participant "OperacionAlerta" as OA <<utility>>
+participant "db : BaseConnection" as DB
+activate U
+U -> H ++ : 1: abre cualquier pantalla del panel (plantilla)
+H -> S ++ : 1.1: n = contarPendientes(usuarioId, rol)
+S -> DB ++ : 1.1.1: query(alertas pendientes del rol o del usuario)
+deactivate DB
+S --> H -- : 1.1.2: n
+H --> U -- : 1.2: indicador de alertas pendientes en el menú
+U -> C ++ : 2: index(estado, tipo, desde, hasta)
+C -> S ++ : 2.1: alertas = listar(usuarioId, rol, filtros)
+S -> DB ++ : 2.1.1: query(alertas con la marca de vista, de la más reciente a la más antigua)
+deactivate DB
+S --> C -- : 2.1.2: alertas
+C --> U -- : 2.2: listado
+U -> C ++ : 3: ver(id)
+C -> S ++ : 3.1: a = verDetalle(id, usuarioId, rol)
+S -> DB ++ : 3.1.1: a = query(alerta por id)
+deactivate DB
+alt Si (a = null o dirigida a otro rol u otra persona)
+  S --> C : 3.1.2: ReglaNegocioException("La alerta no existe o no está dirigida a usted") (RN-01)
+  C --> U : 3.2: vuelve al listado con el aviso
+end
+S -> DB ++ : 3.1.3: insert("alertas_vistas") si el usuario no la había visto
+deactivate DB
+S --> C -- : 3.1.4: a
+opt Si (a.estado = "Pendiente")
+  C -> OA ++ : 3.3: operacion = para(a.objetoTipo, a.objetoId, permisos, rutasPanel)
+  deactivate OA
+end
+C --> U -- : 3.4: detalle de la alerta con «Ir a la operación» si su ruta existe y el rol tiene el permiso (A3)
+@enduml

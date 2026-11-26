@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title CU-17 Modificar Línea de Crédito
+actor Gerente as GE
+participant ":Lineas" as C <<control>>
+participant ":LineaService" as S <<service>>
+participant "ValidadorLinea" as VL <<utility>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate GE
+GE -> C ++ : 1: actualizar(id, datos, fechaVigencia, motivo, versionFila, confirmado)
+C -> S ++ : 1.1: r = modificar(id, versionFila, datos, fechaVigencia, motivo, confirmado)
+S -> VL ++ : 1.1.1: d = normalizar(datos)
+deactivate VL
+S -> VL ++ : 1.1.2: errores = validar(d, códigos de documentación, hoy, false): TNA, gastos, montos, cuotas, edades y categorías (RN-14, RN-76)
+deactivate VL
+alt Si (hay errores, la fecha es anterior a hoy o falta el motivo)
+  S --> C : 1.1.3: ValidacionException(errores, "RN-14")
+  C --> GE : 1.2: cada error junto a su campo
+end
+group critical [transacción]
+  S -> S : 1.1.4: linea = bloquear("lineas_credito", [id])
+  S -> DB ++ : 1.1.5: repetida = query(otra línea con el mismo nombre)
+  deactivate DB
+  S -> DB ++ : 1.1.6: anterior = query(versión vigente a la fecha)
+  deactivate DB
+  S -> S : 1.1.7: enCurso = operaciones([anterior.id])
+  alt Si (repetida ≠ null)
+    S --> C : 1.1.8: ValidacionException("Ya existe otra línea con ese nombre")
+  else Si (no confirmado y enCurso.solicitudes > 0)
+    S --> C : 1.1.9: ValidacionException(pide confirmar el cambio)
+    C --> GE : 1.3: aviso con las operaciones en trámite
+  end
+  S -> S : 1.1.10: versionId = insertarVersion(id, numero, vigenteDesde, d): versión, categorías y requisitos documentales (D-14)
+  S -> S : 1.1.11: actualizarConVersion("lineas_credito", id, versionFila, datos)
+  S -> AU ++ : 1.1.12: registrarCambios("lineas.modificar", "lineas_credito", id, cambios, motivo)
+  deactivate AU
+end
+S --> C -- : 1.1.13: [version, vigenteDesde, operacionesAnteriores]
+C --> GE -- : 1.4: versión nueva vigente desde la fecha; las operaciones anteriores conservan sus condiciones (RN-15)
+@enduml

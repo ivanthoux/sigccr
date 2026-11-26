@@ -1,0 +1,27 @@
+@startuml
+!include estilo.iuml
+title sd Validar los datos y los documentos (CU-11, diagrama 2 de 3)
+participant ":ClienteService" as S <<service>>
+participant "ValidadorCliente" as VC <<utility>>
+participant ":MonotributoService" as MS <<service>>
+participant ":LegajoService" as L <<service>>
+participant "RequisitosDocumentales" as RD <<utility>>
+[-> S ++ : datos, archivos
+S -> VC ++ : 1.1.1.1: d = normalizar(datos)
+deactivate VC
+S -> MS ++ : 1.1.1.2: escala = vigentes()
+deactivate MS
+S -> VC ++ : 1.1.1.3: errores = validar(d, true, hoy, escala): campos, edad mínima, CUIL y DNI, categoría de monotributo
+deactivate VC
+S -> S : 1.1.1.4: validarLocalidad(d, null, errores)
+S -> L ++ : 1.1.1.5: documentos = validarArchivos(archivos, errores): tipo real y tamaño (RNF-12)
+deactivate L
+S -> RD ++ : 1.1.1.6: exigidos = identificacion(d.tipoCliente)
+deactivate RD
+S -> RD ++ : 1.1.1.7: faltan = faltantes(exigidos, códigos de documentos) (RN-11, D-14)
+deactivate RD
+loop Mientras (haya documentos faltantes)
+  S -> S : 1.1.1.8: errores["doc_" + codigo] = mensaje
+end
+[<-- S -- : d, documentos, errores
+@enduml
