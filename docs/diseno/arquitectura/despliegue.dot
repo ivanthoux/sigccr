@@ -1,0 +1,41 @@
+// Vista de despliegue del SIG-CCR. Generar: dot -Tsvg despliegue.dot -o despliegue.svg
+digraph D {
+graph [rankdir=TB, fontname="Arial", fontsize=15, nodesep=0.4, ranksep=0.5, compound=true, newrank=true];
+node [shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", fontname="Arial", fontsize=14, margin="0.14,0.08"];
+edge [color="#333333", arrowsize=0.8, fontname="Arial", fontsize=13];
+u1 [label="Usuarios internos\n(navegador, red de la entidad)", style="filled", fillcolor="#FFFFFF"];
+u2 [label="Clientes\n(navegador, Internet)", style="filled", fillcolor="#FFFFFF"];
+subgraph cluster_srv { label=<<B>«dispositivo» Servidor Linux</B><BR/>4 vCPU · 8 GB · Docker Engine + docker compose>; style="rounded"; color="#555555";
+  subgraph cluster_net { label="red interna sigccr_net"; labelloc=b; style="dashed,rounded"; color="#999999";
+    web [label="«contenedor» web\nNginx 1.27 · TLS 1.2+ · HSTS\narchivos estáticos · proxy FastCGI\npuertos 80 → 443"];
+    subgraph cluster_php { label="imagen sigccr/php:8.3"; style="rounded"; color="#6C8EBF";
+      app [label="«contenedor» app\nPHP 8.3-FPM\nCodeIgniter 4.7\nsqlsrv · bcmath\nintl · sodium"];
+      sch [label="«contenedor» scheduler\ncron → php spark\n<comando> (RNF-10)"];
+    }
+    db [label="«contenedor» db\nmssql/server:\n2022-CU28-ubuntu-22.04\n(versión fijada)\nDeveloper / Express\n1433 sin publicar", fillcolor="#E6E6E6", color="#808080"];
+    mp [label="«contenedor» mailpit\nsolo en desarrollo\nSMTP :1025", style="rounded,dashed,filled", fillcolor="#FFFFFF", color="#999999"];
+  }
+  v2 [label="«volumen» storage\nadjuntos · sesiones\nregistros · caché", shape=cylinder, fillcolor="#FFF2CC", color="#D6B656"];
+  v1 [label="«volumen»\nsqldata", shape=cylinder, fillcolor="#FFF2CC", color="#D6B656"];
+  v3 [label="«volumen» backups\ncopias cifradas\n+ SHA-256", shape=cylinder, fillcolor="#FFF2CC", color="#D6B656"];
+}
+e2 [label="«sistema externo»\nPasarela de pagos", shape=box3d, style="filled", fillcolor="#E6E6E6", color="#808080"];
+e1 [label="«sistema externo»\nCentral de Deudores\nBCRA", shape=box3d, style="filled", fillcolor="#E6E6E6", color="#808080"];
+e3 [label="«sistema externo»\nServidor SMTP\ndel proveedor", shape=box3d, style="filled", fillcolor="#E6E6E6", color="#808080"];
+e4 [label="Almacenamiento externo\n(copia fuera del servidor, RNF-13)", shape=folder, style="filled", fillcolor="#FFFFFF"];
+{rank=same; u1; u2; e2}
+{rank=same; app; sch; e1}
+{rank=same; db; mp; e3}
+u1 -> web [label=" HTTPS /admin"]; u2 -> web [label=" HTTPS /portal"];
+e2 -> web [label=" HTTPS (webhook)"];
+web -> app [label=" FastCGI :9000"];
+sch -> e2 [ltail=cluster_php, label=" HTTPS: órdenes\n y conciliación"];
+sch -> e1 [ltail=cluster_php, label=" HTTPS\n (CU-23, CU-86)"];
+sch -> e3 [ltail=cluster_php, label=" SMTP: envío inmediato\n y cola con reintentos"];
+app -> mp [ltail=cluster_php, style=dashed, label=" SMTP\n (desarrollo)"];
+app -> db [ltail=cluster_php, label=" ODBC 18 / TDS\n :1433 (cifrado)"];
+app -> v2 [ltail=cluster_php];
+db -> v1; db -> v3 [label=" BACKUP\n DATABASE"];
+sch -> v3 [label=" copias cifradas;\n app solo lee (CU-62)"];
+v3 -> e4 [style=dashed, label=" sincronización diaria"];
+}
