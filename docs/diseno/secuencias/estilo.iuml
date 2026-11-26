@@ -1,8 +1,8 @@
 skinparam defaultFontName Arial
-skinparam defaultFontSize 13
+skinparam defaultFontSize 15
 skinparam shadowing false
 skinparam dpi 200
-skinparam maxMessageSize 200
+skinparam maxMessageSize 220
 skinparam ParticipantPadding 4
 skinparam BoxPadding 4
 skinparam actorStyle default
@@ -28,3 +28,12 @@ skinparam note {
   BorderColor #D6B656
 }
 hide footbox
+<style>
+sequenceDiagram {
+  lifeLine {
+    LineColor #333333
+    LineThickness 1.8
+    LineStyle 9-6
+  }
+}
+</style>

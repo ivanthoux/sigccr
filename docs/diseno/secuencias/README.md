@@ -16,6 +16,8 @@ Fuentes en PlantUML de los diagramas de secuencia de las secciones 4.4.7 y 4.5 d
 | Autollamada | Método propio del objeto (`bloquear("clientes", id)`, `registrarTransicion(…)`). |
 | Fragmentos | `alt` con guardas `[Si (…)]` y una rama por condición; `opt` para una sola rama; `loop` con `[Mientras (…)]`; `critical [transacción]` para lo que ocurre dentro de una transacción. |
 | Interacción referenciada | `ref` cuando el diagrama no entra legible en una página; la interacción se dibuja aparte con el título `sd Nombre` y numeración propia. |
+| Tamaño | Hasta 6 líneas de vida además del actor y unos 15 mensajes por diagrama, en hoja vertical a todo el ancho (17,1 cm): la letra impresa queda en 6 a 7 pt. Los diagramas son más altos que anchos, así que la hoja apaisada los achica (la altura útil es de 15,5 cm). |
+| Líneas de vida | Punteadas (trazo 9-6), de 1,8 px y gris oscuro, para que se vean impresas. |
 | Notas | Solo para aclaraciones que no son mensajes (variables locales, decisiones). |
 
 ## Generar las imágenes

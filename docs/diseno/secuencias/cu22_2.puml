@@ -1,10 +1,11 @@
 @startuml
 !include estilo.iuml
-title sd Validar la simulación y el cliente (CU-22, diagrama 2 de 2)
+title sd Validar la simulación, el cliente y la documentación (CU-22, diagrama 2 de 2)
 participant ":SolicitudService" as S
 participant ":SimulacionService" as SM
 participant "Elegibilidad" as EL
 participant "Simulador" as SI
+participant "RequisitosDocumentales" as RD
 participant "db : BaseConnection" as DB
 [-> S ++ : simulacionId
 S -> DB ++ : 1: sim = query(simulación WITH UPDLOCK)
@@ -35,5 +36,10 @@ else Si (exceso ≠ null)
 else Si (existente ≠ null)
   [<-- S : 14: ReglaNegocioException("solicitud en trámite", "RN-18")
 end
-[<-- S -- : 15: datos
+S -> RD ++ : 15: faltantes = faltantes(exigidos, presentes)
+deactivate RD
+alt Si (faltantes no está vacío y origen ≠ "Oferta")
+  [<-- S : 16: ValidacionException(faltantes, "RN-11")
+end
+[<-- S -- : 17: datos
 @enduml

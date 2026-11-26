@@ -5,7 +5,6 @@ actor Analista as AN
 participant ":Solicitudes" as C
 participant ":SolicitudService" as S
 participant ":LegajoService" as L
-participant "RequisitosDocumentales" as RD
 participant ":AuditoriaService" as AU
 participant "db : BaseConnection" as DB
 activate AN
@@ -18,27 +17,21 @@ alt Si (errores no está vacío)
   C --> AN : 1.2: formulario con cada error junto a su campo
 end
 group critical [transacción]
-  ref over S, DB : 1.1.3: Validar la simulación y el cliente\n(CU-22, diagrama 2 de 2)
-  S -> RD ++ : 1.1.4: faltantes = faltantes(exigidos, presentes)
-  deactivate RD
-  alt Si (faltantes no está vacío y origen ≠ "Oferta")
-    S --> C : 1.1.5: ValidacionException(faltantes, "RN-11")
-    C --> AN : 1.3: formulario con los documentos que faltan
-  end
+  ref over S, DB : 1.1.3: Validar la simulación, el cliente y la documentación\n(CU-22, diagrama 2 de 2)
   loop Mientras (haya documentos por guardar)
-    S -> L ++ : 1.1.6: guardar(clienteId, unDocumento, usuarioId)
+    S -> L ++ : 1.1.4: guardar(clienteId, unDocumento, usuarioId)
     deactivate L
   end
-  S -> DB ++ : 1.1.7: id = insert("solicitudes_credito", PendienteVerificacion)
+  S -> DB ++ : 1.1.5: id = insert("solicitudes_credito", PendienteVerificacion)
   deactivate DB
-  S -> S : 1.1.8: registrarTransicion(id, null, "PendienteVerificacion")
-  S -> S : 1.1.9: nuevaRevision(id, versionId)
-  S -> AU ++ : 1.1.10: registrar("solicitudes.registrar", id)
+  S -> S : 1.1.6: registrarTransicion(id, null, "PendienteVerificacion")
+  S -> S : 1.1.7: nuevaRevision(id, versionId)
+  S -> AU ++ : 1.1.8: registrar("solicitudes.registrar", id)
   deactivate AU
 end
 opt Si (falla después de guardar documentos)
-  S -> L : 1.1.11: descartar(movidos)
+  S -> L : 1.1.9: descartar(movidos)
 end
-S --> C -- : 1.1.12: [id, numero]
-C --> AN -- : 1.4: solicitud N.º numero registrada, pendiente de verificación
+S --> C -- : 1.1.10: [id, numero]
+C --> AN -- : 1.3: solicitud N.º numero registrada, pendiente de verificación
 @enduml
