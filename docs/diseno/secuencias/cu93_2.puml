@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title sd Activar la campaña (CU-93, diagrama 2 de 4)
+participant ":CampanaService" as CP <<service>>
+participant ":ParametroService" as PS <<service>>
+participant ":SimulacionService" as SM <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> CP ++ : proyeccion, proceso
+group critical [transacción]
+  CP -> DB ++ : 1.1.9.1.1: query(sp_getapplock "sigccr:campanas") y activa = query(¿hay una campaña Activa?)
+  deactivate DB
+  alt Si (activa)
+    [<-- CP : 1.1.9.1.2: «ya existe una campaña activa» (RN-66)
+  end
+  CP -> PS ++ : 1.1.9.1.3: p = vigente("Campanas")
+  deactivate PS
+  CP -> DB ++ : 1.1.9.1.4: linea = query(línea de las campañas)
+  deactivate DB
+  CP -> SM ++ : 1.1.9.1.5: version = versionVigente(linea.id), si la línea está Activa
+  deactivate SM
+  alt Si (version = null) (A2)
+    CP -> AL ++ : 1.1.9.1.6: generar("Proceso", «no se activó la campaña», «configurar la línea (CU-51)»)
+    deactivate AL
+    CP -> AU ++ : 1.1.9.1.7: registrar("campanas.activar", "proyecciones_fondos", id, "Rechazado")
+    deactivate AU
+    [<-- CP : 1.1.9.1.8: «no se activó»
+  end
+  ref over CP, DB : 1.1.9.1.9: ofertas = Elegir los clientes y sus condiciones (diagrama 3 de 4)
+  alt Si (ofertas = ∅) (A1)
+    CP -> AL ++ : 1.1.9.1.10: generar("Proceso", «no hay clientes elegibles»)
+    deactivate AL
+    CP -> AU ++ : 1.1.9.1.11: registrar("campanas.activar", "proyecciones_fondos", id, "Rechazado")
+    deactivate AU
+    [<-- CP : 1.1.9.1.12: «no se activó: sin clientes elegibles»
+  end
+  ref over CP, DB : 1.1.9.1.13: numero = Crear la campaña y las ofertas (diagrama 4 de 4)
+end
+[<-- CP -- : «activada la campaña N.º numero con n ofertas»
+@enduml

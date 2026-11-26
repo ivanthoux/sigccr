@@ -1,0 +1,27 @@
+@startuml
+!include estilo.iuml
+title CU-52 Registrar Respuesta a Oferta Crediticia (diagrama 1 de 3)
+actor Cliente as CL
+participant ":Propuestas" as C <<control>>
+participant ":CampanaService" as CP <<service>>
+participant "db : BaseConnection" as DB
+activate CL
+note over CL, C : Antes del controlador, PertenenciaClienteFilter obtiene el cliente\nde la sesión, nunca de los parámetros (RNF-01).
+CL -> C ++ : 1: oferta(id)
+C -> CP ++ : 1.1: o = ofertaParaCliente(clienteId, id): alternativas recalculadas con los ingresos de hoy que no superan el importe ofrecido (A4)
+deactivate CP
+C --> CL -- : 1.2: oferta vigente con sus alternativas
+CL -> C ++ : 2: aceptar(id, versionFila, alternativa)
+C -> CP ++ : 2.1: r = aceptar(clienteId, id, versionFila, alternativa)
+group critical [transacción]
+  ref over CP, DB : 2.1.1: o, campana, eleccion = Validar la oferta y la elección (diagrama 2 de 3)
+  ref over CP, DB : 2.1.2: s = Generar la solicitud (diagrama 3 de 3)
+end
+alt Si (la oferta quedó Vencida en 2.1.1) (A2)
+  CP --> C : 2.1.3: ReglaNegocioException(mensaje, "RN-43")
+  C --> CL : 2.2: la oferta ya no puede aceptarse
+else
+  CP --> C -- : 2.1.4: [solicitudId, numero, cupoAlcanzado]
+  C --> CL -- : 2.3: número de solicitud y documentación a presentar
+end
+@enduml

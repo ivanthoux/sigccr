@@ -1,0 +1,34 @@
+@startuml
+!include estilo.iuml
+title CU-63 Restaurar Copia de Seguridad: solicitar la restauración (diagrama 1 de 2)
+actor Administrador as AD
+participant ":Copias" as C <<control>>
+participant ":CopiaService" as CS <<service>>
+participant "PoliticaCopias" as PC <<utility>>
+participant ":EstadoRestauracion" as ER
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AD
+AD -> C ++ : 1: restaurar(id, confirmacion "RESTAURAR", sinRespaldo)
+C -> CS ++ : 1.1: solicitarRestauracion(id, confirmacion, sinRespaldo, usuarioId, nombre)
+CS -> CS : 1.1.1: c = obtener(id): disponible si está Verificada y su SHA-256 coincide
+CS -> PC ++ : 1.1.2: valida = confirmacionValida(confirmacion)
+deactivate PC
+CS -> ER ++ : 1.1.3: enCurso = activa()
+deactivate ER
+CS -> DB ++ : 1.1.4: procesos = query(procesos programados EnCurso en las últimas 2 horas)
+deactivate DB
+alt Si (no c.disponible) (A1)
+  CS --> C : 1.1.5: ReglaNegocioException(«copia corrupta, incompleta o no disponible»)
+else Si (no valida) (A2)
+  CS --> C : 1.1.6: ValidacionException(«escriba RESTAURAR»)
+else Si (enCurso, hayEnCurso() o procesos ≠ ∅)
+  CS --> C : 1.1.7: ReglaNegocioException(«hay una restauración, una copia o un proceso en curso»)
+end
+CS -> AU ++ : 1.1.8: registrar("copias.solicitar-restauracion", "copias_seguridad", id)
+deactivate AU
+CS -> ER ++ : 1.1.9: guardar(pedido Pendiente): activa el modo mantenimiento
+deactivate ER
+CS --> C -- : 1.1.10:
+C --> AD -- : 1.2: página /mantenimiento
+@enduml

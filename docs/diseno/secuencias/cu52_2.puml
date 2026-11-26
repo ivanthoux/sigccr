@@ -1,0 +1,37 @@
+@startuml
+!include estilo.iuml
+title sd Validar la oferta y la elección (CU-52, diagrama 2 de 3)
+participant ":CampanaService" as CP <<service>>
+participant ":SimulacionService" as SM <<service>>
+participant "ReglasCampanas" as RC <<utility>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> CP ++ : clienteId, id, versionFila, clave
+CP -> CP : 2.1.1.1: o = filaOferta(id, true): con bloqueo UPDLOCK
+alt Si (o = null o o.clienteId ≠ clienteId)
+  CP -> CP : 2.1.1.2: denegar(id, o = null): registra portal.acceso-denegado y lanza AccesoAjenoException (RNF-01)
+else Si (o.solicitudId ≠ null) (A3)
+  [<-- CP : 2.1.1.3: ReglaNegocioException(«ya aceptó esta oferta», "RN-42")
+else Si (o.versionFila ≠ versionFila)
+  [<-- CP : 2.1.1.4: ReglaNegocioException(«la oferta cambió desde que la abrió»)
+end
+CP -> CP : 2.1.1.5: campana = bloquear("campanas", [o.campanaId])
+alt Si (o.estado ≠ "Vigente")
+  [<-- CP : 2.1.1.6: ReglaNegocioException(«ya fue respondida o venció», "RN-42")
+end
+CP -> SM ++ : 2.1.1.7: cliente = cliente(clienteId)
+deactivate SM
+CP -> CP : 2.1.1.8: alternativas = alternativas(cliente, o.versionId, hoy)
+CP -> RC ++ : 2.1.1.9: eleccion = eleccion(aceptables(alternativas, o.importe), clave)
+deactivate RC
+CP -> SM ++ : 2.1.1.10: version = versionVigente(o.lineaId)
+deactivate SM
+alt Si (campaña no Activa, sin cupo para eleccion.importe o version ≠ o.versionId) (A2)
+  CP -> DB ++ : 2.1.1.11: update(oferta Vencida)
+  deactivate DB
+  CP -> AU ++ : 2.1.1.12: registrar("campanas.aceptar-oferta", "ofertas", id, "Rechazado", motivo)
+  deactivate AU
+  [<-- CP : 2.1.1.13: [vencida = motivo]
+end
+[<-- CP -- : o, campana, eleccion
+@enduml

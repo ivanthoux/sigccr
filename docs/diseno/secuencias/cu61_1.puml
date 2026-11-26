@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title CU-61 Generar Copia de Seguridad: solicitar la copia (diagrama 1 de 2)
+actor Administrador as AD
+participant ":Copias" as C <<control>>
+participant ":CopiaService" as CS <<service>>
+participant "PoliticaCopias" as PC <<utility>>
+participant ":MotorCopias" as MC <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AD
+AD -> C ++ : 1: generar(descripcion): confirmada en el navegador
+C -> CS ++ : 1.1: id = solicitar(usuarioId, nombre, descripcion)
+alt Si (descripción de más de 300 caracteres)
+  CS --> C : 1.1.1: ValidacionException(descripcion)
+end
+CS -> CS : 1.1.2: d = destino(): ruta, disponibilidad, espacio libre y restauración en curso
+CS -> PC ++ : 1.1.3: requerido = espacioRequerido(tamañoBase, tamañoAdjuntos)
+deactivate PC
+alt Si (d.restauracion)
+  CS --> C : 1.1.4: ReglaNegocioException(«hay una restauración en curso»)
+else Si (no d.disponible) (A2)
+  CS --> C : 1.1.5: ReglaNegocioException(«el destino de las copias no está disponible»)
+else Si (d.libre < requerido) (A2)
+  CS --> C : 1.1.6: ReglaNegocioException(«el destino no tiene espacio suficiente»)
+end
+group critical [transacción]
+  CS -> DB ++ : 1.1.7: query(copias Solicitada o EnCurso, con UPDLOCK y HOLDLOCK)
+  deactivate DB
+  alt Si (hayEnCurso()) (A1)
+    CS --> C : 1.1.8: ReglaNegocioException(«ya hay una copia en curso»)
+  end
+  CS -> MC ++ : 1.1.9: id = registrar("Manual", usuarioId, responsable, descripcion): copia Solicitada
+  deactivate MC
+  CS -> AU ++ : 1.1.10: registrar("copias.solicitar", "copias_seguridad", id)
+  deactivate AU
+end
+CS --> C -- : 1.1.11: id
+C --> AD -- : 1.2: copia solicitada: se genera en el próximo minuto (D-45)
+note over AD, C : El Administrador consulta luego la copia (ver(id)):\nVerificada con su código SHA-256, o Fallida con su causa.
+@enduml

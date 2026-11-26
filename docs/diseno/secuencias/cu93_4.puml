@@ -1,0 +1,28 @@
+@startuml
+!include estilo.iuml
+title sd Crear la campaña y las ofertas (CU-93, diagrama 4 de 4)
+participant ":CampanaService" as CP <<service>>
+participant "ReglasCampanas" as RC <<utility>>
+participant ":ComunicacionService" as CO <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> CP ++ : proyeccion, linea, version, p, ofertas
+CP -> RC ++ : 1.1.9.1.13.1: asignado = capitalAsignado(p.capitalMaximo, proyeccion.proyectado): el menor de los dos
+deactivate RC
+CP -> DB ++ : 1.1.9.1.13.2: id = insert("campanas", Activa, línea, versión, capital asignado, vence en p.duracionDias)
+deactivate DB
+loop Mientras (haya ofertas)
+  CP -> DB ++ : 1.1.9.1.13.3: insert("ofertas", Vigente, cliente, importe y cuotas)
+  deactivate DB
+  opt Si ("Correo" está entre p.canales)
+    CP -> CO ++ : 1.1.9.1.13.4: encolar("Oferta", correo, "oferta_crediticia", datos)
+    deactivate CO
+  end
+end
+CP -> AU ++ : 1.1.9.1.13.5: registrar("campanas.activar", "campanas", id, "Exitoso")
+deactivate AU
+CP -> AL ++ : 1.1.9.1.13.6: generar("Operativa", «se activó la campaña N.º …», Gerente)
+deactivate AL
+[<-- CP -- : numero
+@enduml

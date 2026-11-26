@@ -1,0 +1,30 @@
+@startuml
+!include estilo.iuml
+title sd Generar la solicitud (CU-52, diagrama 3 de 3)
+participant ":CampanaService" as CP <<service>>
+participant ":SimulacionService" as SM <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":FondosService" as F <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> CP ++ : o, campana, eleccion
+CP -> SM ++ : 2.1.2.1: simulacionId = simular(clienteId, lineaId, eleccion.importe, eleccion.cuotas, null): sin usuario interno
+deactivate SM
+CP -> SO ++ : 2.1.2.2: s = registrar(simulacionId, [], null, "Oferta"): ver CU-22, sin Analista
+deactivate SO
+CP -> F ++ : 2.1.2.3: reserva = comprometerParaSolicitud(s.id, importe) (RN-41)
+deactivate F
+alt Si (reserva = null)
+  [<-- CP : 2.1.2.4: ReglaNegocioException(«la entidad no tiene fondos disponibles para esta oferta», "RN-41")
+end
+CP -> DB ++ : 2.1.2.5: update(oferta Aceptada con la solicitud)
+deactivate DB
+CP -> DB ++ : 2.1.2.6: update(campaña: capital comprometido + importe)
+deactivate DB
+CP -> AU ++ : 2.1.2.7: registrar("campanas.aceptar-oferta", "ofertas", id, "Exitoso")
+deactivate AU
+opt Si (comprometido ≥ asignado)
+  CP -> CP : 2.1.2.8: cerrar(campanaId, "Cupo"): ver CU-94
+end
+[<-- CP -- : [solicitudId, numero, cupoAlcanzado]
+@enduml

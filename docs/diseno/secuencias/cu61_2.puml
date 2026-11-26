@@ -1,0 +1,49 @@
+@startuml
+!include estilo.iuml
+title CU-61 Generar Copia de Seguridad: generar la copia (diagrama 2 de 2)
+actor "Temporizador\n(cada minuto)" as T
+participant ":ProcesarCopias" as K <<control>>
+participant ":MotorCopias" as MC <<service>>
+participant "PaqueteCopia" as PQ <<utility>>
+participant "CifradoCopia" as CC <<utility>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark copias:procesar
+K -> MC ++ : 1.1: r = procesarSolicitadas()
+MC -> DB ++ : 1.1.1: ids = query(copias Solicitada)
+deactivate DB
+loop Mientras (haya copias solicitadas)
+  MC -> MC : 1.1.2: generar(id)
+  activate MC
+  MC -> MC : 1.1.2.1: bloquear(): sp_getapplock de las copias
+  MC -> DB ++ : 1.1.2.2: update(copia EnCurso)
+  deactivate DB
+  alt Si (hay espacio y todos los pasos terminan bien)
+    MC -> DB ++ : 1.1.2.3: BACKUP DATABASE … WITH CHECKSUM, COPY_ONLY
+    deactivate DB
+    MC -> DB ++ : 1.1.2.4: RESTORE VERIFYONLY … WITH CHECKSUM
+    deactivate DB
+    MC -> PQ ++ : 1.1.2.5: cantidad = armar(sigccr.bak, adjuntos del legajo, rutas, paquete.zip)
+    deactivate PQ
+    MC -> CC ++ : 1.1.2.6: cifrar(paquete.zip, destino, clave): AES-256-GCM por bloques
+    deactivate CC
+    MC -> DB ++ : 1.1.2.7: update(copia Verificada con su tamaño y SHA-256) y manifiesto junto al archivo
+    deactivate DB
+    MC -> AU ++ : 1.1.2.8: registrar("copias.generar", "copias_seguridad", id)
+    deactivate AU
+  else Si (espacio insuficiente o error en algún paso) (A3)
+    MC -> DB ++ : 1.1.2.9: update(copia Fallida con su causa)
+    deactivate DB
+    opt Si (origen ≠ "Manual") (A5)
+      MC -> AL ++ : 1.1.2.10: generar("Proceso", «falló la copia de seguridad», Administrador)
+      deactivate AL
+    end
+  end
+  deactivate MC
+end
+MC --> K -- : 1.1.3: resultados
+deactivate K
+note over T, K : La copia automática diaria (copias:generar, 2:00) llama a copiaAutomatica(),\nque registra la copia con origen Automatica y sigue este mismo generar(id).
+@enduml

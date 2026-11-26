@@ -1,5 +1,7 @@
 # Diseño por iteración
 
+> **Desde el 26/11/2026 las fuentes vigentes están en [`secuencias/`](secuencias/README.md)** (PlantUML, notación UML 2, iteraciones 1 a 4: 70 diagramas). Las fuentes Mermaid de esta carpeta quedan como antecedente de la versión v18 del documento.
+
 Fuentes de los diagramas de secuencia de la sección 4.5 del documento del proyecto (realizaciones de los casos de uso de cada iteración de Construcción).
 
 | Iteración | Carpeta | Diagramas |

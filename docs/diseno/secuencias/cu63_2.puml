@@ -1,0 +1,58 @@
+@startuml
+!include estilo.iuml
+title CU-63 Restaurar Copia de Seguridad: ejecutar la restauración (diagrama 2 de 2)
+actor "Temporizador\n(cada minuto)" as T
+participant ":ProcesarCopias" as K <<control>>
+participant ":MotorCopias" as MC <<service>>
+participant ":EstadoRestauracion" as ER
+participant "CifradoCopia" as CC <<utility>>
+participant "PaqueteCopia" as PQ <<utility>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark copias:procesar
+K -> MC ++ : 1.1: r = restaurarPendiente()
+MC -> ER ++ : 1.1.1: pedido = actual()
+deactivate ER
+alt Si (pedido = null o pedido.estado ≠ "Pendiente")
+  MC --> K : 1.1.2: null
+end
+MC -> ER ++ : 1.1.3: guardar(pedido con inicio)
+deactivate ER
+MC -> DB ++ : 1.1.4: copia = query(copia del pedido)
+deactivate DB
+alt Si (no Verificada o el SHA-256 no coincide) (A1)
+  MC -> DB ++ : 1.1.5: update(copia Corrupta)
+  deactivate DB
+  MC -> MC : 1.1.6: terminar(pedido, false, «copia corrupta o incompleta»)
+  MC --> K : resultado: no se restauró
+end
+MC -> MC : 1.1.7: previa = generar(registrar("PreviaRestauracion", …)): copia del estado actual (CU-61)
+alt Si (previa fallida y no sinRespaldo) (A3)
+  MC -> MC : 1.1.8: terminar(pedido, false, «no se pudo generar la copia del estado actual»)
+  MC --> K : resultado: no se restauró
+end
+MC -> MC : 1.1.9: cerrarSesiones() y cerrar la conexión de la aplicación
+MC -> CC ++ : 1.1.10: descifrar(copia, paquete.zip, clave)
+deactivate CC
+MC -> PQ ++ : 1.1.11: extraerBase(paquete.zip, sigccr.bak)
+deactivate PQ
+MC -> DB ++ : 1.1.12: RESTORE VERIFYONLY, SET OFFLINE y RESTORE … WITH REPLACE, CHECKSUM
+deactivate DB
+MC -> PQ ++ : 1.1.13: adjuntos = extraerAdjuntos(paquete.zip, writable, rutas del legajo)
+deactivate PQ
+alt Si (falla la restauración) (A4)
+  MC -> MC : 1.1.14: restaurarArchivo(previa, sin adjuntos): vuelve al estado anterior
+end
+MC -> DB ++ : 1.1.15: SET ONLINE, DBCC CHECKDB y migraciones pendientes
+deactivate DB
+MC -> MC : 1.1.16: reconciliarCatalogo(): catálogo de copias rehecho con los manifiestos
+MC -> MC : 1.1.17: registrarRestauracion(pedido, copia, previa, exitosa, resultado, posteriores, sesiones): auditoría y alerta con lo que debe reconstruirse
+MC -> MC : 1.1.18: terminar(pedido, exitosa, resultado)
+activate MC
+MC -> ER ++ : 1.1.18.1: guardar(pedido Finalizada o Fallida): fin del modo mantenimiento
+deactivate ER
+deactivate MC
+MC --> K -- : 1.1.19: resultado
+deactivate K
+note over T, MC : El Administrador inicia sesión y consulta el resultado de la restauración.
+@enduml

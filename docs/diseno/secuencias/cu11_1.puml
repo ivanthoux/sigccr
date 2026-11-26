@@ -10,7 +10,7 @@ participant "db : BaseConnection" as DB
 activate AN
 note over AN, C : Antes del controlador, los filtros auth, permiso:clientes.registrar\ny csrf verifican la sesión, el permiso y el token (RNF-01, RNF-11).
 AN -> C ++ : 1: registrar(datos, archivos)
-C -> S ++ : 1.1: id = registrar(datos, archivos, usuarioId, preRegistroId)
+C -> S ++ : 1.1: id = registrar(datos, archivos, usuarioId): datos.pre_registro_id si viene de CU-104
 ref over S, DB : 1.1.1: d, documentos = Validar los datos y los documentos (diagrama 2 de 3)
 alt Si (hay errores)
   S --> C : 1.1.2: ValidacionException(errores, "RN-11")

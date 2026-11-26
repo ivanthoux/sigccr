@@ -1,0 +1,28 @@
+@startuml
+!include estilo.iuml
+title CU-104 Pre-registrarse en el Portal: completar el alta en la sucursal (diagrama 3 de 3)
+actor "Analista de Crédito" as AN
+participant ":PreRegistros" as PR <<control>>
+participant ":Clientes" as C <<control>>
+participant ":PreRegistroService" as S <<service>>
+participant ":ClienteService" as CS <<service>>
+activate AN
+AN -> PR ++ : 1: index("PendienteValidacion", texto)
+PR -> S ++ : 1.1: pre = buscar("PendienteValidacion", texto)
+deactivate S
+PR --> AN -- : 1.2: pre-registros del portal pendientes de validación
+AN -> C ++ : 2: nuevo(pre = preRegistroId)
+C -> S ++ : 2.1: datos = datosParaAlta(preRegistroId)
+alt Si (el pre-registro no está PendienteValidacion)
+  S --> C : 2.1.1: ReglaNegocioException(«solo se completa un pre-registro verificado»)
+end
+S --> C -- : 2.1.2: datos: nombre, apellido, documento, CUIT/CUIL, correo y teléfono
+C --> AN -- : 2.2: formulario de CU-11 prellenado
+AN -> C ++ : 3: registrar(datos completos, archivos, preRegistroId)
+C -> CS ++ : 3.1: id = registrar(datos con pre_registro_id, archivos, usuarioId): ver CU-11
+CS -> S ++ : 3.1.1: completar(preRegistroId, id, usuarioId): pre-registro Completado
+deactivate S
+CS --> C -- : 3.1.2: id
+C --> AN -- : 3.2: perfil del cliente nuevo
+note over AN, CS : El pre-registro no crea un cliente ni habilita el portal (D-42).\nLos no verificados se depuran en CU-89 (PreRegistroService::depurar).
+@enduml

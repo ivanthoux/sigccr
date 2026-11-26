@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title sd Generar el régimen del período (CU-105, diagrama 3 de 3)
+participant ":RegimenService" as RS <<service>>
+participant "ReglasRegimen" as RR <<utility>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+note over RS, DB : Interacción referenciada desde 1.3.1 (diagrama 1) y 2.1.1 (diagrama 2):\ntiene numeración propia porque la usan dos escenarios.
+[-> RS ++ : periodo, usuarioId, motivo, proceso
+RS -> RR ++ : 1: cerrado = periodoCerrado(periodo, hoy)
+deactivate RR
+alt Si (no cerrado)
+  [<-- RS : 2: ValidacionException(«Seleccione un mes ya cerrado»)
+end
+group critical [transacción]
+  RS -> RS : 3: vigentes = bloquear("regimenes_informativos", [periodo], "periodo")
+  alt Si (existe uno Vigente y usuarioId = null: proceso programado)
+    [<-- RS : 4: ReglaNegocioException(«ya fue generado; el Gerente puede rectificarlo») (A1)
+  else Si (existe uno Vigente y motivo vacío o inválido)
+    [<-- RS : 5: ValidacionException(«Indique el motivo de la rectificación»)
+  else Si (existe uno Vigente)
+    RS -> DB ++ : 6: update(régimen anterior Rectificado)
+    deactivate DB
+  end
+  RS -> RR ++ : 7: cierre = cierre(periodo)
+  deactivate RR
+  RS -> RS : 8: cuotas = cuotasVigentes(cierre): impagas de los créditos vigentes liquidados hasta el cierre
+  RS -> RR ++ : 9: deudores = deudores(cuotas, cierre): días de atraso al cierre y situación 1 a 5 (RN-84)
+  deactivate RR
+  RS -> RR ++ : 10: archivo = archivo(periodo, version, cierre, deudores): cabecera y una línea por deudor
+  deactivate RR
+  RS -> DB ++ : 11: id = insert("regimenes_informativos", archivo y su SHA-256) e insert("situaciones_deudor") por deudor
+  deactivate DB
+  RS -> AU ++ : 12: registrar("regimen.generar" o "regimen.rectificar", "regimenes_informativos", id)
+  deactivate AU
+  RS -> AL ++ : 13: generar("Proceso", «régimen generado», «descargarlo y presentarlo por el canal del BCRA», Gerente)
+  deactivate AL
+end
+[<-- RS -- : [id, version, deudores]
+@enduml
