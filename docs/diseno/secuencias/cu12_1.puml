@@ -5,6 +5,7 @@ actor "Analista de Crédito" as AN
 participant ":Clientes" as C <<control>>
 participant ":ClienteService" as S <<service>>
 participant "ValidadorCliente" as VC <<utility>>
+participant "Cambios" as CB <<utility>>
 participant ":AuditoriaService" as AU <<service>>
 participant "db : BaseConnection" as DB
 activate AN
@@ -21,7 +22,8 @@ group critical [transacción]
     S --> C : 1.1.4: ReglaNegocioException("solo se modifica un cliente activo")
   end
   S -> S : 1.1.5: verificarUnicidad(d, id, correoNuevo) (RN-07, RN-08)
-  S -> S : 1.1.6: cambios = Cambios::entre(actual, nuevos)
+  S -> CB ++ : 1.1.6: cambios = entre(actual, nuevos, campos)
+  deactivate CB
   alt Si (cambios = ∅ y no cambia el correo ni el consentimiento)
     S --> C : 1.1.7: ReglaNegocioException("No hay cambios para guardar")
   end

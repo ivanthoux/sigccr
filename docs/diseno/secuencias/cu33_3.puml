@@ -1,0 +1,39 @@
+@startuml
+!include estilo.iuml
+title sd Asentar e imputar el cobro (CU-33, diagrama 3 de 3)
+participant ":CobroService" as CS <<service>>
+participant "Imputador" as IM <<utility>>
+participant "CobroCuotas" as CC <<utility>>
+participant ":RefinanciacionService" as RF <<service>>
+participant "db : BaseConnection" as DB
+[-> CS ++ : jornada, cuotas, importe, medios
+CS -> IM ++ : 2.1.6.1: r = imputar(importe, conceptos de cada cuota): por vencimiento y prelación de conceptos (RN-29)
+deactivate IM
+CS -> CS : 2.1.6.2: cobroId = asentarVentanilla(jornada, usuarioId, clienteId, importe, medios, "Ordinario")
+activate CS
+CS -> DB ++ : 2.1.6.2.1: insert("cobros", Confirmado)
+deactivate DB
+loop Mientras (haya medios de pago)
+  CS -> DB ++ : 2.1.6.2.2: insert("cobros_medios") e insert("movimientos_caja")
+  deactivate DB
+end
+CS -> DB ++ : 2.1.6.2.3: insert("comprobantes_pago")
+deactivate DB
+deactivate CS
+CS -> CS : 2.1.6.3: imputar(cobroId, cuotas, r.imputaciones, creditos)
+activate CS
+loop Mientras (haya imputaciones)
+  CS -> DB ++ : 2.1.6.3.1: insert("imputaciones", cuota, concepto, importe)
+  deactivate DB
+end
+loop Mientras (haya cuotas alcanzadas)
+  CS -> CC ++ : 2.1.6.3.2: s = saldosDespues(cuota, imputaciones de la cuota)
+  deactivate CC
+  CS -> CS : 2.1.6.3.3: actualizarConVersion("cuotas", id, versionFila, s.columnas y estado Pagada si corresponde)
+end
+CS -> CS : 2.1.6.3.4: actualizarEstadoCredito(credito): Cancelado o Activo
+CS -> RF ++ : 2.1.6.3.5: observarPorCuotas(cuotaIds, causa): la propuesta vigente queda Observada (RN-36)
+deactivate RF
+deactivate CS
+[<-- CS -- : cobroId
+@enduml

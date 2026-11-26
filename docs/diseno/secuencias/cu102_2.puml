@@ -1,0 +1,40 @@
+@startuml
+!include estilo.iuml
+title CU-102 Registrar Revocación del Préstamo: confirmar la restitución (diagrama 2 de 2)
+actor Cajero as CA
+participant ":Revocaciones" as C <<control>>
+participant ":RevocacionService" as RV <<service>>
+participant ":CajaService" as CJ <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: confirmar(creditoId, numeroOperacion, importe)
+C -> RV ++ : 1.1: confirmar(creditoId, numeroOperacion, importe, usuarioId)
+alt Si (número de operación o importe inválidos)
+  RV --> C : 1.1.1: ValidacionException(errores, "RN-79")
+end
+group critical [transacción]
+  RV -> CJ ++ : 1.1.2: jornada = jornadaOperable(usuarioId)
+  deactivate CJ
+  alt Si (jornada = null)
+    RV --> C : 1.1.3: ReglaNegocioException(«No tiene una caja abierta hoy», "RN-28")
+  end
+  RV -> RV : 1.1.4: c = bloquear("creditos", [creditoId])
+  RV -> DB ++ : 1.1.5: r = query(revocación del crédito, con bloqueo UPDLOCK)
+  deactivate DB
+  alt Si (r = null o r.estado ≠ "PendienteRestitucion")
+    RV --> C : 1.1.6: ReglaNegocioException(«sin revocación pendiente de restitución»)
+  else Si (importe ≠ r.importeRestituir)
+    RV --> C : 1.1.7: ValidacionException(«el importe a restituir es …»)
+  end
+  RV -> DB ++ : 1.1.8: cobroId = insert("cobros", tipo Revocacion), insert("cobros_medios", Transferencia), insert("movimientos_caja") e insert("comprobantes_pago")
+  deactivate DB
+  RV -> DB ++ : 1.1.9: update(revocación Confirmada con el cobro)
+  deactivate DB
+  RV -> RV : 1.1.10: dejarSinEfecto(c, saldoAFavor): crédito Revocado, cuotas no pagadas SinEfecto y saldo a favor si pagó de más (RN-57)
+  RV -> AU ++ : 1.1.11: registrar("creditos.confirmar-revocacion", "creditos", creditoId)
+  deactivate AU
+end
+RV --> C -- : 1.1.12:
+C --> CA -- : 1.2: crédito revocado
+@enduml

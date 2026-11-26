@@ -1,0 +1,28 @@
+@startuml
+!include estilo.iuml
+title sd Calcular la cancelación (CU-97, diagrama 2 de 3)
+participant ":CancelacionAnticipadaService" as CN <<service>>
+participant ":PunitorioService" as PU <<service>>
+participant ":ParametroService" as PA <<service>>
+participant "CancelacionAnticipada" as CL <<utility>>
+participant "db : BaseConnection" as DB
+[-> CN ++ : c
+CN -> DB ++ : 2.1.4.1: ids = query(cuotas Pendiente o Vencida del crédito)
+deactivate DB
+CN -> PU ++ : 2.1.4.2: devengarCuotas(ids, hoy)
+deactivate PU
+CN -> DB ++ : 2.1.4.3: cuotas = query(cuotas impagas, con bloqueo UPDLOCK)
+deactivate DB
+alt Si (cuotas = ∅) (A2)
+  [<-- CN : 2.1.4.4: ReglaNegocioException(«el crédito no tiene cuotas pendientes»)
+end
+CN -> PA ++ : 2.1.4.5: iva = vigente("Estructuracion").alicuotaIva
+deactivate PA
+CN -> CL ++ : 2.1.4.6: calculo = calcular(entrada, pagado, fechaBase, iva): vencidas, capital y no capitalizable no vencidos, interés proporcional menos lo pagado, e IVA (RN-67)
+deactivate CL
+CN -> CL ++ : 2.1.4.7: distribucion = distribuir(entrada, pagado, calculo)
+deactivate CL
+CN -> DB ++ : 2.1.4.8: ordenes = query(órdenes de pago pendientes o en conciliación con cuotas del crédito)
+deactivate DB
+[<-- CN -- : [fecha, cuotas, calculo, distribucion, ordenes]
+@enduml

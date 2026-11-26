@@ -1,0 +1,29 @@
+@startuml
+!include estilo.iuml
+title sd Seleccionar las cuotas y el importe (CU-33, diagrama 2 de 3)
+participant ":CobroService" as CS <<service>>
+participant ":PunitorioService" as PU <<service>>
+participant "CobroCuotas" as CC <<utility>>
+participant "db : BaseConnection" as DB
+[-> CS ++ : clienteId, seleccion, importe
+CS -> CS : 2.1.3.1: creditos = bloquear("creditos", ids de la selección): del cliente, Activo o En mora
+CS -> PU ++ : 2.1.3.2: devengarCuotas(cuotasImpagas(clienteId, creditos), hoy): punitorios hasta el día del pago (RN-53)
+deactivate PU
+CS -> DB ++ : 2.1.3.3: cuotas = query(cuotas impagas de los créditos, con bloqueo UPDLOCK)
+deactivate DB
+CS -> CC ++ : 2.1.3.4: errores = validarSeleccion(pendientes, seleccion, números de crédito): consecutivas desde la más antigua (A8)
+deactivate CC
+alt Si (errores no está vacío)
+  [<-- CS : 2.1.3.5: ValidacionException(errores, "RN-29")
+end
+CS -> CC ++ : 2.1.3.6: elegidas = ordenar(elegidas)
+deactivate CC
+CS -> CC ++ : 2.1.3.7: total = suma de total(cuota) de las elegidas
+deactivate CC
+CS -> CC ++ : 2.1.3.8: imp = importeACobrar(importe, total): mayor que cero y hasta el total (RN-29)
+deactivate CC
+alt Si (imp.error ≠ null)
+  [<-- CS : 2.1.3.9: ValidacionException(imp.error, "RN-29")
+end
+[<-- CS -- : elegidas, imp.importe
+@enduml

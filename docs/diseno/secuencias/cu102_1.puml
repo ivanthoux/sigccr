@@ -1,0 +1,44 @@
+@startuml
+!include estilo.iuml
+title CU-102 Registrar Revocación del Préstamo: registrar la comunicación (diagrama 1 de 2)
+actor Cajero as CA
+participant ":Revocaciones" as C <<control>>
+participant ":RevocacionService" as RV <<service>>
+participant "Revocacion" as R <<utility>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: registrar(creditoId, fechaComunicacion, medio)
+C -> RV ++ : 1.1: r = registrar(creditoId, fecha, medio, usuarioId)
+alt Si (fecha futura o medio inválido)
+  RV --> C : 1.1.1: ValidacionException(errores, "RN-79")
+end
+group critical [transacción]
+  RV -> RV : 1.1.2: c = bloquear("creditos", [creditoId])
+  RV -> DB ++ : 1.1.3: previa = query(revocación del crédito)
+  deactivate DB
+  alt Si (c no está Activo o EnMora, o previa ≠ null)
+    RV --> C : 1.1.4: ReglaNegocioException(mensaje)
+  end
+  RV -> RV : 1.1.5: plazo = plazo(creditoId): 10 días hábiles desde la recepción del contrato o el desembolso, lo último (RN-79)
+  alt Si (plazo.limite = null: sin constancia de recepción del contrato)
+    RV --> C : 1.1.6: ReglaNegocioException(«no se puede computar el plazo»)
+  else Si (fecha < desembolso o fecha > plazo.limite)
+    RV --> C : 1.1.7: ValidacionException o ReglaNegocioException(«el plazo de revocación venció»)
+  end
+  RV -> RV : 1.1.8: k = calcular(c, fecha)
+  activate RV
+  RV -> R ++ : 1.1.8.1: importe(neto, tna, desembolso, fecha, iva, pagado): interés simple por los días corridos y su IVA, menos lo pagado
+  deactivate R
+  deactivate RV
+  RV -> DB ++ : 1.1.9: insert("revocaciones", PendienteRestitucion o Confirmada si k.restituir = 0)
+  deactivate DB
+  opt Si (k.restituir = 0)
+    RV -> RV : 1.1.10: dejarSinEfecto(c, k.saldoAFavor): crédito Revocado y cuotas SinEfecto
+  end
+  RV -> AU ++ : 1.1.11: registrar("creditos.revocar", "creditos", creditoId)
+  deactivate AU
+end
+RV --> C -- : 1.1.12: [importe, confirmada]
+C --> CA -- : 1.2: importe a restituir, o crédito revocado si no hay nada que restituir
+@enduml

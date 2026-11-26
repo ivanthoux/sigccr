@@ -1,0 +1,42 @@
+@startuml
+!include estilo.iuml
+title CU-78 Ejecutar Devolución de Saldo a Favor (diagrama 1 de 2)
+actor Cajero as CA
+participant ":SaldosFavor" as C <<control>>
+participant ":DevolucionService" as DS <<service>>
+participant "Devolucion" as DV <<utility>>
+participant ":AlertaService" as AL <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: ejecutar(id, versionFila, transferencia)
+C -> DS ++ : 1.1: r = ejecutar(cajeroId, id, versionFila, transferencia)
+group critical [transacción 1]
+  DS -> DS : 1.1.1: a = autorizacionBloqueada(id, versionFila)
+  alt Si (a.estado ≠ "PendienteEjecucion" o ya tiene una ejecución) (A3)
+    DS --> C : 1.1.2: ReglaNegocioException(«no se repite la devolución»)
+  else Si (no vigente(a.vence): 72 horas)
+    DS -> DS : 1.1.3: vencer(a): autorización Vencida y libera la reserva
+  end
+  alt Si (a.destino = "Transferencia") (A1)
+    DS -> DV ++ : 1.1.4: v = validarTransferencia(transferencia, a, hoy): importe y CBU iguales a los autorizados (RN-73)
+    deactivate DV
+    alt Si (v.errores ≠ ∅)
+      DS -> AL ++ : 1.1.5: generar(«comprobante con importe o cuenta distintos»), si hay discrepancia (A6)
+      deactivate AL
+      DS --> C : 1.1.6: ValidacionException(v.errores, "RN-73")
+    end
+    DS -> DB ++ : 1.1.7: insert("ejecuciones_devolucion", Confirmada, con el comprobante)
+    deactivate DB
+    DS -> DS : 1.1.8: completar(a): autorización Completada, consume la reserva, resuelve la alerta y audita
+  else medio de pago original
+    DS -> DB ++ : 1.1.9: insert("ejecuciones_devolucion", Pendiente, identificador SIGCCR-DEV-n)
+    deactivate DB
+    DS -> DS : 1.1.10: actualizarConVersion(autorización EnEjecucion)
+  end
+end
+opt Si (medio de pago original)
+  ref over DS, DB : 1.1.11: Devolver por el medio de pago original (diagrama 2 de 2)
+end
+DS --> C -- : 1.1.12: [ok, estado, mensaje]
+C --> CA -- : 1.2: resultado de la devolución y constancia
+@enduml

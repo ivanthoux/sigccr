@@ -1,0 +1,39 @@
+@startuml
+!include estilo.iuml
+title sd Confirmar el pago (CU-90, diagrama 3 de 3)
+participant ":PagoElectronicoService" as PE <<service>>
+participant ":PunitorioService" as PU <<service>>
+participant "Imputador" as IM <<utility>>
+participant ":CobroService" as CS <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> PE ++ : o, txId, p, fechaEfectiva, incidencias
+PE -> PE : 1.1.4.9.1: creditos = bloquear("creditos", ids de las cuotas de la orden)
+PE -> PU ++ : 1.1.4.9.2: devengarCuotas(impagas, fecha efectiva)
+deactivate PU
+PE -> PE : 1.1.4.9.3: revertirPunitoriosPosteriores(impagas, fechaEfectiva) (RN-55)
+PE -> DB ++ : 1.1.4.9.4: cuotas = query(cuotas impagas de la orden, con bloqueo UPDLOCK)
+deactivate DB
+PE -> IM ++ : 1.1.4.9.5: r = imputar(mínimo entre el importe y el total, conceptos de cada cuota)
+deactivate IM
+PE -> DB ++ : 1.1.4.9.6: cobroId = insert("cobros", Electronico, con la transacción) e insert("cobros_medios", PagoElectronico)
+deactivate DB
+PE -> CS ++ : 1.1.4.9.7: imputar(cobroId, cuotas, r.imputaciones, creditos) (RN-29, RN-36)
+deactivate CS
+PE -> DB ++ : 1.1.4.9.8: insert("comprobantes_pago")
+deactivate DB
+opt Si (excedente > 0 o las cuotas ya estaban pagadas)
+  PE -> DB ++ : 1.1.4.9.9: insert("saldos_a_favor", excedente) (RN-57)
+  deactivate DB
+end
+opt Si (incidencias ≠ ∅)
+  PE -> PE : 1.1.4.9.10: incidencia(txId, tipo) por cada una
+  PE -> AL ++ : 1.1.4.9.11: generar("Operativa", «pago con incidencias», Gerente) (RN-56)
+  deactivate AL
+end
+PE -> PE : 1.1.4.9.12: actualizarConVersion("ordenes_pago_electronico", id, versionFila, Confirmada)
+PE -> AU ++ : 1.1.4.9.13: registrar("pagos.confirmar", "ordenes_pago_electronico", id)
+deactivate AU
+[<-- PE -- : «cobro N.º» o «saldo a favor»
+@enduml

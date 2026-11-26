@@ -1,0 +1,47 @@
+@startuml
+!include estilo.iuml
+title CU-34 Generar Orden de Pago Electrónico
+actor Cajero as CA
+participant ":PagosElectronicos" as C <<control>>
+participant ":PagoElectronicoService" as PE <<service>>
+participant ":CobroService" as CS <<service>>
+participant "PagoElectronico" as PG <<utility>>
+participant ":PasarelaInterface" as PS
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: generar(clienteId, seleccion, presentado)
+C -> PE ++ : 1.1: orden = generarOrden(usuarioId, clienteId, seleccion, presentado)
+group critical [transacción]
+  PE -> CS ++ : 1.1.1: elegidas = seleccionar(clienteId, seleccion): cuotas completas y consecutivas, punitorios al día (RN-29)
+  deactivate CS
+  PE -> DB ++ : 1.1.2: existente = query(orden pendiente y vigente con alguna de las cuotas)
+  deactivate DB
+  alt Si (existente ≠ null) (A7)
+    PE --> C : 1.1.3: ReglaNegocioException(«ya integra la orden N.º …»)
+  else Si (total ≤ 0) (A3)
+    PE --> C : 1.1.4: ValidacionException(«el importe debe ser mayor que cero», "RN-54")
+  end
+  PE -> PG ++ : 1.1.5: vence = vencimiento(emision, zona): 00:00 del día siguiente, hora local (RN-54)
+  deactivate PG
+  PE -> DB ++ : 1.1.6: id = insert("ordenes_pago_electronico", PendienteConfirmacion) e insert("ordenes_pago_cuotas")
+  deactivate DB
+end
+PE -> PS ++ : 1.1.7: r = crearOrden(numero, importe, descripcion, vence), fuera de la transacción (RNF-08)
+deactivate PS
+alt Si (la pasarela no responde) (A1)
+  PE -> DB ++ : 1.1.8: delete(ordenes_pago_cuotas y la orden)
+  deactivate DB
+  PE -> AU ++ : 1.1.9: registrar("pagos.generar-orden", "clientes", clienteId, "Fallido")
+  deactivate AU
+  PE --> C : 1.1.10: ReglaNegocioException(«la pasarela de pagos no está disponible»)
+  C --> CA : 1.2: no se generó la orden: reintentar o usar otro medio
+else
+  PE -> DB ++ : 1.1.11: update(orden: referenciaExterna y urlPago)
+  deactivate DB
+  PE -> AU ++ : 1.1.12: registrar("pagos.generar-orden", "ordenes_pago_electronico", id, "Exitoso")
+  deactivate AU
+  PE --> C -- : 1.1.13: [id, numero, importe, urlPago, vence]
+  C --> CA -- : 1.3: orden con su enlace de pago
+end
+@enduml

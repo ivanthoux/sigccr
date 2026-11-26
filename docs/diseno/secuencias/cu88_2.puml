@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title sd Devengar los punitorios de la cuota (CU-88, diagrama 2 de 2)
+participant ":PunitorioService" as PU <<service>>
+participant "Punitorios" as R <<utility>>
+participant ":ParametroService" as PA <<service>>
+participant "db : BaseConnection" as DB
+[-> PU ++ : cuotaId, hasta
+group critical [transacción]
+  PU -> DB ++ : 1.5.1.1: q = query(cuota con su crédito, con bloqueo UPDLOCK)
+  deactivate DB
+  alt Si (la cuota no está Pendiente o Vencida, o el crédito no está Activo o EnMora)
+    [<-- PU : 1.5.1.2: sin tramos
+  end
+  PU -> R ++ : 1.5.1.3: dias = diasAtraso(vencimiento, hasta)
+  deactivate R
+  PU -> DB ++ : 1.5.1.4: ultimo = query(fecha del último tramo de la cuota)
+  deactivate DB
+  PU -> R ++ : 1.5.1.5: exigible = esExigible(dias, q.toleranciaDias) (RN-53)
+  deactivate R
+  PU -> R ++ : 1.5.1.6: dias = diasSinTramo(vencimiento, ultimo, hasta)
+  deactivate R
+  loop Mientras (haya días sin tramo)
+    PU -> PA ++ : 1.5.1.7: v = vigente("Morosidad", fin del día) (RN-35)
+    deactivate PA
+    PU -> R ++ : 1.5.1.8: tasa = tasaDiaria(v.tasaPunitoriaDiaria, v.topeSobreTna, tna) (RN-34)
+    deactivate R
+    PU -> PA ++ : 1.5.1.9: iva = vigente("Estructuracion", fin del día).alicuotaIva
+    deactivate PA
+    PU -> R ++ : 1.5.1.10: t = tramo(capitalPendiente, tasa, iva)
+    deactivate R
+    PU -> DB ++ : 1.5.1.11: insert("tramos_punitorios", condicional, clave única cuota y fecha) (A2)
+    deactivate DB
+  end
+  opt Si (exigible)
+    PU -> DB ++ : 1.5.1.12: update(tramos exigibles y punitorios pendientes de la cuota)
+    deactivate DB
+  end
+end
+[<-- PU -- : tramos, importe, exigible
+@enduml

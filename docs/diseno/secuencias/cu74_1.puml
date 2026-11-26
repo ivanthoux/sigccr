@@ -1,0 +1,40 @@
+@startuml
+!include estilo.iuml
+title CU-74 Registrar Aceptación y Aplicar Refinanciación (diagrama 1 de 2)
+actor "Cajero o Analista\nde Crédito" as A
+participant ":Refinanciaciones" as C <<control>>
+participant ":RefinanciacionService" as RS <<service>>
+participant "DeudaRefinanciable" as DR <<utility>>
+participant "db : BaseConnection" as DB
+activate A
+A -> C ++ : 1: aplicar(id, versionFila, fecha, medio, observaciones)
+C -> RS ++ : 1.1: r = aplicar(usuarioId, id, versionFila, fecha, medio, observaciones)
+alt Si (fecha futura, medio vacío u observaciones de más de 500 caracteres)
+  RS --> C : 1.1.1: ValidacionException(errores, "RN-37")
+end
+group critical [transacción]
+  RS -> RS : 1.1.2: p = propuestaBloqueada(id, versionFila) (RN-24)
+  alt Si (p.estado ≠ "AprobadaPendienteAceptacion" o fecha anterior al registro)
+    RS --> C : 1.1.3: ReglaNegocioException o ValidacionException
+  end
+  RS -> RS : 1.1.4: r = revalidar(p): vigencia de 7 días y deuda actual por cuota
+  activate RS
+  RS -> DR ++ : 1.1.4.1: variaciones = variaciones(guardadas, actuales, fechaCorte) (RN-36)
+  deactivate DR
+  deactivate RS
+  alt Si (r.vencida) (A1)
+    RS -> RS : 1.1.5: vencer(p): propuesta Vencida
+    RS --> C : 1.1.6: [ok = false, «superó su vigencia; las obligaciones originales siguen vigentes»]
+  else Si (r.variaciones ≠ ∅) (A2)
+    RS -> RS : 1.1.7: observar(p, variaciones): propuesta Observada
+    RS --> C : 1.1.8: [ok = false, «la deuda cambió; debe registrarse una nueva versión»]
+  end
+  RS -> RS : 1.1.9: ordenes = ordenesVigentes(p)
+  alt Si (ordenes ≠ ∅)
+    RS --> C : 1.1.10: ReglaNegocioException(«hay cuotas en una orden de pago vigente»)
+  end
+  ref over RS, DB : 1.1.11: creditoId = Crear el crédito refinanciado (diagrama 2 de 2)
+end
+RS --> C -- : 1.1.12: [ok, mensaje]
+C --> A -- : 1.2: nuevo crédito con su plan, o el motivo por el que no se aplicó
+@enduml

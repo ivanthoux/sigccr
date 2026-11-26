@@ -1,0 +1,21 @@
+@startuml
+!include estilo.iuml
+title CU-103 Registrar Contrato Firmado: obtener el contrato (diagrama 1 de 2)
+actor "Analista de Crédito" as AN
+participant ":Contratos" as C <<control>>
+participant ":ContratoService" as CT <<service>>
+participant ":ParametroService" as PA <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+AN -> C ++ : 1: ver(solicitudId)
+C -> CT ++ : 1.1: s = obtener(solicitudId)
+CT -> CT : 1.1.1: s.contrato = generar(solicitudId): si no existe, lo crea para la aprobación vigente (RN-78)
+activate CT
+CT -> PA ++ : 1.1.1.1: v = vigente("Contrato"): versión vigente del modelo de contrato (CU-106)
+deactivate PA
+CT -> DB ++ : 1.1.1.2: insert("contratos_prestamo", resolución y versionContratoId = v.id)
+deactivate DB
+deactivate CT
+CT --> C -- : 1.1.2: s
+C --> AN -- : 1.2: contrato para imprimir en dos ejemplares
+@enduml
