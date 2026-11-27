@@ -1,0 +1,57 @@
+@startuml
+!include estilo.iuml
+title CU-95 Procesar Comunicaciones Pendientes
+actor "Temporizador\n(cron, cada minuto)" as T
+participant ":EnviarComunicaciones" as K <<control>>
+participant ":ComunicacionService" as S <<service>>
+participant "PoliticaEnvio" as PE <<utility>>
+participant ":ComunicacionesInterface" as P
+participant ":AlertaService" as AL <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark comunicaciones:enviar
+K -> DB ++ : 1.1: r = query(sp_getapplock exclusivo, espera 0) (RNF-10)
+deactivate DB
+alt Si (otra ejecución en curso)
+  K --> T : 1.2: termina sin procesar
+end
+K -> DB ++ : 1.3: insert("ejecuciones_proceso", EnCurso)
+deactivate DB
+K -> S ++ : 1.4: ids = pendientes()
+deactivate S
+loop Mientras (haya comunicaciones por enviar), cada una en su propia transacción
+  K -> S ++ : 1.5: estado = enviar(id)
+  S -> DB ++ : 1.5.1: c = query(comunicación, con bloqueo UPDLOCK)
+  deactivate DB
+  S -> PE ++ : 1.5.2: motivo = motivoCancelacion(tipo, autorización, oferta, consentimiento)
+  deactivate PE
+  alt Si (motivo ≠ null) (A1)
+    S -> DB ++ : 1.5.3: insert("intentos_envio", Cancelada) y update(comunicación Cancelada, sin datos cifrados)
+    deactivate DB
+  else
+    S -> S : 1.5.4: descifrar(datos) y armar el asunto y el cuerpo con su plantilla
+    S -> P ++ : 1.5.5: r = enviar(destino, asunto, cuerpo, identificadorOperacion)
+    deactivate P
+    S -> DB ++ : 1.5.6: insert("intentos_envio", r.resultado)
+    deactivate DB
+    S -> PE ++ : 1.5.7: sig = despuesDelIntento(r.resultado, intentos, primerIntento): reintento a 1, 3 o 5 min (RNF-09)
+    deactivate PE
+    S -> DB ++ : 1.5.8: update(comunicación: sig.estado, programadaPara; sin datos al finalizar)
+    deactivate DB
+    opt Si (sig.alerta) (A3, A4)
+      S -> AL ++ : 1.5.9: generar("Integracion", causa, acción, "Administrador")
+      deactivate AL
+    end
+  end
+  S --> K -- : 1.5.10: estado
+end
+K -> DB ++ : 1.6: update(ejecución Finalizada o ConErrores)
+deactivate DB
+opt Si (terminó con errores)
+  K -> AL ++ : 1.7: generar("Proceso", mensaje, acción, "Administrador") (RNF-16)
+  deactivate AL
+end
+K -> DB ++ : 1.8: query(sp_releaseapplock)
+deactivate DB
+deactivate K
+@enduml

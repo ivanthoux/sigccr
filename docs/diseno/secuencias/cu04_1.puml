@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title CU-04 Activar o Rehabilitar Acceso del Cliente: solicitar el enlace (diagrama 1 de 2)
+actor Cliente as CL
+participant ":Activacion" as C <<control>>
+participant ":ActivacionService" as S <<service>>
+participant "ReglasActivacion" as RA <<utility>>
+participant ":AutorizacionService" as AZ <<service>>
+participant ":ComunicacionService" as CO <<service>>
+participant ":AuditoriaService" as AU <<service>>
+activate CL
+CL -> C ++ : 1: solicitar(tipo, numero, correo)
+C -> S ++ : 1.1: enviado = solicitar(tipo, numero, correo)
+S -> RA ++ : 1.1.1: identificacion = identificacion(tipo, numero)
+deactivate RA
+group critical [transacción]
+  S -> S : 1.1.2: c = buscarCliente(identificacion), con bloqueo UPDLOCK
+  S -> RA ++ : 1.1.3: r = evaluar(c, correo)
+  deactivate RA
+  alt Si (r.resultado ≠ "Enviar")
+    S -> AU ++ : 1.1.4: registrar("acceso.activacion.solicitud", "cuenta_acceso", cuentaId, "Rechazado")
+    deactivate AU
+  else
+    S -> AZ ++ : 1.1.5: comunicacionId = emitir(cuentaId, r.proposito, correo, nombre, "portal/activar"), vigencia de 24 h
+    deactivate AZ
+    S -> AU ++ : 1.1.6: registrar("acceso.activacion.solicitud", "cuenta_acceso", cuentaId, "Exitoso")
+    deactivate AU
+  end
+end
+opt Si (comunicacionId ≠ null)
+  S -> CO ++ : 1.1.7: enviar(comunicacionId)
+  deactivate CO
+end
+S --> C -- : 1.1.8: enviado
+alt Si (r.resultado = "NoVerificado")
+  C --> CL : 1.2: no pudimos verificar los datos (A1)
+else
+  C --> CL -- : 1.3: le enviamos un correo con las instrucciones (A2: el mismo mensaje si no hay envío)
+end
+
+@enduml

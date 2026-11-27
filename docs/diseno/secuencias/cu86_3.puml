@@ -1,0 +1,43 @@
+@startuml
+!include estilo.iuml
+title sd Registrar el resultado (CU-86, diagrama 3 de 3)
+participant ":EvaluacionService" as E <<service>>
+participant "ModeloEvaluacion" as ME <<utility>>
+participant "DimensionesEvaluacion" as DE <<utility>>
+participant ":EstructuracionService" as ES <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> E ++ : s, e, bcra
+E -> E : 1.4.1.12.1: internos = antecedentesInternos(cliente, solicitudId) (RN-18, RN-69)
+E -> ME ++ : 1.4.1.12.2: r = evaluar(bcra, atraso, obligaciones, ingresos, antigüedad, parametros)
+deactivate ME
+alt Si (la solicitud cambió durante la consulta) (A4, A5)
+  E -> DB ++ : 1.4.1.12.3: update(evaluación Finalizada e Invalidada)
+  deactivate DB
+  E -> AU ++ : 1.4.1.12.4: registrar("evaluaciones.ejecutar", "solicitudes_credito", id, "Rechazado")
+  deactivate AU
+  [<-- E : 1.4.1.12.5: "SinEfecto"
+end
+E -> E : 1.4.1.12.6: sustituirVigente(solicitudId)
+E -> DB ++ : 1.4.1.12.7: update(evaluación Finalizada, puntaje, categoría, Vigente por 30 días)
+deactivate DB
+E -> DE ++ : 1.4.1.12.8: destino = estadoSolicitud(r.resultado)
+deactivate DE
+opt Si (destino = "PendienteSeleccionPlan")
+  E -> ES ++ : 1.4.1.12.9: estructuracion = generar(s, null, proceso): capacidad, monto máximo y alternativas (CU-87)
+  deactivate ES
+  opt Si (estructuracion.viables = 0)
+    E -> E : 1.4.1.12.10: destino = "PendienteResolucion"
+  end
+end
+E -> SO ++ : 1.4.1.12.11: cambiarEstado(s, destino, null, motivo, null, tipoRechazo, proceso)
+deactivate SO
+E -> AL ++ : 1.4.1.12.12: resolver("solicitudes_credito", id, proceso)
+deactivate AL
+E -> E : 1.4.1.12.13: alertar(s, destino, texto): alerta al Analista o al Gerente según el destino
+E -> AU ++ : 1.4.1.12.14: registrar("evaluaciones.ejecutar", "solicitudes_credito", id, "Exitoso", motivo)
+deactivate AU
+[<-- E -- : r.resultado
+@enduml

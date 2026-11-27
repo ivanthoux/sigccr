@@ -1,0 +1,40 @@
+@startuml
+!include estilo.iuml
+title CU-103 Registrar Contrato Firmado: registrar la constancia (diagrama 2 de 2)
+actor "Analista de Crédito" as AN
+participant ":Contratos" as C <<control>>
+participant ":ContratoService" as CT <<service>>
+participant "ArchivoLegajo" as AL <<utility>>
+participant "Contrato" as K <<utility>>
+participant ":LegajoService" as L <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+AN -> C ++ : 2: registrar(solicitudId, archivo, fechaRecepcion)
+C -> CT ++ : 2.1: registrarConstancia(solicitudId, archivo, fechaRecepcion, usuarioId)
+CT -> AL ++ : 2.1.1: error = validar(nombre, tamaño, tipo real): PDF, JPG o PNG de hasta 5 MB (RNF-12)
+deactivate AL
+group critical [transacción]
+  CT -> CT : 2.1.2: s = bloquear("solicitudes_credito", [solicitudId])
+  alt Si (s.estado ≠ "AprobadaPendienteLiquidacion") (A2)
+    CT --> C : 2.1.3: ReglaNegocioException(«no está aprobada pendiente de liquidación»)
+  end
+  CT -> CT : 2.1.4: contrato = generar(solicitudId)
+  CT -> K ++ : 2.1.5: f = validarRecepcion(fechaRecepcion, fechaAprobacion, hoy)
+  deactivate K
+  alt Si (hay errores del archivo o de la fecha)
+    CT --> C : 2.1.6: ValidacionException(errores, "RN-78")
+  end
+  CT -> L ++ : 2.1.7: g = guardar(clienteId, documento de la constancia, que reemplaza a la anterior y la conserva) (A3, RN-44)
+  deactivate L
+  CT -> DB ++ : 2.1.8: update(contrato: documento, fecha de recepción y responsable)
+  deactivate DB
+  CT -> AU ++ : 2.1.9: registrar("contratos.registrar_firmado", "solicitudes_credito", solicitudId)
+  deactivate AU
+end
+opt Si (falla después de guardar el archivo)
+  CT -> L : 2.1.10: descartar([ruta])
+end
+CT --> C -- : 2.1.11:
+C --> AN -- : 2.2: constancia registrada: la solicitud puede liquidarse (RN-25) y corre el plazo de revocación (RN-79)
+@enduml

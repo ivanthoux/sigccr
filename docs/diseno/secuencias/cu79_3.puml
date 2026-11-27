@@ -1,0 +1,37 @@
+@startuml
+!include estilo.iuml
+title sd Aprobar la solicitud (CU-79, diagrama 3 de 3)
+participant ":EstructuracionService" as ES <<service>>
+participant "Simulador" as SI <<utility>>
+participant ":FondosService" as F <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":ContratoService" as CT <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> ES ++ : s, a, datos
+ES -> DB ++ : 1.1.15.1: update(alternativa Confirmada con fecha y medio de la conformidad) (RN-23)
+deactivate DB
+ES -> SI ++ : 1.1.15.2: calculo = calcular(version, a.importe, a.cuotas, iva, hoy)
+deactivate SI
+ES -> F ++ : 1.1.15.3: reserva = reservarParaSolicitud(solicitudId, calculo.neto) (RN-41)
+deactivate F
+alt Si (version.estadoLinea ≠ "Activa" o reserva = null) (A1, A4)
+  ES -> ES : 1.1.15.4: derivarAResolucion(s, usuarioId, causa)
+  ES -> AU ++ : 1.1.15.5: registrar("alternativas.confirmar", …, "Derivada a resolución")
+  deactivate AU
+  [<-- ES : 1.1.15.6: [PendienteResolucion, mensaje]
+end
+ES -> ES : 1.1.15.7: vence = venceAprobacion(): 72 horas hábiles (RN-49)
+ES -> DB ++ : 1.1.15.8: insert("resoluciones", Aprobada, automática, vence)
+deactivate DB
+ES -> SO ++ : 1.1.15.9: cambiarEstado(s, "AprobadaPendienteLiquidacion", usuarioId, motivo)
+deactivate SO
+ES -> CT ++ : 1.1.15.10: generar(solicitudId): contrato con el modelo vigente (CU-103, CU-106)
+deactivate CT
+ES -> AL ++ : 1.1.15.11: resolver("solicitudes_credito", solicitudId, responsable)
+deactivate AL
+ES -> AU ++ : 1.1.15.12: registrar("alternativas.confirmar", …, "Aprobación automática")
+deactivate AU
+[<-- ES -- : [AprobadaPendienteLiquidacion, mensaje]
+@enduml

@@ -1,0 +1,47 @@
+@startuml
+!include estilo.iuml
+title CU-37 Anular Cobro
+actor Gerente as GE
+participant ":Cobros" as C <<control>>
+participant ":CobroService" as CS <<service>>
+participant "CobroCuotas" as CC <<utility>>
+participant ":RefinanciacionService" as RF <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate GE
+GE -> C ++ : 1: anular(id, motivo, continuar)
+C -> CS ++ : 1.1: r = anular(id, motivo, continuar, usuarioId)
+alt Si (el motivo no es válido)
+  CS --> C : 1.1.1: ValidacionException(motivo, "RN-33")
+end
+group critical [transacción]
+  CS -> CS : 1.1.2: b = bloquear("cobros", [id])
+  alt Si (b.tipo = "Revocacion" o "CancelacionAnticipada" o b.estado = "Anulado") (A1)
+    CS --> C : 1.1.3: ReglaNegocioException(mensaje, "RN-33, RN-79")
+  end
+  CS -> CS : 1.1.4: dependientes = dependientes(id): cobros posteriores sobre las mismas cuotas
+  alt Si (dependientes ≠ ∅ y no continuar)
+    CS --> C : 1.1.5: ValidacionException(«confirme la anulación con los cobros dependientes»)
+    C --> GE : 1.2: cobros dependientes para confirmar
+  end
+  CS -> DB ++ : 1.1.6: imputaciones = query(imputaciones del cobro)
+  deactivate DB
+  CS -> CS : 1.1.7: cuotas = bloquear("cuotas", ids) y creditos = bloquear("creditos", ids)
+  loop Mientras (haya cuotas alcanzadas)
+    CS -> CC ++ : 1.1.8: r = restaurar(cuota, imputaciones, hoy): saldos por concepto y estado Pendiente o Vencida
+    deactivate CC
+    CS -> CS : 1.1.9: actualizarConVersion("cuotas", id, versionFila, r.columnas)
+  end
+  CS -> CS : 1.1.10: restaurarEstadoCredito(credito, hoy): En mora o Activo
+  CS -> RF ++ : 1.1.11: observarPorCuotas(cuotaIds, causa) (RN-36)
+  deactivate RF
+  CS -> DB ++ : 1.1.12: insert("saldos_a_favor", importe recibido) (RN-57) e insert("anulaciones_cobro", motivo)
+  deactivate DB
+  CS -> DB ++ : 1.1.13: update(cobro Anulado): conserva sus movimientos de caja
+  deactivate DB
+  CS -> AU ++ : 1.1.14: registrar("cobros.anular", "cobros", id, motivo)
+  deactivate AU
+end
+CS --> C -- : 1.1.15: [saldoAFavor, cuotas, dependientes]
+C --> GE -- : 1.3: cobro anulado y saldo a favor generado
+@enduml

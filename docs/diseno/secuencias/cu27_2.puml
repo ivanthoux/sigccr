@@ -1,0 +1,38 @@
+@startuml
+!include estilo.iuml
+title sd Registrar el crédito y el desembolso (CU-27, diagrama 2 de 2)
+participant ":LiquidacionService" as LQ <<service>>
+participant ":ParametroService" as PS <<service>>
+participant "AmortizacionFrancesa" as AF <<utility>>
+participant ":FondosService" as F <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> LQ ++ : s, datos, reserva
+LQ -> PS ++ : 2.1.17.1: morosidad = vigente("Morosidad")
+deactivate PS
+LQ -> DB ++ : 2.1.17.2: creditoId = insert("creditos", Activo, con la versión de morosidad)
+deactivate DB
+LQ -> AF ++ : 2.1.17.3: plan = plan(capital, tna, cuotas, hoy, gasto por cuota, iva) (RN-50 a RN-52)
+deactivate AF
+loop Mientras (haya cuotas en el plan)
+  LQ -> DB ++ : 2.1.17.4: insert("cuotas", Pendiente)
+  deactivate DB
+end
+LQ -> DB ++ : 2.1.17.5: insert("liquidaciones", cuenta, comprobante y neto)
+deactivate DB
+LQ -> F ++ : 2.1.17.6: consumir(reserva.id)
+deactivate F
+opt Si (s.requiereConformidad)
+  LQ -> DB ++ : 2.1.17.7: update(alternativa con la conformidad del desembolso)
+  deactivate DB
+end
+LQ -> SO ++ : 2.1.17.8: cambiarEstado(fila, "Liquidada", usuarioId, motivo)
+deactivate SO
+LQ -> AL ++ : 2.1.17.9: resolver("solicitudes_credito", id, responsable)
+deactivate AL
+LQ -> AU ++ : 2.1.17.10: registrar("creditos.liquidar", "solicitudes_credito", id)
+deactivate AU
+[<-- LQ -- : creditoId
+@enduml

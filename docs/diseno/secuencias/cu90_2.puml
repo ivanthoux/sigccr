@@ -1,0 +1,57 @@
+@startuml
+!include estilo.iuml
+title CU-90 Procesar Notificación de Pago Electrónico: procesar las notificaciones (diagrama 2 de 3)
+actor "Temporizador\n(cada minuto)" as T
+participant ":ProcesarNotificacionesPago" as K <<control>>
+participant ":PagoElectronicoService" as PE <<service>>
+participant "PagoElectronico" as PG <<utility>>
+participant ":PasarelaInterface" as P
+participant ":AlertaService" as AL <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark pagos:notificaciones
+loop Mientras (haya notificaciones Pendiente)
+  K -> PE ++ : 1.1: procesarNotificacion(id)
+  PE -> DB ++ : 1.1.1: orden = query(orden con la referencia externa de la notificación)
+  deactivate DB
+  alt Si (orden = null)
+    PE -> AL ++ : 1.1.2: generar("Operativa", «notificación sin orden registrada»)
+    deactivate AL
+    PE -> DB ++ : 1.1.3: update(notificación Descartada)
+    deactivate DB
+  else
+    PE -> PE : 1.1.4: procesarOrden(orden.id)
+    activate PE
+    PE -> P ++ : 1.1.4.1: pagos = consultarPagos(referenciaExterna), fuera de la transacción: no confía en el cuerpo (RNF-08)
+    deactivate P
+    loop Mientras (haya pagos informados), cada uno en su propia transacción
+      PE -> PE : 1.1.4.2: o = bloquear("ordenes_pago_electronico", [ordenId])
+      PE -> DB ++ : 1.1.4.3: t = query(transacción por su idExterno, con bloqueo UPDLOCK)
+      deactivate DB
+      PE -> PG ++ : 1.1.4.4: clase = clasificar(p.estado)
+      deactivate PG
+      alt Si (t ya tiene un estado definitivo) (RN-30)
+        PE -> PE : 1.1.4.5: «repetida»: no se aplica de nuevo
+      else Si (clase = "pendiente") (A7)
+        PE -> PE : 1.1.4.6: orden EnConciliacion e incidencia(txId, "EstadoDesconocido")
+      else Si (clase = "rechazado") (A3)
+        PE -> DB ++ : 1.1.4.7: update(orden Rechazada): la deuda se mantiene
+        deactivate DB
+      else clase = "aprobado"
+        PE -> PG ++ : 1.1.4.8: incidencias = incidencias(o.importe, p.importe, moneda, vence, fechaEfectiva)
+        deactivate PG
+        ref over PE, DB : 1.1.4.9: Confirmar el pago (diagrama 3 de 3)
+      end
+    end
+    deactivate PE
+    PE -> DB ++ : 1.1.5: update(notificación Procesada)
+    deactivate DB
+  end
+  opt Si (error al procesar)
+    PE -> DB ++ : 1.1.6: update(notificación Pendiente para reintentar, o Error al quinto intento)
+    deactivate DB
+  end
+  deactivate PE
+end
+deactivate K
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+!include estilo.iuml
+title CU-02 Recuperar Acceso: definir la contraseña nueva (diagrama 2 de 2)
+actor "Usuario interno\no Cliente" as U
+participant ":Acceso" as C <<control>>
+participant ":RecuperacionService" as S <<service>>
+participant "PoliticaContrasena" as PC <<utility>>
+participant ":AutorizacionService" as AZ <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate U
+U -> C ++ : 2: guardarContrasena(codigo, contrasena, confirmacion)
+C -> S ++ : 2.1: restablecer(codigo, contrasena, confirmacion)
+S -> PC ++ : 2.1.1: motivos = validar(contrasena, confirmacion)
+deactivate PC
+alt Si (motivos no está vacío)
+  S --> C : 2.1.2: ReglaNegocioException(motivos, "RN-62")
+  C --> U : 2.2: el formulario con los motivos
+end
+group critical [transacción]
+  S -> AZ ++ : 2.1.3: a = buscarVigente(codigo, propósitos, true)
+  deactivate AZ
+  alt Si (a = null)
+    S --> C : 2.1.4: ReglaNegocioException("enlace inválido", "RN-03")
+    C --> U : 2.3: enlace inválido o vencido (A2)
+  end
+  S -> DB ++ : 2.1.5: update(cuenta: hash Argon2id, correo verificado, versionSeguridad + 1)
+  deactivate DB
+  S -> AZ ++ : 2.1.6: marcarUtilizada(a.id)
+  deactivate AZ
+  S -> AU ++ : 2.1.7: registrar("acceso.recuperacion.restablecer", "cuenta_acceso", cuentaId)
+  deactivate AU
+end
+S --> C -- : 2.1.8:
+C --> U -- : 2.4: inicio de sesión con la contraseña nueva
+@enduml

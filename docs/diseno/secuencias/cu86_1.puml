@@ -1,0 +1,27 @@
+@startuml
+!include estilo.iuml
+title CU-86 Ejecutar Evaluación Crediticia Automática (diagrama 1 de 3)
+actor "Temporizador\n(cada 5 minutos)" as T
+participant ":EjecutarEvaluaciones" as K <<control>>
+participant ":EvaluacionService" as E <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark evaluacion:ejecutar
+K -> DB ++ : 1.1: query(sp_getapplock exclusivo, espera 0) y ejecución EnCurso (RNF-10)
+deactivate DB
+K -> E ++ : 1.2: recuperarInterrumpidas(proceso)
+loop Mientras (haya intentos EnProceso de más de 15 minutos)
+  E -> E : 1.2.1: revertirIntento(s, e, motivo): evaluación NoCompletada y solicitud PendienteEvaluacion (D-17)
+end
+deactivate E
+K -> E ++ : 1.3: ids = pendientes()
+deactivate E
+loop Mientras (haya solicitudes PendienteEvaluacion), cada una por separado
+  K -> E ++ : 1.4: resultado = evaluar(id)
+  ref over E, DB : 1.4.1: Evaluar la solicitud (diagrama 2 de 3)
+  E --> K -- : 1.4.2: resultado
+end
+K -> DB ++ : 1.5: update(ejecución Finalizada o ConErrores) y sp_releaseapplock
+deactivate DB
+deactivate K
+@enduml

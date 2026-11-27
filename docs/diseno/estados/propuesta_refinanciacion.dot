@@ -1,0 +1,21 @@
+digraph propuesta_refinanciacion { rankdir=TB; compound=true;
+graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+f1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f3 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f4 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f5 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+subgraph cluster_v { label="Vigente"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ PendienteResolucion; AprobadaPendienteAceptacion;
+ PendienteResolucion -> AprobadaPendienteAceptacion [label="aprobación (CU-41)"];
+}
+ini -> PendienteResolucion [label="registro (CU-40)\n/ vence = registro + 7 días"];
+PendienteResolucion -> Rechazada [label="rechazo (CU-41)"];
+AprobadaPendienteAceptacion -> Aplicada [label="aceptación registrada [capital sin\ncambios] / incorpora punitorios desde\nla fecha de corte (CU-74, RN-70)"];
+AprobadaPendienteAceptacion -> Observada [label="observación gerencial (CU-41) o deuda\nmodificada por pago, condonación,\nanulación o cancelación anticipada"];
+AprobadaPendienteAceptacion -> Vencida [ltail=cluster_v, label="7 días sin\naplicación (CU-89)"];
+AprobadaPendienteAceptacion -> Cancelada [ltail=cluster_v, label="desistimiento o causa\nadministrativa (CU-96)"];
+Observada -> Cancelada [label="cancelación (CU-96)"];
+Observada -> f2 [label="corrección: nueva\nversión (CU-40)"];
+Aplicada -> f1; Vencida -> f3; Cancelada -> f4; Rechazada -> f5;
+{rank=same; Aplicada -> Observada -> Vencida -> Cancelada [style=invis]}
+}

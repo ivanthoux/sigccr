@@ -1,0 +1,28 @@
+@startuml
+!include estilo.iuml
+title sd Revalidar la capacidad de pago (CU-79, diagrama 2 de 3)
+participant ":EstructuracionService" as ES <<service>>
+participant ":EvaluacionService" as EV <<service>>
+participant ":ParametroService" as PS <<service>>
+participant "CapacidadPago" as CP <<utility>>
+participant "db : BaseConnection" as DB
+[-> ES ++ : s, a
+ES -> EV ++ : 1.1.14.1: internos = antecedentesInternos(cliente, solicitudId)
+deactivate EV
+ES -> PS ++ : 1.1.14.2: p = vigente("Estructuracion")
+deactivate PS
+ES -> CP ++ : 1.1.14.3: capacidad = capacidad(internos.ingresos, p.porcentajeAfectacion, internos.obligaciones)
+deactivate CP
+opt Si (a.valorCuota > capacidad) (A3)
+  ES -> DB ++ : 1.1.14.4: update(alternativa Descartada)
+  deactivate DB
+  ES -> ES : 1.1.14.5: r = generar(s, usuarioId): alternativas nuevas (CU-87)
+  alt Si (r.viables = 0)
+    ES -> ES : 1.1.14.6: derivarAResolucion(s, usuarioId, causa)
+    [<-- ES : 1.1.14.7: [PendienteResolucion, mensaje]
+  else
+    [<-- ES : 1.1.14.8: [PendienteSeleccionPlan, «se generaron alternativas nuevas»]
+  end
+end
+[<-- ES -- : la alternativa sigue siendo viable
+@enduml

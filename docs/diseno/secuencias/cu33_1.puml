@@ -1,0 +1,36 @@
+@startuml
+!include estilo.iuml
+title CU-33 Registrar Cobro en Ventanilla (diagrama 1 de 3)
+actor Cajero as CA
+participant ":Cobros" as C <<control>>
+participant ":CobroService" as CS <<service>>
+participant ":CajaService" as CJ <<service>>
+participant "MediosCobro" as MC <<utility>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: index(clienteId)
+C -> CS ++ : 1.1: o = obligaciones(clienteId): cuotas impagas con su total al día y órdenes pendientes (A6)
+deactivate CS
+C --> CA -- : 1.2: cuotas a cobrar
+CA -> C ++ : 2: registrar(clienteId, seleccion, importe, medios)
+C -> CS ++ : 2.1: r = registrar(usuarioId, clienteId, seleccion, importe, medios)
+group critical [transacción]
+  CS -> CJ ++ : 2.1.1: jornada = jornadaOperable(usuarioId)
+  deactivate CJ
+  alt Si (jornada = null) (A3)
+    CS --> C : 2.1.2: ReglaNegocioException("No tiene una caja abierta hoy", "RN-28")
+  end
+  ref over CS, DB : 2.1.3: cuotas, importe = Seleccionar las cuotas y el importe (diagrama 2 de 3)
+  CS -> MC ++ : 2.1.4: m = componer(medios, importe): sin efectivo, con número de operación y suma igual al importe
+  deactivate MC
+  alt Si (m.errores no está vacío)
+    CS --> C : 2.1.5: ValidacionException(m.errores, "RN-77")
+  end
+  ref over CS, DB : 2.1.6: cobroId = Asentar e imputar el cobro (diagrama 3 de 3)
+  CS -> AU ++ : 2.1.7: registrar("cobros.registrar", "cobros", cobroId)
+  deactivate AU
+end
+CS --> C -- : 2.1.8: [cobroId, numero, importe, canceladas]
+C --> CA -- : 2.2: comprobante del cobro (CU-35)
+@enduml

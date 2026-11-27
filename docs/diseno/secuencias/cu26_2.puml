@@ -1,0 +1,52 @@
+@startuml
+!include estilo.iuml
+title sd Aprobar la solicitud (CU-26, diagrama 2 de 2)
+participant ":ResolucionService" as R <<service>>
+participant ":EstructuracionService" as ES <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant "Simulador" as SI <<utility>>
+participant ":FondosService" as F <<service>>
+participant ":ContratoService" as CT <<service>>
+participant "db : BaseConnection" as DB
+[-> R ++ : s, datos, confirmada
+R -> ES ++ : 2.1.14.1: ev = evaluacionVigente(id)
+deactivate ES
+R -> R : 2.1.14.2: verificada = documentacionVerificada(id)
+alt Si (ev = null) (A3)
+  R -> DB ++ : 2.1.14.3: update(evaluación Vencida)
+  deactivate DB
+  R -> SO ++ : 2.1.14.4: cambiarEstado(s, "PendienteEvaluacion", usuarioId, motivo RN-20, RN-61)
+  deactivate SO
+  [<-- R : 2.1.14.5: [PendienteEvaluacion, «la evaluación ya no está vigente»]
+else Si (no verificada) (A5)
+  R -> SO ++ : 2.1.14.6: cambiarEstado(s, "PendienteVerificacion", usuarioId, motivo)
+  deactivate SO
+  [<-- R : 2.1.14.7: [PendienteVerificacion, «la documentación no está verificada»]
+end
+R -> ES ++ : 2.1.14.8: version = version(versionId)
+deactivate ES
+alt Si (version.estadoLinea ≠ "Activa")
+  [<-- R : 2.1.14.9: ReglaNegocioException("la línea está suspendida o vencida")
+end
+R -> ES ++ : 2.1.14.10: a = alternativaParaAprobar(s, plan, alternativaId, importe, cuotas): dentro de la línea, la capacidad y el tope (RN-76, RN-83)
+deactivate ES
+R -> SI ++ : 2.1.14.11: neto = calcular(version, a.importe, a.cuotas, iva, hoy).neto
+deactivate SI
+R -> F ++ : 2.1.14.12: liberarDeSolicitud(id)
+deactivate F
+R -> F ++ : 2.1.14.13: reserva = reservarParaSolicitud(id, neto) (RN-71)
+deactivate F
+alt Si (reserva = null) (A4)
+  [<-- R : 2.1.14.14: ReglaNegocioException("Fondos insuficientes para el desembolso")
+end
+R -> ES ++ : 2.1.14.15: vence = vencimientoAprobacion(): 72 horas hábiles (RN-49)
+deactivate ES
+R -> DB ++ : 2.1.14.16: insert("resoluciones", Aprobada, plan, vence)
+deactivate DB
+R -> SO ++ : 2.1.14.17: cambiarEstado(s, "AprobadaPendienteLiquidacion", usuarioId, fundamento)
+deactivate SO
+R -> CT ++ : 2.1.14.18: generar(id): contrato con el modelo vigente (CU-103, CU-106)
+deactivate CT
+R -> R : 2.1.14.19: cerrarAlertas(id) y alertarAnalista(s, «aprobada por el Gerente»)
+[<-- R -- : [AprobadaPendienteLiquidacion, mensaje]
+@enduml

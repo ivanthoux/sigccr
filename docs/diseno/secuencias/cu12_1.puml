@@ -1,0 +1,40 @@
+@startuml
+!include estilo.iuml
+title CU-12 Modificar Datos del Cliente (diagrama 1 de 2)
+actor "Analista de Crédito" as AN
+participant ":Clientes" as C <<control>>
+participant ":ClienteService" as S <<service>>
+participant "ValidadorCliente" as VC <<utility>>
+participant "Cambios" as CB <<utility>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+AN -> C ++ : 1: actualizar(id, datos, versionFila, evidencia)
+C -> S ++ : 1.1: r = modificar(id, versionFila, datos, correoNuevo, evidencia)
+S -> VC ++ : 1.1.1: d = normalizar(datos) y errores = validar(d, false, hoy, escala)
+deactivate VC
+alt Si (hay errores o correo nuevo sin evidencia de identidad (RN-58))
+  S --> C : 1.1.2: ValidacionException(errores)
+end
+group critical [transacción]
+  S -> S : 1.1.3: c = bloquear("clientes", [id])
+  alt Si (c.estado ≠ "Activo")
+    S --> C : 1.1.4: ReglaNegocioException("solo se modifica un cliente activo")
+  end
+  S -> S : 1.1.5: verificarUnicidad(d, id, correoNuevo) (RN-07, RN-08)
+  S -> CB ++ : 1.1.6: cambios = entre(actual, nuevos, campos)
+  deactivate CB
+  alt Si (cambios = ∅ y no cambia el correo ni el consentimiento)
+    S --> C : 1.1.7: ReglaNegocioException("No hay cambios para guardar")
+  end
+  S -> S : 1.1.8: actualizarConVersion("clientes", id, versionFila, datos)
+  alt Si (otro usuario lo modificó antes)
+    S --> C : 1.1.9: ConflictoConcurrenciaException (RN-24)
+  end
+  ref over S, DB : 1.1.10: afectadas = Aplicar los cambios (diagrama 2 de 2)
+  S -> AU ++ : 1.1.11: registrarCambios("clientes.modificar", "clientes", id, cambios)
+  deactivate AU
+end
+S --> C -- : 1.1.12: [verificacion, solicitudesAfectadas]
+C --> AN -- : 1.2: confirmación, con aviso de verificación o de solicitudes afectadas
+@enduml

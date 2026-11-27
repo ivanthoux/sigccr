@@ -1,0 +1,42 @@
+@startuml
+!include estilo.iuml
+title sd Validar la simulación y el cliente (CU-22, diagrama 2 de 2)
+participant ":SolicitudService" as S <<service>>
+participant ":SimulacionService" as SM <<service>>
+participant "Elegibilidad" as EL <<utility>>
+participant "Simulador" as SI <<utility>>
+participant "db : BaseConnection" as DB
+[-> S ++ : simulacionId
+S -> DB ++ : 1.1.3.1: sim = query(simulación, con bloqueo UPDLOCK)
+deactivate DB
+alt Si (sim.vigente = 0)
+  [<-- S : 1.1.3.2: ReglaNegocioException(mensaje, "RN-48")
+end
+S -> S : 1.1.3.3: bloquear("clientes", [sim.clienteId])
+S -> SM ++ : 1.1.3.4: datos = cliente(sim.clienteId)
+deactivate SM
+alt Si (datos.estado ≠ "Activo" o ValidadorCliente::identificacionIncompleta(datos) ≠ ∅)
+  [<-- S : 1.1.3.5: ReglaNegocioException(mensaje)
+end
+S -> S : 1.1.3.6: bloquear("lineas_credito", [lineaId])
+S -> S : 1.1.3.7: version = versionParaElegibilidad(sim.versionId)
+S -> EL ++ : 1.1.3.8: motivo = motivoNoAdmitida(version, datos, hoy)
+deactivate EL
+S -> SI ++ : 1.1.3.9: limites = validar(version, sim.importe, sim.cuotas)
+deactivate SI
+S -> SM ++ : 1.1.3.10: exceso = excesoCapacidad(datos, version, sim.cuotas, sim.valorCuota)
+deactivate SM
+alt Si (motivo ≠ null)
+  [<-- S : 1.1.3.11: ReglaNegocioException(motivo, "RN-13")
+else Si (limites.errores no está vacío)
+  [<-- S : 1.1.3.12: ReglaNegocioException(limites.errores, "RN-76")
+else Si (exceso ≠ null)
+  [<-- S : 1.1.3.13: ReglaNegocioException(exceso.mensaje, "RN-18")
+end
+S -> DB ++ : 1.1.3.14: existente = query(solicitud del cliente en trámite en la línea)
+deactivate DB
+alt Si (existente ≠ null)
+  [<-- S : 1.1.3.15: ReglaNegocioException(mensaje, "RN-18")
+end
+[<-- S -- : datos
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+!include estilo.iuml
+title sd Devolver por el medio de pago original (CU-78, diagrama 2 de 2)
+participant ":DevolucionService" as DS <<service>>
+participant ":PasarelaInterface" as P
+participant "Devolucion" as DV <<utility>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+[-> DS ++ : id, a
+DS -> P ++ : 1.1.11.1: r = devolver(transaccion, importe, identificador), fuera de la transacción
+deactivate P
+group critical [transacción 2]
+  DS -> DS : 1.1.11.2: registrarResultado(id, r)
+  activate DS
+  DS -> DV ++ : 1.1.11.2.1: resultado = resultado(r.estado)
+  deactivate DV
+  alt Si (resultado = "Confirmada")
+    DS -> DS : 1.1.11.2.2: completar(a)
+  else Si (resultado = "Rechazada")
+    DS -> DS : 1.1.11.2.3: actualizarConVersion(autorización Fallida) y liberar(a)
+    DS -> AL ++ : 1.1.11.2.4: generar(«la pasarela rechazó la devolución», Gerente)
+    deactivate AL
+  else sin respuesta o estado no definitivo
+    DS -> DS : 1.1.11.2.5: actualizarConVersion(autorización EnConciliacion): la resuelve pagos:conciliar (CU-91)
+  end
+  DS -> AU ++ : 1.1.11.2.6: registrar("saldos-favor.ejecutar-devolucion", "autorizaciones_devolucion", id, resultado)
+  deactivate AU
+  deactivate DS
+end
+[<-- DS -- : [ok, estado, mensaje]
+@enduml

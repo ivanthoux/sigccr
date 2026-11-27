@@ -1,0 +1,29 @@
+@startuml
+!include estilo.iuml
+title sd Elegir los clientes y sus condiciones (CU-93, diagrama 3 de 4)
+participant ":CampanaService" as CP <<service>>
+participant "ReglasCampanas" as RC <<utility>>
+participant "Elegibilidad" as EL <<utility>>
+participant "db : BaseConnection" as DB
+[-> CP ++ : linea, version, p
+CP -> CP : 1.1.9.1.9.1: candidatos = candidatos(linea.id, hoy)
+activate CP
+CP -> DB ++ : 1.1.9.1.9.1.1: query(clientes con portal: consentimiento comercial (RN-64), máximo atraso, créditos vigentes y solicitudes en la línea (RN-18))
+deactivate DB
+deactivate CP
+loop Mientras (haya candidatos y ofertas < p.cantidadMaximaOfertas)
+  CP -> RC ++ : 1.1.9.1.9.2: motivo = motivoNoElegible(c, p, hoy): categoría, antigüedad y morosidad admitidas
+  deactivate RC
+  opt Si (motivo = null)
+    CP -> EL ++ : 1.1.9.1.9.3: motivo = motivoNoAdmitida(version, c.datos, hoy)
+    deactivate EL
+  end
+  opt Si (motivo = null)
+    CP -> CP : 1.1.9.1.9.4: condiciones = condiciones(c.datos, version, hoy): alternativas con Estructurador y los antecedentes del cliente (CU-87), y ReglasCampanas::condicionesOferta: mayor importe, menos cuotas
+  end
+  opt Si (condiciones ≠ null)
+    CP -> CP : 1.1.9.1.9.5: ofertas.agregar(c, condiciones)
+  end
+end
+[<-- CP -- : ofertas
+@enduml

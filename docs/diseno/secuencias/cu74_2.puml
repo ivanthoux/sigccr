@@ -1,0 +1,24 @@
+@startuml
+!include estilo.iuml
+title sd Crear el crédito refinanciado (CU-74, diagrama 2 de 2)
+participant ":RefinanciacionService" as RS <<service>>
+participant ":ParametroService" as PA <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> RS ++ : p, r
+RS -> RS : 1.1.11.1: plan = plan(capital, noCapitalizable + punitorios posteriores al corte, tasa, cuotas, hoy): sin gastos (RN-70)
+RS -> PA ++ : 1.1.11.2: morosidad = vigente("Morosidad"): tolerancia del nuevo crédito
+deactivate PA
+RS -> DB ++ : 1.1.11.3: creditoId = insert("creditos", origen Refinanciacion, Activo) e insert("cuotas") sin desembolso (RN-37)
+deactivate DB
+RS -> RS : 1.1.11.4: actualizarConVersion: cuotas originales Sustituida y créditos originales Refinanciado
+RS -> DB ++ : 1.1.11.5: insert("aceptaciones_refinanciacion", fecha, medio, observaciones)
+deactivate DB
+RS -> RS : 1.1.11.6: actualizarConVersion("propuestas_refinanciacion", id, versionFila, Aplicada)
+RS -> AL ++ : 1.1.11.7: resolver("propuestas_refinanciacion", id, responsable)
+deactivate AL
+RS -> AU ++ : 1.1.11.8: registrar("refinanciaciones.aplicar", "propuestas_refinanciacion", id)
+deactivate AU
+[<-- RS -- : creditoId
+@enduml

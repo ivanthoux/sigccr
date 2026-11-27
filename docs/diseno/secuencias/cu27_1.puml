@@ -1,0 +1,57 @@
+@startuml
+!include estilo.iuml
+title CU-27 Liquidar Crédito Aprobado (diagrama 1 de 2)
+actor Cajero as CA
+participant ":Liquidaciones" as C <<control>>
+participant ":LiquidacionService" as LQ <<service>>
+participant "Desembolso" as DS <<utility>>
+participant ":FondosService" as F <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: ver(id)
+C -> LQ ++ : 1.1: s = datos(id): condiciones aprobadas, neto y plan
+deactivate LQ
+C --> CA -- : 1.2: datos para el desembolso
+CA -> C ++ : 2: liquidar(id, versionFila, CBU, titular, evidencia, comprobante, fecha)
+C -> LQ ++ : 2.1: r = liquidar(id, versionFila, datos, usuarioId)
+group critical [transacción]
+  LQ -> LQ : 2.1.1: fila = bloquear("solicitudes_credito", [id])
+  LQ -> DB ++ : 2.1.2: anterior = query(liquidación de la solicitud)
+  deactivate DB
+  alt Si (anterior ≠ null) (A5, RN-26)
+    LQ --> C : 2.1.3: ReglaNegocioException("la solicitud ya fue liquidada")
+  else Si (fila.estado ≠ "AprobadaPendienteLiquidacion" o fila.versionFila ≠ versionFila)
+    LQ --> C : 2.1.4: ReglaNegocioException(mensaje, "RN-24")
+  end
+  LQ -> LQ : 2.1.5: s = datos(id)
+  alt Si (la aprobación venció) (A1, RN-49)
+    LQ -> F ++ : 2.1.6: liberarDeSolicitud(id)
+    deactivate F
+    LQ -> SO ++ : 2.1.7: cambiarEstado(fila, "Vencida", usuarioId, motivo)
+    deactivate SO
+    LQ --> C : 2.1.8: [Vencida, mensaje]
+  else Si (la evaluación ya no está vigente) (A2)
+    LQ -> F ++ : 2.1.9: liberarDeSolicitud(id)
+    deactivate F
+    LQ -> SO ++ : 2.1.10: cambiarEstado(fila, "PendienteEvaluacion", usuarioId, motivo)
+    deactivate SO
+    LQ --> C : 2.1.11: [PendienteEvaluacion, mensaje]
+  else Si (no s.constancia o no s.declaracionPep)
+    LQ --> C : 2.1.12: ReglaNegocioException(«falta el contrato firmado (CU-103)» o «falta la declaración PEP»)
+  end
+  LQ -> DS ++ : 2.1.13: v = validar(datos, s, neto, hoy, requiereConformidad): transferencia a un CBU válido del cliente, no CVU (RN-25, RN-77)
+  deactivate DS
+  alt Si (v.errores no está vacío)
+    LQ --> C : 2.1.14: ValidacionException(v.errores, "RN-25")
+  end
+  LQ -> F ++ : 2.1.15: reserva = afectacionVigente(id)
+  deactivate F
+  alt Si (reserva = null o reserva.importe < neto) (A3)
+    LQ --> C : 2.1.16: ReglaNegocioException("sin reserva de fondos suficiente")
+  end
+  ref over LQ, DB : 2.1.17: creditoId = Registrar el crédito y el desembolso (diagrama 2 de 2)
+end
+LQ --> C -- : 2.1.18: [Liquidada, mensaje]
+C --> CA -- : 2.2: crédito activo y constancia de desembolso
+@enduml

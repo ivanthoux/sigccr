@@ -1,0 +1,44 @@
+@startuml
+!include estilo.iuml
+title sd Evaluar la solicitud (CU-86, diagrama 2 de 3)
+participant ":EvaluacionService" as E <<service>>
+participant ":ParametroService" as PS <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":InformacionCrediticiaInterface" as B
+participant "AntecedentesBcra" as AB <<utility>>
+participant "db : BaseConnection" as DB
+[-> E ++ : solicitudId
+group critical [transacción 1]
+  E -> E : 1.4.1.1: s = bloquear("solicitudes_credito", [solicitudId])
+  alt Si (s.estado ≠ "PendienteEvaluacion")
+    [<-- E : 1.4.1.2: null
+  end
+  E -> PS ++ : 1.4.1.3: parametros = vigente("Evaluacion")
+  deactivate PS
+  E -> DB ++ : 1.4.1.4: evaluacionId = insert("evaluaciones_crediticias", EnProceso, versión de parámetros)
+  deactivate DB
+  E -> SO ++ : 1.4.1.5: cambiarEstado(s, "EnEvaluacion", null, null, null, [], proceso)
+  deactivate SO
+end
+E -> B ++ : 1.4.1.6: deudas = consultar(cuit), fuera de la transacción (10 s, 2 reintentos, RNF-08)
+deactivate B
+group critical [transacción 2]
+  E -> E : 1.4.1.7: registrarIntercambios(evaluacionId, intercambios) (R6)
+  alt Si (ServicioNoDisponibleException) (A3, RN-21)
+    E -> E : 1.4.1.8: noCompletada(evaluacionId, motivo): evaluación NoCompletada, solicitud PendienteContingencia y alerta
+  else
+    E -> E : 1.4.1.9: [s, e] = bloquearIntento(evaluacionId): bloquea la solicitud y luego la evaluación
+    E -> AB ++ : 1.4.1.10: bcra = resumir(deudas, hoy)
+    deactivate AB
+    loop Mientras (haya deudas informadas)
+      E -> DB ++ : 1.4.1.11: insert("antecedentes_externos", deuda)
+      deactivate DB
+    end
+    ref over E, DB : 1.4.1.12: resultado = Registrar el resultado (diagrama 3 de 3)
+  end
+end
+opt Si (error interno) (A7)
+  E -> E : 1.4.1.13: revertirPorError(evaluacionId, error): NoCompletada y solicitud PendienteEvaluacion (D-17)
+end
+[<-- E -- : resultado
+@enduml

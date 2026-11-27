@@ -1,0 +1,36 @@
+@startuml
+!include estilo.iuml
+title CU-97 Registrar Cancelación Anticipada de Crédito (diagrama 1 de 3)
+actor Cajero as CA
+participant ":CancelacionesAnticipadas" as C <<control>>
+participant ":CancelacionAnticipadaService" as CN <<service>>
+participant ":CajaService" as CJ <<service>>
+participant "MediosCobro" as MC <<utility>>
+participant "db : BaseConnection" as DB
+activate CA
+CA -> C ++ : 1: index(creditoId)
+C -> CN ++ : 1.1: d = calcular(creditoId): importe a hoy con su detalle
+deactivate CN
+C --> CA -- : 1.2: importe total de la cancelación y su detalle
+CA -> C ++ : 2: registrar(creditoId, importe, medio, numeroOperacion)
+C -> CN ++ : 2.1: r = registrar(cajeroId, creditoId, importe, medio, numeroOperacion)
+group critical [transacción]
+  CN -> CJ ++ : 2.1.1: jornada = jornadaOperable(cajeroId)
+  deactivate CJ
+  alt Si (jornada = null) (A1)
+    CN --> C : 2.1.2: ReglaNegocioException(«No tiene una caja abierta hoy»)
+  end
+  CN -> CN : 2.1.3: c = creditoAdmitido(creditoId): Activo o En mora (A2)
+  ref over CN, DB : 2.1.4: d = Calcular la cancelación (diagrama 2 de 3)
+  alt Si (d.ordenes ≠ ∅) (A4, RN-30)
+    CN --> C : 2.1.5: ReglaNegocioException(«hay cuotas en una orden de pago pendiente»)
+  else Si (importe ≠ total) (A3)
+    CN --> C : 2.1.6: ValidacionException(«el importe debe ser igual al total: no hay cancelación parcial»)
+  end
+  CN -> MC ++ : 2.1.7: m = componer(medio, total): sin efectivo y con número de operación (RN-77)
+  deactivate MC
+  ref over CN, DB : 2.1.8: cobroId = Asentar la cancelación (diagrama 3 de 3)
+end
+CN --> C -- : 2.1.9: [cobroId, numero, importe]
+C --> CA -- : 2.2: comprobante con la reducción aplicada
+@enduml

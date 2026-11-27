@@ -1,0 +1,56 @@
+@startuml
+!include estilo.iuml
+title CU-89 Controlar Vencimientos
+actor "Temporizador\n(cada 15 minutos)" as T
+participant ":ControlarVencimientos" as K <<control>>
+participant ":VencimientoService" as VS <<service>>
+participant ":FondosService" as F <<service>>
+participant ":SolicitudService" as SO <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark vencimientos:controlar
+K -> VS ++ : 1.1: vencerSimulacionesYAlternativas() y vencerAutorizaciones()
+deactivate VS
+loop Mientras (haya aprobaciones vencidas), primero (RN-49)
+  K -> VS ++ : 1.2: vencerAprobacion(solicitudId)
+  VS -> VS : 1.2.1: s = bloquear("solicitudes_credito", [solicitudId]) y releer
+  VS -> DB ++ : 1.2.2: update(resolución sin vigencia)
+  deactivate DB
+  VS -> F ++ : 1.2.3: liberarDeSolicitud(solicitudId)
+  deactivate F
+  VS -> VS : 1.2.4: terminar(s, "Vencida", motivo, causa)
+  activate VS
+  VS -> SO ++ : 1.2.4.1: cambiarEstado(s, "Vencida", null, motivo, …, proceso)
+  deactivate SO
+  VS -> AL ++ : 1.2.4.2: resolver(alertas de la solicitud) y generar("Vencimiento", causa, acción, Analista)
+  deactivate AL
+  VS -> AU ++ : 1.2.4.3: registrar("vencimientos.solicitud", "solicitudes_credito", id)
+  deactivate AU
+  deactivate VS
+  deactivate VS
+end
+loop Mientras (haya evaluaciones vencidas)
+  K -> VS ++ : 1.3: vencerEvaluacion(evaluacionId)
+  VS -> DB ++ : 1.3.1: update(evaluación Vencida) (RN-20)
+  deactivate DB
+  opt Si (la solicitud está en selección de plan, resolución o aprobada)
+    VS -> DB ++ : 1.3.2: update(resolución sin vigencia y alternativas Vencidas)
+    deactivate DB
+    VS -> F ++ : 1.3.3: liberarDeSolicitud(solicitudId)
+    deactivate F
+    VS -> VS : 1.3.4: terminar(s, "PendienteEvaluacion", motivo, causa) (D-22): cambia el estado, renueva la alerta y audita
+  end
+  deactivate VS
+end
+note over K, AL : El mismo comando vence además las propuestas de refinanciación (RefinanciacionService),\nlas órdenes de pago (PagoElectronicoService) y las autorizaciones de devolución (DevolucionService),\ny depura los pre-registros (PreRegistroService). Se dibujan en sus casos de uso.
+loop Mientras (haya solicitudes sin movimiento por 30 días)
+  K -> VS ++ : 1.4: vencerPorInactividad(solicitudId)
+  VS -> F ++ : 1.4.1: liberarDeSolicitud(solicitudId)
+  deactivate F
+  VS -> VS : 1.4.2: terminar(s, "Vencida", motivo RN-72, causa): cambia el estado, renueva la alerta y audita
+  deactivate VS
+end
+deactivate K
+@enduml

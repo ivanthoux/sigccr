@@ -1,0 +1,29 @@
+@startuml
+!include estilo.iuml
+title CU-11 Registrar Cliente (diagrama 1 de 3)
+actor "Analista de Crédito" as AN
+participant ":Clientes" as C <<control>>
+participant ":ClienteService" as S <<service>>
+participant "LegajoService" as L <<service>>
+participant ":ComunicacionService" as CO <<service>>
+participant "db : BaseConnection" as DB
+activate AN
+note over AN, C : Antes del controlador, los filtros auth, permiso:clientes.registrar\ny csrf verifican la sesión, el permiso y el token (RNF-01, RNF-11).
+AN -> C ++ : 1: registrar(datos, archivos)
+C -> S ++ : 1.1: id = registrar(datos, archivos, usuarioId): datos.pre_registro_id si viene de CU-104
+ref over S, DB : 1.1.1: d, documentos = Validar los datos y los documentos (diagrama 2 de 3)
+alt Si (hay errores)
+  S --> C : 1.1.2: ValidacionException(errores, "RN-11")
+  C --> AN : 1.2: volverConError: cada error junto a su campo (RNF-02)
+end
+group critical [transacción]
+  ref over S, DB : 1.1.3: id, comunicacionId = Registrar el cliente y su cuenta (diagrama 3 de 3)
+end
+opt Si (falla la transacción)
+  S -> L : 1.1.4: descartar(movidos) (método estático)
+end
+S -> CO ++ : 1.1.5: enviar(comunicacionId), fuera de la transacción
+deactivate CO
+S --> C -- : 1.1.6: id
+C --> AN -- : 1.3: perfil del cliente con el aviso de verificación del correo
+@enduml

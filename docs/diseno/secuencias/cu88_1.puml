@@ -1,0 +1,34 @@
+@startuml
+!include estilo.iuml
+title CU-88 Calcular Intereses Punitorios (diagrama 1 de 2)
+actor "Temporizador\n(00:05)" as T
+participant ":CalcularPunitorios" as K <<control>>
+participant ":PunitorioService" as PU <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark cartera:punitorios
+K -> DB ++ : 1.1: query(sp_getapplock exclusivo) y insert("ejecuciones_proceso", EnCurso) (RNF-10)
+deactivate DB
+K -> K : 1.2: fechas = fechasPendientes(): días anteriores a hoy sin ejecución finalizada (A1)
+loop Mientras (haya días pendientes)
+  K -> PU ++ : 1.3: vencidas = marcarVencidas(dia)
+  PU -> DB ++ : 1.3.1: update(cuotas Pendiente vencidas a Vencida y créditos Activo con cuotas vencidas a EnMora)
+  deactivate DB
+  deactivate PU
+  K -> PU ++ : 1.4: cuotas = cuotasEnAtraso(dia)
+  deactivate PU
+  loop Mientras (haya cuotas en atraso), cada una en su propia transacción (A4)
+    K -> PU ++ : 1.5: devengar(cuotaId, dia)
+    ref over PU, DB : 1.5.1: Devengar los punitorios de la cuota (diagrama 2 de 2)
+    deactivate PU
+  end
+  K -> PU ++ : 1.6: auditar(dia, cantidad de cuotas, vencidas, errores)
+  PU -> AU ++ : 1.6.1: registrar("cartera.punitorios", "ejecuciones_proceso", null)
+  deactivate AU
+  deactivate PU
+end
+K -> DB ++ : 1.7: update(ejecución Finalizada o ConErrores) y sp_releaseapplock
+deactivate DB
+deactivate K
+@enduml

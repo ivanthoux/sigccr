@@ -1,0 +1,14 @@
+digraph revision_documental { rankdir=LR;
+graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+f1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; f3 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+ini -> PendienteRevision [label="solicitud registrada (CU-22)\no corrección registrada (CU-84)"];
+PendienteRevision -> Observada [label="faltantes subsanables (CU-23)"];
+PendienteRevision -> Verificada [label="documentación suficiente (CU-23)"];
+PendienteRevision -> Rechazada [label="incumplimiento no\nsubsanable (CU-23)"];
+Observada -> f1 [label="corrección: nueva\nrevisión (CU-84)"];
+Verificada -> f2 [label="cambio de documento clave:\nnueva revisión (RN-61)"];
+Rechazada -> f3;
+}

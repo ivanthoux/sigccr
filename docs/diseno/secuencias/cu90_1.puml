@@ -1,0 +1,29 @@
+@startuml
+!include estilo.iuml
+title CU-90 Procesar Notificación de Pago Electrónico: recibir la notificación (diagrama 1 de 3)
+actor "Pasarela de pagos" as PSA
+participant ":Webhooks\\Pasarela" as W <<control>>
+participant ":PagoElectronicoService" as PE <<service>>
+participant ":PasarelaInterface" as P
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate PSA
+PSA -> W ++ : 1: recibir(): POST con la notificación firmada
+W -> PE ++ : 1.1: valida = recibirNotificacion(cuerpo, cabeceras)
+PE -> P ++ : 1.1.1: valida = firmaValida(cuerpo, cabeceras)
+deactivate P
+PE -> DB ++ : 1.1.2: existe = query(notificación con el mismo idEvento)
+deactivate DB
+alt Si (existe)
+  PE --> W : 1.1.3: true: ya registrada, no se repite
+else
+  PE -> DB ++ : 1.1.4: insert("notificaciones_pasarela", Pendiente, o Descartada si la firma no es válida)
+  deactivate DB
+  opt Si (no valida) (A1)
+    PE -> AU ++ : 1.1.5: registrar("pagos.notificacion", "notificaciones_pasarela", id, "Fallido")
+    deactivate AU
+  end
+  PE --> W -- : 1.1.6: valida
+end
+W --> PSA -- : 1.2: 200 si es válida o 401 (acuse)
+@enduml

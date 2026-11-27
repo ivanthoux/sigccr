@@ -1,0 +1,41 @@
+@startuml
+!include estilo.iuml
+title CU-93 Activar Campaña Crediticia: proyectar la disponibilidad (diagrama 1 de 4)
+actor "Temporizador" as T
+participant ":ProyectarFondos" as K <<control>>
+participant ":FondosService" as F <<service>>
+participant ":ParametroService" as PS <<service>>
+participant ":CampanaService" as CP <<service>>
+participant ":AlertaService" as AL <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark fondos:proyectar
+K -> F ++ : 1.1: r = proyectar(proceso)
+F -> PS ++ : 1.1.1: v = vigente("Campanas"): período, factor de cobrabilidad y umbral
+deactivate PS
+F -> F : 1.1.2: d = disponibilidad(): fondos, afectaciones y reserva mínima
+F -> DB ++ : 1.1.3: query(cuotas a vencer en el período y egresos programados)
+deactivate DB
+F -> F : 1.1.4: proyectado = fondos + cuotas a vencer × factor − egresos − reserva mínima (RN-39)
+F -> DB ++ : 1.1.5: id = insert("proyecciones_fondos", proyectado)
+deactivate DB
+F -> DB ++ : 1.1.6: activa = query(¿hay una campaña Activa?)
+deactivate DB
+opt Si (proyectado < 0)
+  F -> AL ++ : 1.1.7: generar("Proceso", «disponibilidad proyectada negativa»)
+  deactivate AL
+end
+F -> AU ++ : 1.1.8: registrar("fondos.proyectar", "proyecciones_fondos", id)
+deactivate AU
+alt Si (no activa y proyectado > umbral)
+  F -> CP ++ : 1.1.9: r.campana = activar([id, proyectado], proceso)
+  ref over CP, DB : 1.1.9.1: Activar la campaña (diagrama 2 de 4)
+  deactivate CP
+else Si (activa y proyectado ≤ umbral y cierre por disponibilidad)
+  F -> CP ++ : 1.1.10: cerrar(campanaId, "Disponibilidad", proceso): ver CU-94 (A1)
+  deactivate CP
+end
+F --> K -- : 1.1.11: r
+deactivate K
+@enduml

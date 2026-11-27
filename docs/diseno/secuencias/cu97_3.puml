@@ -1,0 +1,24 @@
+@startuml
+!include estilo.iuml
+title sd Asentar la cancelación (CU-97, diagrama 3 de 3)
+participant ":CancelacionAnticipadaService" as CN <<service>>
+participant ":CobroService" as CS <<service>>
+participant ":RefinanciacionService" as RF <<service>>
+participant ":AuditoriaService" as AU <<service>>
+participant "db : BaseConnection" as DB
+[-> CN ++ : jornada, c, d, medios
+CN -> CS ++ : 2.1.8.1: cobroId = asentarVentanilla(jornada, cajeroId, clienteId, total, m.medios, "CancelacionAnticipada")
+deactivate CS
+loop Mientras (haya imputaciones en la distribución)
+  CN -> DB ++ : 2.1.8.2: insert("imputaciones")
+  deactivate DB
+end
+CN -> CN : 2.1.8.3: actualizarConVersion: todas las cuotas Pagadas con saldo cero y crédito Cancelado
+CN -> DB ++ : 2.1.8.4: insert("cancelaciones_anticipadas", componentes y reducción de intereses no devengados)
+deactivate DB
+CN -> RF ++ : 2.1.8.5: observarPorCuotas(cuotaIds, causa) (RN-36)
+deactivate RF
+CN -> AU ++ : 2.1.8.6: registrar("creditos.cancelar-anticipadamente", "creditos", creditoId)
+deactivate AU
+[<-- CN -- : cobroId
+@enduml

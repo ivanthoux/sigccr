@@ -1,0 +1,25 @@
+@startuml
+!include estilo.iuml
+title CU-105 Generar Régimen Informativo de Deudores: generación mensual (diagrama 1 de 3)
+actor "Temporizador\n(7:00)" as T
+participant ":GenerarRegimen" as K <<control>>
+participant ":RegimenService" as RS <<service>>
+participant "ReglasRegimen" as RR <<utility>>
+participant "db : BaseConnection" as DB
+activate T
+T -> K ++ : 1: run(): php spark regimen:generar
+K -> RS ++ : 1.1: periodo = periodoPendiente()
+RS -> RR ++ : 1.1.1: periodo = periodoACerrar(hoy, díasNoHábiles): mes anterior, desde el primer día hábil
+deactivate RR
+RS -> DB ++ : 1.1.2: query(¿ya se generó el período?)
+deactivate DB
+RS --> K -- : 1.1.3: periodo o null
+alt Si (periodo = null) (A1)
+  K --> T : 1.2: «No hay un período a generar»
+else
+  K -> RS ++ : 1.3: r = generar(periodo, null, null, proceso)
+  ref over RS, DB : 1.3.1: Generar el régimen del período (diagrama 3 de 3)
+  RS --> K -- : 1.3.2: [id, version, deudores]
+end
+deactivate K
+@enduml
