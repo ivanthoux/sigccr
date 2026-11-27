@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 plt.rcParams['font.family']='Liberation Sans'
 fig,ax=plt.subplots(figsize=(12,8.6)); ax.set_xlim(0,120); ax.set_ylim(0,86); ax.axis('off')
-B=dict(fc='#DAE8FC',ec='#6C8EBF'); Y=dict(fc='#FFF2CC',ec='#D6B656'); G=dict(fc='#E6E6E6',ec='#808080')
+B={'fc': '#DAE8FC', 'ec': '#6C8EBF'}; Y={'fc': '#FFF2CC', 'ec': '#D6B656'}; G={'fc': '#E6E6E6', 'ec': '#808080'}
 def band(y,h,title,x=1,w=96):
     ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle='round,pad=0,rounding_size=1.2',fc='#F5F5F5',ec='#999999',lw=1))
     ax.text(x+1.2,y+h-1.6,title,fontsize=10,fontweight='bold',va='top')
@@ -12,7 +12,7 @@ def box(x,y,w,h,t,st=B,fs=8.6):
     ax.add_patch(FancyBboxPatch((x,y),w,h,boxstyle='round,pad=0,rounding_size=0.8',lw=1.1,**st))
     ax.text(x+w/2,y+h/2,t,ha='center',va='center',fontsize=fs,linespacing=1.3)
 def arr(x1,y1,x2,y2,**k):
-    ax.annotate('',xy=(x2,y2),xytext=(x1,y1),arrowprops=dict(arrowstyle='-|>',color='#333333',lw=1,**k))
+    ax.annotate('',xy=(x2,y2),xytext=(x1,y1),arrowprops={'arrowstyle': '-|>', 'color': '#333333', 'lw': 1, **k})
 band(73,12,'Presentación  ·  app/Views, public/assets')
 box(4,74.5,44,6.5,'Panel administrativo\nBootstrap 5 · DataTables con procesamiento en el servidor (RNF-07)')
 box(52,74.5,42,6.5,'Portal de autogestión del cliente\nBootstrap 5 · diseño adaptable desde 360 px (RNF-02)')

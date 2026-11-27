@@ -6,12 +6,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 JAR="${PLANTUML_JAR:-$HOME/.cache/sigccr/plantuml.jar}"
-if [ ! -f "$JAR" ]; then
+if [[ ! -f "$JAR" ]]; then
   mkdir -p "$(dirname "$JAR")" && tmp=$(mktemp -d)
   (cd "$tmp" && npm pack plantuml-pipe@1.7.0 --silent >/dev/null && tar xzf plantuml-pipe-1.7.0.tgz)
   cp "$tmp/package/vendor/plantuml.jar" "$JAR" && rm -rf "$tmp"
 fi
 archivos=("${@:-}")
-[ -z "${archivos[0]}" ] && archivos=(*.puml)
+[[ -z "${archivos[0]:-}" ]] && archivos=(*.puml)
 java -DPLANTUML_LIMIT_SIZE=16384 -jar "$JAR" -tsvg -o svg "${archivos[@]}"
 java -DPLANTUML_LIMIT_SIZE=16384 -jar "$JAR" -tpng -Sdpi=200 -o png "${archivos[@]}"

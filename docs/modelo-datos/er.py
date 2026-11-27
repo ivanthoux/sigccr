@@ -23,25 +23,24 @@ def pkcols(t):
     return t.pkcols or [c.name for c in t.cols if c.pk]
 
 
+def fila(c, pk, fkcols):
+    k = [m for m, si in (('PK', c.name in pk), ('FK', c.name in fkcols), ('UQ', c.uq)) if si]
+    name = html.escape(c.name)
+    if c.name in pk:
+        name = f'<B><U>{name}</U></B>'
+    typ = html.escape(short(c.typ)) + (' <FONT COLOR="#555555">N</FONT>' if c.null else '')
+    return (f'<TR><TD ALIGN="LEFT" BGCOLOR="{BODY}"><FONT POINT-SIZE="8">{",".join(k) or " "}</FONT></TD>'
+            f'<TD ALIGN="LEFT" BGCOLOR="{BODY}" PORT="{c.name}">{name}</TD>'
+            f'<TD ALIGN="LEFT" BGCOLOR="{BODY}"><FONT POINT-SIZE="8">{typ}</FONT></TD></TR>')
+
+
 def label(t):
     pk = pkcols(t)
     fkcols = {c.name for c in t.cols if c.fk} | {x for f in t.fkx for x in f[1]}
-    resto = 0
+    cols = [c for c in t.cols if not SOLO_CLAVES or c.name in pk or c.name in fkcols or c.uq]
+    resto = len(t.cols) - len(cols)
     rows = [f'<TR><TD COLSPAN="3" BGCOLOR="{HDR}" ALIGN="CENTER"><B>{t.name}</B></TD></TR>']
-    for c in t.cols:
-        if SOLO_CLAVES and not (c.name in pk or c.name in fkcols or c.uq):
-            resto += 1
-            continue
-        k = []
-        if c.name in pk: k.append('PK')
-        if c.name in fkcols: k.append('FK')
-        if c.uq: k.append('UQ')
-        name = html.escape(c.name)
-        if c.name in pk: name = f'<B><U>{name}</U></B>'
-        typ = html.escape(short(c.typ)) + ('' if not c.null else ' <FONT COLOR="#555555">N</FONT>')
-        rows.append(f'<TR><TD ALIGN="LEFT" BGCOLOR="{BODY}"><FONT POINT-SIZE="8">{",".join(k) or " "}</FONT></TD>'
-                    f'<TD ALIGN="LEFT" BGCOLOR="{BODY}" PORT="{c.name}">{name}</TD>'
-                    f'<TD ALIGN="LEFT" BGCOLOR="{BODY}"><FONT POINT-SIZE="8">{typ}</FONT></TD></TR>')
+    rows += [fila(c, pk, fkcols) for c in cols]
     if resto:
         rows.append(f'<TR><TD COLSPAN="3" ALIGN="LEFT" BGCOLOR="{BODY}"><FONT POINT-SIZE="8" COLOR="#555555"><I>{resto} columnas más (4.3.6)</I></FONT></TD></TR>')
     return f'<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="2" COLOR="{BORDER}">' + ''.join(rows) + '</TABLE>>'
@@ -118,7 +117,6 @@ def paginar(ss, minimo=6.5):
     salida = []
     for i, g in enumerate(grupos):
         key = ss if len(grupos) == 1 else f'{ss}{"abcdefghij"[i]}'
-        f, rd = mejor(g, key) if False else (None, None)
         RENDER = False; f, rd = mejor(g, key); RENDER = True
         diagram(ss, rd, only=g, key=key)
         salida.append((key, rd, round(f, 1), g))
