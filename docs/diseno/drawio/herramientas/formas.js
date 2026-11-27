@@ -29,3 +29,26 @@ function estilosConNombre(graph) {
 }
 const _inst = instalarEstilos;
 instalarEstilos = function (graph) { _inst(graph); estilosConNombre(graph); };
+
+// Paquete (carpeta con pestaña) como el shape=folder de draw.io.
+function Carpeta() { mxShape.call(this); }
+mxUtils.extend(Carpeta, mxShape);
+Carpeta.prototype.paintVertexShape = function (c, x, y, w, h) {
+  const tw = Number(mxUtils.getValue(this.style, 'tabWidth', 60));
+  const th = Number(mxUtils.getValue(this.style, 'tabHeight', 20));
+  c.begin(); c.moveTo(x, y + th); c.lineTo(x, y); c.lineTo(x + tw, y); c.lineTo(x + tw, y + th);
+  c.lineTo(x + w, y + th); c.lineTo(x + w, y + h); c.lineTo(x, y + h); c.close(); c.fillAndStroke();
+  c.begin(); c.moveTo(x, y + th); c.lineTo(x + tw, y + th); c.stroke();
+};
+mxCellRenderer.registerShape('folder', Carpeta);
+
+// Estado final de UML: círculo con un círculo lleno adentro.
+function EstadoFinal() { mxShape.call(this); }
+mxUtils.extend(EstadoFinal, mxShape);
+EstadoFinal.prototype.paintVertexShape = function (c, x, y, w, h) {
+  c.ellipse(x, y, w, h); c.fillAndStroke();
+  const i = Math.min(w, h) * 0.2;
+  c.setFillColor(mxUtils.getValue(this.style, 'strokeColor', '#000000'));
+  c.ellipse(x + i, y + i, w - 2 * i, h - 2 * i); c.fill();
+};
+mxCellRenderer.registerShape('endState', EstadoFinal);

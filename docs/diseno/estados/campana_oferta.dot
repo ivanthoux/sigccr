@@ -1,0 +1,22 @@
+digraph campana_oferta { rankdir=TB; compound=true;
+graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+subgraph cluster_c { label="Campaña"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ ic [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+ fc [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+ ic -> Activa [label="activación (CU-93)"];
+ Activa -> Finalizada [label="vigencia cumplida, cupo alcanzado\no disponibilidad insuficiente (CU-94)"];
+ Finalizada -> fc;
+}
+subgraph cluster_o { label="Oferta"; labeljust=l; fontname="Arial Bold"; style="rounded,filled"; fillcolor="#F7F9FC"; color="#6C8EBF"; penwidth=1.5;
+ io [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+ fo1 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; fo2 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""]; fo3 [shape=doublecircle, style=filled, fillcolor=black, color=black, width=0.24, height=0.24, fixedsize=true, label=""];
+ OVigente [label="Vigente"]; OAceptada [label="Aceptada"]; ORechazada [label="Rechazada"]; OVencida [label="Vencida"];
+ io -> OVigente [label="generación (CU-93)"];
+ OVigente -> OAceptada [label="aceptación (CU-52) / genera solicitud\ny compromiso de fondos (RN-41)"];
+ OVigente -> ORechazada [label="rechazo (CU-52)"];
+ OVigente -> OVencida [label="cierre de la\ncampaña (CU-94)"];
+ OAceptada -> fo1; ORechazada -> fo2; OVencida -> fo3;
+}
+}

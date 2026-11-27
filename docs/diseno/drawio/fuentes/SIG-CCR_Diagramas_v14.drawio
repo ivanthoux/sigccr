@@ -1113,7 +1113,13 @@
         <mxCell id="c302" style="endArrow=none;html=1;rounded=0;entryX=0.023;entryY=0.650;entryDx=0;entryDy=0;" edge="1" parent="1" source="c290" target="c279">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-      </root>
+      <mxCell id="j10cu32" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#999999;fontSize=10;dashed=1;" value="&lt;b&gt;CU-32&lt;/b&gt;&lt;br&gt;Consultar Movimientos de Caja&lt;br&gt;&lt;i&gt;(SS-05)&lt;/i&gt;" vertex="1">
+          <mxGeometry height="59" width="148" x="430" y="756" as="geometry" />
+        </mxCell>
+        <mxCell id="j10inc32" edge="1" parent="1" source="c279" style="endArrow=open;dashed=1;html=1;rounded=0;endSize=10;fontSize=9;labelBackgroundColor=#FFFFFF;exitX=0.977;exitY=0.350;exitDx=0;exitDy=0;entryX=0.023;entryY=0.350;entryDx=0;entryDy=0;" target="j10cu32" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        </root>
     </mxGraphModel>
   </diagram>
   <diagram name="SS-10 Servicios comunes" id="c375">

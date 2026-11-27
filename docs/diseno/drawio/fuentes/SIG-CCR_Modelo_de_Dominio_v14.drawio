@@ -2597,13 +2597,13 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="d614" parent="1" style="swimlane;fontStyle=1;align=center;startSize=24;html=1;fillColor=#7EA6E0;swimlaneFillColor=#D4E1F5;strokeColor=#555555;fontSize=10;collapsible=0;" value="CopiaSeguridad" vertex="1">
-          <mxGeometry height="90" width="130" as="geometry" />
+          <mxGeometry height="104" width="150" as="geometry" />
         </mxCell>
-        <mxCell id="d615" parent="d614" style="text;html=1;align=left;verticalAlign=top;spacingLeft=4;fontSize=9;strokeColor=none;fillColor=none;" value="archivo: Texto&lt;br&gt;fechaGeneracion: FechaHora&lt;br&gt;tamano: Entero&lt;br&gt;origen: OrigenCopia&lt;br&gt;estado: Texto" vertex="1">
-          <mxGeometry height="50" width="116" y="24" as="geometry" />
+        <mxCell id="d615" parent="d614" style="text;html=1;align=left;verticalAlign=top;spacingLeft=4;fontSize=9;strokeColor=none;fillColor=none;" value="archivo: Texto&lt;br&gt;fechaGeneracion: FechaHora&lt;br&gt;tamano: Entero&lt;br&gt;origen: OrigenCopia&lt;br&gt;hashVerificacion: Texto&lt;br&gt;estado: EstadoCopia" vertex="1">
+          <mxGeometry height="74" width="140" y="24" as="geometry" />
         </mxCell>
         <mxCell id="d616" parent="1" style="swimlane;fontStyle=1;align=center;startSize=24;html=1;fillColor=#7EA6E0;swimlaneFillColor=#D4E1F5;strokeColor=#555555;fontSize=10;collapsible=0;" value="Restauracion" vertex="1">
-          <mxGeometry height="60" width="89.5" x="250" y="15" as="geometry" />
+          <mxGeometry height="60" width="89.5" x="250" y="22" as="geometry" />
         </mxCell>
         <mxCell id="d617" parent="d616" style="text;html=1;align=left;verticalAlign=top;spacingLeft=4;fontSize=9;strokeColor=none;fillColor=none;" value="fecha: FechaHora&lt;br&gt;resultado: Texto" vertex="1">
           <mxGeometry height="23" width="75" y="24" as="geometry" />

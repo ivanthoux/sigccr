@@ -1,0 +1,11 @@
+digraph linea_credito { rankdir=LR;
+graph [fontname="Arial", fontsize=12, nodesep=0.5, ranksep=0.6, bgcolor=white];
+node [fontname="Arial", fontsize=12, shape=box, style="rounded,filled", fillcolor="#DAE8FC", color="#6C8EBF", penwidth=1.5, height=0.45];
+edge [fontname="Arial", fontsize=9, color="#333333", penwidth=1.2, arrowsize=0.8];
+ini [shape=circle, style=filled, fillcolor=black, color=black, width=0.22, height=0.22, fixedsize=true, label=""];
+ini -> Activa [label="registro (CU-16)"];
+Activa -> Suspendida [label="suspensión (CU-18)"];
+Suspendida -> Activa [label="reactivación (CU-19)\n[dentro del período de vigencia]"];
+Suspendida -> Vencida [label="fin del período\nde vigencia"];
+Activa -> Vencida [label="fin del período\nde vigencia"];
+}
