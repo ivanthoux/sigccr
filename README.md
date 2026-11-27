@@ -142,6 +142,7 @@ El controlador ODBC 18 exige un certificado de confianza para cifrar la conexió
 ## Seguimiento del proyecto
 
 - Tareas: [issues](https://github.com/ivanthoux/sigccr/issues), agrupadas en un [hito por fase](https://github.com/ivanthoux/sigccr/milestones) del cronograma (2.2).
+- Instalación, despliegue, copias y operación en producción: [docs/manual_tecnico.md](docs/manual_tecnico.md).
 - Flujo de trabajo, ramas y versiones: [CONTRIBUTING.md](CONTRIBUTING.md).
 - Decisiones de diseño: [docs/decisiones.md](docs/decisiones.md).
 - Cambios por versión: [CHANGELOG.md](CHANGELOG.md).
