@@ -15,4 +15,4 @@ docs/diseno/drawio/generar.sh
 
 Deja `svg/<archivo>/<página>.svg` (vectorial, con las etiquetas HTML de draw.io) y `png/<archivo>/<página>.png` a escala 4 (unos 400 ppp al ancho de la página), que es la que se inserta en el documento porque Word no dibuja las etiquetas HTML de un SVG. `png/` no se versiona.
 
-`herramientas/celdas.py` lista las celdas de una página (identificador, estilo, texto, geometría y extremos) para ubicar lo que se quiere cambiar.
+`python3 herramientas/paginas.py fuentes/<archivo>.drawio | python3 herramientas/celdas.py SS-02` lista las celdas de una página (identificador, estilo, texto, geometría y extremos) para ubicar lo que se quiere cambiar.

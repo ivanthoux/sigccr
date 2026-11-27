@@ -1,16 +1,15 @@
-"""Lista las celdas de las páginas cuyo nombre contiene el filtro. Uso: python3 celdas.py <paginas.json> <filtro>"""
+"""Lista las celdas de las páginas cuyo nombre contiene el filtro.
+
+Uso: python3 herramientas/paginas.py fuentes/<archivo>.drawio | python3 herramientas/celdas.py <filtro>
+"""
 import json
 import re
 import sys
 import xml.etree.ElementTree as ET
 
-from paginas import ruta_segura
 
-
-def listar(json_paginas, filtro):
-    with open(ruta_segura(json_paginas), encoding='utf-8') as f:
-        pags = json.load(f)
-    for p in pags:
+def listar(paginas, filtro):
+    for p in paginas:
         if filtro not in p['name']:
             continue
         for c in ET.fromstring(p['xml']).iter('mxCell'):
@@ -22,4 +21,4 @@ def listar(json_paginas, filtro):
 
 
 if __name__ == '__main__':
-    listar(sys.argv[1], sys.argv[2])
+    listar(json.load(sys.stdin), sys.argv[1])
