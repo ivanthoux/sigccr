@@ -43,6 +43,22 @@ ese registro.
 4. **Cada mes.** Se revisa la actualización acumulativa de SQL Server (D-62) y los avisos de las bibliotecas de la
    interfaz.
 
+## Versiones mayores y congelamiento
+
+Una actualización de versión mayor (por ejemplo, de 3.x a 4.x) puede cambiar el comportamiento o las reglas de la
+herramienta, por lo que no se incorpora por el pull request automático: se evalúa en una rama propia con el CI
+completo. Durante la Transición el código queda congelado para el despliegue de prueba y la entrega, y solo se
+incorporan actualizaciones de seguridad dentro de los plazos anteriores. Las demás se reevalúan después de v1.0.0.
+
+| Fecha | Pull request | Actualización | Decisión |
+|---|---|---|---|
+| 27/11/2026 | #222 | PHP_CodeSniffer 3.13.6 → 4.0.4 (herramienta de desarrollo) | Cerrado sin unir; se reevalúa después de v1.0.0 |
+| 27/11/2026 | #221 | mssql 11.0.1 → 12.8.0 en `tests/e2e` (no se distribuye) | Cerrado sin unir; se reevalúa después de v1.0.0 |
+
+Ninguna de las dos corrige una vulnerabilidad que afecte al proyecto. La nota de seguridad de PHP_CodeSniffer 4.0.2
+(CVE-2026-67434, inyección de comandos en los reportes Gitblame, Hgblame y Svnblame) también está corregida en la
+3.13.6, la versión que usa el proyecto, que además no emplea esos reportes.
+
 ## Responsable
 
 El responsable del proyecto (el alumno, durante el Trabajo Final) atiende los pull requests de Dependabot y registra las
